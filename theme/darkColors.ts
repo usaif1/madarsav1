@@ -1,4 +1,4 @@
-export enum ColorPrimaryDark {
+export enum ColorPrimary {
   'primary50' = '#F5F4FB',
   'primary100' = '#ECE9F8',
   'primary200' = '#DCD7F3',
@@ -12,7 +12,7 @@ export enum ColorPrimaryDark {
   'primary950' = '#271A40',
 }
 
-export enum ColorSecondaryDark {
+export enum ColorSecondary {
   'neutral50' = '#F5F5F7',
   'neutral100' = '#E9E9EC',
   'neutral200' = '#D2D2D6',
@@ -26,7 +26,7 @@ export enum ColorSecondaryDark {
   'neutral950' = '#111113',
 }
 
-export enum ColorAccentDark {
+export enum ColorAccent {
   'accent50' = '#FFFDF6',
   'accent100' = '#FEFAEC',
   'accent200' = '#FCEFC7',
@@ -40,7 +40,7 @@ export enum ColorAccentDark {
   'accent950' = '#292108',
 }
 
-export enum ColorInfoDark {
+export enum ColorInfo {
   'info50' = '#F5FBFF',
   'info100' = '#F0F9FF',
   'info200' = '#E0F2FE',
@@ -54,7 +54,7 @@ export enum ColorInfoDark {
   'info950' = '#0B4A6F',
 }
 
-export enum ColorWarningDark {
+export enum ColorWarning {
   'warning50' = '#FFFCF5',
   'warning100' = '#FFFAEB',
   'warning200' = '#FEF0C7',
@@ -68,7 +68,7 @@ export enum ColorWarningDark {
   'warning950' = '#7A2E0E',
 }
 
-export enum ColorErrorDark {
+export enum ColorError {
   'error50' = '#FFFBFA',
   'error100' = '#FEF3F2',
   'error200' = '#FEE4E2',
@@ -82,7 +82,7 @@ export enum ColorErrorDark {
   'error950' = '#7A271A',
 }
 
-export enum ColorSuccessDark {
+export enum ColorSuccess {
   'success50' = '#ECFAF4',
   'success100' = '#D2F1DF',
   'success200' = '#ABE0C7',
@@ -96,14 +96,12 @@ export enum ColorSuccessDark {
   'success950' = '#0C1B18',
 }
 
-const darkColors = {
-  primary: ColorPrimaryDark,
-  secondary: ColorSecondaryDark,
-  accent: ColorAccentDark,
-  info: ColorInfoDark,
-  warning: ColorWarningDark,
-  error: ColorErrorDark,
-  success: ColorSuccessDark,
+export const darkColors = {
+  primary: ColorPrimary,
+  secondary: ColorSecondary,
+  accent: ColorAccent,
+  info: ColorInfo,
+  warning: ColorWarning,
+  error: ColorError,
+  success: ColorSuccess,
 };
-
-export default darkColors;

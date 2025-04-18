@@ -1,15 +1,15 @@
-// colors
-import lightColors from './lightColors';
-import darkColors from './darkColors';
+// // colors
+// import lightColors from './lightColors';
+// import darkColors from './darkColors';
 
-// typography
-import typography from './typography';
+// // typography
+// import typography from './typography';
 
-export type AppColorScheme = 'light' | 'dark';
+// export type AppColorScheme = 'light' | 'dark';
 
-const isDark = false;
+// const isDark = false;
 
-export const theme = {
-  colors: isDark ? darkColors : lightColors,
-  typography: typography,
-};
+// export const theme = {
+//   colors: isDark ? darkColors : lightColors,
+//   typography: typography,
+// };
