@@ -9,6 +9,7 @@ import Share from '@/assets/profile/share.svg';
 import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
+import {useThemeStore} from '@/theme/store';
 
 const actionList = [
   {
@@ -42,8 +43,10 @@ const actionList = [
 ];
 
 const ActionList = () => {
+  const {shadows} = useThemeStore();
+
   return (
-    <View style={{padding: 20, backgroundColor: '#FFFFFF'}}>
+    <View style={[{padding: 20, backgroundColor: '#FFFFFF'}, shadows.sm1]}>
       <View style={{rowGap: 20}}>
         {actionList.map(actionItem => {
           return (

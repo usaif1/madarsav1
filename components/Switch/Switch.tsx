@@ -24,7 +24,7 @@ const CustomSwitch = () => {
 
   const backgroundColor = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#ccc', '#4cd137'],
+    outputRange: ['#E5E5E5', '#4cd137'],
   });
 
   return (
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#FFFFFF',
   },
 });
 

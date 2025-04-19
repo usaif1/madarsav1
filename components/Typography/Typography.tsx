@@ -56,6 +56,7 @@ export const H5Bold = createTextComponent('h5Bold');
 export const Title1Regular = createTextComponent('title1Regular');
 export const Title1Medium = createTextComponent('title1Medium');
 export const Title1Bold = createTextComponent('title1Bold');
+export const Title3Bold = createTextComponent('title3Bold');
 
 export const Body1Title2Regular = createTextComponent('title2_body1Regular');
 export const Body1Title2Medium = createTextComponent('title2_body1Medium');

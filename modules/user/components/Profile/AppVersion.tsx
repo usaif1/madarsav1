@@ -1,13 +1,29 @@
+// dependencies
 import {Text, View} from 'react-native';
 import React from 'react';
 
 // assets
 import LogoUrduSm from '@/assets/logo_urdu_small.svg';
+import LogoUrduSmPurple from '@/assets/logo_urdu_small_purple.svg';
+import TnCGraphic from '@/assets/profile/TnCGraphic.svg';
+import PrivacyPolicyGraphic from '@/assets/profile/PrivacyPolicyGraphic.svg';
+
+// store
+import {useThemeStore} from '@/theme/store';
+
+// components
 import {Divider} from '@/components';
+import {
+  Body2Medium,
+  CaptionBold,
+  Title3Bold,
+} from '@/components/Typography/Typography';
 
 const AppVersion = () => {
+  const {shadows} = useThemeStore();
+
   return (
-    <View style={{padding: 20}}>
+    <View style={[{padding: 20, backgroundColor: '#FFFFFF'}, shadows.sm1]}>
       <View style={{flexDirection: 'row', columnGap: 12, alignItems: 'center'}}>
         <View
           style={{
@@ -44,7 +60,7 @@ const AppVersion = () => {
           <View
             style={{flexDirection: 'row', columnGap: 6, alignItems: 'center'}}>
             {/* Title 3-bold */}
-            <Text style={{fontSize: 17, fontWeight: '700'}}>Madrasa App</Text>
+            <Title3Bold>Madrasa App</Title3Bold>
             <View
               style={{
                 backgroundColor: '#F0EAFB',
@@ -54,16 +70,30 @@ const AppVersion = () => {
                 justifyContent: 'center',
                 borderRadius: 20,
               }}>
-              <Text style={{fontSize: 10, fontWeight: '700', color: '#6D2DD3'}}>
-                V1
-              </Text>
+              <CaptionBold color="primary">V1</CaptionBold>
             </View>
           </View>
           <Divider height={4} />
-          <Text style={{color: '#808080', fontWeight: '500'}}>
+          <Body2Medium color="secondary">
             2025-2026 Madrasa. All Right Registered
-          </Text>
+          </Body2Medium>
         </View>
+      </View>
+      <Divider height={14} />
+      <View style={{flexDirection: 'row', columnGap: 12}}>
+        <TnCGraphic />
+        <PrivacyPolicyGraphic />
+      </View>
+      <Divider height={24} />
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          columnGap: 6,
+        }}>
+        <Body2Medium color="sub-heading">Powered by</Body2Medium>
+        <LogoUrduSmPurple />
       </View>
     </View>
   );

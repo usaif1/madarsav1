@@ -268,6 +268,7 @@ const BASE_STYLES = {
   h5: 20,
   title1: 17,
   title2_body1: 14,
+  title3: 17,
   body2: 12,
   caption: 10,
 } as const;
@@ -307,6 +308,7 @@ export enum TypographyColor {
   'black' = '#000000',
   'grey' = '#171C22',
   'primary' = '#8A57DC',
+  'secondary' = '#808080',
 }
 
 export type TypographyColorKeys =
@@ -314,7 +316,8 @@ export type TypographyColorKeys =
   | 'sub-heading'
   | 'black'
   | 'grey'
-  | 'primary';
+  | 'primary'
+  | 'secondary';
 
 // Factory function to create typography variants
 const createTypographyVariants = (): Typography =>
