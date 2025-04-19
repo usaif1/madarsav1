@@ -1,6 +1,7 @@
 import {create} from 'zustand';
 import {Appearance} from 'react-native'; // or use `useColorScheme` hook in component
-import {lightColors, darkColors, typography} from '@/theme';
+import {lightColors, darkColors, typography, shadows} from '@/theme';
+import {Shadows} from './shadows';
 
 type ThemeType = 'light' | 'dark';
 
@@ -8,6 +9,7 @@ interface ThemeState {
   theme: ThemeType;
   colors: typeof lightColors;
   typography: typeof typography;
+  shadows: Shadows;
   setTheme: (theme: ThemeType) => void;
   toggleTheme: () => void;
 }
@@ -18,6 +20,7 @@ export const useThemeStore = create<ThemeState>(set => ({
   theme: systemTheme,
   colors: systemTheme === 'dark' ? darkColors : lightColors,
   typography: typography,
+  shadows: shadows,
 
   setTheme: theme =>
     set({

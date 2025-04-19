@@ -1,5 +1,5 @@
 // dependencies
-import {Text, View, Switch} from 'react-native';
+import {Text, View} from 'react-native';
 import React from 'react';
 
 // assets
@@ -8,6 +8,7 @@ import Notification from '@/assets/profile/notification.svg';
 import Share from '@/assets/profile/share.svg';
 import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
+import {Switch} from '@/components';
 
 const actionList = [
   {
@@ -42,7 +43,7 @@ const actionList = [
 
 const ActionList = () => {
   return (
-    <View style={{padding: 20}}>
+    <View style={{padding: 20, backgroundColor: '#FFFFFF'}}>
       <View style={{rowGap: 20}}>
         {actionList.map(actionItem => {
           return (

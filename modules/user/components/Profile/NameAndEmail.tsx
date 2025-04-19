@@ -12,6 +12,8 @@ import {
 import {useThemeStore} from '@/theme/store';
 
 const NameAndEmail = () => {
+  const {shadows} = useThemeStore();
+
   return (
     <View
       style={[
@@ -21,18 +23,8 @@ const NameAndEmail = () => {
           paddingTop: 20,
           paddingBottom: 20,
           backgroundColor: 'white', // Required for shadows to work properly
-          // // iOS Shadow
-          // shadowColor: '#000',
-          // shadowOffset: {
-          //   width: 0,
-          //   height: 2,
-          // },
-          // shadowOpacity: 0.25,
-          // shadowRadius: 3.84,
-          // // Android Shadow
-          // elevation: 5,
         },
-        shadows.shadowSm2,
+        shadows.sm1,
       ]}>
       <Avatar />
       <Divider />
@@ -98,31 +90,5 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-});
-
-const shadows = StyleSheet.create({
-  // First shadow variant (Blur 2)
-  shadowSm1: {
-    shadowColor: '#E5E5E5',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 1,
-    shadowRadius: 2 / 2, // Divide by 2 to match CSS blur to RN's shadowRadius
-    elevation: 2, // Android equivalent
-  },
-
-  // Second shadow variant (Blur 3)
-  shadowSm2: {
-    shadowColor: '#E5E5E5',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 1,
-    shadowRadius: 3 / 2, // Divide by 2 to match CSS blur to RN's shadowRadius
-    elevation: 3, // Android equivalent
   },
 });

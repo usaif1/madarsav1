@@ -7,7 +7,7 @@ import FastImage from 'react-native-fast-image';
 // assets
 // import SplashGraphic from '../../../assets/splash/splash_graphic.svg';
 import SplashGraphic from '@/assets/splash/splash_graphic.svg';
-import Mandala from '../../../assets/splash/mandala.png';
+// import Mandala from '../../../assets/splash/mandala.png';
 
 const SplashPrimary: React.FC = () => {
   const navigation = useNavigation();

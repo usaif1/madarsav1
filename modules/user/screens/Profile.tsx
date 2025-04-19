@@ -1,15 +1,19 @@
+// dependencies
 import {StatusBar, View} from 'react-native';
 import React from 'react';
+
+// components
 import {ActionList, AppVersion, NameAndEmail} from '../components/Profile';
+import {Divider} from '@/components';
 
 const Profile: React.FC = () => {
   return (
     <View style={{flex: 1}}>
       <StatusBar barStyle="light-content" />
       <NameAndEmail />
-      {/* <View style={{height: 8, backgroundColor: '#E5E5E5'}} /> */}
+      <Divider height={8} />
       <ActionList />
-      {/* <View style={{height: 8, backgroundColor: '#E5E5E5'}} /> */}
+      <Divider height={8} />
       <AppVersion />
     </View>
   );
