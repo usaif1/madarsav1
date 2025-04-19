@@ -1,15 +1,17 @@
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 
 // components
 import {Divider} from '@/components';
 import {
+  Body1Title2Bold,
   Body1Title2Medium,
   H2Bold,
   H5Bold,
 } from '@/components/Typography/Typography';
 import {useThemeStore} from '@/theme/store';
+import {useNavigation} from '@react-navigation/native';
 
 const NameAndEmail = () => {
   const {shadows} = useThemeStore();
@@ -61,24 +63,25 @@ const NameEmail = () => {
 
 const ViewProfileButton = () => {
   const {colors} = useThemeStore();
+
+  const navigation = useNavigation();
+
+  const onPress = () => {
+    // @ts-ignore
+    navigation.navigate('profileDetails');
+  };
+
   return (
     <Pressable
+      onPress={onPress}
       style={{
         backgroundColor: colors.primary.primary100,
         width: 114,
         borderRadius: 100,
+        paddingVertical: 4,
         alignItems: 'center',
       }}>
-      <Text
-        style={{
-          fontSize: 14,
-          fontWeight: 700,
-          color: '#8A57DC',
-          lineHeight: 20,
-          paddingVertical: 4,
-        }}>
-        View Profile
-      </Text>
+      <Body1Title2Bold color="primary">View Profile</Body1Title2Bold>
     </Pressable>
   );
 };
