@@ -301,6 +301,21 @@ type Typography = {
   [Key in VariantKeys as `${Key}${WeightSuffix}`]: TextStyle;
 };
 
+export enum TypographyColor {
+  'heading' = '#171717',
+  'sub-heading' = '#737373',
+  'black' = '#000000',
+  'grey' = '#171C22',
+  'primary' = '#8A57DC',
+}
+
+export type TypographyColorKeys =
+  | 'heading'
+  | 'sub-heading'
+  | 'black'
+  | 'grey'
+  | 'primary';
+
 // Factory function to create typography variants
 const createTypographyVariants = (): Typography =>
   (Object.entries(typographyBase) as [VariantKeys, TextStyle][]).reduce(

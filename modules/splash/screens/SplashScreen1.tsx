@@ -33,7 +33,14 @@ const SplashPrimary: React.FC = () => {
       </Pressable>
 
       <FastImage
-        style={{width: 200, height: 200}}
+        style={{
+          width: 200,
+          height: 200,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+        }}
         source={require('../../../assets/splash/mandala.png')}
         resizeMode={FastImage.resizeMode.contain}
       />

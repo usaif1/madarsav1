@@ -13,7 +13,7 @@ const SplashStack = createNativeStackNavigator({
   screens: {
     screen1: SplashScreen1,
     screen2: SplashScreen2,
-    screen3: SplashScreen3
+    screen3: SplashScreen3,
   },
 });
 
