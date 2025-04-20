@@ -19,6 +19,7 @@ import PrayerTimesGraphic from './PrayerTimesGraphic';
 // store
 import {useThemeStore} from '@/theme/store';
 import DecliningDayGraphic from './DecliningDayGraphic';
+import PrayerBeads from './PrayerBeads';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -135,8 +136,10 @@ export default function App() {
         <View>
           <PrayerTimesGraphic />
           <Divider height={10} />
-          <View>
+          <View
+            style={{flexDirection: 'row', alignItems: 'center', columnGap: 10}}>
             <DecliningDayGraphic />
+            <PrayerBeads />
           </View>
         </View>
       </View>
