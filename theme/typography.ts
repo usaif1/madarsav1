@@ -309,6 +309,7 @@ export enum TypographyColor {
   'grey' = '#171C22',
   'primary' = '#8A57DC',
   'secondary' = '#808080',
+  'white' = '#FFFFFF',
 }
 
 export type TypographyColorKeys =
@@ -317,6 +318,7 @@ export type TypographyColorKeys =
   | 'black'
   | 'grey'
   | 'primary'
+  | 'white'
   | 'secondary';
 
 // Factory function to create typography variants

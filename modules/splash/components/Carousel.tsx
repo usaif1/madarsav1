@@ -14,6 +14,8 @@ import Carousel from 'react-native-snap-carousel';
 // components
 import {Body1Title2Regular, H4Bold} from '@/components';
 import {Divider} from '@/components';
+import Spiritual from '@/assets/splash/spiritual.svg';
+import SplashScreenGraphic from './SplashScreenGraphic';
 
 // store
 import {useThemeStore} from '@/theme/store';
@@ -129,6 +131,9 @@ export default function App() {
         <Body1Title2Regular color="sub-heading" style={{textAlign: 'center'}}>
           {item.content.description}
         </Body1Title2Regular>
+        <Divider />
+        {/* <Spiritual /> */}
+        <SplashScreenGraphic />
       </View>
     );
   };
