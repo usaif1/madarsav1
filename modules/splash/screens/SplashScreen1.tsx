@@ -2,15 +2,18 @@
 import {Pressable, StatusBar, Text, View} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import FastImage from 'react-native-fast-image';
 
 // assets
-// import SplashGraphic from '../../../assets/splash/splash_graphic.svg';
 import SplashGraphic from '@/assets/splash/splash_graphic.svg';
-// import Mandala from '../../../assets/splash/mandala.png';
+
+type RootStackParamList = {
+  screen2: undefined;
+};
 
 const SplashPrimary: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <View

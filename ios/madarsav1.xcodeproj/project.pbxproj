@@ -21,6 +21,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		833E1A67FBF047B386424C76 /* Geist-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6489F552139C42B4AF6DBC79 /* Geist-ExtraLight.ttf */; };
 		E643CDD40251476990E8CB4E /* Geist-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4D4F31F40F2749D1B6EACA46 /* Geist-Black.ttf */; };
+		B2BA68499AD24742822D4274 /* KFGQPC Uthmanic Script HAFS Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = B392839D3C024C8F81DE48E3 /* KFGQPC Uthmanic Script HAFS Regular.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 		E7D826CA7C484C089E32AEEF /* Geist-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-Light.ttf"; path = "../assets/fonts/Geist-Light.ttf"; sourceTree = "<group>"; };
 		EC6AF75501634468B8D0C4E4 /* Geist-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-ExtraBold.ttf"; path = "../assets/fonts/Geist-ExtraBold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		B392839D3C024C8F81DE48E3 /* KFGQPC Uthmanic Script HAFS Regular.otf */ = {isa = PBXFileReference; name = "KFGQPC Uthmanic Script HAFS Regular.otf"; path = "../assets/fonts/KFGQPC Uthmanic Script HAFS Regular.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +83,7 @@
 				32108BE912134EE8AC5D5C42 /* Geist-Regular.ttf */,
 				D9076CE4E57B455A816AB2F9 /* Geist-SemiBold.ttf */,
 				2C465AEA9BB442C7A6B70C48 /* Geist-Thin.ttf */,
+				B392839D3C024C8F81DE48E3 /* KFGQPC Uthmanic Script HAFS Regular.otf */,
 			);
 			name = Resources;
 			path = "";
@@ -206,6 +209,7 @@
 				396212164AD74D1EB9CED24D /* Geist-Regular.ttf in Resources */,
 				5E7BFC82150D4AFFAD06C1EC /* Geist-SemiBold.ttf in Resources */,
 				5159BB09FCB84DCA88C438ED /* Geist-Thin.ttf in Resources */,
+				B2BA68499AD24742822D4274 /* KFGQPC Uthmanic Script HAFS Regular.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

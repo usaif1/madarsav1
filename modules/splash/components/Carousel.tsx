@@ -14,11 +14,11 @@ import Carousel from 'react-native-snap-carousel';
 // components
 import {Body1Title2Regular, H4Bold} from '@/components';
 import {Divider} from '@/components';
-import Spiritual from '@/assets/splash/spiritual.svg';
-import SplashScreenGraphic from './SplashScreenGraphic';
+import PrayerTimesGraphic from './PrayerTimesGraphic';
 
 // store
 import {useThemeStore} from '@/theme/store';
+import DecliningDayGraphic from './DecliningDayGraphic';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -132,8 +132,13 @@ export default function App() {
           {item.content.description}
         </Body1Title2Regular>
         <Divider />
-        {/* <Spiritual /> */}
-        <SplashScreenGraphic />
+        <View>
+          <PrayerTimesGraphic />
+          <Divider height={10} />
+          <View>
+            <DecliningDayGraphic />
+          </View>
+        </View>
       </View>
     );
   };

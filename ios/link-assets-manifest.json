@@ -36,6 +36,10 @@
     {
       "path": "assets/fonts/Geist-Thin.ttf",
       "sha1": "434d2a1d4260832117515be784c38773a7bab6c0"
+    },
+    {
+      "path": "assets/fonts/KFGQPC Uthmanic Script HAFS Regular.otf",
+      "sha1": "23868a63cc7188f94875b97ca0c60a3b1d172919"
     }
   ]
 }
