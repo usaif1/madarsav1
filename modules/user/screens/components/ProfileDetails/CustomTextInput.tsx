@@ -2,7 +2,7 @@ import React from 'react';
 import {TextInput, StyleSheet} from 'react-native';
 
 // component
-import {Body1Title2Medium} from '@/components/Typography/Typography';
+import {Body1Title2Medium} from '@/components';
 
 interface Props {
   label: string;

@@ -4,12 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 
 // components
 import {Divider} from '@/components';
-import {
-  Body1Title2Bold,
-  Body1Title2Medium,
-  H2Bold,
-  H5Bold,
-} from '@/components/Typography/Typography';
+import {Body1Title2Bold, Body1Title2Medium, H2Bold, H5Bold} from '@/components';
 import {useThemeStore} from '@/theme/store';
 import {useNavigation} from '@react-navigation/native';
 

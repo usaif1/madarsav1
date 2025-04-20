@@ -13,11 +13,7 @@ import {useThemeStore} from '@/theme/store';
 
 // components
 import {Divider} from '@/components';
-import {
-  Body2Medium,
-  CaptionBold,
-  Title3Bold,
-} from '@/components/Typography/Typography';
+import {Body2Medium, CaptionBold, Title3Bold} from '@/components';
 
 const AppVersion = () => {
   const {shadows} = useThemeStore();

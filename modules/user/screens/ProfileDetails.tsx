@@ -5,7 +5,7 @@ import React from 'react';
 import {Avatar} from './components/ProfileDetails';
 import CustomTextInput from './components/ProfileDetails/CustomTextInput';
 import {Divider} from '@/components';
-import {Body1Title2Bold} from '@/components/Typography/Typography';
+import {Body1Title2Bold} from '@/components';
 
 const ProfileDetails: React.FC = () => {
   return (

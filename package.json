@@ -12,12 +12,15 @@
     "reset-cache": "npx react-native start --reset-cache",
     "clean-android": "cd android && ./gradlew clean && cd ..",
     "clean-ios": "cd ios && xcodebuild clean && cd ..",
-    "clean": "npx react-native clean-project"
+    "clean": "npx react-native clean-project",
+    "postinstall": "patch-package"
   },
   "dependencies": {
+    "@react-native-community/viewpager": "^5.0.11",
     "@react-navigation/native": "^7.1.6",
     "@react-navigation/native-stack": "^7.3.10",
     "imagekit-javascript": "^4.0.1",
+    "patch-package": "^8.0.0",
     "react": "19.0.0",
     "react-native": "0.79.0",
     "react-native-fast-image": "^8.6.3",

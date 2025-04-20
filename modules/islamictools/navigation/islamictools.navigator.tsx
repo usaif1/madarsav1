@@ -3,12 +3,13 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Platform} from 'react-native';
 
 // screens
-import {Profile, ProfileDetails} from '../screens';
+import {NinetyNineNames, Duas} from '../screens';
 
 // components
-import {BackButton, LogoutButton} from '@/components';
+import {BackButton} from '@/components';
 
-const SplashStack = createNativeStackNavigator({
+const IslamicToolsStack = createNativeStackNavigator({
+  initialRouteName: 'dua',
   screenOptions: {
     headerStyle: {
       backgroundColor: '#411B7F',
@@ -21,20 +22,19 @@ const SplashStack = createNativeStackNavigator({
     headerShadowVisible: false,
   },
   screens: {
-    profile: {
-      screen: Profile,
+    ninetyninenames: {
+      screen: NinetyNineNames,
       options: {
-        title: 'Profile',
-        headerRight: LogoutButton,
+        title: '99 Names of Allah',
       },
     },
-    profileDetails: {
-      screen: ProfileDetails,
+    dua: {
+      screen: Duas,
       options: {
-        title: 'Profile details',
+        title: 'Duas',
       },
     },
   },
 });
 
-export default SplashStack;
+export default IslamicToolsStack;

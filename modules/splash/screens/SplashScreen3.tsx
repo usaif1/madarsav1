@@ -45,35 +45,12 @@ const SplashPrimary: React.FC = () => {
           paddingHorizontal: 27,
           alignItems: 'center',
         }}>
-        {/* <Carousel /> */}
-        <Text
-          style={{
-            fontWeight: '700',
-            color: 'black',
-            fontSize: 24,
-            paddingTop: 28,
-          }}>
-          {carousel[currentState]?.title}
-          {/* Your Spiritual Companion */}
-        </Text>
-        <Text
-          style={{
-            fontSize: 17,
-            fontWeight: 500,
-            color: '#737373',
-            textAlign: 'center',
-            marginTop: 6,
-          }}>
-          {carousel[currentState]?.label}
-          {/* Your Complete Islamic Worship App: Quran, Hadith, Prayer Times, Qibla,
-          Zakat, Tasbih and Spiritual Tools—All in One Place. */}
-        </Text>
-
         <View style={{height: 33}} />
+        <Carousel />
 
-        <View
+        {/* <View
           style={{width: '100%', height: 321, backgroundColor: '#411B7F'}}
-        />
+        /> */}
 
         <View style={{height: 140}} />
         <View style={{width: '100%'}}>
