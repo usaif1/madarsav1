@@ -5,7 +5,6 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
-  SafeAreaView,
   StyleProp,
   ViewStyle,
 } from 'react-native';
@@ -149,7 +148,7 @@ export default function App() {
   const {colors} = useThemeStore();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <>
       <View style={styles.progressContainer}>
         {progressAnims.map((progress, index) => (
           <View
@@ -173,17 +172,11 @@ export default function App() {
         enableMomentum={false}
         lockScrollWhileSnapping={true}
       />
-    </SafeAreaView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  // ... (keep the same styles as previous implementation)
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-  },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -206,19 +199,7 @@ const styles = StyleSheet.create({
     padding: 40,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 30,
-    color: '#2D2D2D',
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 28,
-  },
+
   daysContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

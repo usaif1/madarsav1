@@ -6,25 +6,19 @@ import {Platform} from 'react-native';
 import {AllNames} from '../screens';
 
 // components
-import {BackButton} from '@/components';
+import {Header} from '@/components';
 
 const SplashStack = createNativeStackNavigator({
   screenOptions: {
-    headerStyle: {
-      backgroundColor: '#411B7F',
-    },
-    headerTitleStyle: {
-      color: '#FFFFFF',
-    },
     presentation: Platform.OS === 'android' ? 'transparentModal' : 'card',
-    headerLeft: () => <BackButton />,
-    headerShadowVisible: false,
+    // headerShadowVisible: false,
   },
   screens: {
     allnames: {
       screen: AllNames,
       options: {
         title: '99 Names of Allah',
+        header: () => <Header title="99 Names of Allah" />,
       },
     },
   },

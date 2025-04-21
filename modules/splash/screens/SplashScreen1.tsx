@@ -43,7 +43,7 @@ const SplashPrimary: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SplashGraphic />
 
       <Pressable
@@ -56,7 +56,7 @@ const SplashPrimary: React.FC = () => {
         style={[
           styles.mandalaWrapper,
           {
-            transform: [{translateY: 145}, {rotate: rotateInterpolate}],
+            transform: [{translateY: 150}, {rotate: rotateInterpolate}],
           },
         ]}>
         <MandalaFull />

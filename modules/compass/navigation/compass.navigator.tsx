@@ -6,7 +6,7 @@ import {Platform} from 'react-native';
 import {Compass} from '../screens';
 
 // components
-import {BackButton, ShareButton} from '@/components';
+import {BackButton, Header, ShareButton} from '@/components';
 
 const CompassNavigator = createNativeStackNavigator({
   screenOptions: {
@@ -24,8 +24,9 @@ const CompassNavigator = createNativeStackNavigator({
     allnames: {
       screen: Compass,
       options: {
-        title: 'Qiblah Finder',
-        headerRight: ShareButton,
+        header: () => (
+          <Header title="Qiblah Finder" RightButton={() => <ShareButton />} />
+        ),
       },
     },
   },

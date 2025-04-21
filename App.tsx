@@ -8,13 +8,32 @@ import ParentNavigation from '@/navigator/ParentNavigation';
 
 // store
 import {useGlobalStore} from './globalStore';
+import {StatusBar} from 'react-native';
 
 export default function App() {
   const {onboarded} = useGlobalStore();
 
   if (!onboarded) {
-    return <SplashNavigation />;
+    return (
+      <>
+        <StatusBar
+          barStyle={'light-content'}
+          backgroundColor={'transparent'}
+          translucent
+        />
+        <SplashNavigation />
+      </>
+    );
   }
 
-  return <ParentNavigation />;
+  return (
+    <>
+      <StatusBar
+        barStyle={'light-content'}
+        backgroundColor={'transparent'}
+        translucent
+      />
+      <ParentNavigation />
+    </>
+  );
 }

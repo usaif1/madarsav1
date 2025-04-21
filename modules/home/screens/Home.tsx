@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
+  Pressable,
+  StatusBar,
 } from 'react-native';
 
 const {width} = Dimensions.get('window');
@@ -33,7 +35,7 @@ const IslamicTools: React.FC = () => {
   const navigation = useNavigation();
 
   const renderItem = ({item}: {item: ToolItem}) => (
-    <TouchableOpacity
+    <Pressable
       onPress={() => {
         if (item.to) {
           navigation.navigate(item.to);
@@ -42,11 +44,12 @@ const IslamicTools: React.FC = () => {
       style={styles.item}>
       <View style={styles.iconPlaceholder} />
       <Text style={styles.title}>{item.title}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (
     <View style={styles.wrapper}>
+      <StatusBar barStyle={'dark-content'} />
       <Text style={styles.heading}>Islamic Tools</Text>
       <FlatList
         data={TOOLS}

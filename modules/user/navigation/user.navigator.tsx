@@ -6,16 +6,10 @@ import {Platform} from 'react-native';
 import {Profile, ProfileDetails} from '../screens';
 
 // components
-import {BackButton, LogoutButton} from '@/components';
+import {BackButton, Header, LogoutButton} from '@/components';
 
 const UserNavigator = createNativeStackNavigator({
   screenOptions: {
-    headerStyle: {
-      backgroundColor: '#411B7F',
-    },
-    headerTitleStyle: {
-      color: '#FFFFFF',
-    },
     presentation: Platform.OS === 'android' ? 'transparentModal' : 'card',
     headerLeft: () => <BackButton />,
     headerShadowVisible: false,
@@ -24,14 +18,17 @@ const UserNavigator = createNativeStackNavigator({
     profile: {
       screen: Profile,
       options: {
-        title: 'Profile',
-        headerRight: LogoutButton,
+        header: () => (
+          <Header title="Profile" RightButton={() => <LogoutButton />} />
+        ),
       },
     },
     profileDetails: {
       screen: ProfileDetails,
       options: {
         title: 'Profile details',
+        header: () => <Header title="Profile details" />,
+        headerTitleAlign: 'center',
       },
     },
   },

@@ -4,12 +4,18 @@ import {useThemeStore} from '@/globalStore';
 
 // assets
 import Camera from '@/assets/profile/camera.svg';
+import FastImage from 'react-native-fast-image';
 
 const Avatar = () => {
   const {shadows} = useThemeStore();
 
   return (
     <View style={[styles.avatar, shadows.md1]}>
+      <FastImage
+        source={require('@/assets/profile/face.png')}
+        resizeMode={FastImage.resizeMode.contain}
+        style={{width: 100, height: 100}}
+      />
       <Pressable style={styles.cameraBtn}>
         <Camera />
       </Pressable>
@@ -29,7 +35,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
   },
 
   cameraBtn: {

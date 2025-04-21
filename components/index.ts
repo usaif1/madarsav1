@@ -4,6 +4,7 @@ export {default as BackButton} from './BackButton/BackButton';
 export {default as Divider} from './Divider/Divider';
 export {default as Switch} from './Switch/Switch';
 export {default as ShareButton} from './ShareButton/ShareButton';
+export {default as Header} from './Header/Header';
 
 // typography
 export {

@@ -24,6 +24,7 @@ const ParentNavigator = createNativeStackNavigator({
       screen: UserNavigator,
       options: {
         title: 'Profile',
+        headerTitleAlign: 'center',
       },
     },
     compass: CompassNavigator,

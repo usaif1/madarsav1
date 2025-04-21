@@ -1,7 +1,7 @@
 // dependencies
 import React from 'react';
 import {Pressable, StyleSheet, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 
 // assets
 import FacebookLogin from '@/assets/splash/facebook_login.svg';
@@ -19,6 +19,10 @@ const SplashPrimary: React.FC = () => {
   const {colors} = useThemeStore();
   const {setOnboarded} = useGlobalStore();
 
+  const {bottom} = useSafeAreaInsets();
+
+  console.log('bottom', bottom);
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#FFFFFF'}}>
       <View
@@ -30,8 +34,7 @@ const SplashPrimary: React.FC = () => {
         <View style={{height: 33}} />
         <Carousel />
 
-        <View style={{height: 140}} />
-        <View style={{width: '100%'}}>
+        <View style={{width: '100%', paddingBottom: 20}}>
           <Pressable
             style={[
               styles.btn,
