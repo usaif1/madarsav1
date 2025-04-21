@@ -6,6 +6,7 @@ import UserNavigator from '@/modules/user/navigation/user.navigator';
 import HomeNavigator from '@/modules/home/navigation/home.navigator';
 import NamesNavigator from '@/modules/names/navigation/names.navigator';
 import CompassNavigator from '@/modules/compass/navigation/compass.navigator';
+import DuaNavigator from '@/modules/dua/navigation/dua.navigator';
 
 const ParentNavigator = createNativeStackNavigator({
   initialRouteName: 'home',
@@ -28,6 +29,7 @@ const ParentNavigator = createNativeStackNavigator({
       },
     },
     compass: CompassNavigator,
+    dua: DuaNavigator,
   },
 });
 

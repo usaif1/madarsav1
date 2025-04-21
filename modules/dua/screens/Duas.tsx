@@ -1,5 +1,5 @@
 // dependencies
-import {View} from 'react-native';
+import {StatusBar, View} from 'react-native';
 import React from 'react';
 
 // components
@@ -18,6 +18,7 @@ const Duas = () => {
         backgroundColor: '#FFFFFF',
         paddingTop: 10,
       }}>
+      <StatusBar barStyle={'light-content'} />
       <View style={{paddingHorizontal: 18}}>
         <DuaSearchbar />
       </View>
