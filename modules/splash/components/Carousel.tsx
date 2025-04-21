@@ -131,12 +131,12 @@ export default function App() {
         <Body1Title2Regular color="sub-heading" style={{textAlign: 'center'}}>
           {item.content.description}
         </Body1Title2Regular>
-        <Divider />
+        <Divider height={33} />
         <View>
           <PrayerTimesGraphic />
           <Divider height={10} />
           <View
-            style={{flexDirection: 'row', alignItems: 'center', columnGap: 10}}>
+            style={{flexDirection: 'row', alignItems: 'flex-start', columnGap: 10}}>
             <DecliningDayGraphic />
             <PrayerBeads />
           </View>
@@ -196,7 +196,8 @@ const styles = StyleSheet.create({
   },
   slide: {
     width: SCREEN_WIDTH,
-    padding: 40,
+    paddingHorizontal: 27,
+    paddingTop: 18,
     alignItems: 'center',
   },
 

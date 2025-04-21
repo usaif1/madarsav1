@@ -14,13 +14,26 @@ const SplashScreen1: React.FC = () => {
   return (
     <LinearGradient
       colors={['#FFFFFF', '#F2DEFF']}
-      style={{borderRadius: 16, maxWidth: 188}}>
-      <View style={{paddingHorizontal: 18, paddingBottom: 13, paddingTop: 16}}>
+      style={{
+        borderRadius: 16,
+        maxWidth: 188,
+      }}>
+      <View
+        style={{
+          paddingHorizontal: 18,
+          paddingBottom: 13,
+          paddingTop: 16.5,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: '#F5F5F5',
+          height: 161,
+        }}>
         <View style={{alignItems: 'flex-end'}}>
           <DecliningDay />
+          <Divider height={4} />
           <Title1Regular>The Declining Day</Title1Regular>
         </View>
-        <Divider height={28} />
+        <Divider height={34} />
         <Pressable style={[styles.button, {backgroundColor: '#8A57DC'}]}>
           <RightTriangle />
           <Body1Title2Bold color="white">Continue</Body1Title2Bold>
@@ -31,13 +44,8 @@ const SplashScreen1: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-
   button: {
-    paddingVertical: 4,
+    paddingVertical: 5,
     flexDirection: 'row',
     borderRadius: 100,
     width: '100%',
