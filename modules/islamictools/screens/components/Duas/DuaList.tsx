@@ -1,4 +1,4 @@
-import {FlatList, StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {FlatList, StyleSheet, View, TouchableOpacity} from 'react-native';
 import React from 'react';
 
 // assets
@@ -8,6 +8,7 @@ import GoodEtiquette from '@/assets/duas/good_etiquette.svg';
 import PraisingAllah from '@/assets/duas/praising_allah.svg';
 import Washroom from '@/assets/duas/washroom.svg';
 import House from '@/assets/duas/house.svg';
+import {Body1Title2Bold, Body2Medium, Divider} from '@/components';
 
 const dailyDuasData = [
   {
@@ -61,7 +62,7 @@ const DuaList = () => {
       data={dailyDuasData}
       keyExtractor={item => item.id}
       renderItem={DuaCard}
-      contentContainerStyle={{paddingBottom: 24}}
+      contentContainerStyle={{paddingBottom: 24, paddingHorizontal: 18}}
       ItemSeparatorComponent={Separator}
     />
   );
@@ -74,16 +75,14 @@ const DuaCard = ({item}: {item: any}) => {
 
   return (
     <TouchableOpacity style={styles.card}>
-      <View style={styles.iconWrapper}>
-        <IconComponent width={28} height={28} />
-      </View>
-
+      <IconComponent width={38} height={38} />
       <View style={styles.textWrapper}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <Body1Title2Bold>{item.title}</Body1Title2Bold>
+        <Divider height={4} />
+        <Body2Medium color="sub-heading">{item.description}</Body2Medium>
       </View>
 
-      <Text style={styles.count}>{item.count} Duas</Text>
+      <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
     </TouchableOpacity>
   );
 };
@@ -93,8 +92,9 @@ const Separator = () => <View style={styles.separator} />;
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
+    alignItems: 'flex-start',
+    columnGap: 8,
+    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
   },
   iconWrapper: {

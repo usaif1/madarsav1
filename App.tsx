@@ -4,15 +4,17 @@ import 'react-native-url-polyfill/auto';
 
 // navigators
 import SplashNavigation from './modules/splash/navigation/splash.navigation';
-// import UserNavigation from '@/modules/user/navigation/user.navigation';
-// import IslamicToolsNavigation from '@/modules/islamictools/navigation/islamictools.navigation';
+import ParentNavigation from '@/navigator/ParentNavigation';
+
+// store
+import {useGlobalStore} from './globalStore';
 
 export default function App() {
-  return (
-    <>
-      <SplashNavigation />
-      {/* <UserNavigation /> */}
-      {/* <IslamicToolsNavigation /> */}
-    </>
-  );
+  const {onboarded} = useGlobalStore();
+
+  if (!onboarded) {
+    return <SplashNavigation />;
+  }
+
+  return <ParentNavigation />;
 }

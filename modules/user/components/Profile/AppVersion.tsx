@@ -9,7 +9,7 @@ import TnCGraphic from '@/assets/profile/TnCGraphic.svg';
 import PrivacyPolicyGraphic from '@/assets/profile/PrivacyPolicyGraphic.svg';
 
 // store
-import {useThemeStore} from '@/theme/store';
+import {useThemeStore} from '@/globalStore';
 
 // components
 import {Divider} from '@/components';

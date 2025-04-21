@@ -9,7 +9,7 @@ import Share from '@/assets/profile/share.svg';
 import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
-import {useThemeStore} from '@/theme/store';
+import {useThemeStore} from '@/globalStore';
 
 const actionList = [
   {

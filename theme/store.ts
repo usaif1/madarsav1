@@ -16,7 +16,7 @@ interface ThemeState {
 
 const systemTheme = Appearance.getColorScheme() ?? 'light';
 
-export const useThemeStore = create<ThemeState>(set => ({
+const useThemeStore = create<ThemeState>(set => ({
   theme: systemTheme,
   colors: systemTheme === 'dark' ? darkColors : lightColors,
   typography: typography,
@@ -37,3 +37,5 @@ export const useThemeStore = create<ThemeState>(set => ({
       };
     }),
 }));
+
+export default useThemeStore;

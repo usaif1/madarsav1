@@ -1,6 +1,6 @@
 import {Pressable, StyleSheet, View} from 'react-native';
 import React from 'react';
-import {useThemeStore} from '@/theme/store';
+import {useThemeStore} from '@/globalStore';
 
 // assets
 import Camera from '@/assets/profile/camera.svg';

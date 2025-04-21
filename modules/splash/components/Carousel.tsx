@@ -17,7 +17,7 @@ import {Divider} from '@/components';
 import PrayerTimesGraphic from './PrayerTimesGraphic';
 
 // store
-import {useThemeStore} from '@/theme/store';
+import {useThemeStore} from '@/globalStore';
 import DecliningDayGraphic from './DecliningDayGraphic';
 import PrayerBeads from './PrayerBeads';
 

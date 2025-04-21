@@ -2,9 +2,7 @@ import {StyleSheet, TextInput, View} from 'react-native';
 import React from 'react';
 import Search from '@/assets/search.svg'; // assuming it's an SVG icon via react-native-svg
 
-type Props = {};
-
-const DuaSearchbar = (props: Props) => {
+const DuaSearchbar = () => {
   return (
     <View style={styles.container}>
       <Search width={20} height={20} />
@@ -27,7 +25,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 999, // radius-xxxl for pill shape
-    borderWidth: 1,
+    borderWidth: 0.8,
     borderColor: '#D1D5DB', // assuming Primitives/Regular = gray-300
     paddingHorizontal: 16,
     paddingVertical: 8,

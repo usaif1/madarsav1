@@ -4,7 +4,7 @@ import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 
 // store
-import {useThemeStore} from '@/theme/store';
+import {useThemeStore} from '@/globalStore';
 import {
   Body1Title2Bold,
   Body1Title2Medium,
