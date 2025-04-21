@@ -1,43 +1,3 @@
-// // dependencies
-// import {StatusBar, StyleSheet, View} from 'react-native';
-// import React from 'react';
-
-// // components
-// import {FindMosqueButton, NextSalah} from './components/compass';
-// import CompassIcon from '@/assets/compass/compass.svg';
-// import {Divider} from '@/components';
-// import GeographicDetails from './components/compass/GeographicDetails';
-
-// const Compass = () => {
-//   return (
-//     <View style={styles.topContainer}>
-//       <StatusBar barStyle={'light-content'} />
-//       <NextSalah />
-//       <View
-//         style={{
-//           justifyContent: 'center',
-//           alignItems: 'center',
-//           paddingTop: 82,
-//         }}>
-//         <CompassIcon />
-//       </View>
-//       <Divider height={82} />
-//       <GeographicDetails />
-//       <Divider height={20} />
-//       <FindMosqueButton />
-//     </View>
-//   );
-// };
-
-// export default Compass;
-
-// const styles = StyleSheet.create({
-//   topContainer: {
-//     flex: 1,
-//     backgroundColor: '#ffffff',
-//   },
-// });
-
 // dependencies
 import React, {useEffect, useRef} from 'react';
 import {View, StyleSheet, StatusBar, Animated, Easing} from 'react-native';
@@ -53,26 +13,32 @@ import {FindMosqueButton, NextSalah} from './components/compass';
 import CompassSvg from '@/assets/compass/compass.svg';
 import {Divider} from '@/components';
 import GeographicDetails from './components/compass/GeographicDetails';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const Compass: React.FC = () => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const {bottom} = useSafeAreaInsets();
 
   useEffect(() => {
-    /* 100 ms = 10 Hz */
     setUpdateIntervalForType(SensorTypes.magnetometer, 100);
 
     const subscription = magnetometer
       .pipe(
         map(({x, y}) => {
+          // Calculate compass heading
           let heading = Math.atan2(y, x) * (180 / Math.PI);
-          if (heading < 0) heading += 360;
-          return heading;
+          // Convert negative angles to positive
+          if (heading < 0) {
+            heading += 360;
+          }
+          // Reverse rotation for proper compass display
+          return 360 - heading;
         }),
       )
       .subscribe(heading => {
         Animated.timing(rotateAnim, {
           toValue: heading,
-          duration: 120,
+          duration: 100,
           easing: Easing.linear,
           useNativeDriver: true,
         }).start();
@@ -91,31 +57,42 @@ const Compass: React.FC = () => {
       <StatusBar barStyle="light-content" />
       <NextSalah />
 
-      <View style={styles.compassWrapper}>
-        <Animated.View style={{transform: [{rotate}]}}>
-          <CompassSvg width={240} height={240} />
+      {/* Centered compass with rotation */}
+      <View style={styles.compassContainer}>
+        <Animated.View style={[styles.compass, {transform: [{rotate}]}]}>
+          <CompassSvg width={300} height={300} />
         </Animated.View>
       </View>
 
       <Divider height={82} />
       <GeographicDetails />
-      <Divider height={20} />
-      <FindMosqueButton />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: bottom ? bottom : 10,
+          width: '100%',
+        }}>
+        <FindMosqueButton />
+      </View>
     </View>
   );
 };
 
-export default Compass;
-
-/* ------------------------------------------------------------ */
 const styles = StyleSheet.create({
   topContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  compassWrapper: {
-    alignItems: 'center',
+  compassContainer: {
+    paddingTop: 80,
     justifyContent: 'center',
-    paddingTop: 82,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  compass: {
+    width: 300,
+    height: 300,
   },
 });
+
+export default Compass;

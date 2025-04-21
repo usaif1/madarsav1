@@ -6,7 +6,6 @@ import {
   FlatList,
   StyleSheet,
   Dimensions,
-  TouchableOpacity,
   Pressable,
   StatusBar,
 } from 'react-native';
