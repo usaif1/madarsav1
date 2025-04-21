@@ -21,7 +21,7 @@ type ToolItem = {
 const TOOLS: ToolItem[] = [
   {key: 'duas', title: "Dua's"},
   {key: 'hadith', title: 'Hadith'},
-  {key: 'zakat', title: 'Zakat'},
+  {key: 'user', title: 'User', to: 'user'},
   {key: 'tasbih', title: 'Tasbih'},
   {key: 'names', title: '99 Names', to: 'names'},
   {key: 'calendar', title: 'Calendar'},

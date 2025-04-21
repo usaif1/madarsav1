@@ -8,7 +8,7 @@ import {Profile, ProfileDetails} from '../screens';
 // components
 import {BackButton, LogoutButton} from '@/components';
 
-const SplashStack = createNativeStackNavigator({
+const UserNavigator = createNativeStackNavigator({
   screenOptions: {
     headerStyle: {
       backgroundColor: '#411B7F',
@@ -17,7 +17,7 @@ const SplashStack = createNativeStackNavigator({
       color: '#FFFFFF',
     },
     presentation: Platform.OS === 'android' ? 'transparentModal' : 'card',
-    headerLeft: BackButton,
+    headerLeft: () => <BackButton />,
     headerShadowVisible: false,
   },
   screens: {
@@ -37,4 +37,4 @@ const SplashStack = createNativeStackNavigator({
   },
 });
 
-export default SplashStack;
+export default UserNavigator;

@@ -1,18 +1,11 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  Pressable,
-  Dimensions,
-} from 'react-native';
+import {View, FlatList, StyleSheet, Pressable, Dimensions} from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
 
 // components & data
 import {Name, namesData} from '../../../namesData';
-import {Body1Title2Bold} from '@/components';
+import {Body1Title2Bold, Body2Medium, Title3Bold} from '@/components';
 import Share from '@/assets/share-light.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
 import Close from '@/assets/close.svg';
@@ -27,6 +20,7 @@ const NamesList: React.FC = () => {
   const {colors} = useThemeStore();
 
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
 
   return (
     <>
@@ -34,15 +28,42 @@ const NamesList: React.FC = () => {
         data={namesData}
         keyExtractor={item => item.id}
         renderItem={({index, item}) => (
-          <NameCard index={index} item={item} setIsVisible={setIsVisible} />
+          <NameCard
+            index={index}
+            item={item}
+            setIsVisible={setIsVisible}
+            setCurrentItemIndex={setCurrentItemIndex}
+          />
         )}
       />
       <Modal
         isVisible={isVisible}
         backdropOpacity={0.9}
         style={stylesModal.modal}
-        backdropColor="#171717E5">
+        backdropColor="#171717">
         <View style={stylesModal.card}>
+          <Pressable
+            style={{position: 'absolute', top: 70, left: 10}}
+            onPress={() => setIsVisible(false)}>
+            <Close />
+          </Pressable>
+
+          <View
+            style={{
+              position: 'absolute',
+              top: 70,
+              backgroundColor: colors.secondary.neutral600,
+              paddingHorizontal: 12,
+              borderRadius: 100,
+              paddingVertical: 3,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Body1Title2Bold color="white">
+              {currentItemIndex + 1}/99
+            </Body1Title2Bold>
+          </View>
+
           <FastImage
             source={require('@/assets/names/name_xxl.png')}
             style={stylesModal.image}
@@ -85,12 +106,21 @@ interface NameCardProps {
   item: Name; // required – the list item itself
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   index: number;
+  setCurrentItemIndex: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const NameCard: React.FC<NameCardProps> = ({item, index, setIsVisible}) => {
+const NameCard: React.FC<NameCardProps> = ({
+  item,
+  index,
+  setIsVisible,
+  setCurrentItemIndex,
+}) => {
   return (
     <Pressable
-      onPress={() => setIsVisible(true)}
+      onPress={() => {
+        setCurrentItemIndex(index);
+        setIsVisible(true);
+      }}
       style={[styles.item, {borderTopWidth: index === 0 ? 1 : 0}]}>
       {/* ▶️ The FastImage avatar */}
       <FastImage
@@ -101,13 +131,13 @@ const NameCard: React.FC<NameCardProps> = ({item, index, setIsVisible}) => {
 
       {/* Name & meaning */}
       <View style={styles.textContainer}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.meaning}>{item.meaning}</Text>
+        <Title3Bold>{item.name}</Title3Bold>
+        <Body2Medium color="sub-heading">{item.meaning}</Body2Medium>
       </View>
 
       {/* Index badge */}
       <View style={styles.indexBadge}>
-        <Text style={styles.indexText}>{index + 1}</Text>
+        <Body1Title2Bold color="primary">{index + 1}</Body1Title2Bold>
       </View>
     </Pressable>
   );
@@ -148,7 +178,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#EAE6F9',
+    backgroundColor: '#F9F6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -195,19 +225,5 @@ const stylesModal = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 32,
     columnGap: 2,
-  },
-
-  /* text colours */
-  closeTxt: {
-    color: '#111827',
-    fontWeight: '600',
-  },
-  primaryTxt: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  secondaryTxt: {
-    color: '#5B3FC4',
-    fontWeight: '600',
   },
 });

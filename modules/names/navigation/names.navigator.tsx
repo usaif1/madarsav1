@@ -17,7 +17,7 @@ const SplashStack = createNativeStackNavigator({
       color: '#FFFFFF',
     },
     presentation: Platform.OS === 'android' ? 'transparentModal' : 'card',
-    headerLeft: BackButton,
+    headerLeft: () => <BackButton />,
     headerShadowVisible: false,
   },
   screens: {
