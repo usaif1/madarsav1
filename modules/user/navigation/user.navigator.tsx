@@ -3,34 +3,35 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Platform} from 'react-native';
 
 // screens
-import {Profile} from '../screens';
+import {Profile, ProfileDetails} from '../screens';
 
 // components
-import {BackButton, LogoutButton} from '@/components';
+import {BackButton, Header, LogoutButton} from '@/components';
 
-const SplashStack = createNativeStackNavigator({
+const UserNavigator = createNativeStackNavigator({
   screenOptions: {
-    // headerShown: false,
     presentation: Platform.OS === 'android' ? 'transparentModal' : 'card',
+    headerLeft: () => <BackButton />,
+    headerShadowVisible: false,
   },
   screens: {
     profile: {
       screen: Profile,
       options: {
-        title: 'Profile',
-        headerTitleStyle: {
-          color: '#FFFFFF',
-        },
-        headerRight: LogoutButton,
-        headerLeft: BackButton,
-        headerShadowVisible: false,
-        // statusBarStyle: 'light',
-        headerStyle: {
-          backgroundColor: '#411B7F',
-        },
+        header: () => (
+          <Header title="Profile" RightButton={() => <LogoutButton />} />
+        ),
+      },
+    },
+    profileDetails: {
+      screen: ProfileDetails,
+      options: {
+        title: 'Profile details',
+        header: () => <Header title="Profile details" />,
+        headerTitleAlign: 'center',
       },
     },
   },
 });
 
-export default SplashStack;
+export default UserNavigator;

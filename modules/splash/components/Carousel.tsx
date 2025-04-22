@@ -1,102 +1,228 @@
-import React, {useState, useRef} from 'react';
-import {View, Text, StyleSheet, Dimensions} from 'react-native';
+// dependencies
+import React, {useState, useEffect, useRef} from 'react';
+import {
+  View,
+  Animated,
+  StyleSheet,
+  Dimensions,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import Carousel from 'react-native-snap-carousel';
 
-const {width} = Dimensions.get('window');
+// components
+import {Body1Title2Regular, H4Bold} from '@/components';
+import {Divider} from '@/components';
+import PrayerTimesGraphic from './PrayerTimesGraphic';
 
-const carouselData = [
+// store
+import {useThemeStore} from '@/globalStore';
+import DecliningDayGraphic from './DecliningDayGraphic';
+import PrayerBeads from './PrayerBeads';
+
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
+
+type SlideContent = {title: string; description: string};
+
+interface Slide {
+  id: number;
+  content: SlideContent;
+}
+
+interface ProgressSegmentProps {
+  progress: Animated.Value;
+  style?: StyleProp<ViewStyle>;
+}
+
+const slides: Slide[] = [
   {
-    text: 'Day 1: Start your spiritual journey',
+    id: 1,
+    content: {
+      title: 'Your Spiritual Companion',
+      description:
+        'Your Complete Islamic Worship App: Quran, Hadith, Prayer Times, Qibla, Zakat, Tasbih and Spiritual Tools—All in One Place.',
+    },
   },
   {
-    text: 'Day 2: Keep progressing',
+    id: 2,
+    content: {
+      title: 'Nourish Your Soul',
+      description:
+        'Spiritual Healing at Your Fingertips Dua, Galleries, Mood Tracking—Your Divine Path to Inner Peace.',
+    },
   },
   {
-    text: 'Day 3: Reach your inner peace',
+    id: 3,
+    content: {
+      title: 'Combining Deen & Dunya',
+      description:
+        'Modern tech education rooted in Islamic principles—coding, design, and business skills taught within a traditional Maktab framework.',
+    },
   },
 ];
 
-const App = () => {
-  const carouselRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+const ProgressSegment: React.FC<ProgressSegmentProps> = ({progress, style}) => {
+  const {colors} = useThemeStore();
 
-  const renderItem = ({item}) => {
-    // Check if 'item' contains the expected properties
-    if (!item || !item.text) {
-      return null; // If data is missing, return null to avoid rendering errors
-    }
+  return (
+    <Animated.View
+      style={[
+        styles.segmentFill,
+        {backgroundColor: colors.primary.primary600},
+        style,
+        {
+          width: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0%', '100%'],
+          }),
+        },
+      ]}
+    />
+  );
+};
 
+export default function App() {
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const progressAnims = useRef<Animated.Value[]>([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+  const carouselRef = useRef<Carousel<Slide>>(null);
+
+  useEffect(() => {
+    progressAnims.forEach((anim, index) => {
+      if (index < activeIndex) {
+        anim.setValue(1);
+      }
+      if (index > activeIndex) {
+        anim.setValue(0);
+      }
+    });
+
+    const currentAnim = progressAnims[activeIndex];
+    currentAnim.setValue(0);
+
+    const animation = Animated.timing(currentAnim, {
+      toValue: 1,
+      duration: 10000,
+      useNativeDriver: false,
+    });
+
+    animation.start(({finished}) => {
+      if (finished && activeIndex < slides.length - 1) {
+        const newIndex = activeIndex + 1;
+        setActiveIndex(newIndex);
+        carouselRef.current?.snapToItem(newIndex);
+      }
+    });
+
+    return () => animation.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex]);
+
+  const handleSnapToItem = (index: number) => setActiveIndex(index);
+
+  const renderItem = ({item}: {item: Slide}) => {
     return (
-      <View style={styles.carouselItem}>
-        <Text style={styles.carouselText}>{item.text}</Text>
-        {/* Replaced Image with a View having red background */}
-        <View style={styles.carouselImagePlaceholder} />
+      <View style={styles.slide}>
+        <H4Bold>{item.content.title}</H4Bold>
+        <Divider height={6} />
+        <Body1Title2Regular color="sub-heading" style={{textAlign: 'center'}}>
+          {item.content.description}
+        </Body1Title2Regular>
+        <Divider height={33} />
+        <View>
+          <PrayerTimesGraphic />
+          <Divider height={10} />
+          <View
+            style={{flexDirection: 'row', alignItems: 'flex-start', columnGap: 10}}>
+            <DecliningDayGraphic />
+            <PrayerBeads />
+          </View>
+        </View>
       </View>
     );
   };
 
+  const {colors} = useThemeStore();
+
   return (
-    <View style={styles.container}>
-      {/* Purple snap indicator */}
-      <View style={styles.snapIndicator}>
-        <View
-          style={[
-            styles.snapIndicatorBar,
-            {width: (width / 3) * (activeIndex + 1)},
-          ]}
-        />
+    <>
+      <View style={styles.progressContainer}>
+        {progressAnims.map((progress, index) => (
+          <View
+            key={index}
+            style={[
+              styles.segmentContainer,
+              {backgroundColor: colors.primary.primary100},
+            ]}>
+            <ProgressSegment progress={progress} />
+          </View>
+        ))}
       </View>
 
-      {/* Carousel */}
-      <Carousel
+      <Carousel<Slide>
         ref={carouselRef}
-        data={carouselData}
+        data={slides}
         renderItem={renderItem}
-        sliderWidth={width}
-        itemWidth={width * 0.8}
-        onSnapToItem={index => setActiveIndex(index)}
-        inactiveSlideScale={0.95}
-        inactiveSlideOpacity={0.7}
+        sliderWidth={SCREEN_WIDTH}
+        itemWidth={SCREEN_WIDTH}
+        onSnapToItem={handleSnapToItem}
+        enableMomentum={false}
+        lockScrollWhileSnapping={true}
       />
-    </View>
+    </>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
+  progressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 20,
+    marginTop: 20,
+    gap: 4,
+  },
+  segmentContainer: {
     flex: 1,
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: 4,
+    borderRadius: 3,
+    overflow: 'hidden',
   },
-  snapIndicator: {
-    position: 'absolute',
-    top: 50,
-    width: width,
-    height: 5,
-    backgroundColor: 'purple',
-  },
-  snapIndicatorBar: {
+  segmentFill: {
     height: '100%',
-    backgroundColor: 'white',
+    borderRadius: 3,
   },
-  carouselItem: {
-    justifyContent: 'center',
+  slide: {
+    width: SCREEN_WIDTH,
+    paddingHorizontal: 27,
+    paddingTop: 18,
     alignItems: 'center',
   },
-  carouselText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 20,
+
+  daysContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
   },
-  carouselImagePlaceholder: {
-    width: width * 0.6,
-    height: 340,
-    backgroundColor: 'red',
+  dayText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  googleButton: {
+    backgroundColor: '#4285F4',
+    padding: 18,
     borderRadius: 10,
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
-
-export default App;

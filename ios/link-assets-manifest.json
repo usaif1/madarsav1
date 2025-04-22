@@ -1,0 +1,41 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/Geist-Black.ttf",
+      "sha1": "68476dc1b24a356d99e8b32c1de2b6acf8231e4b"
+    },
+    {
+      "path": "assets/fonts/Geist-Bold.ttf",
+      "sha1": "026330c06c7e45d360dfbd2ce6a803fe5f4d1a6a"
+    },
+    {
+      "path": "assets/fonts/Geist-ExtraBold.ttf",
+      "sha1": "c2805b3b87453a9db5633f250ea12b29dddceb46"
+    },
+    {
+      "path": "assets/fonts/Geist-ExtraLight.ttf",
+      "sha1": "df5c95e7da53b65006e4cf8dcb3e16a56ef29367"
+    },
+    {
+      "path": "assets/fonts/Geist-Light.ttf",
+      "sha1": "6115346b1691a5650edfe8e60c5c13a92833789f"
+    },
+    {
+      "path": "assets/fonts/Geist-Medium.ttf",
+      "sha1": "a600be28e2aace53fefa81e3f1fd1f05c978ef77"
+    },
+    {
+      "path": "assets/fonts/Geist-Regular.ttf",
+      "sha1": "edafc7c65cff343e301e4ccd5b5680bb726ff9e7"
+    },
+    {
+      "path": "assets/fonts/Geist-SemiBold.ttf",
+      "sha1": "fcdef3c84b886c795dd344a6fc663b1097793c16"
+    },
+    {
+      "path": "assets/fonts/Geist-Thin.ttf",
+      "sha1": "434d2a1d4260832117515be784c38773a7bab6c0"
+    }
+  ]
+}

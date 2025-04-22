@@ -2,7 +2,7 @@
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 // screens
-import {SplashScreen1, SplashScreen2, SplashScreen3} from '../screens';
+import {SplashScreen1, SplashScreen2} from '../screens';
 import {Platform} from 'react-native';
 
 const SplashStack = createNativeStackNavigator({
@@ -13,7 +13,6 @@ const SplashStack = createNativeStackNavigator({
   screens: {
     screen1: SplashScreen1,
     screen2: SplashScreen2,
-    screen3: SplashScreen3
   },
 });
 
