@@ -1,5 +1,5 @@
 // dependencies
-import {Pressable, StyleSheet, View} from 'react-native';
+import {Dimensions, Pressable, StyleSheet, View} from 'react-native';
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -9,6 +9,8 @@ import {Body1Title2Bold, Divider, Title1Regular} from '@/components';
 // assets
 import DecliningDay from '@/assets/splash/decling_day.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
+
+const {height} = Dimensions.get('window');
 
 const SplashScreen1: React.FC = () => {
   return (
@@ -26,7 +28,7 @@ const SplashScreen1: React.FC = () => {
           borderRadius: 16,
           borderWidth: 1,
           borderColor: '#F5F5F5',
-          height: 161,
+          height: height * 0.2,
         }}>
         <View style={{alignItems: 'flex-end'}}>
           <DecliningDay />
@@ -45,6 +47,9 @@ const SplashScreen1: React.FC = () => {
 
 const styles = StyleSheet.create({
   button: {
+    position: 'absolute',
+    bottom: 13,
+    alignSelf: 'center',
     paddingVertical: 5,
     flexDirection: 'row',
     borderRadius: 100,

@@ -1,5 +1,5 @@
 // dependencies
-import {StyleSheet, View} from 'react-native';
+import {Dimensions, StyleSheet, View} from 'react-native';
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 import FastImage from 'react-native-fast-image';
@@ -7,6 +7,8 @@ import FastImage from 'react-native-fast-image';
 // assets
 import PrayerBeadsText from '@/assets/splash/prayer_beads_text.svg';
 import MarblePath from '@/assets/splash/marble_path.svg';
+
+const {height} = Dimensions.get('window');
 
 const PrayerBeads = () => {
   return (
@@ -17,7 +19,7 @@ const PrayerBeads = () => {
         style={{
           paddingTop: 16,
           paddingHorizontal: 16,
-          height: 161,
+          height: height * 0.2,
           width: '100%',
           position: 'relative',
           overflow: 'hidden',
