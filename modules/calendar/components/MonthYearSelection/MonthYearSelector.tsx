@@ -53,19 +53,22 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
   
   // Initial scroll to position
   useEffect(() => {
-    if (yearListRef.current && initialYearIndex >= 0) {
-      yearListRef.current.scrollToIndex({
-        index: Math.max(0, initialYearIndex - 1),
-        animated: false,
-      });
-    }
-    
-    if (monthListRef.current && initialMonthIndex >= 0) {
-      monthListRef.current.scrollToIndex({
-        index: Math.max(0, initialMonthIndex - 1),
-        animated: false,
-      });
-    }
+    // Use setTimeout to ensure the FlatList has rendered before scrolling
+    setTimeout(() => {
+      if (yearListRef.current && initialYearIndex >= 0) {
+        yearListRef.current.scrollToOffset({
+          offset: initialYearIndex * ITEM_HEIGHT,
+          animated: false,
+        });
+      }
+      
+      if (monthListRef.current && initialMonthIndex >= 0) {
+        monthListRef.current.scrollToOffset({
+          offset: initialMonthIndex * ITEM_HEIGHT,
+          animated: false,
+        });
+      }
+    }, 100);
   }, [initialYearIndex, initialMonthIndex]);
 
   const handleConfirm = () => {
@@ -84,7 +87,17 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         styles.option,
         selectedYear === item && styles.selectedOption,
       ]}
-      onPress={() => setSelectedYear(item)}>
+      onPress={() => {
+        setSelectedYear(item);
+        // Scroll to the selected item when pressed
+        if (yearListRef.current) {
+          const index = years.findIndex(year => year === item);
+          yearListRef.current.scrollToOffset({
+            offset: index * ITEM_HEIGHT,
+            animated: true,
+          });
+        }
+      }}>
       <Body1Title2Bold
         color={selectedYear === item ? 'primary' : 'heading'}>
         {item}
@@ -98,7 +111,17 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         styles.option,
         selectedMonth === item && styles.selectedOption,
       ]}
-      onPress={() => setSelectedMonth(item)}>
+      onPress={() => {
+        setSelectedMonth(item);
+        // Scroll to the selected item when pressed
+        if (monthListRef.current) {
+          const index = months.findIndex(month => month === item);
+          monthListRef.current.scrollToOffset({
+            offset: index * ITEM_HEIGHT,
+            animated: true,
+          });
+        }
+      }}>
       <Body1Title2Bold
         color={selectedMonth === item ? 'primary' : 'heading'}>
         {item}
@@ -128,10 +151,15 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
             renderItem={renderYearItem}
             keyExtractor={item => item}
             showsVerticalScrollIndicator={false}
-            snapToInterval={styles.option.height}
+            snapToInterval={ITEM_HEIGHT}
             decelerationRate="fast"
             onScrollToIndexFailed={handleScrollError}
             contentContainerStyle={styles.scrollContent}
+            getItemLayout={(data, index) => ({
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * index,
+              index,
+            })}
           />
         </View>
 
@@ -143,10 +171,15 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
             renderItem={renderMonthItem}
             keyExtractor={item => item}
             showsVerticalScrollIndicator={false}
-            snapToInterval={styles.option.height}
+            snapToInterval={ITEM_HEIGHT}
             decelerationRate="fast"
             onScrollToIndexFailed={handleScrollError}
             contentContainerStyle={styles.scrollContent}
+            getItemLayout={(data, index) => ({
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * index,
+              index,
+            })}
           />
         </View>
       </View>
@@ -179,7 +212,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '40%',
+    maxHeight: '50%', // Increased from 40% to 50%
   },
   header: {
     flexDirection: 'row',
@@ -191,23 +224,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    height: ITEM_HEIGHT * VISIBLE_ITEMS,
+    height: ITEM_HEIGHT * 3 + 10, // Adjusted to show exactly 3 items
   },
   column: {
     flex: 1,
     padding: 10,
-    height: ITEM_HEIGHT * VISIBLE_ITEMS,
+    height: ITEM_HEIGHT * 3 + 10, // Adjusted to match selectionArea
     overflow: 'hidden',
   },
   scrollContent: {
-    paddingVertical: ITEM_HEIGHT,
+    paddingTop: ITEM_HEIGHT,
+    paddingBottom: ITEM_HEIGHT,
   },
   option: {
     height: ITEM_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    marginBottom: 8,
+    marginBottom: 0, // Removed bottom margin to fit exactly 3 items
   },
   selectedOption: {
     backgroundColor: '#F5F5F5',
