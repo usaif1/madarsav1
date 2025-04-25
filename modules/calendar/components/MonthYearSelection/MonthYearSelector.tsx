@@ -99,7 +99,7 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         }
       }}>
       <Body1Title2Bold
-        color={selectedYear === item ? 'primary' : 'heading'}>
+        color={selectedYear === item ? 'heading' : 'secondary'}>
         {item}
       </Body1Title2Bold>
     </Pressable>
@@ -123,7 +123,7 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         }
       }}>
       <Body1Title2Bold
-        color={selectedMonth === item ? 'primary' : 'heading'}>
+        color={selectedMonth === item ? 'heading' : 'secondary'}>
         {item}
       </Body1Title2Bold>
     </Pressable>
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 60,
     alignItems: 'center',
     marginTop: 10,
   },

@@ -36,44 +36,42 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   // Prepare marked dates using custom styles
   const markedDates: {[key: string]: any} = {}; // Initialize as any or a more specific type
 
-  // Style for today
-  markedDates[formattedToday] = {
-    customStyles: {
-      container: {
-        backgroundColor: '#F0EAFB', // Today's background
-        borderRadius: radiusMd,
+  // Style for today (only if not selected)
+  if (formattedToday !== formattedSelected) {
+    markedDates[formattedToday] = {
+      customStyles: {
+        container: {
+          backgroundColor: colors.primary.primary300, // Today's background (not selected)
+          borderRadius: radiusMd,
+        },
+        text: {
+          color: colors.primary.primary600, 
+        },
       },
-      text: {
-        // Use todayTextColor from theme for consistency, or define explicitly
-        color: colors.primary.primary600, 
-      },
-    },
-    // Add dot if today is the special marked date
-    ...(formattedToday === specialMarkedDate && { marked: true, dotColor: '#6D48B8' }), // Adjust dot color if needed on F0EAFB background
-  };
+    };
+  }
 
   // Style for selected date (overrides today if same)
   markedDates[formattedSelected] = {
     selected: true,
     customStyles: {
       container: {
-        backgroundColor: colors.primary.primary600, // Selected background
+        backgroundColor: colors.primary.primary500, // Selected background
         borderRadius: radiusMd,
       },
       text: {
         color: 'white', // Selected text color
       },
     },
-     // Add dot if selected date is the special marked date
-     ...(formattedSelected === specialMarkedDate && { marked: true, dotColor: 'white' }), // White dot on selected background
+    ...(formattedSelected === specialMarkedDate && { marked: true, dotColor: 'white' }),
   };
 
   // Handle the dot for the special marked date if it's neither today nor selected
   if (specialMarkedDate !== formattedToday && specialMarkedDate !== formattedSelected) {
     markedDates[specialMarkedDate] = {
-      ...(markedDates[specialMarkedDate] || {}), // Keep potential existing styles
+      ...(markedDates[specialMarkedDate] || {}),
       marked: true,
-      dotColor: '#6D48B8',
+      dotColor: colors.primary.primary600,
     };
   }
 

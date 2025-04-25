@@ -41,8 +41,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({date, marking, state}) => {
       <View
         style={[
           styles.dayContainer,
-          isSelected && {backgroundColor: colors.primary.primary600, borderRadius: 8},
-          isToday && !isSelected && {backgroundColor: colors.primary.primary300, borderRadius: 8}
+          isSelected && {backgroundColor: colors.primary.primary500, borderRadius: 8},
+          !isSelected && isToday && {backgroundColor: colors.primary.primary300, borderRadius: 8}
         ]}>
         <Body2Medium color={isSelected ? 'white' : isDisabled ? 'secondary' : 'heading'}>
           {date.day}
