@@ -1,6 +1,6 @@
 // modules/calendar/components/MonthYearSelector/MonthYearSelector.tsx
-import React, {useState} from 'react';
-import {View, StyleSheet, Pressable} from 'react-native';
+import React, {useState, useRef, useEffect} from 'react';
+import {View, StyleSheet, Pressable, FlatList, Dimensions} from 'react-native';
 import {Body1Title2Bold, Title3Bold} from '@/components';
 
 // store
@@ -37,13 +37,77 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
   const {colors} = useThemeStore();
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [selectedYear, setSelectedYear] = useState(initialYear);
+  const [hasChanged, setHasChanged] = useState(false);
+  
+  const yearListRef = useRef<FlatList>(null);
+  const monthListRef = useRef<FlatList>(null);
+  
+  // Calculate initial indices for scrolling
+  const initialYearIndex = years.findIndex(year => year === initialYear);
+  const initialMonthIndex = months.findIndex(month => month === initialMonth);
+  
+  // Monitor changes to selection
+  useEffect(() => {
+    setHasChanged(selectedMonth !== initialMonth || selectedYear !== initialYear);
+  }, [selectedMonth, selectedYear, initialMonth, initialYear]);
+  
+  // Initial scroll to position
+  useEffect(() => {
+    if (yearListRef.current && initialYearIndex >= 0) {
+      yearListRef.current.scrollToIndex({
+        index: Math.max(0, initialYearIndex - 1),
+        animated: false,
+      });
+    }
+    
+    if (monthListRef.current && initialMonthIndex >= 0) {
+      monthListRef.current.scrollToIndex({
+        index: Math.max(0, initialMonthIndex - 1),
+        animated: false,
+      });
+    }
+  }, [initialYearIndex, initialMonthIndex]);
 
   const handleConfirm = () => {
-    onConfirm(
-      selectedMonth,
-      selectedYear,
-      getIslamicDate(selectedMonth, selectedYear)
-    );
+    if (hasChanged) {
+      onConfirm(
+        selectedMonth,
+        selectedYear,
+        getIslamicDate(selectedMonth, selectedYear)
+      );
+    }
+  };
+  
+  const renderYearItem = ({item}: {item: string}) => (
+    <Pressable
+      style={[
+        styles.option,
+        selectedYear === item && styles.selectedOption,
+      ]}
+      onPress={() => setSelectedYear(item)}>
+      <Body1Title2Bold
+        color={selectedYear === item ? 'primary' : 'heading'}>
+        {item}
+      </Body1Title2Bold>
+    </Pressable>
+  );
+  
+  const renderMonthItem = ({item}: {item: string}) => (
+    <Pressable
+      style={[
+        styles.option,
+        selectedMonth === item && styles.selectedOption,
+      ]}
+      onPress={() => setSelectedMonth(item)}>
+      <Body1Title2Bold
+        color={selectedMonth === item ? 'primary' : 'heading'}>
+        {item}
+      </Body1Title2Bold>
+    </Pressable>
+  );
+  
+  const handleScrollError = (error: any) => {
+    console.log('Scroll to index failed:', error);
   };
 
   return (
@@ -58,55 +122,56 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
       <View style={styles.selectionArea}>
         {/* Year Column */}
         <View style={styles.column}>
-          {years.map(year => (
-            <Pressable
-              key={year}
-              style={[
-                styles.option,
-                selectedYear === year && {
-                  backgroundColor: colors.primary.primary100,
-                },
-              ]}
-              onPress={() => setSelectedYear(year)}>
-              <Body1Title2Bold
-                color={selectedYear === year ? 'primary' : 'heading'}>
-                {year}
-              </Body1Title2Bold>
-            </Pressable>
-          ))}
+          <FlatList
+            ref={yearListRef}
+            data={years}
+            renderItem={renderYearItem}
+            keyExtractor={item => item}
+            showsVerticalScrollIndicator={false}
+            snapToInterval={styles.option.height}
+            decelerationRate="fast"
+            onScrollToIndexFailed={handleScrollError}
+            contentContainerStyle={styles.scrollContent}
+          />
         </View>
 
         {/* Month Column */}
         <View style={styles.column}>
-          {months.map(month => (
-            <Pressable
-              key={month}
-              style={[
-                styles.option,
-                selectedMonth === month && {
-                  backgroundColor: colors.primary.primary100,
-                },
-              ]}
-              onPress={() => setSelectedMonth(month)}>
-              <Body1Title2Bold
-                color={selectedMonth === month ? 'primary' : 'heading'}>
-                {month}
-              </Body1Title2Bold>
-            </Pressable>
-          ))}
+          <FlatList
+            ref={monthListRef}
+            data={months}
+            renderItem={renderMonthItem}
+            keyExtractor={item => item}
+            showsVerticalScrollIndicator={false}
+            snapToInterval={styles.option.height}
+            decelerationRate="fast"
+            onScrollToIndexFailed={handleScrollError}
+            contentContainerStyle={styles.scrollContent}
+          />
         </View>
       </View>
 
       <Pressable
-        style={[styles.confirmButton, {backgroundColor: colors.primary.primary600}]}
-        onPress={handleConfirm}>
-        <Body1Title2Bold color="white">Confirm</Body1Title2Bold>
+        style={[
+          styles.confirmButton, 
+          hasChanged 
+            ? {backgroundColor: colors.primary.primary600}
+            : styles.disabledButton
+        ]}
+        onPress={handleConfirm}
+        disabled={!hasChanged}>
+        <Body1Title2Bold color={hasChanged ? "white" : "heading"}>Confirm</Body1Title2Bold>
       </Pressable>
     </View>
   );
 };
 
 export default MonthYearSelector;
+
+// Get screen dimensions to calculate proper sizing
+const {height: screenHeight} = Dimensions.get('window');
+const ITEM_HEIGHT = 50; // Height of each option
+const VISIBLE_ITEMS = 3; // Number of items to show at once
 
 const styles = StyleSheet.create({
   container: {
@@ -126,21 +191,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    height: ITEM_HEIGHT * VISIBLE_ITEMS,
   },
   column: {
     flex: 1,
     padding: 10,
+    height: ITEM_HEIGHT * VISIBLE_ITEMS,
+    overflow: 'hidden',
+  },
+  scrollContent: {
+    paddingVertical: ITEM_HEIGHT,
   },
   option: {
-    padding: 12,
+    height: ITEM_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: 10,
     marginBottom: 8,
-    alignItems: 'center',
+  },
+  selectedOption: {
+    backgroundColor: '#F5F5F5',
   },
   confirmButton: {
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#F5F5F5',
   },
 });
