@@ -147,14 +147,18 @@ export default CustomCalendar;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F5F5F7',
+    backgroundColor: 'white',
   },
   dayNamesContainer: {
     flexDirection: 'row',
     backgroundColor: '#F0EAFB',
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 4,
     justifyContent: 'space-around',
+    borderRadius: 8,
+    marginTop: 8,
+    width: '98%',
+    alignSelf: 'center',
   },
   dayNameBox: {
     alignItems: 'center',

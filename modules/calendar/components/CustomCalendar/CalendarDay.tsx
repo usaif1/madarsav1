@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, StyleSheet} from 'react-native';
-import {Body2Regular, Title3Bold} from '@/components';
+import {Body2Regular, Body2Medium} from '@/components';
 
 // store
 import {useThemeStore} from '@/globalStore';
@@ -44,9 +44,9 @@ const CalendarDay: React.FC<CalendarDayProps> = ({date, marking, state}) => {
           isSelected && {backgroundColor: colors.primary.primary600, borderRadius: 8},
           isToday && !isSelected && {backgroundColor: colors.primary.primary300, borderRadius: 8}
         ]}>
-        <Title3Bold color={isSelected ? 'white' : isDisabled ? 'secondary' : 'heading'}>
+        <Body2Medium color={isSelected ? 'white' : isDisabled ? 'secondary' : 'heading'}>
           {date.day}
-        </Title3Bold>
+        </Body2Medium>
         <Body2Regular color={isSelected ? 'white' : 'sub-heading'}>
           {hijriDate.day}
         </Body2Regular>
