@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import {View, StyleSheet} from 'react-native';
 
 // components
-// import {CustomCalendar, TabBar, PrayerTimesList, FastingView, EventsList} from '../components';
+import {CustomCalendar, TabBar, PrayerTimesList, FastingView, EventsList} from '../components';
 import {Divider} from '@/components';
 
 type TabType = 'salah' | 'fasting' | 'events' | 'today';
@@ -14,17 +14,17 @@ const CalendarScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* <CustomCalendar 
+      <CustomCalendar 
         onDateSelect={setSelectedDate}
         selectedDate={selectedDate}
-      /> */}
+      />
       <Divider height={10} />
-      {/* <TabBar activeTab={activeTab} onTabChange={setActiveTab} /> */}
+      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
       <Divider height={10} />
       
-      {/* {activeTab === 'salah' && <PrayerTimesList selectedDate={selectedDate} />}
+      {activeTab === 'salah' && <PrayerTimesList selectedDate={selectedDate} />}
       {activeTab === 'fasting' && <FastingView selectedDate={selectedDate} />}
-      {activeTab === 'events' && <EventsList selectedDate={selectedDate} />} */}
+      {activeTab === 'events' && <EventsList selectedDate={selectedDate} />}
     </View>
   );
 };
