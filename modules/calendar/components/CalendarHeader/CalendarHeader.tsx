@@ -34,26 +34,31 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack}) => {
 
   return (
     <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
-      {/* Left: Back button */}
-      <Pressable
-        onPress={onBack}
-        hitSlop={10}
-        style={styles.backButton}>
-        <BackButton />
-      </Pressable>
+      <View style={styles.headerContent}>
+        {/* Left: Back button */}
+        <Pressable
+          onPress={onBack}
+          hitSlop={10}
+          style={styles.backButton}>
+          <BackButton />
+        </Pressable>
 
-      {/* Center: Title with dropdown */}
-      <Pressable onPress={toggleModal} style={styles.titleContainer}>
-        <View style={styles.titleRow}>
-          <Title3Bold color="white">
-            {selectedMonth} {selectedYear}
-          </Title3Bold>
-          <DownArrow width={16} height={16} fill="#FFFFFF" style={styles.arrow} />
-        </View>
-        <Body2Medium color="white" style={styles.subtitle}>
-          {islamicDate}
-        </Body2Medium>
-      </Pressable>
+        {/* Center: Title with dropdown */}
+        <Pressable onPress={toggleModal} style={styles.titleContainer}>
+          <View style={styles.titleRow}>
+            <Title3Bold color="white">
+              {selectedMonth} {selectedYear}
+            </Title3Bold>
+            <DownArrow width={16} height={16} fill="#FFFFFF" style={styles.arrow} />
+          </View>
+          <Body2Medium color="white" style={styles.subtitle}>
+            {islamicDate}
+          </Body2Medium>
+        </Pressable>
+        
+        {/* Empty view for balance */}
+        <View style={styles.backButton} />
+      </View>
 
       {/* Month/Year Selector Modal */}
       <Modal
@@ -79,15 +84,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#411B7F',
     paddingBottom: 12,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
   backButton: {
-    position: 'absolute',
-    left: 18,
-    zIndex: 1,
-    top: 12,
+    width: 40,
+    paddingLeft: 18,
   },
   titleContainer: {
     alignItems: 'center',
-    paddingTop: 12,
+    flex: 1,
   },
   titleRow: {
     flexDirection: 'row',
