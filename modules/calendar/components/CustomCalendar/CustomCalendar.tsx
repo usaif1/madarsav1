@@ -57,6 +57,11 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
           const newDate = new Date(day.timestamp);
           onDateSelect(newDate);
         }}
+        // Hide month navigation arrows
+        hideArrows={true}
+        // Hide month header with name
+        hideExtraDays={true}
+        renderHeader={() => null}
         theme={{
           calendarBackground: '#F5F5F7',
           textSectionTitleColor: '#333338',
