@@ -1,5 +1,4 @@
-// modules/calendar/components/CustomCalendar/CustomCalendar.tsx
-import React from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {StyleSheet, View, Text} from 'react-native';
 import {Calendar, DateData} from 'react-native-calendars';
 import CalendarDay from './CalendarDay';
@@ -15,7 +14,6 @@ interface CustomCalendarProps {
   year?: number;
 }
 
-// Helper function to format dates for the calendar
 const formatDate = (date: Date): string => {
   return date.toISOString().split('T')[0]; // YYYY-MM-DD
 };
@@ -27,68 +25,73 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   year,
 }) => {
   const {colors} = useThemeStore();
-  // Assuming radius.md is available, otherwise define it. Using 8 for now.
-  const radiusMd = 8; // Replace with theme value if available e.g., radius.md
+  const radiusMd = 8;
 
-  // Use month/year props if provided
-  const displayMonth = typeof month === 'number' ? month : selectedDate.getMonth();
-  const displayYear = typeof year === 'number' ? year : selectedDate.getFullYear();
+  // Memoize the current date string to prevent unnecessary re-renders
+  const currentDateString = useMemo(() => {
+    const displayMonth = typeof month === 'number' ? month : selectedDate.getMonth();
+    const displayYear = typeof year === 'number' ? year : selectedDate.getFullYear();
+    return `${displayYear}-${(displayMonth + 1).toString().padStart(2, '0')}-01`;
+  }, [month, year, selectedDate]);
+
   const today = new Date();
   const formattedToday = formatDate(today);
   const formattedSelected = formatDate(selectedDate);
-  const specialMarkedDate = '2025-04-26'; // Date to show a dot
+  const specialMarkedDate = formatDate(new Date(2025, 3, 26)); // Fixed hardcoded date
 
-  // Prepare marked dates using custom styles
-  const markedDates: {[key: string]: any} = {}; // Initialize as any or a more specific type
+  // Prepare marked dates
+  const markedDates = useMemo(() => {
+    const marked: {[key: string]: any} = {};
 
-  // Style for today (only if not selected)
-  if (formattedToday !== formattedSelected) {
-    markedDates[formattedToday] = {
+    // Style for today (only if not selected)
+    if (formattedToday !== formattedSelected) {
+      marked[formattedToday] = {
+        customStyles: {
+          container: {
+            backgroundColor: colors.primary.primary300,
+            borderRadius: radiusMd,
+          },
+          text: {
+            color: colors.primary.primary600, 
+          },
+        },
+      };
+    }
+
+    // Style for selected date (overrides today if same)
+    marked[formattedSelected] = {
+      selected: true,
       customStyles: {
         container: {
-          backgroundColor: colors.primary.primary300, // Today's background (not selected)
+          backgroundColor: colors.primary.primary500,
           borderRadius: radiusMd,
         },
         text: {
-          color: colors.primary.primary600, 
+          color: 'white',
         },
       },
+      ...(formattedSelected === specialMarkedDate && { marked: true, dotColor: 'white' }),
     };
-  }
 
-  // Style for selected date (overrides today if same)
-  markedDates[formattedSelected] = {
-    selected: true,
-    customStyles: {
-      container: {
-        backgroundColor: colors.primary.primary500, // Selected background
-        borderRadius: radiusMd,
-      },
-      text: {
-        color: 'white', // Selected text color
-      },
-    },
-    ...(formattedSelected === specialMarkedDate && { marked: true, dotColor: 'white' }),
-  };
+    // Handle the dot for the special marked date
+    if (specialMarkedDate !== formattedToday && specialMarkedDate !== formattedSelected) {
+      marked[specialMarkedDate] = {
+        ...(marked[specialMarkedDate] || {}),
+        marked: true,
+        dotColor: colors.primary.primary600,
+      };
+    }
 
-  // Handle the dot for the special marked date if it's neither today nor selected
-  if (specialMarkedDate !== formattedToday && specialMarkedDate !== formattedSelected) {
-    markedDates[specialMarkedDate] = {
-      ...(markedDates[specialMarkedDate] || {}),
-      marked: true,
-      dotColor: colors.primary.primary600,
-    };
-  }
+    return marked;
+  }, [formattedToday, formattedSelected, specialMarkedDate, colors, radiusMd]);
 
-  // New function to handle day press and logging
   const handleDayPress = (day: DateData) => {
     const newDate = new Date(day.timestamp);
-    console.log('Date Selected Event:', day); // Log the event object
-    console.log('Selected Date Value:', newDate); // Log the new Date object
+    console.log('Date Selected Event:', day);
+    console.log('Selected Date Value:', newDate);
     onDateSelect(newDate);
   };
 
-  // Custom Day Names Header component
   const CustomDayHeader = () => {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
@@ -96,7 +99,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
       <View style={styles.dayNamesContainer}>
         {dayNames.map((day, index) => (
           <View key={index} style={styles.dayNameBox}>
-            {/* If Body1Title2Medium component exists, use it, otherwise use Text */}
             {Body1Title2Medium ? (
               <Body1Title2Medium color="heading">{day}</Body1Title2Medium>
             ) : (
@@ -110,18 +112,17 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Render custom day names header outside the Calendar */}
       <CustomDayHeader />
       <Calendar
+        key={currentDateString} // Force re-render when month/year changes
         markingType={'custom'}
         markedDates={markedDates}
         onDayPress={handleDayPress}
         hideArrows={true}
         hideExtraDays={true}
         renderHeader={() => null}
-        // Hide the default day names row
         customHeader={() => null}
-        current={`${displayYear}-${(displayMonth + 1).toString().padStart(2, '0')}-01`}
+        current={currentDateString}
         theme={{
           calendarBackground: 'white',
           textSectionTitleColor: '#333338',
@@ -136,9 +137,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         }}
         dayComponent={({date, state, marking}) => (
           <CalendarDay
-            date={date as any}
-            state={state as any}
-            marking={marking as any}
+            date={date}
+            state={state}
+            marking={marking}
           />
         )}
       />
@@ -165,10 +166,10 @@ const styles = StyleSheet.create({
   dayNameBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 38, // Match the day cell width
+    width: 38,
   },
   dayNameText: {
-    fontWeight: '500', // Medium font weight for Body1Title2Medium approximation
+    fontWeight: '500',
     fontSize: 14,
     color: '#333338',
   },
