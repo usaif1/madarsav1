@@ -1,7 +1,9 @@
 // modules/calendar/components/FastingView/FastingView.tsx
 import React, {useState} from 'react';
 import {View, StyleSheet, Pressable} from 'react-native';
-import {Body1Title2Bold, Body2Medium, Title3Bold} from '@/components';
+import {Body1Title2Bold, Body1Title2Medium, Body2Medium, Title3Bold} from '@/components';
+import {FazrIcon, MaghribIcon, FazrWhiteIcon, MaghribWhiteIcon} from '@/assets/calendar';
+import {ShadowColors} from '@/theme/shadows';
 
 // store
 import {useThemeStore} from '@/globalStore';
@@ -20,32 +22,84 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
   
   return (
     <View style={styles.container}>
-      <View style={styles.timesContainer}>
+      <View style={[styles.timesContainer, {
+        width: 400,
+        height: 110,
+        paddingRight: 20,
+        paddingLeft: 20,
+        gap: 24,
+      }]}>
         <Pressable
           style={[
             styles.timeBox,
-            activeType === 'sehri' && styles.activeTimeBox,
-            activeType === 'sehri' && { borderColor: colors.primary.primary600 }
+            {
+              width: 171.5,
+              height: 120,
+              borderRadius: 12,
+              paddingTop: 12,
+              paddingRight: 20,
+              paddingBottom: 12,
+              paddingLeft: 20,
+              backgroundColor: activeType === 'sehri' ? colors.primary.primary50 : '#FFFFFF',
+              borderColor: activeType === 'sehri' ? colors.primary.primary300 : ShadowColors['border-light'],
+              borderWidth: 1,
+              gap: 8,
+            },
           ]}
           onPress={() => setActiveType('sehri')}>
-          <View style={styles.iconContainer}>
-            {/* This would be your SVG icon */}
+          <View
+            style={[
+              styles.iconContainer,
+              {
+                borderRadius: 8,
+                width: 32,
+                height: 32,
+                backgroundColor: activeType === 'sehri' ? colors.primary.primary500 : '#F9F6FF',
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+            ]}
+          >
+            {activeType === 'sehri' ? <FazrWhiteIcon /> : <FazrIcon />}
           </View>
-          <Title3Bold>{sehriTime}</Title3Bold>
+          <Body1Title2Medium>{sehriTime}</Body1Title2Medium>
           <Body2Medium color="sub-heading">Sehri time</Body2Medium>
         </Pressable>
         
         <Pressable
           style={[
             styles.timeBox,
-            activeType === 'iftar' && styles.activeTimeBox,
-            activeType === 'iftar' && { borderColor: colors.primary.primary600 }
+            {
+              width: 161.5,
+              height: 110,
+              borderRadius:12,
+              paddingTop: 12,
+              paddingRight: 20,
+              paddingBottom: 12,
+              paddingLeft: 20,
+              backgroundColor: activeType === 'iftar' ? colors.primary.primary50 : '#FFFFFF',
+              borderColor: activeType === 'iftar' ? colors.primary.primary300 : ShadowColors['border-light'],
+              borderWidth: 1,
+              gap: 8,
+            },
           ]}
           onPress={() => setActiveType('iftar')}>
-          <View style={styles.iconContainer}>
-            {/* This would be your SVG icon */}
+          <View
+            style={[
+              styles.iconContainer,
+              {
+                borderRadius: 8,
+                width: 32,
+                height: 32,
+                backgroundColor: activeType === 'iftar' ? colors.primary.primary500 : '#F9F6FF',
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+            ]}
+          >
+            {activeType === 'iftar' ? <MaghribWhiteIcon /> : <MaghribIcon />}
           </View>
-          <Title3Bold>{iftarTime}</Title3Bold>
+          <Body1Title2Medium>{iftarTime}</Body1Title2Medium>
           <Body2Medium color="sub-heading">Iftar time</Body2Medium>
         </Pressable>
       </View>
@@ -89,16 +143,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   timeBox: {
-    width: '48%',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#F5F5F5',
-  },
-  activeTimeBox: {
-    borderWidth: 2,
   },
   iconContainer: {
     width: 40,
