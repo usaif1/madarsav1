@@ -103,7 +103,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     return (
-      <View style={[styles.dayNamesContainer, {backgroundColor: colors.secondary.neutral100}]}>
+      <View style={[styles.dayNamesContainer, {backgroundColor: colors.primary.primary100}]}>
         {dayNames.map((day, index) => (
           <View key={index} style={styles.dayNameBox}>
             {Body1Title2Medium ? (
