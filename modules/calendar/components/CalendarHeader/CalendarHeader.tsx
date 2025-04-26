@@ -13,6 +13,10 @@ import MonthYearSelector from '../MonthYearSelection/MonthYearSelector';
 // icons
 import DownArrow from '@/assets/calendar/down-arrow.svg'; // You'll need to create/add this SVG
 
+// theme
+import {useThemeStore} from '@/globalStore';
+import {scale, verticalScale} from '@/theme/responsive';
+
 // Month names for mapping
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -26,6 +30,7 @@ interface CalendarHeaderProps {
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChange}) => {
   const insets = useSafeAreaInsets();
+  const {colors, shadows} = useThemeStore();
 
   // Get current date values
   const now = new Date();
@@ -72,8 +77,11 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
     if (onMonthYearChange) onMonthYearChange(month, year);
   };
 
+  // Use semantic color token for typography components
+  const textColor = 'white';
+
   return (
-    <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
+    <View style={[styles.headerContainer, { backgroundColor: colors.primary.primary800, paddingTop: insets.top, paddingBottom: verticalScale(12) }, shadows.md1]}>
       <View style={styles.headerContent}>
         {/* Left: Back button */}
         <Pressable
@@ -86,16 +94,15 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
         {/* Center: Title with dropdown */}
         <Pressable onPress={toggleModal} style={styles.titleContainer}>
           <View style={styles.titleRow}>
-            <Title3Bold color="white">
+            <Title3Bold color={textColor}>
               {selectedMonth} {selectedYear}
             </Title3Bold>
-            <DownArrow width={16} height={16} fill="#FFFFFF" style={styles.arrow} />
+            <DownArrow width={scale(16)} height={scale(16)} fill={textColor} style={styles.arrow} />
           </View>
-          <Body2Medium color="white" style={styles.subtitle}>
+          <Body2Medium color={textColor} style={styles.subtitle}>
             {islamicDate}
           </Body2Medium>
         </Pressable>
-        
         {/* Empty view for balance */}
         <View style={styles.backButton} />
       </View>
@@ -121,18 +128,17 @@ export default CalendarHeader;
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#411B7F',
-    paddingBottom: 12,
+    // backgroundColor and paddingTop/paddingBottom are set inline for theme and responsive
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: verticalScale(12),
   },
   backButton: {
-    width: 40,
-    paddingLeft: 18,
+    width: scale(40),
+    paddingLeft: scale(18),
   },
   titleContainer: {
     alignItems: 'center',
@@ -143,10 +149,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   arrow: {
-    marginLeft: 4,
+    marginLeft: scale(4),
   },
   subtitle: {
-    marginTop: 2,
+    marginTop: verticalScale(2),
   },
   modal: {
     justifyContent: 'flex-end',
