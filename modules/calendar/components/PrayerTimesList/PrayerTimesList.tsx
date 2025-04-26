@@ -9,6 +9,8 @@ import {
   MaghribIcon,
   IshaIcon,
 } from '@/assets/calendar';
+import {useThemeStore} from '@/globalStore';
+import {ShadowColors} from '@/theme/shadows';
 
 interface PrayerTime {
   id: string;
@@ -35,16 +37,39 @@ const getPrayerTimes = (date: Date): PrayerTime[] => {
 };
 
 const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
+  const {colors} = useThemeStore();
   const prayerTimes = getPrayerTimes(selectedDate);
   
   return (
     <FlatList
       data={prayerTimes}
       keyExtractor={item => item.id}
-      renderItem={({item}) => (
-        <View style={styles.item}>
+      renderItem={({item, index}) => (
+        <View
+          style={[
+            styles.item,
+            {
+              borderBottomWidth: index !== prayerTimes.length - 1 ? 0.8 : 0,
+              borderBottomColor: ShadowColors['border-light'],
+              height: 44,
+              paddingTop: 6,
+              paddingBottom: 6,
+              paddingLeft: 20,
+              paddingRight: 20,
+              gap: 10,
+              marginBottom: 6
+            },
+          ]}>
           <View style={styles.leftContent}>
+          <View
+            style={[
+              styles.iconContainer,
+              {
+                borderRadius: 8,
+              },
+            ]}>
             {item.icon}
+          </View>
             <Body1Title2Bold color="heading" style={styles.name}>
               {item.name}
             </Body1Title2Bold>
@@ -52,7 +77,6 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
           <Body1Title2Medium color="sub-heading">{item.time}</Body1Title2Medium>
         </View>
       )}
-      contentContainerStyle={styles.list}
     />
   );
 };
@@ -60,16 +84,19 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
 export default PrayerTimesList;
 
 const styles = StyleSheet.create({
-  list: {
-    paddingHorizontal: 16,
-  },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8, 
+    borderWidth: 1,
+    borderColor: '#F5F4FB', 
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   leftContent: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
 // modules/calendar/components/TabBar/TabBar.tsx
 import React from 'react';
 import {View, StyleSheet, Pressable} from 'react-native';
-import {Body1Title2Bold} from '@/components';
+import {Body1Title2Bold, Body1Title2Medium} from '@/components';
 
 // store
 import {useThemeStore} from '@/globalStore';
@@ -63,9 +63,7 @@ const TabButton: React.FC<TabButtonProps> = ({
         isActive && {backgroundColor: '#F5F4FB'},
       ]}
       onPress={onPress}>
-      <Body1Title2Bold color={isActive ? 'primary' : 'sub-heading'}>
-        {label}
-      </Body1Title2Bold>
+        {!isActive ? (<Body1Title2Medium color={isActive ? 'primary' : 'sub-heading'}>{label}</Body1Title2Medium>) : (<Body1Title2Bold color={isActive ? 'primary' : 'sub-heading'}>{label}</Body1Title2Bold>)}
     </Pressable>
   );
 };
@@ -79,11 +77,11 @@ const TodayPill: React.FC<TodayPillProps> = ({isActive}) => {
     <View
       style={[
         styles.todayPill,
-        isActive && {backgroundColor: '#F5F4FB', borderWidth: 1, borderColor: '#7D5FFF'},
+        isActive && {backgroundColor: '#F5F4FB'},
       ]}>
-      <Body1Title2Bold color={isActive ? 'primary' : 'sub-heading'}>
+      <Body1Title2Medium color={isActive ? 'primary' : 'sub-heading'}>
         Today
-      </Body1Title2Bold>
+      </Body1Title2Medium>
     </View>
   );
 };
@@ -93,9 +91,14 @@ export default TabBar;
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
     justifyContent: 'space-between',
     alignItems: 'center',
+    height: 50,
+    paddingTop: 12,
+    paddingRight: 20,
+    paddingBottom: 10,
+    paddingLeft: 20,
+    backgroundColor: '#FFFFFF',
   },
   tabsLeft: {
     flexDirection: 'row',
@@ -121,6 +124,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    marginLeft: 24,
   },
 });
