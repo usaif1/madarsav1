@@ -6,7 +6,7 @@ import {View, StyleSheet} from 'react-native';
 import {CustomCalendar, TabBar, PrayerTimesList, FastingView, EventsList} from '../components';
 import {Divider} from '@/components';
 
-type TabType = 'salah' | 'fasting' | 'events' | 'today';
+type TabType = 'salah' | 'fasting' | 'events';
 
 const CalendarScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());

@@ -6,7 +6,7 @@ import {Body1Title2Bold} from '@/components';
 // store
 import {useThemeStore} from '@/globalStore';
 
-type TabType = 'salah' | 'fasting' | 'events' | 'today';
+type TabType = 'salah' | 'fasting' | 'events';
 
 interface TabBarProps {
   activeTab: TabType;
@@ -18,32 +18,27 @@ const TabBar: React.FC<TabBarProps> = ({activeTab, onTabChange}) => {
 
   return (
     <View style={styles.container}>
-      <TabButton
-        label="Salah"
-        isActive={activeTab === 'salah'}
-        onPress={() => onTabChange('salah')}
-        activeColor={colors.primary.primary600}
-      />
-      <TabButton
-        label="Fasting"
-        isActive={activeTab === 'fasting'}
-        onPress={() => onTabChange('fasting')}
-        activeColor={colors.primary.primary600}
-      />
-      <TabButton
-        label="Events"
-        isActive={activeTab === 'events'}
-        onPress={() => onTabChange('events')}
-        activeColor={colors.primary.primary600}
-      />
-      <View style={{alignSelf: 'flex-end'}}>
-      <TabButton
-        label="Today"
-        isActive={activeTab === 'today'}
-        onPress={() => onTabChange('today')}
-        activeColor={colors.primary.primary600}
-      />
+      <View style={styles.tabsLeft}>
+        <TabButton
+          label="Salah"
+          isActive={activeTab === 'salah'}
+          onPress={() => onTabChange('salah')}
+          activeColor={colors.primary.primary600}
+        />
+        <TabButton
+          label="Fasting"
+          isActive={activeTab === 'fasting'}
+          onPress={() => onTabChange('fasting')}
+          activeColor={colors.primary.primary600}
+        />
+        <TabButton
+          label="Events"
+          isActive={activeTab === 'events'}
+          onPress={() => onTabChange('events')}
+          activeColor={colors.primary.primary600}
+        />
       </View>
+      <TodayPill isActive={activeTab === 'salah'} />
     </View>
   );
 };
@@ -63,14 +58,33 @@ const TabButton: React.FC<TabButtonProps> = ({
 }) => {
   return (
     <Pressable
-      style={[styles.tab, isActive && {backgroundColor: '#F5F4FB'}]}
+      style={[
+        styles.tab,
+        isActive && {backgroundColor: '#F5F4FB'},
+      ]}
       onPress={onPress}>
-      <Body1Title2Bold
-        color={isActive ? 'primary' : 'sub-heading'}>
+      <Body1Title2Bold color={isActive ? 'primary' : 'sub-heading'}>
         {label}
       </Body1Title2Bold>
-      {isActive && <View style={[styles.indicator, {backgroundColor: activeColor}]} />}
     </Pressable>
+  );
+};
+
+interface TodayPillProps {
+  isActive: boolean;
+}
+
+const TodayPill: React.FC<TodayPillProps> = ({isActive}) => {
+  return (
+    <View
+      style={[
+        styles.todayPill,
+        isActive && {backgroundColor: '#F5F4FB', borderWidth: 1, borderColor: '#7D5FFF'},
+      ]}>
+      <Body1Title2Bold color={isActive ? 'primary' : 'sub-heading'}>
+        Today
+      </Body1Title2Bold>
+    </View>
   );
 };
 
@@ -80,21 +94,33 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  tabsLeft: {
+    flexDirection: 'row',
   },
   tab: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    position: 'relative',
+    height: 28,
+    borderRadius: 60,
+    paddingTop: 4,
+    paddingRight: 16,
+    paddingBottom: 4,
+    paddingLeft: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
-  indicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: '50%',
-    width: 20,
-    height: 3,
-    borderRadius: 2,
-    transform: [{translateX: -10}],
+  todayPill: {
+    height: 28,
+    borderRadius: 60,
+    paddingTop: 4,
+    paddingRight: 16,
+    paddingBottom: 4,
+    paddingLeft: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginLeft: 24,
   },
 });

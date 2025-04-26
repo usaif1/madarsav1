@@ -1,6 +1,6 @@
 // modules/calendar/components/MonthYearSelector/MonthYearSelector.tsx
 import React, {useState, useRef, useEffect} from 'react';
-import {View, StyleSheet, Pressable, FlatList, Dimensions} from 'react-native';
+import {View, StyleSheet, Pressable, FlatList} from 'react-native';
 import {Body1Title2Bold, Title3Bold} from '@/components';
 
 // store
@@ -201,10 +201,7 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
 
 export default MonthYearSelector;
 
-// Get screen dimensions to calculate proper sizing
-const {height: screenHeight} = Dimensions.get('window');
 const ITEM_HEIGHT = 50; // Height of each option
-const VISIBLE_ITEMS = 3; // Number of items to show at once
 
 const styles = StyleSheet.create({
   container: {
