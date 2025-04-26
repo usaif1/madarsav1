@@ -10,7 +10,7 @@ import {
   IshaIcon,
 } from '@/assets/calendar';
 import {useThemeStore} from '@/globalStore';
-import {ShadowColors} from '@/theme/shadows';
+import {verticalScale, scale} from '@/theme/responsive';
 
 interface PrayerTime {
   id: string;
@@ -50,26 +50,28 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
             styles.item,
             {
               borderBottomWidth: index !== prayerTimes.length - 1 ? 0.8 : 0,
-              borderBottomColor: ShadowColors['border-light'],
-              height: 44,
-              paddingTop: 6,
-              paddingBottom: 6,
-              paddingLeft: 20,
-              paddingRight: 20,
-              gap: 10,
-              marginBottom: 6
+              borderBottomColor: colors.primary.primary100,
+              height: verticalScale(44),
+              paddingTop: verticalScale(6),
+              paddingBottom: verticalScale(6),
+              paddingLeft: scale(20),
+              paddingRight: scale(20),
+              gap: scale(10),
+              marginBottom: verticalScale(6)
             },
           ]}>
           <View style={styles.leftContent}>
-          <View
-            style={[
-              styles.iconContainer,
-              {
-                borderRadius: 8,
-              },
-            ]}>
-            {item.icon}
-          </View>
+            <View
+              style={[
+                styles.iconContainer,
+                {
+                  borderRadius: scale(8),
+                  borderColor: colors.primary.primary100,
+                  backgroundColor: colors.primary.primary50,
+                },
+              ]}>
+              {item.icon}
+            </View>
             <Body1Title2Bold color="heading" style={styles.name}>
               {item.name}
             </Body1Title2Bold>
@@ -90,11 +92,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8, 
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(8),
     borderWidth: 1,
-    borderColor: '#F5F4FB', 
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -103,6 +104,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   name: {
-    marginLeft: 12,
+    marginLeft: scale(12),
   }
 });
