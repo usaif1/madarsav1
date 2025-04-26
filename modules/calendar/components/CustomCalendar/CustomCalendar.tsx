@@ -1,21 +1,29 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useMemo} from 'react';
 import {StyleSheet, View, Text} from 'react-native';
 import {Calendar, DateData} from 'react-native-calendars';
 import CalendarDay from './CalendarDay';
-
-// store
 import {useThemeStore} from '@/globalStore';
 import {Body1Title2Medium} from '@/components';
+import {islamicEvents} from '../../data/eventsData';
+import type { lightColors } from '@/theme/lightColors';
 
 interface CustomCalendarProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
-  month?: number; // 0-based
+  month?: number;
   year?: number;
 }
 
-const formatDate = (date: Date): string => {
-  return date.toISOString().split('T')[0]; // YYYY-MM-DD
+// Helper: Map event IDs to theme color keys
+type ThemeColors = typeof lightColors;
+type EventColorGetter = (colors: ThemeColors) => string;
+
+const EVENT_COLORS: Record<string, EventColorGetter> = {
+  'ramadan-start': (colors) => colors.primary.primary600,
+  'eid-al-fitr': (colors) => colors.success.success500,
+  'eid-al-adha': (colors) => colors.error.error600,
+  'islamic-new-year': (colors) => colors.info.info600,
+  'laylatul-qadr': (colors) => colors.accent.accent600,
 };
 
 const CustomCalendar: React.FC<CustomCalendarProps> = ({
@@ -27,7 +35,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   const {colors} = useThemeStore();
   const radiusMd = 8;
 
-  // Memoize the current date string to prevent unnecessary re-renders
   const currentDateString = useMemo(() => {
     const displayMonth = typeof month === 'number' ? month : selectedDate.getMonth();
     const displayYear = typeof year === 'number' ? year : selectedDate.getFullYear();
@@ -35,15 +42,14 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   }, [month, year, selectedDate]);
 
   const today = new Date();
-  const formattedToday = formatDate(today);
-  const formattedSelected = formatDate(selectedDate);
-  const specialMarkedDate = formatDate(new Date(2025, 3, 26)); // Fixed hardcoded date
+  const formattedToday = today.toISOString().split('T')[0];
+  const formattedSelected = selectedDate.toISOString().split('T')[0];
 
-  // Prepare marked dates
+  // Build markedDates using islamicEvents
   const markedDates = useMemo(() => {
     const marked: {[key: string]: any} = {};
 
-    // Style for today (only if not selected)
+    // Mark today if not selected
     if (formattedToday !== formattedSelected) {
       marked[formattedToday] = {
         customStyles: {
@@ -58,37 +64,38 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
       };
     }
 
-    // Style for selected date (overrides today if same)
+    // Mark selected date
     marked[formattedSelected] = {
       selected: true,
       customStyles: {
         container: {
-          backgroundColor: colors.primary.primary500,
+          backgroundColor: colors.primary.primary600,
           borderRadius: radiusMd,
         },
         text: {
           color: 'white',
         },
       },
-      ...(formattedSelected === specialMarkedDate && { marked: true, dotColor: 'white' }),
     };
 
-    // Handle the dot for the special marked date
-    if (specialMarkedDate !== formattedToday && specialMarkedDate !== formattedSelected) {
-      marked[specialMarkedDate] = {
-        ...(marked[specialMarkedDate] || {}),
-        marked: true,
-        dotColor: colors.primary.primary600,
-      };
-    }
+    // Add Islamic holidays from islamicEvents
+    islamicEvents.forEach(event => {
+      const dateString = event.gregorianDateRange.start.toISOString().split('T')[0];
+      if (dateString !== formattedSelected) { // Don't override selected date styling
+        marked[dateString] = {
+          ...marked[dateString],
+          marked: true,
+          dotColor: EVENT_COLORS[event.id] ? EVENT_COLORS[event.id](colors) : colors.primary.primary600,
+          holidayName: event.title,
+        };
+      }
+    });
 
     return marked;
-  }, [formattedToday, formattedSelected, specialMarkedDate, colors, radiusMd]);
+  }, [formattedToday, formattedSelected, colors, radiusMd]);
 
   const handleDayPress = (day: DateData) => {
     const newDate = new Date(day.timestamp);
-    console.log('Date Selected Event:', day);
-    console.log('Selected Date Value:', newDate);
     onDateSelect(newDate);
   };
 
@@ -96,13 +103,13 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     return (
-      <View style={styles.dayNamesContainer}>
+      <View style={[styles.dayNamesContainer, {backgroundColor: colors.secondary.neutral100}]}>
         {dayNames.map((day, index) => (
           <View key={index} style={styles.dayNameBox}>
             {Body1Title2Medium ? (
               <Body1Title2Medium color="heading">{day}</Body1Title2Medium>
             ) : (
-              <Text style={styles.dayNameText}>{day}</Text>
+              <Text style={[styles.dayNameText, {color: colors.secondary.neutral800}]}>{day}</Text>
             )}
           </View>
         ))}
@@ -114,7 +121,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     <View style={styles.container}>
       <CustomDayHeader />
       <Calendar
-        key={currentDateString} // Force re-render when month/year changes
+        key={currentDateString}
         markingType={'custom'}
         markedDates={markedDates}
         onDayPress={handleDayPress}
@@ -125,9 +132,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         current={currentDateString}
         theme={{
           calendarBackground: 'white',
-          textSectionTitleColor: '#333338',
-          dayTextColor: '#333338',
-          textDisabledColor: '#AAABB3',
+          textSectionTitleColor: colors.secondary.neutral800,
+          dayTextColor: colors.secondary.neutral800,
+          textDisabledColor: colors.secondary.neutral300,
           arrowColor: colors.primary.primary600,
           monthTextColor: colors.primary.primary800,
           textMonthFontWeight: 'bold',
@@ -140,6 +147,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
             date={date}
             state={state}
             marking={marking}
+            onPress={handleDayPress}
           />
         )}
       />
@@ -147,15 +155,12 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   );
 };
 
-export default CustomCalendar;
-
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
   },
   dayNamesContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F0EAFB',
     paddingVertical: 12,
     justifyContent: 'space-around',
     borderRadius: 8,
@@ -171,6 +176,7 @@ const styles = StyleSheet.create({
   dayNameText: {
     fontWeight: '500',
     fontSize: 14,
-    color: '#333338',
   },
 });
+
+export default CustomCalendar;

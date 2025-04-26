@@ -27,14 +27,59 @@ export interface IslamicEvent {
         year: 1446,
       },
       gregorianDateRange: {
-        start: new Date('2025-03-01'),
-        end: new Date('2025-03-01'),
+        start: new Date('2025-02-28'), // 1 Ramadan 1446 (approximate)
+        end: new Date('2025-02-28'),
+      },
+      isHoliday: true,
+    },
+    {
+      id: 'eid-al-fitr',
+      title: 'Eid al-Fitr',
+      description: 'Festival of Breaking the Fast, celebrated at the end of Ramadan.',
+      hijriDate: {
+        day: 1,
+        month: 'Shawwal',
+        year: 1446,
+      },
+      gregorianDateRange: {
+        start: new Date('2025-03-30'), // 1 Shawwal 1446 (approximate)
+        end: new Date('2025-03-30'),
+      },
+      isHoliday: true,
+    },
+    {
+      id: 'eid-al-adha',
+      title: 'Eid al-Adha',
+      description: 'Festival of Sacrifice, commemorating the willingness of Ibrahim to sacrifice his son.',
+      hijriDate: {
+        day: 10,
+        month: 'Dhul Hijjah',
+        year: 1446,
+      },
+      gregorianDateRange: {
+        start: new Date('2025-06-07'), // 10 Dhul Hijjah 1446 (approximate)
+        end: new Date('2025-06-07'),
+      },
+      isHoliday: true,
+    },
+    {
+      id: 'islamic-new-year',
+      title: 'Islamic New Year',
+      description: 'The beginning of the new Islamic year (1 Muharram).',
+      hijriDate: {
+        day: 1,
+        month: 'Muharram',
+        year: 1447,
+      },
+      gregorianDateRange: {
+        start: new Date('2025-07-27'), // 1 Muharram 1447 (approximate)
+        end: new Date('2025-07-27'),
       },
       isHoliday: true,
     },
     {
       id: 'laylatul-qadr',
-      title: 'First day of Lailat-ul-Qadr',
+      title: 'Lailat-ul-Qadr',
       description: 'The Night of Power, commemorating the night when the first verses of the Quran were revealed to Muhammad.',
       hijriDate: {
         day: 27,
@@ -42,21 +87,8 @@ export interface IslamicEvent {
         year: 1446,
       },
       gregorianDateRange: {
-        start: new Date('2025-03-27'),
-        end: new Date('2025-03-27'),
-      },
-    },
-    {
-      id: 'shaban-6',
-      title: '6 Shaban',
-      hijriDate: {
-        day: 6,
-        month: 'Shaban',
-        year: 1446,
-      },
-      gregorianDateRange: {
-        start: new Date('2025-03-01'),
-        end: new Date('2025-03-01'),
+        start: new Date('2025-03-26'), // 27 Ramadan 1446 (approximate)
+        end: new Date('2025-03-26'),
       },
     },
   ];
