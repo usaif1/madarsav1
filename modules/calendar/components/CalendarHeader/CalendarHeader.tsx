@@ -3,6 +3,7 @@ import React, {useState} from 'react';
 import {View, StyleSheet, Pressable} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Modal from 'react-native-modal';
+import { toHijri } from 'hijri-converter';
 
 // components
 import {BackButton} from '@/components';
@@ -25,10 +26,28 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack}) => {
 
   const toggleModal = () => setModalVisible(!isModalVisible);
 
-  const handleMonthYearConfirm = (month: string, year: string, islamicDate: string) => {
+  const handleMonthYearConfirm = (month: string, year: string, _islamicDate: string) => {
     setSelectedMonth(month);
     setSelectedYear(year);
-    setIslamicDate(islamicDate);
+    // Map month name to JS month index (0-based)
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const monthIndex = monthNames.indexOf(month);
+    // Use 1st of selected month/year for conversion
+    const gregorianYear = parseInt(year, 10);
+    const gregorianMonth = monthIndex + 1; // toHijri expects 1-based month
+    const hijri = toHijri(gregorianYear, gregorianMonth, 1);
+    // Format: Month, Year AH
+    const hijriMonthNames = [
+      'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani",
+      'Jumada al-awwal', 'Jumada al-thani', 'Rajab', 'Sha‘ban',
+      'Ramadan', 'Shawwal', 'Dhu al-Qi‘dah', 'Dhu al-Hijjah'
+    ];
+    const hijriMonth = hijriMonthNames[hijri.hm - 1];
+    const hijriYear = hijri.hy;
+    setIslamicDate(`${hijriMonth}, ${hijriYear} AH`);
     setModalVisible(false);
   };
 
