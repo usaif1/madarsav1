@@ -119,7 +119,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   };
 
   return (
-    <View style={[styles.container, {backgroundColor: colors.primary.primary50}]}> 
+    <View style={[styles.container, {backgroundColor: 'white'}]}> 
       <CustomDayHeader />
       <Calendar
         key={currentDateString}
@@ -131,8 +131,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         renderHeader={() => null}
         customHeader={() => null}
         current={currentDateString}
+        style={{ backgroundColor: 'white' }}
         theme={{
-          calendarBackground: colors.primary.primary50,
+          calendarBackground: 'white',
           textSectionTitleColor: colors.secondary.neutral800,
           dayTextColor: colors.secondary.neutral800,
           textDisabledColor: colors.secondary.neutral300,
@@ -158,7 +159,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor set inline for theme
+    backgroundColor: 'white',
   },
   dayNamesContainer: {
     flexDirection: 'row',
