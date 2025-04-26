@@ -215,30 +215,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    height: 60,
+    paddingTop: 0,
+    paddingRight: 20, 
+    paddingLeft: 20,  
     marginBottom: 20,
+    borderBottomWidth: 1, 
+    borderBottomColor: '#F5F5F5',
+    borderTopLeftRadius: 8, 
+    borderTopRightRadius: 8, 
   },
   selectionArea: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    height: ITEM_HEIGHT * 3 + 10, // Adjusted to show exactly 3 items
+    height: ITEM_HEIGHT * 3,
   },
   column: {
     flex: 1,
-    padding: 10,
-    height: ITEM_HEIGHT * 3 + 10, // Adjusted to match selectionArea
+    padding: 0,
+    height: ITEM_HEIGHT * 3,
     overflow: 'hidden',
   },
   scrollContent: {
-    paddingTop: ITEM_HEIGHT,
-    paddingBottom: ITEM_HEIGHT,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   option: {
     height: ITEM_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    marginBottom: 0, // Removed bottom margin to fit exactly 3 items
+    marginBottom: 0, 
   },
   selectedOption: {
     backgroundColor: '#F5F5F5',
