@@ -57,14 +57,14 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     setTimeout(() => {
       if (yearListRef.current && initialYearIndex >= 0) {
         yearListRef.current.scrollToOffset({
-          offset: initialYearIndex * ITEM_HEIGHT,
+          offset: (initialYearIndex - 1) * ITEM_HEIGHT,
           animated: false,
         });
       }
       
       if (monthListRef.current && initialMonthIndex >= 0) {
         monthListRef.current.scrollToOffset({
-          offset: initialMonthIndex * ITEM_HEIGHT,
+          offset: (initialMonthIndex - 1) * ITEM_HEIGHT,
           animated: false,
         });
       }
@@ -93,7 +93,7 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         if (yearListRef.current) {
           const index = years.findIndex(year => year === item);
           yearListRef.current.scrollToOffset({
-            offset: index * ITEM_HEIGHT,
+            offset: (index - 1) * ITEM_HEIGHT,
             animated: true,
           });
         }
@@ -117,7 +117,7 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         if (monthListRef.current) {
           const index = months.findIndex(month => month === item);
           monthListRef.current.scrollToOffset({
-            offset: index * ITEM_HEIGHT,
+            offset: (index - 1) * ITEM_HEIGHT,
             animated: true,
           });
         }
@@ -216,7 +216,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     height: 60,
-    paddingTop: 0,
     paddingRight: 20, 
     paddingLeft: 20,  
     marginBottom: 20,
