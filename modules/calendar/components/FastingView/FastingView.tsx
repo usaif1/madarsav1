@@ -4,6 +4,7 @@ import {View, StyleSheet, Pressable} from 'react-native';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium, Title3Bold} from '@/components';
 import {FazrIcon, MaghribIcon, FazrWhiteIcon, MaghribWhiteIcon,SehriDua, IftarDua} from '@/assets/calendar';
 import {ShadowColors} from '@/theme/shadows';
+import {scale, verticalScale} from '@/theme/responsive';
 
 // store
 import {useThemeStore} from '@/globalStore';
@@ -19,31 +20,29 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
   // This would be fetched from an API or calculated
   const sehriTime = '5:46 AM';
   const iftarTime = '6:03 PM';
+
+  const styles = getStyles(colors);
   
   return (
     <View style={styles.container}>
-      <View style={[styles.timesContainer, {
-        width: 400,
-        height: 110,
-        paddingRight: 20,
-        paddingLeft: 20,
-        gap: 24,
-      }]}>
+      <View style={[styles.timesContainer, {gap: scale(16)}]}>
+        {/* Sehri Pressable */}
         <Pressable
           style={[
             styles.timeBox,
             {
-              width: 171.5,
-              height: 120,
-              borderRadius: 12,
-              paddingTop: 12,
-              paddingRight: 20,
-              paddingBottom: 12,
-              paddingLeft: 20,
-              backgroundColor: activeType === 'sehri' ? colors.primary.primary50 : '#FFFFFF',
-              borderColor: activeType === 'sehri' ? colors.primary.primary300 : ShadowColors['border-light'],
+              width: scale(161.5),
+              height: verticalScale(110),
+              borderRadius: scale(12),
               borderWidth: 1,
-              gap: 8,
+              paddingTop: verticalScale(12),
+              paddingRight: scale(20),
+              paddingBottom: verticalScale(12),
+              paddingLeft: scale(20),
+              gap: scale(8),
+              marginRight: scale(8),
+              backgroundColor: activeType === 'sehri' ? colors.primary.primary100 : 'white',
+              borderColor: activeType === 'sehri' ? colors.primary.primary300 : ShadowColors['border-light'],
             },
           ]}
           onPress={() => setActiveType('sehri')}>
@@ -51,36 +50,38 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
             style={[
               styles.iconContainer,
               {
-                borderRadius: 8,
-                width: 32,
-                height: 32,
-                backgroundColor: activeType === 'sehri' ? colors.primary.primary500 : '#F9F6FF',
+                borderRadius: scale(6),
+                width: scale(24),
+                height: scale(24),
+                backgroundColor: activeType === 'sehri' ? colors.primary.primary500 : 'white',
                 justifyContent: 'center',
                 alignItems: 'center',
               },
             ]}
           >
-            {activeType === 'sehri' ? <FazrWhiteIcon /> : <FazrIcon />}
+            {activeType === 'sehri' ? <FazrWhiteIcon width={scale(16)} height={scale(16)} /> : <FazrIcon width={scale(16)} height={scale(16)} />}
           </View>
           <Body1Title2Medium>{sehriTime}</Body1Title2Medium>
           <Body2Medium color="sub-heading">Sehri time</Body2Medium>
         </Pressable>
-        
+
+        {/* Iftar Pressable */}
         <Pressable
           style={[
             styles.timeBox,
             {
-              width: 171.5,
-              height: 120,
-              borderRadius:12,
-              paddingTop: 12,
-              paddingRight: 20,
-              paddingBottom: 12,
-              paddingLeft: 20,
-              backgroundColor: activeType === 'iftar' ? colors.primary.primary50 : '#FFFFFF',
-              borderColor: activeType === 'iftar' ? colors.primary.primary300 : ShadowColors['border-light'],
+              width: scale(161.5),
+              height: verticalScale(110),
+              borderRadius: scale(12),
               borderWidth: 1,
-              gap: 8,
+              paddingTop: verticalScale(12),
+              paddingRight: scale(20),
+              paddingBottom: verticalScale(12),
+              paddingLeft: scale(20),
+              gap: scale(8),
+              marginLeft: scale(8),
+              backgroundColor: activeType === 'iftar' ? colors.primary.primary100 : colors.primary.primary50,
+              borderColor: activeType === 'iftar' ? colors.primary.primary300 : ShadowColors['border-light'],
             },
           ]}
           onPress={() => setActiveType('iftar')}>
@@ -88,87 +89,81 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
             style={[
               styles.iconContainer,
               {
-                borderRadius: 8,
-                width: 32,
-                height: 32,
-                backgroundColor: activeType === 'iftar' ? colors.primary.primary500 : '#F9F6FF',
+                borderRadius: scale(6),
+                width: scale(24),
+                height: scale(24),
+                backgroundColor: activeType === 'iftar' ? colors.primary.primary500 : colors.primary.primary50,
                 justifyContent: 'center',
                 alignItems: 'center',
               },
             ]}
           >
-            {activeType === 'iftar' ? <MaghribWhiteIcon /> : <MaghribIcon />}
+            {activeType === 'iftar' ? <MaghribWhiteIcon width={scale(16)} height={scale(16)} /> : <MaghribIcon width={scale(16)} height={scale(16)} />}
           </View>
           <Body1Title2Medium>{iftarTime}</Body1Title2Medium>
           <Body2Medium color="sub-heading">Iftar time</Body2Medium>
         </Pressable>
       </View>
-      
-      <View style={{ alignItems: 'center', marginVertical: 8 }}>
-  {activeType === 'sehri' ? (
-    <SehriDua width={435} height={146} />
-  ) : (
-    <IftarDua width={435} height={146} />
-  )}
-</View>
+      <View style={{ alignItems: 'center' }}>
+        {activeType === 'sehri' ? (
+          <SehriDua width={scale(335)} height={verticalScale(126)} />
+        ) : (
+          <IftarDua width={scale(335)} height={verticalScale(126)} />
+        )}
+      </View>
     </View>
   );
 };
 
 export default FastingView;
 
-const styles = StyleSheet.create({
+const getStyles =  (colors: any) => StyleSheet.create({
   container: {
-    padding: 16,
+    padding: scale(16),
   },
   timesContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
+    columnGap: scale(4),
+    alignItems: 'stretch',
+    marginBottom: verticalScale(12),
   },
   timeBox: {
-    borderRadius: 12,
-    padding: 16,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    minHeight: verticalScale(60),
+    // backgroundColor and borderColor set inline for theme/selection
     borderWidth: 1,
-    borderColor: '#F5F5F5',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F5F4FB',
-    marginBottom: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   duaContainer: {
-    borderRadius: 12,
-    padding: 16,
-    backgroundColor: '#FFFDF6',
+    borderRadius: scale(12),
+    padding: scale(16),
+    backgroundColor: colors.primary.primary50,
   },
   duaHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: verticalScale(16),
   },
   duaLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#F9DF90',
+    backgroundColor: colors.primary.primary300,
   },
   duaContent: {
     alignItems: 'center',
   },
   arabicText: {
     textAlign: 'center',
-    marginBottom: 8,
-    fontSize: 24,
-    lineHeight: 36,
+    marginBottom: verticalScale(8),
+    fontSize: scale(24),
+    lineHeight: verticalScale(36),
   },
   translationText: {
     textAlign: 'center',
-    color: '#6D591D',
+    color: colors.primary.primary500,
   },
 });
