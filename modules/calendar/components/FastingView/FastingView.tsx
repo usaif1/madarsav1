@@ -80,7 +80,7 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
               paddingLeft: scale(20),
               gap: scale(8),
               marginLeft: scale(8),
-              backgroundColor: activeType === 'iftar' ? colors.primary.primary100 : colors.primary.primary50,
+              backgroundColor: activeType === 'iftar' ? colors.primary.primary100 : 'white',
               borderColor: activeType === 'iftar' ? colors.primary.primary300 : ShadowColors['border-light'],
             },
           ]}
@@ -92,7 +92,7 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
                 borderRadius: scale(6),
                 width: scale(24),
                 height: scale(24),
-                backgroundColor: activeType === 'iftar' ? colors.primary.primary500 : colors.primary.primary50,
+                backgroundColor: activeType === 'iftar' ? colors.primary.primary500 : 'white',
                 justifyContent: 'center',
                 alignItems: 'center',
               },
