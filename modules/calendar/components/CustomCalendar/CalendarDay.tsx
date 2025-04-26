@@ -4,6 +4,7 @@ import { Body2Regular, Body2Medium } from '@/components';
 import { DateData } from 'react-native-calendars';
 import { useThemeStore } from '@/globalStore';
 import { gregorianToHijri } from '../../utils/dateUtils';
+import { scale, verticalScale } from '@/theme/responsive';
 
 interface CalendarDayProps {
   date: DateData;
@@ -32,16 +33,31 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
   const isToday = state === 'today';
   const isMarked = marking?.marked;
   const dotColor = marking?.dotColor || colors.primary.primary600;
-  
+
   const handlePress = () => {
     if (onPress && !isDisabled) {
       onPress(date);
     }
   };
-  
+
+  // Responsive and theme-based styles
+  const containerRadius = scale(8);
+  const containerSize = scale(38);
+  const dayContainerWidth = scale(36);
+  const dayContainerHeight = verticalScale(45);
+  const dotSize = scale(5);
+  const dotRadius = dotSize / 2;
+
   return (
     <TouchableOpacity 
-      style={styles.container} 
+      style={[
+        styles.container,
+        {
+          width: containerSize,
+          height: containerSize,
+          borderRadius: containerRadius,
+        },
+      ]}
       onPress={handlePress}
       disabled={isDisabled}
       activeOpacity={0.7}
@@ -49,13 +65,16 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
       <View
         style={[
           styles.dayContainer,
+          {
+            width: dayContainerWidth,
+            height: dayContainerHeight,
+            borderRadius: containerRadius,
+          },
           isSelected && { 
             backgroundColor: colors.primary.primary600, 
-            borderRadius: 8 
           },
           !isSelected && isToday && { 
             backgroundColor: colors.primary.primary300, 
-            borderRadius: 8 
           }
         ]}
       >
@@ -72,11 +91,11 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
           {hijriDate.day}
         </Body2Regular>
         {isMarked && (
-          <View style={styles.dotWrapper}> 
+          <View style={[styles.dotWrapper, { top: verticalScale(12), right: 0 }]}> 
             <View 
               style={[
                 styles.dot, 
-                { backgroundColor: dotColor }
+                { backgroundColor: dotColor, width: dotSize, height: dotSize, borderRadius: dotRadius }
               ]} 
             />
           </View>
@@ -88,41 +107,30 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
 
 const styles = StyleSheet.create({
   container: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 1,
+    margin: scale(1),
   },
   dayContainer: {
-    width: 36,
-    height: 45,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
     position: 'relative',
   },
   gregorianText: {
-    fontSize: 14,
-    lineHeight: 16,
+    fontSize: scale(14),
+    lineHeight: scale(16),
   },
   hijriText: {
-    lineHeight: 12,
-    marginTop: 2,
+    lineHeight: scale(12),
+    marginTop: verticalScale(2),
   },
   dotWrapper: {
     position: 'absolute',
-    right: 0,
-    top: 12, 
     alignItems: 'center',
     justifyContent: 'center',
   },
   dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    marginHorizontal: 1,
+    marginHorizontal: scale(1),
   },
 });
 

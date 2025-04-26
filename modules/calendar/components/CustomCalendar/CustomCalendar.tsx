@@ -6,6 +6,7 @@ import {useThemeStore} from '@/globalStore';
 import {Body1Title2Medium} from '@/components';
 import {islamicEvents} from '../../data/eventsData';
 import type { lightColors } from '@/theme/lightColors';
+import { scale, verticalScale } from '@/theme/responsive';
 
 interface CustomCalendarProps {
   selectedDate: Date;
@@ -33,7 +34,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   year,
 }) => {
   const {colors} = useThemeStore();
-  const radiusMd = 8;
+  const radiusMd = scale(8);
 
   const currentDateString = useMemo(() => {
     const displayMonth = typeof month === 'number' ? month : selectedDate.getMonth();
@@ -103,13 +104,13 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     return (
-      <View style={[styles.dayNamesContainer, {backgroundColor: colors.primary.primary100}]}>
+      <View style={[styles.dayNamesContainer, {backgroundColor: colors.primary.primary100, borderRadius: radiusMd, paddingVertical: verticalScale(12), marginTop: verticalScale(8)}]}>
         {dayNames.map((day, index) => (
-          <View key={index} style={styles.dayNameBox}>
+          <View key={index} style={[styles.dayNameBox, {width: scale(38)}]}>
             {Body1Title2Medium ? (
               <Body1Title2Medium color="heading">{day}</Body1Title2Medium>
             ) : (
-              <Text style={[styles.dayNameText, {color: colors.secondary.neutral800}]}>{day}</Text>
+              <Text style={[styles.dayNameText, {color: colors.secondary.neutral800, fontSize: scale(14)}]}>{day}</Text>
             )}
           </View>
         ))}
@@ -118,7 +119,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: colors.primary.primary50}]}> 
       <CustomDayHeader />
       <Calendar
         key={currentDateString}
@@ -131,16 +132,16 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         customHeader={() => null}
         current={currentDateString}
         theme={{
-          calendarBackground: 'white',
+          calendarBackground: colors.primary.primary50,
           textSectionTitleColor: colors.secondary.neutral800,
           dayTextColor: colors.secondary.neutral800,
           textDisabledColor: colors.secondary.neutral300,
           arrowColor: colors.primary.primary600,
           monthTextColor: colors.primary.primary800,
           textMonthFontWeight: 'bold',
-          textDayFontSize: 14,
-          textMonthFontSize: 14,
-          textDayHeaderFontSize: 14,
+          textDayFontSize: scale(14),
+          textMonthFontSize: scale(14),
+          textDayHeaderFontSize: scale(14),
         }}
         dayComponent={({date, state, marking}) => (
           <CalendarDay
@@ -157,25 +158,23 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    // backgroundColor set inline for theme
   },
   dayNamesContainer: {
     flexDirection: 'row',
-    paddingVertical: 12,
     justifyContent: 'space-around',
-    borderRadius: 8,
-    marginTop: 8,
+    // paddingVertical, borderRadius, marginTop set inline for theme/responsive
     width: '98%',
     alignSelf: 'center',
   },
   dayNameBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 38,
+    // width set inline for responsive
   },
   dayNameText: {
     fontWeight: '500',
-    fontSize: 14,
+    // fontSize set inline for responsive
   },
 });
 
