@@ -77,7 +77,7 @@ const TodayPill: React.FC<TodayPillProps> = ({isActive}) => {
     <View
       style={[
         styles.todayPill,
-        isActive && {backgroundColor: '#F5F4FB'},
+        {backgroundColor: isActive ? '#F5F4FB' : '#F5F5F5'},
       ]}>
       <Body1Title2Medium color={isActive ? 'primary' : 'sub-heading'}>
         Today
