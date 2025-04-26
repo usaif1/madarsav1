@@ -86,7 +86,11 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     <Pressable
       style={[
         styles.option,
-        selectedYear === item && {backgroundColor: ShadowColors['border-light']},
+        selectedYear === item && {
+          backgroundColor: ShadowColors['border-light'],
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+        },
       ]}
       onPress={() => {
         setSelectedYear(item);
@@ -109,7 +113,11 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     <Pressable
       style={[
         styles.option,
-        selectedMonth === item && {backgroundColor: ShadowColors['border-light']},
+        selectedMonth === item && {
+          backgroundColor: ShadowColors['border-light'],
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        },
       ]}
       onPress={() => {
         setSelectedMonth(item);
