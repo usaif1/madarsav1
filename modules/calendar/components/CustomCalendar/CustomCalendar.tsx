@@ -6,13 +6,13 @@ import CalendarDay from './CalendarDay';
 
 // store
 import {useThemeStore} from '@/globalStore';
-// Assuming you have a text component with Body1Title2Medium style
-// If not, we'll use regular Text with appropriate style
 import {Body1Title2Medium} from '@/components';
 
 interface CustomCalendarProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
+  month?: number; // 0-based
+  year?: number;
 }
 
 // Helper function to format dates for the calendar
@@ -23,15 +23,20 @@ const formatDate = (date: Date): string => {
 const CustomCalendar: React.FC<CustomCalendarProps> = ({
   selectedDate,
   onDateSelect,
+  month,
+  year,
 }) => {
   const {colors} = useThemeStore();
   // Assuming radius.md is available, otherwise define it. Using 8 for now.
   const radiusMd = 8; // Replace with theme value if available e.g., radius.md
 
+  // Use month/year props if provided
+  const displayMonth = typeof month === 'number' ? month : selectedDate.getMonth();
+  const displayYear = typeof year === 'number' ? year : selectedDate.getFullYear();
   const today = new Date();
   const formattedToday = formatDate(today);
   const formattedSelected = formatDate(selectedDate);
-  const specialMarkedDate = '2025-02-28'; // Date to show a dot
+  const specialMarkedDate = '2025-04-26'; // Date to show a dot
 
   // Prepare marked dates using custom styles
   const markedDates: {[key: string]: any} = {}; // Initialize as any or a more specific type
@@ -107,7 +112,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     <View style={styles.container}>
       {/* Render custom day names header outside the Calendar */}
       <CustomDayHeader />
-      
       <Calendar
         markingType={'custom'}
         markedDates={markedDates}
@@ -117,6 +121,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         renderHeader={() => null}
         // Hide the default day names row
         customHeader={() => null}
+        current={`${displayYear}-${(displayMonth + 1).toString().padStart(2, '0')}-01`}
         theme={{
           calendarBackground: 'white',
           textSectionTitleColor: '#333338',

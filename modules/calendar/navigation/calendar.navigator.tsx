@@ -4,15 +4,12 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 // screens
 import {CalendarScreen} from '../screens';
 
-// components
-import {CalendarHeader} from '../components';
-
 const CalendarNavigator = createNativeStackNavigator({
   screens: {
     calendar: {
       screen: CalendarScreen,
       options: {
-        header: () => <CalendarHeader />,
+        headerShown: false,
       },
     },
   },

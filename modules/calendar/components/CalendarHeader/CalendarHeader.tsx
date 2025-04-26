@@ -13,16 +13,40 @@ import MonthYearSelector from '../MonthYearSelection/MonthYearSelector';
 // icons
 import DownArrow from '@/assets/calendar/down-arrow.svg'; // You'll need to create/add this SVG
 
+// Month names for mapping
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
 interface CalendarHeaderProps {
   onBack?: () => void;
+  onMonthYearChange?: (month: string, year: string) => void;
 }
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack}) => {
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChange}) => {
   const insets = useSafeAreaInsets();
+
+  // Get current date values
+  const now = new Date();
+  const initialMonth = monthNames[now.getMonth()];
+  const initialYear = now.getFullYear().toString();
+  // Compute initial Islamic date
+  const toInitialIslamicDate = () => {
+    const hijri = toHijri(now.getFullYear(), now.getMonth() + 1, 1);
+    const hijriMonthNames = [
+      'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani",
+      'Jumada al-awwal', 'Jumada al-thani', 'Rajab', 'Sha‘ban',
+      'Ramadan', 'Shawwal', 'Dhu al-Qi‘dah', 'Dhu al-Hijjah'
+    ];
+    const hijriMonth = hijriMonthNames[hijri.hm - 1];
+    return `${hijriMonth}, ${hijri.hy} AH`;
+  };
+
   const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState('February');
-  const [selectedYear, setSelectedYear] = useState('2025');
-  const [islamicDate, setIslamicDate] = useState('Jumada al-Awwal, 1446 AH');
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
+  const [selectedYear, setSelectedYear] = useState(initialYear);
+  const [islamicDate, setIslamicDate] = useState(toInitialIslamicDate());
 
   const toggleModal = () => setModalVisible(!isModalVisible);
 
@@ -30,10 +54,6 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack}) => {
     setSelectedMonth(month);
     setSelectedYear(year);
     // Map month name to JS month index (0-based)
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
     const monthIndex = monthNames.indexOf(month);
     // Use 1st of selected month/year for conversion
     const gregorianYear = parseInt(year, 10);
@@ -49,6 +69,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack}) => {
     const hijriYear = hijri.hy;
     setIslamicDate(`${hijriMonth}, ${hijriYear} AH`);
     setModalVisible(false);
+    if (onMonthYearChange) onMonthYearChange(month, year);
   };
 
   return (
