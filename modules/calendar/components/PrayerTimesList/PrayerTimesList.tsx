@@ -1,7 +1,14 @@
 // modules/calendar/components/PrayerTimesList/PrayerTimesList.tsx
 import React from 'react';
 import {View, StyleSheet, FlatList} from 'react-native';
-import {Body1Title2Bold, Body2Medium} from '@/components';
+import {Body1Title2Bold, Body1Title2Medium} from '@/components';
+import {
+  FazrIcon,
+  SunriseIcon,
+  DhuhrAsrIcon,
+  MaghribIcon,
+  IshaIcon,
+} from '@/assets/calendar';
 
 interface PrayerTime {
   id: string;
@@ -18,12 +25,12 @@ interface PrayerTimesListProps {
 const getPrayerTimes = (date: Date): PrayerTime[] => {
   // This would be replaced with actual API call or calculation
   return [
-    { id: 'fajr', name: 'Fajr', time: '5:45 AM', icon: <></> },
-    { id: 'sunrise', name: 'Sunrise', time: '5:45 AM', icon: <></> },
-    { id: 'dhuhr', name: 'Dhuhr', time: '5:45 AM', icon: <></> },
-    { id: 'asr', name: 'Asr', time: '5:45 AM', icon: <></> },
-    { id: 'maghrib', name: 'Maghrib', time: '5:45 AM', icon: <></> },
-    { id: 'isha', name: 'Isha', time: '5:45 AM', icon: <></> },
+    { id: 'fazr', name: 'Fazr', time: '5:45 AM', icon: <FazrIcon /> },
+    { id: 'sunrise', name: 'Sunrise', time: '5:45 AM', icon: <SunriseIcon /> },
+    { id: 'dhuhr', name: 'Dhuhr', time: '5:45 AM', icon: <DhuhrAsrIcon /> },
+    { id: 'asr', name: 'Asr', time: '5:45 AM', icon: <DhuhrAsrIcon /> },
+    { id: 'maghrib', name: 'Maghrib', time: '5:45 AM', icon: <MaghribIcon /> },
+    { id: 'isha', name: 'Isha', time: '5:45 AM', icon: <IshaIcon /> },
   ];
 };
 
@@ -42,7 +49,7 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
               {item.name}
             </Body1Title2Bold>
           </View>
-          <Body2Medium color="sub-heading">{item.time}</Body2Medium>
+          <Body1Title2Medium color="sub-heading">{item.time}</Body1Title2Medium>
         </View>
       )}
       contentContainerStyle={styles.list}
