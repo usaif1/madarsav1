@@ -2,7 +2,7 @@
 import React, {useState} from 'react';
 import {View, StyleSheet, Pressable} from 'react-native';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium, Title3Bold} from '@/components';
-import {FazrIcon, MaghribIcon, FazrWhiteIcon, MaghribWhiteIcon} from '@/assets/calendar';
+import {FazrIcon, MaghribIcon, FazrWhiteIcon, MaghribWhiteIcon,SehriDua, IftarDua} from '@/assets/calendar';
 import {ShadowColors} from '@/theme/shadows';
 
 // store
@@ -70,8 +70,8 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
           style={[
             styles.timeBox,
             {
-              width: 161.5,
-              height: 110,
+              width: 171.5,
+              height: 120,
               borderRadius:12,
               paddingTop: 12,
               paddingRight: 20,
@@ -104,29 +104,13 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
         </Pressable>
       </View>
       
-      <View style={styles.duaContainer}>
-        <View style={styles.duaHeader}>
-          <View style={styles.duaLine} />
-          <Body1Title2Bold color="primary">
-            {activeType === 'sehri' ? 'Dua for Sehri' : 'Dua for Iftar'}
-          </Body1Title2Bold>
-          <View style={styles.duaLine} />
-        </View>
-        
-        {/* This would be replaced with the actual dua content/image */}
-        <View style={styles.duaContent}>
-          <Title3Bold style={styles.arabicText}>
-            {activeType === 'sehri' 
-              ? 'وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَان'
-              : 'اللَّهُمَّ لَكَ صُمْتُ، وَعَلَى رِزْقِكَ أَفْطَرْتُ'}
-          </Title3Bold>
-          <Body2Medium style={styles.translationText}>
-            {activeType === 'sehri' 
-              ? 'Wa bisawmi ghadinn nawaiytu min shahri Ramadan'
-              : 'Allahumma inni laka sumtu wa ala rizq-ika-aftartu'}
-          </Body2Medium>
-        </View>
-      </View>
+      <View style={{ alignItems: 'center', marginVertical: 8 }}>
+  {activeType === 'sehri' ? (
+    <SehriDua width={435} height={146} />
+  ) : (
+    <IftarDua width={435} height={146} />
+  )}
+</View>
     </View>
   );
 };
