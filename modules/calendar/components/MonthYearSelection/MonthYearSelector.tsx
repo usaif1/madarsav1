@@ -5,6 +5,7 @@ import {Body1Title2Bold, Title3Bold} from '@/components';
 
 // store
 import {useThemeStore} from '@/globalStore';
+import { ShadowColors } from '@/theme/shadows';
 
 interface MonthYearSelectorProps {
   initialMonth: string;
@@ -85,11 +86,10 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     <Pressable
       style={[
         styles.option,
-        selectedYear === item && styles.selectedOption,
+        selectedYear === item && {backgroundColor: ShadowColors['border-light']},
       ]}
       onPress={() => {
         setSelectedYear(item);
-        // Scroll to the selected item when pressed
         if (yearListRef.current) {
           const index = years.findIndex(year => year === item);
           yearListRef.current.scrollToOffset({
@@ -109,11 +109,10 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     <Pressable
       style={[
         styles.option,
-        selectedMonth === item && styles.selectedOption,
+        selectedMonth === item && {backgroundColor: ShadowColors['border-light']},
       ]}
       onPress={() => {
         setSelectedMonth(item);
-        // Scroll to the selected item when pressed
         if (monthListRef.current) {
           const index = months.findIndex(month => month === item);
           monthListRef.current.scrollToOffset({
@@ -246,9 +245,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     marginBottom: 0, 
-  },
-  selectedOption: {
-    backgroundColor: '#F5F5F5',
   },
   confirmButton: {
     padding: 15,
