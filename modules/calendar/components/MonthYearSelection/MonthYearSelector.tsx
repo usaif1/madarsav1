@@ -1,6 +1,6 @@
 // modules/calendar/components/MonthYearSelector/MonthYearSelector.tsx
 import React, {useState, useRef, useEffect} from 'react';
-import {View, StyleSheet, Pressable, FlatList} from 'react-native';
+import {View, StyleSheet, Pressable, FlatList, Dimensions} from 'react-native';
 import {Body1Title2Bold, Title3Bold} from '@/components';
 
 // store
@@ -140,8 +140,12 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     console.log('Scroll to index failed:', error);
   };
 
+  // Responsive breakpoint for tablet
+  const SCREEN_WIDTH = Dimensions.get('window').width;
+  const IS_LARGE_SCREEN = SCREEN_WIDTH >= 600;
+
   return (
-    <View style={styles.container}>
+    <View style={IS_LARGE_SCREEN ? styles.containerLarge : styles.containerSmall}>
       <View style={styles.header}>
         <Title3Bold>Change year</Title3Bold>
         <Pressable onPress={onClose} hitSlop={10}>
@@ -211,12 +215,32 @@ export default MonthYearSelector;
 const ITEM_HEIGHT = 50; // Height of each option
 
 const styles = StyleSheet.create({
-  container: {
+  containerLarge: {
+    backgroundColor: 'white',
+    borderRadius: 28,
+    padding: 20,
+    width: '90%',
+    maxWidth: 420,
+    minWidth: 280,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  containerSmall: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '50%', // Increased from 40% to 50%
+    width: '100%',
+    maxHeight: '50%',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignSelf: 'flex-end',
   },
   header: {
     flexDirection: 'row',

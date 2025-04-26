@@ -112,7 +112,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
         isVisible={isModalVisible}
         backdropOpacity={0.5}
         onBackdropPress={toggleModal}
-        style={styles.modal}>
+        style={styles.centeredModal}>
         <MonthYearSelector
           initialMonth={selectedMonth}
           initialYear={selectedYear}
@@ -154,8 +154,9 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: verticalScale(2),
   },
-  modal: {
-    justifyContent: 'flex-end',
+  centeredModal: {
+    justifyContent: 'center',
+    alignItems: 'center',
     margin: 0,
   },
 });
