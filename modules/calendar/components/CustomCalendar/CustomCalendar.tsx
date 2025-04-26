@@ -151,7 +151,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#F0EAFB',
     paddingVertical: 12,
-    paddingHorizontal: 4,
     justifyContent: 'space-around',
     borderRadius: 8,
     marginTop: 8,

@@ -18,13 +18,14 @@ const CalendarScreen: React.FC = () => {
         onDateSelect={setSelectedDate}
         selectedDate={selectedDate}
       />
-      <Divider height={10} />
+      <Divider color='#F5F5F5' height={10} />
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
       <Divider height={10} />
-      
+      <View style={{flex: 1,backgroundColor: 'white'}}>
       {activeTab === 'salah' && <PrayerTimesList selectedDate={selectedDate} />}
       {activeTab === 'fasting' && <FastingView selectedDate={selectedDate} />}
       {activeTab === 'events' && <EventsList selectedDate={selectedDate} />}
+      </View>
     </View>
   );
 };
@@ -34,6 +35,5 @@ export default CalendarScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
 });
