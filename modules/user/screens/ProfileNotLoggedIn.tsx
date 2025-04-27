@@ -14,9 +14,9 @@ const ProfileNotLoggedIn: React.FC = () => {
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
       <ProfileNotLoggedDetails />
-      <Divider height={8} />
+      <Divider color='secondary' height={8} />
       <ActionList profileNotLoggedIn={true} />
-      <Divider height={8} />
+      <Divider color='secondary' height={8} />
       <AppVersion />
     </View>
   );

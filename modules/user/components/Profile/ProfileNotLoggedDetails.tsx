@@ -1,13 +1,25 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
-import Handwave from '@/assets/profile/handwave.svg';
+import FastImage from 'react-native-fast-image';
 import { Divider } from '@/components';
 import { Body1Title2Bold, Body1Title2Medium } from '@/components';
 import { useThemeStore } from '@/globalStore';
+import { useWindowDimensions } from 'react-native';
 
 const ProfileNotLoggedDetails: React.FC<{ onLoginPress?: () => void }> = ({ onLoginPress }) => {
   const { colors, shadows } = useThemeStore();
+  const { width } = useWindowDimensions();
+
+  // Make button width and padding responsive, but keep it visually the same size
+  // on all screens (fixed width, centered, not stretched)
+  const loginBtnStyle = [
+    styles.loginBtn,
+    { backgroundColor: colors.primary.primary100 },
+    ...(width > 400
+      ? [{ alignSelf: 'center' as const, width: 180, paddingHorizontal: 0 }]
+      : []),
+  ];
 
   return (
     <View
@@ -29,7 +41,11 @@ const ProfileNotLoggedDetails: React.FC<{ onLoginPress?: () => void }> = ({ onLo
         style={styles.handwaveCircle}
       >
         <View style={styles.handwaveSvgWrap}>
-          <Handwave width={54} height={54} />
+          <FastImage
+            source={require('@/assets/profile/handwave.png')}
+            resizeMode={FastImage.resizeMode.contain}
+            style={{ width: 54, height: 54 }}
+          />
         </View>
       </LinearGradient>
       <Divider height={12} />
@@ -41,10 +57,7 @@ const ProfileNotLoggedDetails: React.FC<{ onLoginPress?: () => void }> = ({ onLo
       <Divider height={16} />
       <Pressable
         onPress={onLoginPress}
-        style={[
-          styles.loginBtn,
-          { backgroundColor: colors.primary.primary100 },
-        ]}
+        style={loginBtnStyle}
       >
         <Body1Title2Bold color="primary">Login to Madrasa</Body1Title2Bold>
       </Pressable>
@@ -75,6 +88,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center', // always center
   },
 });
 
