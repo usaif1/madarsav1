@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import rosaryBead from '@/assets/tasbih/rosaryBead.png';
+import Thread from '@/assets/tasbih/thread.svg';
 import { Body1Title2Bold, Body1Title2Regular, H3Bold } from '@/components';
 
 interface BeadsProps {
@@ -39,13 +40,24 @@ const Beads: React.FC<BeadsProps> = ({
     Array.from({ length: count }, () => new Animated.Value(0))
   ).current;
 
-  // Calculate bead positions along the thread
-  const beadPositions = Array.from({ length: count }, (_, i) => {
-    const progress = i / (count - 1);
-    const angle = Math.PI / 4 + (progress * Math.PI / 2);
+  // Calculate bead positions along the SVG thread curve
+  // For demonstration, let's assume the thread SVG is a simple quadratic Bezier curve from (x1,y1) to (x2,y2) with control point (cx,cy)
+  // You can adjust these values to match your actual SVG
+  const x1 = 32, y1 = 80;
+  const x2 = threadWidth - 32, y2 = 80;
+  const cx = threadWidth / 2, cy = 10; // Control point for curve
+  function getQuadraticBezierXY(t: number, sx: number, sy: number, cx: number, cy: number, ex: number, ey: number) {
     return {
-      left: 32 + progress * (threadWidth - 64),
-      top: 40 + Math.sin(angle) * 30,
+      x: Math.pow(1 - t, 2) * sx + 2 * (1 - t) * t * cx + Math.pow(t, 2) * ex,
+      y: Math.pow(1 - t, 2) * sy + 2 * (1 - t) * t * cy + Math.pow(t, 2) * ey,
+    };
+  }
+  const beadPositions = Array.from({ length: count }, (_, i) => {
+    const t = count === 1 ? 0.5 : i / (count - 1);
+    const pos = getQuadraticBezierXY(t, x1, y1, cx, cy, x2, y2);
+    return {
+      left: pos.x - 24,
+      top: pos.y - 24,
     };
   });
 
@@ -85,7 +97,7 @@ const Beads: React.FC<BeadsProps> = ({
   }, [activeIndex]);
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <View style={[styles.container, { paddingTop: 16 }]} {...panResponder.panHandlers}>
       {/* Counter header: index/total, then round */}
       <View style={styles.counterHeader}>
         <View style={styles.counterIndexRow}>
@@ -97,8 +109,9 @@ const Beads: React.FC<BeadsProps> = ({
       </View>
 
       {/* Thread and beads */}
-      <View style={[styles.threadWrap, { width: threadWidth }]}> 
-        <View style={[styles.threadLine, { width: threadWidth }]} />
+      <View style={[styles.threadWrap, { width: threadWidth, height: 120 }]} > 
+        {/* SVG thread curve */}
+        <Thread width={threadWidth} height={120} style={styles.threadSvg} />
         {beadPositions.map((pos, idx) => {
           const isActive = idx === activeIndex;
           const translateX = beadAnims[idx].interpolate({
@@ -111,7 +124,7 @@ const Beads: React.FC<BeadsProps> = ({
               onPress={() => isActive && onAdvance && onAdvance()}
               style={[
                 styles.beadWrap,
-                { left: pos.left - 24, top: pos.top - 24 },
+                { left: pos.left, top: pos.top },
               ]}
             >
               <Animated.View
@@ -141,7 +154,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
     backgroundColor: '#fff',
   },
   counterHeader: {
@@ -183,24 +196,13 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginVertical: 16,
   },
-  threadLine: {
+  threadSvg: {
     position: 'absolute',
-    height: 2,
-    backgroundColor: '#aaa',
-    top: 50,
-  },
-  beadWrap: {
-    position: 'absolute',
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  bead: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    top: 0,
+    left: 0,
+    zIndex: 0,
+  top: 50,
+Radius: 20,
     overflow: 'hidden',
     backgroundColor: 'transparent',
     borderWidth: 0,
