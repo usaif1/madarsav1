@@ -8,6 +8,7 @@ import NamesNavigator from '@/modules/names/navigation/names.navigator';
 import CompassNavigator from '@/modules/compass/navigation/compass.navigator';
 import DuaNavigator from '@/modules/dua/navigation/dua.navigator';
 import CalendarNavigator from '@/modules/calendar/navigation/calendar.navigator';
+import TasbihNavigator from '@/modules/tasbih/navigation/tasbih.navigator';
 
 const ParentNavigator = createNativeStackNavigator({
   initialRouteName: 'home',
@@ -32,6 +33,7 @@ const ParentNavigator = createNativeStackNavigator({
     compass: CompassNavigator,
     dua: DuaNavigator,
     calendar: CalendarNavigator,
+    tasbih: TasbihNavigator,
   },
 });
 

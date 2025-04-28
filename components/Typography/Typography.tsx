@@ -22,7 +22,7 @@ const createTextComponent = (
       ({children, style, color = 'heading', ...props}, ref) => (
         <RNText
           ref={ref}
-          style={[typography[variant], style, {color: TypographyColor[color]}]}
+          style={[typography[variant], {color: TypographyColor[color]}, style]}
           {...props}>
           {children}
         </RNText>

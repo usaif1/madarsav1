@@ -42,13 +42,21 @@ const actionList = [
   },
 ];
 
-const ActionList = () => {
+// Accepts prop to hide notification items when not logged in
+const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boolean }) => {
   const {shadows} = useThemeStore();
+
+  // Filter out notification items if not logged in
+  const filteredList = profileNotLoggedIn
+    ? actionList.filter(
+        item => item.id !== 'athan-notification' && item.id !== 'push-notification'
+      )
+    : actionList;
 
   return (
     <View style={[{padding: 20, backgroundColor: '#FFFFFF'}, shadows.sm1]}>
       <View style={{rowGap: 20}}>
-        {actionList.map(actionItem => {
+        {filteredList.map(actionItem => {
           return (
             <View
               key={actionItem.id}
