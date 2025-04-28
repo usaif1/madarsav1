@@ -10,6 +10,7 @@ interface SelectCounterModalProps {
   onSelectPreset: (count: number) => void;
   onCustomBeads: () => void;
   presetBeads: number[];
+  selectedCount?: number;
 }
 
 /**
@@ -22,6 +23,7 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
   onSelectPreset,
   onCustomBeads,
   presetBeads = [11, 33, 99],
+  selectedCount,
 }) => {
   return (
     <Modal
@@ -42,27 +44,61 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
         </View>
         
         <View style={styles.countersGrid}>
-          {presetBeads.map((count, index) => (
+          {/* First row */}
+          <View style={styles.gridRow}>
             <TouchableOpacity
-              key={index}
-              style={styles.counterItem}
+              style={[
+                styles.counterItem, 
+                selectedCount === presetBeads[0] && styles.selectedCounterItem
+              ]}
               onPress={() => {
-                onSelectPreset(count);
+                onSelectPreset(presetBeads[0]);
               }}
             >
-              <Text style={styles.counterNumber}>{count}</Text>
+              <Text style={styles.counterNumber}>{presetBeads[0]}</Text>
               <Text style={styles.counterLabel}>Beads</Text>
             </TouchableOpacity>
-          ))}
+            
+            <TouchableOpacity
+              style={[
+                styles.counterItem,
+                selectedCount === presetBeads[1] && styles.selectedCounterItem
+              ]}
+              onPress={() => {
+                onSelectPreset(presetBeads[1]);
+              }}
+            >
+              <Text style={styles.counterNumber}>{presetBeads[1]}</Text>
+              <Text style={styles.counterLabel}>Beads</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Second row */}
+          <View style={styles.gridRow}>
+            <TouchableOpacity
+              style={[
+                styles.counterItem,
+                selectedCount === presetBeads[2] && styles.selectedCounterItem
+              ]}
+              onPress={() => {
+                onSelectPreset(presetBeads[2]);
+              }}
+            >
+              <Text style={styles.counterNumber}>{presetBeads[2]}</Text>
+              <Text style={styles.counterLabel}>Beads</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.counterItem}
+              onPress={onCustomBeads}
+            >
+              <View style={styles.pencilContainer}>
+                <Pencil width={24} height={24} style={styles.pencilIcon} />
+              </View>
+              <Text style={styles.customBeadsText}>Set custom beads</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        
-        <TouchableOpacity 
-          style={styles.customBeadsBtn}
-          onPress={onCustomBeads}
-        >
-          <Pencil width={16} height={16} style={styles.pencilIcon} />
-          <Text style={styles.customBeadsText}>Set custom beads</Text>
-        </TouchableOpacity>
       </View>
     </Modal>
   );
@@ -77,17 +113,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 32,
+    paddingHorizontal: 20,
     width: '100%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 16,
-    paddingHorizontal: 8,
+    paddingBottom: 20,
   },
   title: {
     fontSize: 18,
@@ -100,42 +135,47 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   countersGrid: {
+    width: '100%',
+  },
+  gridRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 16,
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   counterItem: {
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'center',
+    padding: 20,
     borderWidth: 1,
-    borderColor: '#F1EAFD',
+    borderColor: '#E0E0E0',
     borderRadius: 16,
-    width: '30%',
+    width: '48%', // Slightly less than 50% to account for gap
+    height: 90, // Fixed height to make all boxes the same size
+    backgroundColor: 'white',
+  },
+  selectedCounterItem: {
+    borderColor: '#8A57DC', // Purple border for selected item
+    backgroundColor: '#F9F5FF', // Light purple background for selected
   },
   counterNumber: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#8A57DC',
+    color: '#333',
     marginBottom: 4,
   },
   counterLabel: {
     fontSize: 14,
     color: '#888',
   },
-  customBeadsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    paddingVertical: 12,
+  pencilContainer: {
+    marginBottom: 4,
   },
   pencilIcon: {
-    marginRight: 8,
+    color: '#333',
   },
   customBeadsText: {
-    color: '#8A57DC',
-    fontSize: 16,
-    fontWeight: '500',
+    color: '#777',
+    fontSize: 14,
   },
 });
 
