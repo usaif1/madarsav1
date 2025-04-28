@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import Modal from 'react-native-modal';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
 
@@ -13,6 +13,10 @@ interface CustomBeadModalProps {
   setInputTouched: (touched: boolean) => void;
 }
 
+/**
+ * Modal component for setting custom bead count
+ * Displays an input field for users to enter a custom number of beads
+ */
 const CustomBeadModal: React.FC<CustomBeadModalProps> = ({
   visible,
   value,
@@ -30,32 +34,41 @@ const CustomBeadModal: React.FC<CustomBeadModalProps> = ({
       useNativeDriverForBackdrop={true}
       avoidKeyboard={true}
       backdropOpacity={0.5}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
     >
-      <View style={styles.sheet}>
-        <View style={styles.header}>
-          <Body1Title2Bold style={styles.title}>Set custom beads</Body1Title2Bold>
-          <TouchableOpacity onPress={onClose} hitSlop={16}>
-            <Text style={styles.closeButton}>×</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardView}
+      >
+        <View style={styles.sheet}>
+          <View style={styles.header}>
+            <Body1Title2Bold style={styles.title}>Set custom beads</Body1Title2Bold>
+            <TouchableOpacity onPress={onClose} hitSlop={{top: 16, right: 16, bottom: 16, left: 16}}>
+              <Text style={styles.closeButton}>×</Text>
+            </TouchableOpacity>
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Add number of beads"
+            value={value}
+            keyboardType="number-pad"
+            onChangeText={text => { 
+              // Filter non-numeric characters
+              onChangeValue(text.replace(/[^0-9]/g, '')); 
+              setInputTouched(true); 
+            }}
+            autoFocus={true}
+          />
+          <TouchableOpacity
+            style={[styles.saveBtn, value ? styles.saveBtnActive : null]}
+            onPress={onSave}
+            disabled={!value}
+          >
+            <Body1Title2Bold style={styles.saveBtnText}>Save</Body1Title2Bold>
           </TouchableOpacity>
         </View>
-        <TextInput
-          style={styles.input}
-          placeholder="Add number of beads"
-          value={value}
-          keyboardType="number-pad"
-          onChangeText={text => { 
-            onChangeValue(text.replace(/[^0-9]/g, '')); 
-            setInputTouched(true); 
-          }}
-        />
-        <TouchableOpacity
-          style={[styles.saveBtn, value ? styles.saveBtnActive : null]}
-          onPress={onSave}
-          disabled={!value}
-        >
-          <Body1Title2Bold style={styles.saveBtnText}>Save</Body1Title2Bold>
-        </TouchableOpacity>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -65,26 +78,27 @@ const styles = StyleSheet.create({
     margin: 0,
     justifyContent: 'flex-end',
   },
+  keyboardView: {
+    width: '100%',
+  },
   sheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingTop: 24,
+    paddingTop: 16,
     paddingBottom: 24,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     width: '100%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 12,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1EAFD',
+    paddingBottom: 8,
+    paddingHorizontal: 8,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#222',
   },
@@ -96,11 +110,10 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#A07CFA',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 12,
-    fontSize: 22,
-    marginBottom: 16,
-    marginTop: 16,
+    fontSize: 16,
+    marginVertical: 16,
     color: '#222',
     backgroundColor: '#fff',
     textAlign: 'center',
@@ -110,14 +123,13 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 8,
   },
   saveBtnActive: {
-    backgroundColor: '#A07CFA',
+    backgroundColor: '#8A57DC',
   },
   saveBtnText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '700',
   },
 });

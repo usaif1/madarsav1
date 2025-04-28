@@ -1,42 +1,50 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Text, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import Modal from 'react-native-modal'; // Import react-native-modal
+import { View, StyleSheet, Pressable, Text, TouchableOpacity } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import rosaryBead from '@/assets/tasbih/rosaryBead.png';
-import ResetIcon from '@/assets/tasbih/resetViolet.svg'; // Replace with your actual reset icon
-import Pencil from '@/assets/tasbih/pencil.svg'; // For custom beads option
+import ResetIcon from '@/assets/tasbih/resetViolet.svg';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
-import ResetCounterModal from './ResetCounterModal'; // Import ResetCounterModal
+import ResetCounterModal from './ResetCounterModal';
+import CustomBeadModal from './CustomBeadModal';
 
 const PRESET_BEADS = [11, 33, 99];
 
 interface CounterControlsProps {
   selectedCount: number;
-  onSelectCounter: (count: number) => void;
+  onSelectCounter: () => void; // Changed to not expect a count parameter
   onReset: () => void;
-  onCustomBead?: () => void;
-  onShowCounterModal?: () => void;
+  onCustomBead?: (count: number) => void;
 }
 
-const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSelectCounter, onReset, onCustomBead, onShowCounterModal }) => {
+const CounterControls: React.FC<CounterControlsProps> = ({ 
+  selectedCount, 
+  onSelectCounter, 
+  onReset, 
+  onCustomBead
+}) => {
   const { colors } = useThemeStore();
   const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [customBeadModalVisible, setCustomBeadModalVisible] = useState(false);
+  const [customBeadValue, setCustomBeadValue] = useState('');
+  const [inputTouched, setInputTouched] = useState(false);
 
-  const handlePreset = (count: number) => {
-    if (onSelectCounter) onSelectCounter(count);
+  const handleCustomBeadSave = () => {
+    if (customBeadValue && parseInt(customBeadValue) > 0) {
+      if (onCustomBead) {
+        onCustomBead(parseInt(customBeadValue));
+      }
+      setCustomBeadModalVisible(false);
+    }
   };
-  const handleCustom = () => {
-    if (onCustomBead) onCustomBead();
-  };
-  // Reset modal handlers
+
   const handleResetCurrent = () => {
     setResetModalVisible(false);
     onReset();
   };
+  
   const handleResetAll = () => {
     setResetModalVisible(false);
-    // Placeholder: implement reset all logic if needed
     onReset();
   };
 
@@ -48,7 +56,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
           style={styles.beadImg}
           resizeMode={FastImage.resizeMode.contain}
         />
-        <Pressable style={styles.selectBtn} onPress={onShowCounterModal}>
+        <Pressable style={styles.selectBtn} onPress={onSelectCounter}>
           <Body1Title2Bold style={styles.selectCounterText}>
             Select counter <Body1Title2Bold style={styles.counterNumber}>({selectedCount})</Body1Title2Bold>
           </Body1Title2Bold>
@@ -58,12 +66,22 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
           <Body1Title2Bold style={styles.resetText}>Reset</Body1Title2Bold>
         </Pressable>
       </View>
-      <View style={styles.topBorderOnly} />
+      
       <ResetCounterModal
         visible={resetModalVisible}
         onClose={() => setResetModalVisible(false)}
         onResetCurrent={handleResetCurrent}
         onResetAll={handleResetAll}
+      />
+      
+      <CustomBeadModal
+        visible={customBeadModalVisible}
+        value={customBeadValue}
+        onChangeValue={setCustomBeadValue}
+        onSave={handleCustomBeadSave}
+        onClose={() => setCustomBeadModalVisible(false)}
+        inputTouched={inputTouched}
+        setInputTouched={setInputTouched}
       />
     </>
   );
@@ -133,12 +151,6 @@ const styles = StyleSheet.create({
     color: '#8A57DC',
     fontWeight: '700',
     marginLeft: 2,
-  },
-  topBorderOnly: {
-    borderTopWidth: 1,
-    borderTopColor: '#ECECEC',
-    width: '100%',
-    marginBottom: 0,
   },
 });
 

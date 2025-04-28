@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { DuaCard, Beads, CounterControls } from '../components';
 import ChangeDuaModal from '../components/ChangeDuaModal';
+import CustomBeadModal from '../components/CustomBeadModal';
+import SelectCounterModal from '../components/SelectCounterModal';
 import { useThemeStore } from '@/globalStore';
 import { verticalScale } from '@/theme/responsive';
 
@@ -103,7 +105,7 @@ const duaList = [
     verses: [
       {
         arabic: 'اللّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ',
-        transliteration: 'Allahumma inni as’aluka al-‘afwa wal-‘afiyah',
+        transliteration: `Allahumma inni as'aluka al-'afwa wal-'afiyah`,
         translation: 'O Allah, I ask You for pardon and well-being.',
       },
       {
@@ -133,33 +135,44 @@ const duaList = [
     verses: [
       {
         arabic: 'اللّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ زَوَالِ نِعْمَتِكَ',
-        transliteration: 'Allahumma inni a’udhu bika min zawali ni’matik',
+        transliteration: `Allahumma inni a'udhu bika min zawali ni'matik`,
         translation: 'O Allah, I seek refuge in You from the decline of Your favor.',
       },
       {
         arabic: 'وَتَحَوُّلِ عَافِيَتِكَ',
-        transliteration: 'wa tahawwuli ‘afiyatika',
+        transliteration: `wa tahawwuli 'afiyatika`,
         translation: 'and the loss of Your well-being.',
       },
       {
         arabic: 'وَفُجَاءَةِ نِقْمَتِكَ',
-        transliteration: 'wa fuja’ati niqmatik',
+        transliteration: `wa fuja'ati niqmatik`,
         translation: 'and the suddenness of Your punishment.',
       },
       {
         arabic: 'وَجَمِيعِ سَخَطِكَ',
-        transliteration: 'wa jami’i sakhatik',
+        transliteration: `wa jami'i sakhatik`,
         translation: 'and all forms of Your displeasure.',
       },
     ],
   },
 ];
 
+// Preset bead counts for the counter
+const PRESET_BEADS = [11, 33, 99];
+
+/**
+ * TasbihScreen component displaying Islamic prayer beads with duas
+ * Manages the state and UI for digital tasbih counter
+ */
 const TasbihScreen: React.FC = () => {
   const [selectedDuaIndex, setSelectedDuaIndex] = useState(0);
   const [beadIndex, setBeadIndex] = useState(0);
   const [beadCount, setBeadCount] = useState(duaList[selectedDuaIndex].verses.length); // Verses per dua
   const [duaModalVisible, setDuaModalVisible] = useState(false);
+  const [selectCounterModalVisible, setSelectCounterModalVisible] = useState(false);
+  const [customBeadModalVisible, setCustomBeadModalVisible] = useState(false);
+  const [customBeadValue, setCustomBeadValue] = useState('');
+  const [inputTouched, setInputTouched] = useState(false);
   const { colors } = useThemeStore();
 
   useEffect(() => {
@@ -169,7 +182,9 @@ const TasbihScreen: React.FC = () => {
   }, [selectedDuaIndex]);
 
   useEffect(() => {
-    console.log("Modal visibility state in TasbihScreen:", duaModalVisible);
+    if (__DEV__) {
+      console.log("Modal visibility state in TasbihScreen:", duaModalVisible);
+    }
   }, [duaModalVisible]);
 
   const handlePrev = () => {
@@ -189,6 +204,22 @@ const TasbihScreen: React.FC = () => {
   const handleSelectCounter = (count: number) => {
     setBeadCount(count);
     setBeadIndex(0);
+    setSelectCounterModalVisible(false);
+  };
+
+  const handleCustomBeadOpen = () => {
+    setCustomBeadValue('');
+    setInputTouched(false);
+    setCustomBeadModalVisible(true);
+    setSelectCounterModalVisible(false);
+  };
+
+  const handleCustomBeadSave = () => {
+    if (customBeadValue && parseInt(customBeadValue) > 0) {
+      setBeadCount(parseInt(customBeadValue));
+      setBeadIndex(0);
+      setCustomBeadModalVisible(false);
+    }
   };
 
   const handleReset = () => {
@@ -205,7 +236,9 @@ const TasbihScreen: React.FC = () => {
 
   // Enhanced modal toggle function
   const toggleDuaModal = () => {
-    console.log("Toggling dua modal from:", duaModalVisible, "to:", !duaModalVisible);
+    if (__DEV__) {
+      console.log("Toggling dua modal from:", duaModalVisible, "to:", !duaModalVisible);
+    }
     setDuaModalVisible(prevState => !prevState);
     
     // Emit an event for debugging in dev tools
@@ -231,21 +264,43 @@ const TasbihScreen: React.FC = () => {
         totalCount={beadCount}
       />
       <CounterControls
-        selectedCount={beadCount}
-        onSelectCounter={handleSelectCounter}
-        onReset={handleReset}
-      />
+  selectedCount={beadCount}
+  onSelectCounter={() => setSelectCounterModalVisible(true)}
+  onReset={handleReset}
+/>
       
-      {/* The modal component - properly passing visible prop */}
+      {/* Dua selection modal */}
       <ChangeDuaModal
         visible={duaModalVisible}
         duaList={duaList}
         selectedIndex={selectedDuaIndex}
         onSelect={handleSelectDua}
         onClose={() => {
-          console.log("Closing modal");
+          if (__DEV__) {
+            console.log("Closing modal");
+          }
           setDuaModalVisible(false);
         }}
+      />
+
+      {/* Counter selection modal */}
+      <SelectCounterModal
+        visible={selectCounterModalVisible}
+        onClose={() => setSelectCounterModalVisible(false)}
+        onSelectPreset={handleSelectCounter}
+        onCustomBeads={handleCustomBeadOpen}
+        presetBeads={PRESET_BEADS}
+      />
+      
+      {/* Custom bead count modal */}
+      <CustomBeadModal
+        visible={customBeadModalVisible}
+        value={customBeadValue}
+        onChangeValue={setCustomBeadValue}
+        onSave={handleCustomBeadSave}
+        onClose={() => setCustomBeadModalVisible(false)}
+        inputTouched={inputTouched}
+        setInputTouched={setInputTouched}
       />
     </View>
   );

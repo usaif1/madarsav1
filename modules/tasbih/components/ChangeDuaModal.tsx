@@ -5,8 +5,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
+  FlatList,
   Pressable,
+  Dimensions,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import Bubble from '@/assets/tasbih/bubble.svg';
@@ -14,6 +15,9 @@ import Close from '@/assets/tasbih/close.svg';
 import LeftFlowerChangeDua from '@/assets/tasbih/leftFlowerChangeDua.svg';
 import RightFlowerChangeDua from '@/assets/tasbih/rightFlowerChangeDua.svg';
 import { verticalScale } from '@/theme/responsive';
+
+// Get screen dimensions for calculations
+const { height: screenHeight } = Dimensions.get('window');
 
 export interface Dua {
   verses: {
@@ -38,54 +42,66 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   onSelect,
   onClose,
 }) => {
-  // Added console log for debugging
-  console.log("Modal visibility state:", visible);
+  // Render individual dua item
+  const renderDuaItem = ({ item, index }: { item: Dua; index: number }) => (
+    <TouchableOpacity
+      style={styles.duaRow}
+      onPress={() => onSelect(index)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.duaTextWrap}>
+        <Text style={styles.arabic}>{item.verses[0].arabic}</Text>
+        <Text style={styles.transliteration}>{item.verses[0].transliteration}</Text>
+        <Text style={styles.translation}>{item.verses[0].translation}</Text>
+      </View>
+      <View style={styles.bubbleWrap}>
+        <Bubble width={32} height={32} />
+        <Text style={styles.bubbleNum}>{index + 1}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+  
+  // Extract a unique key for each item in the FlatList
+  const keyExtractor = (_: Dua, index: number) => `dua-${index}`;
   
   return (
     <Modal 
       isVisible={visible} 
       onBackdropPress={onClose}
       backdropOpacity={0.5}
-      style={{ margin: 0, justifyContent: 'flex-end', height: '95%' }}
+      style={styles.modal}
       useNativeDriverForBackdrop={true}
       avoidKeyboard={true}
     >
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Change dua</Text>
-            <Pressable onPress={onClose} hitSlop={16}>
-              <Close width={24} height={24} />
-            </Pressable>
-          </View>
-          <View style={styles.tapRow}>
-            <LeftFlowerChangeDua width={34} height={34} />
-            <Text style={styles.tapText}>Tap to change dua</Text>
-            <RightFlowerChangeDua width={34} height={34} />
-          </View>
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
-            {duaList.map((dua, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={[
-                  styles.duaRow,
-                  // idx === selectedIndex && styles.selectedDua,
-                ]}
-                onPress={() => onSelect(idx)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.duaTextWrap}>
-                  <Text style={styles.arabic}>{dua.verses[0].arabic}</Text>
-                  <Text style={styles.transliteration}>{dua.verses[0].transliteration}</Text>
-                  <Text style={styles.translation}>{dua.verses[0].translation}</Text>
-                </View>
-                <View style={styles.bubbleWrap}>
-                  <Bubble width={32} height={32} />
-                  <Text style={styles.bubbleNum}>{idx + 1}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+      <View style={styles.sheet}>
+        {/* Fixed header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Change dua</Text>
+          <Pressable onPress={onClose} hitSlop={16}>
+            <Close width={24} height={24} />
+          </Pressable>
+        </View>
+        
+        {/* Fixed tap row */}
+        <View style={styles.tapRow}>
+          <LeftFlowerChangeDua width={34} height={34} />
+          <Text style={styles.tapText}>Tap to change dua</Text>
+          <RightFlowerChangeDua width={34} height={34} />
+        </View>
+        
+        {/* Scrollable content area */}
+        <View style={styles.listContainer}>
+          <FlatList
+            data={duaList}
+            renderItem={renderDuaItem}
+            keyExtractor={keyExtractor}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={true}
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={true} // Optimize memory usage
+          />
         </View>
       </View>
     </Modal>
@@ -93,9 +109,8 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+  modal: {
+    margin: 0,
     justifyContent: 'flex-end',
   },
   sheet: {
@@ -105,8 +120,10 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 0,
     paddingHorizontal: 0,
-    maxHeight: '95%', 
-    minHeight: verticalScale(800),
+    height: Math.min(verticalScale(800), screenHeight * 0.95), // Use whichever is smaller
+    maxHeight: '95%',
+    // Removed minHeight to avoid conflicts
+    overflow: 'hidden', // Important to contain all children
   },
   header: {
     flexDirection: 'row',
@@ -139,6 +156,14 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
+  // Critical fix - This container ensures FlatList gets proper dimensions
+  listContainer: {
+    flex: 1, // Take remaining space
+    overflow: 'hidden',
+  },
+  listContent: {
+    paddingBottom: 32,
+  },
   duaRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -147,9 +172,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F5F5F5',
     backgroundColor: '#fff',
-  },
-  selectedDua: {
-    backgroundColor: '#F7F3FF', // The purplish background is correct for the selected dua (controlled by selectedIndex prop)
   },
   bubbleWrap: {
     marginTop: 4,
