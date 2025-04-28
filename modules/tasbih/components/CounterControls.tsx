@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Text, Modal, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import Modal from 'react-native-modal'; // Import react-native-modal
 import Marble from '@/assets/tasbih/marble.svg';
 import ResetIcon from '@/assets/tasbih/reset.svg'; // Replace with your actual reset icon
 import Pencil from '@/assets/tasbih/pencil.svg'; // For custom beads option
 import { Body1Title2Bold } from '@/components';
 import { useThemeStore } from '@/globalStore';
+import ResetCounterModal from './ResetCounterModal'; // Import ResetCounterModal
 
 const PRESET_BEADS = [11, 33, 99];
 
@@ -20,6 +22,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
   const [customModal, setCustomModal] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [inputTouched, setInputTouched] = useState(false);
+  const [resetModalVisible, setResetModalVisible] = useState(false);
 
   const handlePreset = (count: number) => {
     setModalVisible(false);
@@ -37,6 +40,16 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
       setInputTouched(false);
     }
   };
+  // Reset modal handlers
+  const handleResetCurrent = () => {
+    setResetModalVisible(false);
+    onReset();
+  };
+  const handleResetAll = () => {
+    setResetModalVisible(false);
+    // Placeholder: implement reset all logic if needed
+    onReset();
+  };
 
   return (
     <>
@@ -45,7 +58,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
         <Pressable style={styles.selectBtn} onPress={() => setModalVisible(true)}>
           <Body1Title2Bold color="primary">Select counter ({selectedCount})</Body1Title2Bold>
         </Pressable>
-        <Pressable style={styles.resetBtn} onPress={onReset}>
+        <Pressable style={styles.resetBtn} onPress={() => setResetModalVisible(true)}>
           <ResetIcon width={22} height={22} style={{ marginRight: 6 }} />
           <Text style={styles.resetText}>Reset</Text>
         </Pressable>
@@ -53,8 +66,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
       <View style={styles.topBorderOnly} />
 
       {/* Counter Select Modal */}
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <TouchableOpacity style={styles.modalBg} activeOpacity={1} onPress={() => setModalVisible(false)} />
+      <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)}>
         <View style={styles.modalSheet}>
           <Text style={styles.modalTitle}>Select counter</Text>
           <View style={styles.counterGrid}>
@@ -77,8 +89,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
       </Modal>
 
       {/* Custom Bead Modal */}
-      <Modal visible={customModal} transparent animationType="slide">
-        <TouchableOpacity style={styles.modalBg} activeOpacity={1} onPress={() => setCustomModal(false)} />
+      <Modal isVisible={customModal} onBackdropPress={() => setCustomModal(false)}>
         <KeyboardAvoidingView
           style={styles.modalSheet}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -100,6 +111,14 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
           </TouchableOpacity>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Reset Counter Modal */}
+      <ResetCounterModal
+        visible={resetModalVisible}
+        onClose={() => setResetModalVisible(false)}
+        onResetCurrent={handleResetCurrent}
+        onResetAll={handleResetAll}
+      />
     </>
   );
 };
@@ -144,10 +163,6 @@ const styles = StyleSheet.create({
     borderTopColor: '#ECECEC',
     width: '100%',
     marginBottom: 0,
-  },
-  modalBg: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
   },
   modalSheet: {
     position: 'absolute',

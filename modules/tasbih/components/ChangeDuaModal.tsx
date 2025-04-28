@@ -3,14 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TouchableOpacity,
   ScrollView,
   Pressable,
 } from 'react-native';
+import Modal from 'react-native-modal';
 import Bubble from '@/assets/tasbih/bubble.svg';
 import Close from '@/assets/tasbih/close.svg';
-import { Body1Title2Bold } from '@/components';
 
 export interface Dua {
   arabic: string;
@@ -34,7 +33,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   onClose,
 }) => {
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal isVisible={visible} onBackdropPress={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.header}>
