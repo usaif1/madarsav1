@@ -58,8 +58,9 @@ const CounterControls: React.FC<CounterControlsProps> = ({
         />
         <Pressable style={styles.selectBtn} onPress={onSelectCounter}>
           <Body1Title2Bold style={styles.selectCounterText}>
-            Select counter <Body1Title2Bold style={styles.counterNumber}>({selectedCount})</Body1Title2Bold>
+            Select counter 
           </Body1Title2Bold>
+          <Body1Title2Bold style={styles.counterNumber}> ({selectedCount})</Body1Title2Bold>
         </Pressable>
         <Pressable style={styles.resetBtn} onPress={() => setResetModalVisible(true)}>
           <ResetIcon width={18} height={18} style={{ marginRight: 4 }} />
@@ -107,11 +108,9 @@ const styles = StyleSheet.create({
   },
   selectBtn: {
     width: 182,
+    backgroundColor: '#F7F3FF',
     height: 36,
-    backgroundColor: '#fff',
     borderRadius: 60,
-    borderWidth: 1,
-    borderColor: '#F1EAFD',
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -121,8 +120,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   selectCounterText: {
-    color: '#888',
-    fontSize: 18,
+    color: '#8A57DC',
+    fontSize: 14,
     fontWeight: '400',
     textAlign: 'center',
     flexDirection: 'row',
@@ -131,15 +130,15 @@ const styles = StyleSheet.create({
   counterNumber: {
     color: '#8A57DC',
     fontWeight: '700',
-    fontSize: 18,
+    fontSize: 14,
     marginLeft: 2,
   },
   resetBtn: {
     width: 97,
     height: 36,
-    backgroundColor: '#F7F3FF',
     borderRadius: 60,
-    flexDirection: 'row',
+    flexDirection: 'row',borderWidth: 1,
+    borderColor: '#F1EAFD',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
@@ -147,8 +146,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   resetText: {
-    fontSize: 18,
-    color: '#8A57DC',
+    fontSize: 14,
+    color: '#888',
     fontWeight: '700',
     marginLeft: 2,
   },

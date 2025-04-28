@@ -5,7 +5,6 @@ import {
   Animated, 
   Pressable, 
   useWindowDimensions, 
-  Text, 
   PanResponder
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -42,16 +41,17 @@ const Beads: React.FC<BeadsProps> = ({
 
   // Calculate bead positions along the SVG thread curve
   // For demonstration, let's assume the thread SVG is a simple quadratic Bezier curve from (x1,y1) to (x2,y2) with control point (cx,cy)
-  // You can adjust these values to match your actual SVG
   const x1 = 32, y1 = 80;
   const x2 = threadWidth - 32, y2 = 80;
   const cx = threadWidth / 2, cy = 10; // Control point for curve
+  
   function getQuadraticBezierXY(t: number, sx: number, sy: number, cx: number, cy: number, ex: number, ey: number) {
     return {
       x: Math.pow(1 - t, 2) * sx + 2 * (1 - t) * t * cx + Math.pow(t, 2) * ex,
       y: Math.pow(1 - t, 2) * sy + 2 * (1 - t) * t * cy + Math.pow(t, 2) * ey,
     };
   }
+  
   const beadPositions = Array.from({ length: count }, (_, i) => {
     const t = count === 1 ? 0.5 : i / (count - 1);
     const pos = getQuadraticBezierXY(t, x1, y1, cx, cy, x2, y2);
@@ -201,8 +201,17 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     zIndex: 0,
-  top: 50,
-Radius: 20,
+  },
+  beadWrap: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    zIndex: 1,
+  },
+  bead: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: 'transparent',
     borderWidth: 0,
