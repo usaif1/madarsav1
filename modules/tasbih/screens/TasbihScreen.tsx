@@ -4,95 +4,153 @@ import { View, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { DuaCard, Beads, CounterControls } from '../components';
 import ChangeDuaModal from '../components/ChangeDuaModal';
 import { useThemeStore } from '@/globalStore';
+import { verticalScale } from '@/theme/responsive';
 
-// --- Dua data structure now supports multiple verses ---
+// --- Famous multi-verse duas ---
 const duaList = [
   {
     id: '1',
     verses: [
       {
-        arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الْغَفُورُ',
-        transliteration: 'Rabbighfirli watub alayya innaka antat-Tawwabul-Ghafur',
-        translation: 'O my Rabb, forgive me, and accept my repentance. Verily, You are the Oft-Returning, the Most Forgiving.',
+        arabic: 'اللّهُـمَّ أَنْتَ السَّلاَمُ وَمِنْكَ السَّلاَمُ',
+        transliteration: 'Allahumma antas-salaamu wa minkas-salaam',
+        translation: 'O Allah, You are Peace and from You is peace.',
       },
-      // Add more verses if needed
+      {
+        arabic: 'تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ',
+        transliteration: 'Tabaarakta yaa Dhal-Jalaali wal-Ikraam',
+        translation: 'Blessed are You, O Possessor of majesty and honor.',
+      },
     ],
   },
   {
     id: '2',
     verses: [
       {
-        arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
-        transliteration: `La ilaha illallah, wahdahu la sharika lahu, lahul-mulku wa lahul-hamdu wa huwa 'ala kulli shay'in qadir.`,
-        translation: 'There is no god but Allah. He is Alone and He has no partner whatsoever. To Him Alone belongs all sovereignty and all praise. He is over all things competent.',
+        arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ',
+        transliteration: 'Rabbi ighfir li wa tub alayya',
+        translation: 'My Lord, forgive me and turn to me in mercy.',
       },
-      // Add more verses if needed
+      {
+        arabic: 'إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ',
+        transliteration: 'Innaka anta at-Tawwaabur-Raheem',
+        translation: 'Indeed, You are the Accepting of repentance, the Merciful.',
+      },
+      {
+        arabic: 'اللّهُمَّ اغْفِرْ لِي وَارْحَمْنِي',
+        transliteration: 'Allahumma ighfir li warhamni',
+        translation: 'O Allah, forgive me and have mercy on me.',
+      },
     ],
   },
   {
     id: '3',
     verses: [
       {
-        arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، سُبْحَانَ اللّٰهِ الْعَظِيمِ',
-        transliteration: 'Subhanallahi wa bihamdihi, subhanallahil-azim.',
-        translation: 'Glory is to Allah and praise is to Him, glory is to Allah the Supreme.',
+        arabic: 'سُبْحَانَ اللّٰهِ',
+        transliteration: 'Subhanallah',
+        translation: 'Glory is to Allah.',
       },
-      // Add more verses if needed
+      {
+        arabic: 'الْحَمْدُ لِلّٰهِ',
+        transliteration: 'Alhamdulillah',
+        translation: 'All praise is for Allah.',
+      },
+      {
+        arabic: 'اللّٰهُ أَكْبَرُ',
+        transliteration: 'Allahu Akbar',
+        translation: 'Allah is the Greatest.',
+      },
     ],
   },
   {
     id: '4',
     verses: [
       {
-        arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
-        transliteration: `Allahumma salli 'ala Muhammadin wa 'ala aali Muhammad`,
-        translation: 'O Allah, send prayers upon Muhammad and upon the family of Muhammad.',
+        arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
+        transliteration: 'Allahumma salli ala Muhammad',
+        translation: 'O Allah, send prayers upon Muhammad.',
       },
-      // Add more verses if needed
+      {
+        arabic: 'وَعَلَى آلِ مُحَمَّدٍ',
+        transliteration: 'wa ala aali Muhammad',
+        translation: 'and upon the family of Muhammad.',
+      },
     ],
   },
   {
     id: '5',
     verses: [
       {
-        arabic: 'أَسْتَغْفِرُ اللّٰهَ',
-        transliteration: 'Astaghfirullah.',
-        translation: 'I seek forgiveness from Allah.',
+        arabic: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً',
+        transliteration: 'Rabbana atina fid-dunya hasanah',
+        translation: 'Our Lord, give us in this world [that which is] good',
       },
-      // Add more verses if needed
+      {
+        arabic: 'وَفِي الْآخِرَةِ حَسَنَةً',
+        transliteration: 'wa fil-akhirati hasanah',
+        translation: 'and in the Hereafter [that which is] good',
+      },
+      {
+        arabic: 'وَقِنَا عَذَابَ النَّارِ',
+        transliteration: 'wa qina adhaban-nar',
+        translation: 'and protect us from the punishment of the Fire.',
+      },
     ],
   },
   {
     id: '6',
     verses: [
       {
-        arabic: 'سُبْحَانَ اللّٰهِ',
-        transliteration: 'Subhanallah.',
-        translation: 'Glory is to Allah.',
+        arabic: 'اللّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ',
+        transliteration: 'Allahumma inni as’aluka al-‘afwa wal-‘afiyah',
+        translation: 'O Allah, I ask You for pardon and well-being.',
       },
-      // Add more verses if needed
+      {
+        arabic: 'فِي الدُّنْيَا وَالآخِرَةِ',
+        transliteration: 'fid-dunya wal-akhirah',
+        translation: 'in this world and the Hereafter.',
+      },
     ],
   },
   {
     id: '7',
     verses: [
       {
-        arabic: 'الْحَمْدُ لِلّٰهِ',
-        transliteration: 'Alhamdulillah.',
-        translation: 'All praise is for Allah.',
+        arabic: 'اللّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ',
+        transliteration: 'Allahumma ihdini fiman hadayt',
+        translation: 'O Allah, guide me among those You have guided.',
       },
-      // Add more verses if needed
+      {
+        arabic: 'وَعَافِنِي فِيمَنْ عَافَيْتَ',
+        transliteration: 'wa aafini fiman aafayt',
+        translation: 'and grant me well-being among those You have granted well-being.',
+      },
     ],
   },
   {
     id: '8',
     verses: [
       {
-        arabic: 'اللّٰهُ أَكْبَرُ',
-        transliteration: 'Allahu Akbar.',
-        translation: 'Allah is the Greatest.',
+        arabic: 'اللّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ زَوَالِ نِعْمَتِكَ',
+        transliteration: 'Allahumma inni a’udhu bika min zawali ni’matik',
+        translation: 'O Allah, I seek refuge in You from the decline of Your favor.',
       },
-      // Add more verses if needed
+      {
+        arabic: 'وَتَحَوُّلِ عَافِيَتِكَ',
+        transliteration: 'wa tahawwuli ‘afiyatika',
+        translation: 'and the loss of Your well-being.',
+      },
+      {
+        arabic: 'وَفُجَاءَةِ نِقْمَتِكَ',
+        transliteration: 'wa fuja’ati niqmatik',
+        translation: 'and the suddenness of Your punishment.',
+      },
+      {
+        arabic: 'وَجَمِيعِ سَخَطِكَ',
+        transliteration: 'wa jami’i sakhatik',
+        translation: 'and all forms of Your displeasure.',
+      },
     ],
   },
 ];
@@ -170,6 +228,7 @@ const TasbihScreen: React.FC = () => {
         count={beadCount}
         activeIndex={beadIndex}
         onAdvance={handleNext}
+        totalCount={beadCount}
       />
       <CounterControls
         selectedCount={beadCount}
@@ -197,6 +256,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    rowGap: verticalScale(52),
   },
 });
 

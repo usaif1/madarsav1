@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import Modal from 'react-native-modal'; // Import react-native-modal
-import Marble from '@/assets/tasbih/marble.svg';
-import ResetIcon from '@/assets/tasbih/reset.svg'; // Replace with your actual reset icon
+import FastImage from 'react-native-fast-image';
+import rosaryBead from '@/assets/tasbih/rosaryBead.png';
+import ResetIcon from '@/assets/tasbih/resetViolet.svg'; // Replace with your actual reset icon
 import Pencil from '@/assets/tasbih/pencil.svg'; // For custom beads option
-import { Body1Title2Bold } from '@/components';
+import { Body1Title2Bold } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
 import ResetCounterModal from './ResetCounterModal'; // Import ResetCounterModal
 
@@ -54,13 +55,19 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
   return (
     <>
       <View style={styles.row}>
-        <Marble width={36} height={36} />
+        <FastImage
+          source={rosaryBead}
+          style={styles.beadImg}
+          resizeMode={FastImage.resizeMode.contain}
+        />
         <Pressable style={styles.selectBtn} onPress={() => setModalVisible(true)}>
-          <Body1Title2Bold color="primary">Select counter ({selectedCount})</Body1Title2Bold>
+          <Body1Title2Bold style={styles.selectCounterText}>
+            Select counter <Body1Title2Bold style={styles.counterNumber}>({selectedCount})</Body1Title2Bold>
+          </Body1Title2Bold>
         </Pressable>
         <Pressable style={styles.resetBtn} onPress={() => setResetModalVisible(true)}>
-          <ResetIcon width={22} height={22} style={{ marginRight: 6 }} />
-          <Text style={styles.resetText}>Reset</Text>
+          <ResetIcon width={18} height={18} style={{ marginRight: 4 }} />
+          <Body1Title2Bold style={styles.resetText}>Reset</Body1Title2Bold>
         </Pressable>
       </View>
       <View style={styles.topBorderOnly} />
@@ -68,7 +75,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
       {/* Counter Select Modal */}
       <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)}>
         <View style={styles.modalSheet}>
-          <Text style={styles.modalTitle}>Select counter</Text>
+          <Body1Title2Bold style={styles.modalTitle}>Select counter</Body1Title2Bold>
           <View style={styles.counterGrid}>
             {PRESET_BEADS.map(count => (
               <TouchableOpacity
@@ -76,13 +83,13 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
                 style={[styles.counterOption, selectedCount === count && styles.counterOptionActive]}
                 onPress={() => handlePreset(count)}
               >
-                <Text style={styles.counterNum}>{count}</Text>
-                <Text style={styles.counterLabel}>Beads</Text>
+                <Body1Title2Bold style={styles.counterNum}>{count}</Body1Title2Bold>
+                <Body1Title2Bold style={styles.counterLabel}>Beads</Body1Title2Bold>
               </TouchableOpacity>
             ))}
             <TouchableOpacity style={styles.counterOption} onPress={handleCustom}>
               <Pencil width={20} height={20} style={{ marginBottom: 2 }} />
-              <Text style={styles.counterLabel}>Set custom beads</Text>
+              <Body1Title2Bold style={styles.counterLabel}>Set custom beads</Body1Title2Bold>
             </TouchableOpacity>
           </View>
         </View>
@@ -94,7 +101,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
           style={styles.modalSheet}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <Text style={styles.modalTitle}>Set custom beads</Text>
+          <Body1Title2Bold style={styles.modalTitle}>Set custom beads</Body1Title2Bold>
           <TextInput
             style={styles.input}
             placeholder="Add number of beads"
@@ -107,7 +114,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({ selectedCount, onSele
             onPress={handleSaveCustom}
             disabled={!customValue}
           >
-            <Text style={styles.saveBtnText}>Save</Text>
+            <Body1Title2Bold style={styles.saveBtnText}>Save</Body1Title2Bold>
           </TouchableOpacity>
         </KeyboardAvoidingView>
       </Modal>
@@ -127,36 +134,66 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     width: '100%',
-    paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderTopColor: '#ECECEC',
+    borderTopWidth: 1,
+  },
+  beadImg: {
+    width: 36,
+    height: 36,
+    marginRight: 8,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
   },
   selectBtn: {
-    flex: 1,
-    marginHorizontal: 12,
-    backgroundColor: '#F7F3FF',
-    borderRadius: 24,
-    height: 48,
+    width: 182,
+    height: 36,
+    backgroundColor: '#fff',
+    borderRadius: 60,
+    borderWidth: 1,
+    borderColor: '#F1EAFD',
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    gap: 4,
+    marginRight: 8,
   },
-  resetBtn: {
+  selectCounterText: {
+    color: '#888',
+    fontSize: 18,
+    fontWeight: '400',
+    textAlign: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ECECEC',
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    height: 48,
-    marginLeft: 8,
+  },
+  counterNumber: {
+    color: '#8A57DC',
+    fontWeight: '700',
+    fontSize: 18,
+    marginLeft: 2,
+  },
+  resetBtn: {
+    width: 97,
+    height: 36,
+    backgroundColor: '#F7F3FF',
+    borderRadius: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    gap: 4,
   },
   resetText: {
     fontSize: 18,
-    color: '#888',
-    fontWeight: '500',
+    color: '#8A57DC',
+    fontWeight: '700',
+    marginLeft: 2,
   },
   topBorderOnly: {
     borderTopWidth: 1,
