@@ -5,83 +5,141 @@ import { DuaCard, Beads, CounterControls } from '../components';
 import ChangeDuaModal from '../components/ChangeDuaModal';
 import { useThemeStore } from '@/globalStore';
 
+// --- Dua data structure now supports multiple verses ---
 const duaList = [
   {
-    arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الْغَفُورُ',
-    transliteration: 'Rabbighfirli watub alayya innaka antat-Tawwabul-Ghafur',
-    translation: 'O my Rabb, forgive me, and accept my repentance. Verily, You are the Oft-Returning, the Most Forgiving.',
+    id: '1',
+    verses: [
+      {
+        arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الْغَفُورُ',
+        transliteration: 'Rabbighfirli watub alayya innaka antat-Tawwabul-Ghafur',
+        translation: 'O my Rabb, forgive me, and accept my repentance. Verily, You are the Oft-Returning, the Most Forgiving.',
+      },
+      // Add more verses if needed
+    ],
   },
   {
-    arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
-    transliteration: `La ilaha illallah, wahdahu la sharika lahu, lahul-mulku wa lahul-hamdu wa huwa 'ala kulli shay'in qadir.`,
-    translation: 'There is no god but Allah. He is Alone and He has no partner whatsoever. To Him Alone belongs all sovereignty and all praise. He is over all things competent.',
+    id: '2',
+    verses: [
+      {
+        arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+        transliteration: `La ilaha illallah, wahdahu la sharika lahu, lahul-mulku wa lahul-hamdu wa huwa 'ala kulli shay'in qadir.`,
+        translation: 'There is no god but Allah. He is Alone and He has no partner whatsoever. To Him Alone belongs all sovereignty and all praise. He is over all things competent.',
+      },
+      // Add more verses if needed
+    ],
   },
   {
-    arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، سُبْحَانَ اللّٰهِ الْعَظِيمِ',
-    transliteration: 'Subhanallahi wa bihamdihi, subhanallahil-azim.',
-    translation: 'Glory is to Allah and praise is to Him, glory is to Allah the Supreme.',
+    id: '3',
+    verses: [
+      {
+        arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، سُبْحَانَ اللّٰهِ الْعَظِيمِ',
+        transliteration: 'Subhanallahi wa bihamdihi, subhanallahil-azim.',
+        translation: 'Glory is to Allah and praise is to Him, glory is to Allah the Supreme.',
+      },
+      // Add more verses if needed
+    ],
   },
   {
-    arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
-    transliteration: `Allahumma salli 'ala Muhammadin wa 'ala aali Muhammad`,
-    translation: 'O Allah, send prayers upon Muhammad and upon the family of Muhammad.',
+    id: '4',
+    verses: [
+      {
+        arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
+        transliteration: `Allahumma salli 'ala Muhammadin wa 'ala aali Muhammad`,
+        translation: 'O Allah, send prayers upon Muhammad and upon the family of Muhammad.',
+      },
+      // Add more verses if needed
+    ],
   },
   {
-    arabic: 'أَسْتَغْفِرُ اللّٰهَ',
-    transliteration: 'Astaghfirullah.',
-    translation: 'I seek forgiveness from Allah.',
+    id: '5',
+    verses: [
+      {
+        arabic: 'أَسْتَغْفِرُ اللّٰهَ',
+        transliteration: 'Astaghfirullah.',
+        translation: 'I seek forgiveness from Allah.',
+      },
+      // Add more verses if needed
+    ],
   },
   {
-    arabic: 'سُبْحَانَ اللّٰهِ',
-    transliteration: 'Subhanallah.',
-    translation: 'Glory is to Allah.',
+    id: '6',
+    verses: [
+      {
+        arabic: 'سُبْحَانَ اللّٰهِ',
+        transliteration: 'Subhanallah.',
+        translation: 'Glory is to Allah.',
+      },
+      // Add more verses if needed
+    ],
   },
   {
-    arabic: 'الْحَمْدُ لِلّٰهِ',
-    transliteration: 'Alhamdulillah.',
-    translation: 'All praise is for Allah.',
+    id: '7',
+    verses: [
+      {
+        arabic: 'الْحَمْدُ لِلّٰهِ',
+        transliteration: 'Alhamdulillah.',
+        translation: 'All praise is for Allah.',
+      },
+      // Add more verses if needed
+    ],
   },
   {
-    arabic: 'اللّٰهُ أَكْبَرُ',
-    transliteration: 'Allahu Akbar.',
-    translation: 'Allah is the Greatest.',
+    id: '8',
+    verses: [
+      {
+        arabic: 'اللّٰهُ أَكْبَرُ',
+        transliteration: 'Allahu Akbar.',
+        translation: 'Allah is the Greatest.',
+      },
+      // Add more verses if needed
+    ],
   },
 ];
 
 const TasbihScreen: React.FC = () => {
-  const [duaIndex, setDuaIndex] = useState(0);
-  const [beadCount, setBeadCount] = useState(11); // Default to 11
-  const [activeBead, setActiveBead] = useState(0);
+  const [selectedDuaIndex, setSelectedDuaIndex] = useState(0);
+  const [beadIndex, setBeadIndex] = useState(0);
+  const [beadCount, setBeadCount] = useState(duaList[selectedDuaIndex].verses.length); // Verses per dua
   const [duaModalVisible, setDuaModalVisible] = useState(false);
   const { colors } = useThemeStore();
 
-  // Add debugging for modal visibility
+  useEffect(() => {
+    // Update bead count when dua changes
+    setBeadCount(duaList[selectedDuaIndex].verses.length);
+    setBeadIndex(0);
+  }, [selectedDuaIndex]);
+
   useEffect(() => {
     console.log("Modal visibility state in TasbihScreen:", duaModalVisible);
   }, [duaModalVisible]);
 
   const handlePrev = () => {
-    setDuaIndex(i => (i > 0 ? i - 1 : duaList.length - 1));
-    setActiveBead(0);
+    setBeadIndex(i => (i > 0 ? i - 1 : beadCount - 1));
   };
   
   const handleNext = () => {
-    setDuaIndex(i => (i < duaList.length - 1 ? i + 1 : 0));
-    setActiveBead(0);
+    setBeadIndex(i => (i < beadCount - 1 ? i + 1 : 0));
+  };
+
+  const handleSelectDua = (idx: number) => {
+    setSelectedDuaIndex(idx);
+    setBeadIndex(0);
+    setDuaModalVisible(false);
   };
 
   const handleSelectCounter = (count: number) => {
     setBeadCount(count);
-    setActiveBead(0);
+    setBeadIndex(0);
   };
 
   const handleReset = () => {
-    setActiveBead(0);
+    setBeadIndex(0);
   };
 
   const handleAdvanceBead = () => {
-    if (activeBead < beadCount - 1) {
-      setActiveBead(activeBead + 1);
+    if (beadIndex < beadCount - 1) {
+      setBeadIndex(beadIndex + 1);
     } else {
       handleNext(); // Change dua and reset bead
     }
@@ -101,17 +159,17 @@ const TasbihScreen: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}> 
       <DuaCard
-        arabic={duaList[duaIndex].arabic}
-        transliteration={duaList[duaIndex].transliteration}
-        translation={duaList[duaIndex].translation}
+        arabic={duaList[selectedDuaIndex].verses[beadIndex].arabic}
+        transliteration={duaList[selectedDuaIndex].verses[beadIndex].transliteration}
+        translation={duaList[selectedDuaIndex].verses[beadIndex].translation}
         onPrev={handlePrev}
         onNext={handleNext}
-        onChangeDua={toggleDuaModal} // Fixed function reference
+        onChangeDua={() => setDuaModalVisible(true)}
       />
       <Beads
         count={beadCount}
-        activeIndex={activeBead}
-        onAdvance={handleAdvanceBead}
+        activeIndex={beadIndex}
+        onAdvance={handleNext}
       />
       <CounterControls
         selectedCount={beadCount}
@@ -123,13 +181,8 @@ const TasbihScreen: React.FC = () => {
       <ChangeDuaModal
         visible={duaModalVisible}
         duaList={duaList}
-        selectedIndex={duaIndex}
-        onSelect={(idx) => {
-          console.log("Selected dua index:", idx);
-          setDuaIndex(idx);
-          setDuaModalVisible(false);
-          setActiveBead(0);
-        }}
+        selectedIndex={selectedDuaIndex}
+        onSelect={handleSelectDua}
         onClose={() => {
           console.log("Closing modal");
           setDuaModalVisible(false);

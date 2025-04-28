@@ -11,11 +11,16 @@ import {
 import Modal from 'react-native-modal';
 import Bubble from '@/assets/tasbih/bubble.svg';
 import Close from '@/assets/tasbih/close.svg';
+import LeftFlowerChangeDua from '@/assets/tasbih/leftFlowerChangeDua.svg';
+import RightFlowerChangeDua from '@/assets/tasbih/rightFlowerChangeDua.svg';
+import { verticalScale } from '@/theme/responsive';
 
 export interface Dua {
-  arabic: string;
-  transliteration: string;
-  translation: string;
+  verses: {
+    arabic: string;
+    transliteration: string;
+    translation: string;
+  }[];
 }
 
 interface ChangeDuaModalProps {
@@ -38,12 +43,12 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   
   return (
     <Modal 
-      isVisible={visible} // Fixed to match the prop name
+      isVisible={visible} 
       onBackdropPress={onClose}
-      backdropOpacity={0.5} // Added for better visuals
-      style={{ margin: 0 }} // Ensures proper positioning
-      useNativeDriverForBackdrop={true} // Added for performance
-      avoidKeyboard={true} // Better handling with keyboard
+      backdropOpacity={0.5}
+      style={{ margin: 0, justifyContent: 'flex-end', height: '95%' }}
+      useNativeDriverForBackdrop={true}
+      avoidKeyboard={true}
     >
       <View style={styles.overlay}>
         <View style={styles.sheet}>
@@ -54,7 +59,9 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
             </Pressable>
           </View>
           <View style={styles.tapRow}>
+            <LeftFlowerChangeDua width={34} height={34} />
             <Text style={styles.tapText}>Tap to change dua</Text>
+            <RightFlowerChangeDua width={34} height={34} />
           </View>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
             {duaList.map((dua, idx) => (
@@ -62,16 +69,17 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
                 key={idx}
                 style={[
                   styles.duaRow,
-                  idx === selectedIndex && styles.selectedDua,
+                  // idx === selectedIndex && styles.selectedDua,
                 ]}
                 onPress={() => onSelect(idx)}
                 activeOpacity={0.7}
               >
                 <View style={styles.duaTextWrap}>
-                  <Text style={styles.arabic}>{dua.arabic}</Text>
-                  <Text style={styles.transliteration}>{dua.transliteration}</Text>
-                  <Text style={styles.translation}>{dua.translation}</Text>
-                </View><View style={styles.bubbleWrap}>
+                  <Text style={styles.arabic}>{dua.verses[0].arabic}</Text>
+                  <Text style={styles.transliteration}>{dua.verses[0].transliteration}</Text>
+                  <Text style={styles.translation}>{dua.verses[0].translation}</Text>
+                </View>
+                <View style={styles.bubbleWrap}>
                   <Bubble width={32} height={32} />
                   <Text style={styles.bubbleNum}>{idx + 1}</Text>
                 </View>
@@ -97,7 +105,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 0,
     paddingHorizontal: 0,
-    maxHeight: '92%',
+    maxHeight: '100%', 
     minHeight: 300,
   },
   header: {
@@ -116,9 +124,11 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   tapRow: {
-    backgroundColor: '#F7F3FF',
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    justifyContent: 'space-between',
+    height: verticalScale(34),
+    backgroundColor: '#F7F3FF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1EAFD',
   },
@@ -126,6 +136,8 @@ const styles = StyleSheet.create({
     color: '#A07CFA',
     fontWeight: '700',
     fontSize: 16,
+    flex: 1,
+    textAlign: 'center',
   },
   duaRow: {
     flexDirection: 'row',
@@ -137,7 +149,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   selectedDua: {
-    backgroundColor: '#F7F3FF',
+    backgroundColor: '#F7F3FF', // The purplish background is correct for the selected dua (controlled by selectedIndex prop)
   },
   bubbleWrap: {
     marginTop: 4,

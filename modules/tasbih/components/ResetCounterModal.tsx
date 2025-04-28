@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import ResetIcon from '@/assets/tasbih/reset.svg';
+import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import ResetIcon from '@/assets/tasbih/resetViolet.svg';
+import { scale } from '@/theme/responsive';
+import { Title3Bold, Body1Title2Medium, Body1Title2Bold } from '@/components/Typography/Typography';
 
 interface ResetCounterModalProps {
   visible: boolean;
@@ -15,18 +17,18 @@ const ResetCounterModal: React.FC<ResetCounterModalProps> = ({ visible, onClose,
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.iconWrap}>
-            <ResetIcon width={38} height={38} style={{ opacity: 0.4 }} />
+            <ResetIcon width={38} height={38} />
           </View>
-          <Text style={styles.title}>Reset counter</Text>
-          <Text style={styles.subtitle}>Sure to reset the counter?</Text>
+          <Title3Bold style={styles.title}>Reset counter</Title3Bold>
+          <Body1Title2Medium style={styles.subtitle}>Sure to reset the counter?</Body1Title2Medium>
           <TouchableOpacity style={styles.resetBtn} onPress={onResetCurrent}>
-            <Text style={styles.resetBtnText}>Reset current counter</Text>
+            <Body1Title2Bold style={styles.resetBtnText}>Reset current counter</Body1Title2Bold>
           </TouchableOpacity>
           <TouchableOpacity style={styles.resetAllBtn} onPress={onResetAll}>
-            <Text style={styles.resetAllBtnText}>Reset all counters</Text>
+            <Body1Title2Bold style={styles.resetAllBtnText}>Reset all counters</Body1Title2Bold>
           </TouchableOpacity>
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeBtnText}>✕ Close</Text>
+            <Body1Title2Bold style={styles.closeBtnText}>✕ Close</Body1Title2Bold>
           </TouchableOpacity>
         </View>
       </View>
@@ -48,7 +50,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 20,
     alignItems: 'center',
-    width: 300,
+    width: scale(335),
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
@@ -64,17 +66,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#6C52EE',
     marginBottom: 4,
     marginTop: 2,
   },
   subtitle: {
     fontSize: 15,
-    color: '#888',
+    color: '#737373',
     marginBottom: 18,
   },
   resetBtn: {
-    backgroundColor: '#A07CFA',
+    backgroundColor: '#6D2DD3',
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 18,
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   resetAllBtn: {
-    backgroundColor: '#F7F3FF',
+    backgroundColor: '#F0EAFB',
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 18,
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resetAllBtnText: {
-    color: '#A07CFA',
+    color: '#8A57DC',
     fontSize: 17,
     fontWeight: '700',
   },
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   closeBtnText: {
-    color: '#A07CFA',
+    color: '#8A57DC',
     fontSize: 18,
     fontWeight: '700',
     marginTop: 2,
