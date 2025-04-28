@@ -267,11 +267,13 @@ const TasbihScreen: React.FC = () => {
         onAdvance={handleNext}
         totalCount={beadCount}
       /> */}
-      <CounterControls
-  selectedCount={beadCount}
-  onSelectCounter={() => setSelectCounterModalVisible(true)}
-  onReset={handleReset}
-/>
+      <View style={styles.counterControlsWrapper}>
+        <CounterControls
+          selectedCount={beadCount}
+          onSelectCounter={() => setSelectCounterModalVisible(true)}
+          onReset={handleReset}
+        />
+      </View>
       
       {/* Dua selection modal */}
       <ChangeDuaModal
@@ -319,6 +321,15 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     rowGap: verticalScale(52),
+  },
+  counterControlsWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    paddingBottom: verticalScale(32),
+    backgroundColor: 'transparent',
   },
 });
 
