@@ -7,6 +7,8 @@ import LogoUrduSm from '@/assets/logo_urdu_small.svg';
 import LogoUrduSmPurple from '@/assets/logo_urdu_small_purple.svg';
 import TnCGraphic from '@/assets/profile/TnCGraphic.svg';
 import PrivacyPolicyGraphic from '@/assets/profile/PrivacyPolicyGraphic.svg';
+import TnCGraphicWide from '@/assets/profile/TnCGraphicWide.svg';
+import PrivacyPolicyGraphicWide from '@/assets/profile/PrivacyPolicyGraphicWide.svg';
 
 // store
 import {useThemeStore} from '@/globalStore';
@@ -15,8 +17,12 @@ import {useThemeStore} from '@/globalStore';
 import {Divider} from '@/components';
 import {Body2Medium, CaptionBold, Title3Bold} from '@/components';
 
+import { useWindowDimensions } from 'react-native';
+
 const AppVersion = () => {
   const {shadows} = useThemeStore();
+  const { width } = useWindowDimensions();
+  const isWide = width >= 700; // iPad and larger screens
 
   return (
     <View style={[{padding: 20, backgroundColor: '#FFFFFF'}, shadows.sm1]}>
@@ -76,10 +82,17 @@ const AppVersion = () => {
         </View>
       </View>
       <Divider height={14} />
-      <View style={{flexDirection: 'row', columnGap: 12}}>
-        <TnCGraphic />
-        <PrivacyPolicyGraphic />
-      </View>
+      {isWide ? (
+        <View style={{flexDirection: 'row', columnGap: 12, width: '100%', justifyContent: 'center'}}>
+          <TnCGraphicWide/>
+          <PrivacyPolicyGraphicWide />
+        </View>
+      ) : (
+        <View style={{flexDirection: 'row', columnGap: 12}}>
+          <TnCGraphic />
+          <PrivacyPolicyGraphic />
+        </View>
+      )}
       <Divider height={24} />
       <View
         style={{

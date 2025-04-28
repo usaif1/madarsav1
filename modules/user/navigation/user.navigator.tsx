@@ -3,7 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Platform} from 'react-native';
 
 // screens
-import {Profile, ProfileDetails} from '../screens';
+import {Profile, ProfileDetails, ProfileNotLoggedIn} from '../screens';
 
 // components
 import {BackButton, Header, LogoutButton} from '@/components';
@@ -15,6 +15,17 @@ const UserNavigator = createNativeStackNavigator({
     headerShadowVisible: false,
   },
   screens: {
+    profileNotLoggedIn: {
+      screen: ProfileNotLoggedIn,
+      options: {
+        title: 'Profile',
+        headerShown: true,
+        headerTitleAlign: 'center',
+        header: () => (
+          <Header title="Profile" RightButton={() => <LogoutButton />} />
+        ),
+      },
+    },
     profile: {
       screen: Profile,
       options: {

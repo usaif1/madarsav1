@@ -23,9 +23,9 @@ const TOOLS: ToolItem[] = [
   {key: 'duas', title: "Dua's", to: 'dua'},
   // {key: 'hadith', title: 'Hadith'},
   {key: 'user', title: 'User', to: 'user'},
-  // {key: 'tasbih', title: 'Tasbih'},
+  {key: 'tasbih', title: 'Tasbih', to: 'tasbih'},
   {key: 'names', title: '99 Names', to: 'names'},
-  // {key: 'calendar', title: 'Calendar'},
+  {key: 'calendar', title: 'Calendar', to: 'calendar'},
   {key: 'qiblah', title: 'Qiblah', to: 'compass'},
   // {key: 'gallery', title: 'Gallery'},
 ];

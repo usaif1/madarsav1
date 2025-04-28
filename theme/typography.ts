@@ -70,6 +70,9 @@ export enum TypographyColor {
   'secondary' = '#808080',
   'white' = '#FFFFFF',
   'yellow-800' = '#6D591D',
+  'warning' = '#DC6803',
+  'accent-yellow-900' = '#5E4B1C',
+  'accent-yellow-800' = '#6D591D',
 }
 
 export type TypographyColorKeys =
@@ -80,7 +83,10 @@ export type TypographyColorKeys =
   | 'primary'
   | 'white'
   | 'secondary'
-  | 'yellow-800';
+  | 'yellow-800'
+  | 'warning'
+  | 'accent-yellow-900'
+  | 'accent-yellow-800';
 
 // Factory function to create typography variants
 const createTypographyVariants = (): Typography =>

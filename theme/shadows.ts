@@ -1,4 +1,4 @@
-enum ShadowColors {
+export enum ShadowColors {
   'border-dark' = '#E5E5E5',
   'border-light' = '#F5F5F5',
   'border-darker' = '#D4D4D4',
