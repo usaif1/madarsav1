@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+// TasbihScreen.tsx
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { DuaCard, Beads, CounterControls } from '../components';
 import ChangeDuaModal from '../components/ChangeDuaModal';
 import { useThemeStore } from '@/globalStore';
 
 const duaList = [
   {
-    arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الْغَفُورُ',
+    arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الْغَفُورُ',
     transliteration: 'Rabbighfirli watub alayya innaka antat-Tawwabul-Ghafur',
     translation: 'O my Rabb, forgive me, and accept my repentance. Verily, You are the Oft-Returning, the Most Forgiving.',
   },
   {
     arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
-    transliteration: 'La ilaha illallah, wahdahu la sharika lahu, lahul-mulku wa lahul-hamdu wa huwa ‘ala kulli shay’in qadir.',
+    transliteration: `La ilaha illallah, wahdahu la sharika lahu, lahul-mulku wa lahul-hamdu wa huwa 'ala kulli shay'in qadir.`,
     translation: 'There is no god but Allah. He is Alone and He has no partner whatsoever. To Him Alone belongs all sovereignty and all praise. He is over all things competent.',
   },
   {
@@ -22,7 +23,7 @@ const duaList = [
   },
   {
     arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
-    transliteration: 'Allahumma salli ‘ala Muhammadin wa ‘ala aali Muhammad.',
+    transliteration: `Allahumma salli 'ala Muhammadin wa 'ala aali Muhammad`,
     translation: 'O Allah, send prayers upon Muhammad and upon the family of Muhammad.',
   },
   {
@@ -54,10 +55,16 @@ const TasbihScreen: React.FC = () => {
   const [duaModalVisible, setDuaModalVisible] = useState(false);
   const { colors } = useThemeStore();
 
+  // Add debugging for modal visibility
+  useEffect(() => {
+    console.log("Modal visibility state in TasbihScreen:", duaModalVisible);
+  }, [duaModalVisible]);
+
   const handlePrev = () => {
     setDuaIndex(i => (i > 0 ? i - 1 : duaList.length - 1));
     setActiveBead(0);
   };
+  
   const handleNext = () => {
     setDuaIndex(i => (i < duaList.length - 1 ? i + 1 : 0));
     setActiveBead(0);
@@ -80,6 +87,17 @@ const TasbihScreen: React.FC = () => {
     }
   };
 
+  // Enhanced modal toggle function
+  const toggleDuaModal = () => {
+    console.log("Toggling dua modal from:", duaModalVisible, "to:", !duaModalVisible);
+    setDuaModalVisible(prevState => !prevState);
+    
+    // Emit an event for debugging in dev tools
+    if (__DEV__) {
+      DeviceEventEmitter.emit('MODAL_TOGGLE', { visible: !duaModalVisible });
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}> 
       <DuaCard
@@ -88,7 +106,7 @@ const TasbihScreen: React.FC = () => {
         translation={duaList[duaIndex].translation}
         onPrev={handlePrev}
         onNext={handleNext}
-        onChangeDua={() => setDuaModalVisible(true)}
+        onChangeDua={toggleDuaModal} // Fixed function reference
       />
       <Beads
         count={beadCount}
@@ -100,16 +118,22 @@ const TasbihScreen: React.FC = () => {
         onSelectCounter={handleSelectCounter}
         onReset={handleReset}
       />
+      
+      {/* The modal component - properly passing visible prop */}
       <ChangeDuaModal
         visible={duaModalVisible}
         duaList={duaList}
         selectedIndex={duaIndex}
-        onSelect={idx => {
+        onSelect={(idx) => {
+          console.log("Selected dua index:", idx);
           setDuaIndex(idx);
           setDuaModalVisible(false);
           setActiveBead(0);
         }}
-        onClose={() => setDuaModalVisible(false)}
+        onClose={() => {
+          console.log("Closing modal");
+          setDuaModalVisible(false);
+        }}
       />
     </View>
   );

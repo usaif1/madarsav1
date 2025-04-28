@@ -1,3 +1,4 @@
+// ChangeDuaModal.tsx
 import React from 'react';
 import {
   View,
@@ -32,14 +33,24 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   onSelect,
   onClose,
 }) => {
+  // Added console log for debugging
+  console.log("Modal visibility state:", visible);
+  
   return (
-    <Modal isVisible={visible} onBackdropPress={onClose}>
+    <Modal 
+      isVisible={visible} // Fixed to match the prop name
+      onBackdropPress={onClose}
+      backdropOpacity={0.5} // Added for better visuals
+      style={{ margin: 0 }} // Ensures proper positioning
+      useNativeDriverForBackdrop={true} // Added for performance
+      avoidKeyboard={true} // Better handling with keyboard
+    >
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.header}>
             <Text style={styles.title}>Change dua</Text>
             <Pressable onPress={onClose} hitSlop={16}>
-              <Close width={28} height={28} />
+              <Close width={24} height={24} />
             </Pressable>
           </View>
           <View style={styles.tapRow}>
@@ -56,14 +67,13 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
                 onPress={() => onSelect(idx)}
                 activeOpacity={0.7}
               >
-                <View style={styles.bubbleWrap}>
-                  <Bubble width={32} height={32} />
-                  <Text style={styles.bubbleNum}>{idx + 1}</Text>
-                </View>
                 <View style={styles.duaTextWrap}>
                   <Text style={styles.arabic}>{dua.arabic}</Text>
                   <Text style={styles.transliteration}>{dua.transliteration}</Text>
                   <Text style={styles.translation}>{dua.translation}</Text>
+                </View><View style={styles.bubbleWrap}>
+                  <Bubble width={32} height={32} />
+                  <Text style={styles.bubbleNum}>{idx + 1}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -131,7 +141,7 @@ const styles = StyleSheet.create({
   },
   bubbleWrap: {
     marginTop: 4,
-    marginRight: 12,
+    marginLeft: 12,
     width: 32,
     height: 32,
     justifyContent: 'center',

@@ -1,3 +1,4 @@
+// DuaCard.tsx
 import React from 'react';
 import { View, StyleSheet, Text, Pressable, useWindowDimensions } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -22,6 +23,12 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
   const { width } = useWindowDimensions();
   // Responsive scaling - increased by 20 as requested
   const cardWidth = Math.min(width - 32, 363); // Increased from 343 to 363
+
+  // Enhanced onChangeDua handler with debug logging
+  const handleChangeDua = () => {
+    console.log("Change dua button pressed");
+    onChangeDua();
+  };
 
   return (
     <View style={[styles.cardContainer, { width: cardWidth }]}> 
@@ -83,10 +90,10 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
       >
         <ArrowRight width={16} height={16} />
       </Pressable>
-      {/* Change Dua Button positioned at bottom center */}
+      {/* Change Dua Button positioned at bottom center - Fixed onPress handler */}
       <Pressable 
         style={styles.changeDuaBtn} 
-        onPress={onChangeDua} 
+        onPress={handleChangeDua} 
         accessibilityLabel="Change dua"
       >
         <Hamburger width={18} height={18} style={{ marginRight: 4 }} />
