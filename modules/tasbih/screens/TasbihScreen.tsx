@@ -163,7 +163,7 @@ const PRESET_BEADS = [11, 33, 99];
 /**
  * TasbihScreen component displaying Islamic prayer beads with duas
  * Manages the state and UI for digital tasbih counter
- */
+*/
 const TasbihScreen: React.FC = () => {
   const [selectedDuaIndex, setSelectedDuaIndex] = useState(0);
   const [beadIndex, setBeadIndex] = useState(0);
@@ -174,7 +174,9 @@ const TasbihScreen: React.FC = () => {
   const [customBeadValue, setCustomBeadValue] = useState('');
   const [inputTouched, setInputTouched] = useState(false);
   const { colors } = useThemeStore();
-
+  // Helper to determine if custom is selected
+  const isCustomSelected = !PRESET_BEADS.includes(beadCount);
+  
   useEffect(() => {
     // Update bead count when dua changes
     setBeadCount(duaList[selectedDuaIndex].verses.length);
@@ -196,8 +198,10 @@ const TasbihScreen: React.FC = () => {
   };
 
   const handleSelectDua = (idx: number) => {
+    const newVerseCount = duaList[idx].verses.length;
     setSelectedDuaIndex(idx);
-    setBeadIndex(0);
+    setBeadCount(newVerseCount);
+    setBeadIndex(prevIndex => Math.min(prevIndex, newVerseCount - 1)); // Ensure index is within bounds
     setDuaModalVisible(false);
   };
 
@@ -257,12 +261,12 @@ const TasbihScreen: React.FC = () => {
         onNext={handleNext}
         onChangeDua={() => setDuaModalVisible(true)}
       />
-      <Beads
+      {/* <Beads
         count={beadCount}
         activeIndex={beadIndex}
         onAdvance={handleNext}
         totalCount={beadCount}
-      />
+      /> */}
       <CounterControls
   selectedCount={beadCount}
   onSelectCounter={() => setSelectCounterModalVisible(true)}
@@ -290,6 +294,9 @@ const TasbihScreen: React.FC = () => {
         onSelectPreset={handleSelectCounter}
         onCustomBeads={handleCustomBeadOpen}
         presetBeads={PRESET_BEADS}
+        selectedCount={beadCount}
+        isCustomSelected={!PRESET_BEADS.includes(beadCount)}
+        customValue={!PRESET_BEADS.includes(beadCount) ? beadCount : undefined}
       />
       
       {/* Custom bead count modal */}

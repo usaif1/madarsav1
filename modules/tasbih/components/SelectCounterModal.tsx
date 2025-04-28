@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Modal from 'react-native-modal';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
-import Pencil from '@/assets/tasbih/pencil.svg'; // Ensure you have this icon
+import Pencil from '@/assets/tasbih/pencil.svg';
 
 interface SelectCounterModalProps {
   visible: boolean;
@@ -11,12 +11,10 @@ interface SelectCounterModalProps {
   onCustomBeads: () => void;
   presetBeads: number[];
   selectedCount?: number;
+  isCustomSelected?: boolean;
+  customValue?: number;
 }
 
-/**
- * Modal component for selecting preset counter values or custom counter option
- * Displays a grid of preset bead counts and an option to set custom beads
- */
 const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
   visible,
   onClose,
@@ -24,6 +22,8 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
   onCustomBeads,
   presetBeads = [11, 33, 99],
   selectedCount,
+  isCustomSelected = false,
+  customValue,
 }) => {
   return (
     <Modal
@@ -38,7 +38,7 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
       <View style={styles.sheet}>
         <View style={styles.header}>
           <Body1Title2Bold style={styles.title}>Select counter</Body1Title2Bold>
-          <TouchableOpacity onPress={onClose} hitSlop={{top: 16, right: 16, bottom: 16, left: 16}}>
+          <TouchableOpacity onPress={onClose} hitSlop={16}>
             <Text style={styles.closeButton}>×</Text>
           </TouchableOpacity>
         </View>
@@ -46,56 +46,51 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
         <View style={styles.countersGrid}>
           {/* First row */}
           <View style={styles.gridRow}>
-            <TouchableOpacity
-              style={[
-                styles.counterItem, 
-                selectedCount === presetBeads[0] && styles.selectedCounterItem
-              ]}
-              onPress={() => {
-                onSelectPreset(presetBeads[0]);
-              }}
-            >
-              <Text style={styles.counterNumber}>{presetBeads[0]}</Text>
-              <Text style={styles.counterLabel}>Beads</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.counterItem,
-                selectedCount === presetBeads[1] && styles.selectedCounterItem
-              ]}
-              onPress={() => {
-                onSelectPreset(presetBeads[1]);
-              }}
-            >
-              <Text style={styles.counterNumber}>{presetBeads[1]}</Text>
-              <Text style={styles.counterLabel}>Beads</Text>
-            </TouchableOpacity>
+            {presetBeads.slice(0, 2).map((count) => (
+              <TouchableOpacity
+                key={count}
+                style={[
+                  styles.counterItem,
+                  selectedCount === count && !isCustomSelected && styles.selectedCounterItem
+                ]}
+                onPress={() => onSelectPreset(count)}
+              >
+                <Text style={styles.counterNumber}>{count}</Text>
+                <Text style={styles.counterLabel}>Beads</Text>
+              </TouchableOpacity>
+            ))}
           </View>
           
           {/* Second row */}
           <View style={styles.gridRow}>
-            <TouchableOpacity
-              style={[
-                styles.counterItem,
-                selectedCount === presetBeads[2] && styles.selectedCounterItem
-              ]}
-              onPress={() => {
-                onSelectPreset(presetBeads[2]);
-              }}
-            >
-              <Text style={styles.counterNumber}>{presetBeads[2]}</Text>
-              <Text style={styles.counterLabel}>Beads</Text>
-            </TouchableOpacity>
+            {presetBeads.length > 2 && (
+              <TouchableOpacity
+                style={[
+                  styles.counterItem,
+                  selectedCount === presetBeads[2] && !isCustomSelected && styles.selectedCounterItem
+                ]}
+                onPress={() => onSelectPreset(presetBeads[2])}
+              >
+                <Text style={styles.counterNumber}>{presetBeads[2]}</Text>
+                <Text style={styles.counterLabel}>Beads</Text>
+              </TouchableOpacity>
+            )}
             
             <TouchableOpacity 
-              style={styles.counterItem}
+              style={[
+                styles.counterItem,
+                styles.customCounterItem,
+                isCustomSelected && styles.selectedCounterItem
+              ]}
               onPress={onCustomBeads}
             >
-              <View style={styles.pencilContainer}>
-                <Pencil width={24} height={24} style={styles.pencilIcon} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>{isCustomSelected && customValue ? (
+                  <Text style={styles.customBeadsValue}>{customValue}</Text>
+                ) : null}
+              <Pencil width={24} height={24} style={styles.pencilIcon} /></View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={styles.customBeadsText}>Set custom beads</Text>
               </View>
-              <Text style={styles.customBeadsText}>Set custom beads</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -110,10 +105,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingTop: 20,
+    paddingTop: 24,
     paddingBottom: 32,
     paddingHorizontal: 20,
     width: '100%',
@@ -122,17 +117,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 20,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#222',
+    color: '#222222',
   },
   closeButton: {
     fontSize: 28,
-    color: '#888',
-    fontWeight: '400',
+    color: '#888888',
+    lineHeight: 28,
   },
   countersGrid: {
     width: '100%',
@@ -145,37 +140,44 @@ const styles = StyleSheet.create({
   counterItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-    borderWidth: 1,
+    paddingVertical: 16,
+    borderWidth: 1.5,
     borderColor: '#E0E0E0',
     borderRadius: 16,
-    width: '48%', // Slightly less than 50% to account for gap
-    height: 90, // Fixed height to make all boxes the same size
-    backgroundColor: 'white',
+    width: '48%',
+    height: 96,
+    backgroundColor: '#FFFFFF',
   },
   selectedCounterItem: {
-    borderColor: '#8A57DC', // Purple border for selected item
-    backgroundColor: '#F9F5FF', // Light purple background for selected
+    borderColor: '#8A57DC',
+    backgroundColor: '#F9F5FF',
+  },
+  customCounterItem: {
+    gap: 8,
   },
   counterNumber: {
-    fontSize: 24,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#333',
+    color: '#333333',
     marginBottom: 4,
   },
   counterLabel: {
     fontSize: 14,
-    color: '#888',
-  },
-  pencilContainer: {
-    marginBottom: 4,
+    color: '#888888',
+    fontWeight: '500',
   },
   pencilIcon: {
-    color: '#333',
+    color: '#333333',
   },
   customBeadsText: {
-    color: '#777',
+    color: '#777777',
     fontSize: 14,
+    fontWeight: '500',
+  },
+  customBeadsValue: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginLeft: 4,
   },
 });
 
