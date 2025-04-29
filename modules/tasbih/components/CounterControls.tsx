@@ -7,7 +7,7 @@ import { Body1Title2Bold } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
 import ResetCounterModal from './ResetCounterModal';
 import CustomBeadModal from './CustomBeadModal';
-
+import { scale, verticalScale } from '@/theme/responsive';
 const PRESET_BEADS = [11, 33, 99];
 
 interface CounterControlsProps {
@@ -50,23 +50,33 @@ const CounterControls: React.FC<CounterControlsProps> = ({
 
   return (
     <>
-      <View style={styles.row}>
-        <FastImage
-          source={rosaryBead}
-          style={styles.beadImg}
-          resizeMode={FastImage.resizeMode.contain}
-        />
-        <Pressable style={styles.selectBtn} onPress={onSelectCounter}>
-          <Body1Title2Bold style={styles.selectCounterText}>
-            Select counter 
-          </Body1Title2Bold>
-          <Body1Title2Bold style={styles.counterNumber}> ({selectedCount})</Body1Title2Bold>
-        </Pressable>
-        <Pressable style={styles.resetBtn} onPress={() => setResetModalVisible(true)}>
-          <ResetIcon width={18} height={18} style={{ marginRight: 4 }} />
-          <Body1Title2Bold style={styles.resetText}>Reset</Body1Title2Bold>
-        </Pressable>
-      </View>
+      <View style={[styles.row, { borderTopColor: colors.primary.primary100 }]}>
+  <FastImage
+    source={rosaryBead}
+    style={styles.beadImg}
+    resizeMode={FastImage.resizeMode.contain}
+  />
+  <Pressable
+    style={[styles.selectBtn, { backgroundColor: colors.primary.primary50 }]}
+    onPress={onSelectCounter}
+  >
+    <Body1Title2Bold style={[styles.selectCounterText, { color: colors.primary.primary600 }]}>
+      Select counter
+    </Body1Title2Bold>
+    <Body1Title2Bold style={[styles.counterNumber, { color: colors.primary.primary600 }]}>
+      ({selectedCount})
+    </Body1Title2Bold>
+  </Pressable>
+  <Pressable
+    style={[styles.resetBtn, { borderColor: colors.primary.primary100 }]}
+    onPress={() => setResetModalVisible(true)}
+  >
+    <ResetIcon width={scale(18)} height={scale(18)} style={{ marginRight: scale(4) }} />
+    <Body1Title2Bold style={[styles.resetText, { color: colors.secondary.neutral500 }]}>
+      Reset
+    </Body1Title2Bold>
+  </Pressable>
+</View>
       
       <ResetCounterModal
         visible={resetModalVisible}
@@ -94,62 +104,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     width: '100%',
-    paddingTop: 12,
-    paddingHorizontal: 18,
-    borderTopColor: '#ECECEC',
+    paddingTop: verticalScale(12),
+    paddingHorizontal: scale(18),
     borderTopWidth: 1,
   },
   beadImg: {
-    width: 36,
-    height: 36,
-    marginRight: 8,
-    borderRadius: 18,
+    width: scale(36),
+    height: scale(36),
+    marginRight: scale(8),
+    borderRadius: scale(18),
     backgroundColor: 'transparent',
   },
   selectBtn: {
-    width: 182,
-    backgroundColor: '#F7F3FF',
-    height: 36,
-    borderRadius: 60,
+    width: scale(182),
+    height: scale(36),
+    borderRadius: scale(60),
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    gap: 4,
-    marginRight: 8,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(16),
+    marginRight: scale(8),
   },
   selectCounterText: {
-    color: '#8A57DC',
-    fontSize: 14,
+    fontSize: scale(14),
     fontWeight: '400',
     textAlign: 'center',
     flexDirection: 'row',
     alignItems: 'center',
   },
   counterNumber: {
-    color: '#8A57DC',
     fontWeight: '700',
-    fontSize: 14,
-    marginLeft: 2,
+    fontSize: scale(14),
+    marginLeft: scale(2),
   },
   resetBtn: {
-    width: 97,
-    height: 36,
-    borderRadius: 60,
-    flexDirection: 'row',borderWidth: 1,
-    borderColor: '#F1EAFD',
+    width: scale(97),
+    height: scale(36),
+    borderRadius: scale(60),
+    flexDirection: 'row',
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    gap: 4,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(16),
   },
   resetText: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: scale(14),
     fontWeight: '700',
-    marginLeft: 2,
+    marginLeft: scale(2),
   },
 });
 
