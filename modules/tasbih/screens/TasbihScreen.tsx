@@ -272,6 +272,7 @@ const TasbihScreen: React.FC = () => {
           selectedCount={beadCount}
           onSelectCounter={() => setSelectCounterModalVisible(true)}
           onReset={handleReset}
+          currentCount={beadIndex}
         />
       </View>
       

@@ -8,9 +8,12 @@ import { useThemeStore } from '@/globalStore';
 import ResetCounterModal from './ResetCounterModal';
 import CustomBeadModal from './CustomBeadModal';
 import { scale, verticalScale } from '@/theme/responsive';
+import { ShadowColors } from '@/theme/shadows';
+
 const PRESET_BEADS = [11, 33, 99];
 
 interface CounterControlsProps {
+  currentCount: number;
   selectedCount: number;
   onSelectCounter: () => void; // Changed to not expect a count parameter
   onReset: () => void;
@@ -18,6 +21,7 @@ interface CounterControlsProps {
 }
 
 const CounterControls: React.FC<CounterControlsProps> = ({ 
+  currentCount,
   selectedCount, 
   onSelectCounter, 
   onReset, 
@@ -57,7 +61,7 @@ const CounterControls: React.FC<CounterControlsProps> = ({
     resizeMode={FastImage.resizeMode.contain}
   />
   <Pressable
-    style={[styles.selectBtn, { backgroundColor: colors.primary.primary50 }]}
+    style={[styles.selectBtn, { borderColor: ShadowColors['border-light'] }]}
     onPress={onSelectCounter}
   >
     <Body1Title2Bold style={[styles.selectCounterText, { color: colors.primary.primary600 }]}>
@@ -68,11 +72,22 @@ const CounterControls: React.FC<CounterControlsProps> = ({
     </Body1Title2Bold>
   </Pressable>
   <Pressable
-    style={[styles.resetBtn, { borderColor: colors.primary.primary100 }]}
+    style={[
+      styles.resetBtn, 
+      { 
+        borderColor: colors.primary.primary100,
+        backgroundColor: currentCount > 0 ? colors.primary.primary50 : 'transparent'
+      }
+    ]}
     onPress={() => setResetModalVisible(true)}
   >
     <ResetIcon width={scale(18)} height={scale(18)} style={{ marginRight: scale(4) }} />
-    <Body1Title2Bold style={[styles.resetText, { color: colors.secondary.neutral500 }]}>
+    <Body1Title2Bold 
+      style={[
+        styles.resetText, 
+        { color: currentCount > 0 ? colors.primary.primary600 : colors.secondary.neutral500 }
+      ]}
+    >
       Reset
     </Body1Title2Bold>
   </Pressable>
@@ -119,6 +134,7 @@ const styles = StyleSheet.create({
     width: scale(182),
     height: scale(36),
     borderRadius: scale(60),
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
