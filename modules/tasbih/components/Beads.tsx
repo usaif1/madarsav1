@@ -31,16 +31,27 @@ const Beads: React.FC<BeadsProps> = ({
 }) => {
   const { width } = useWindowDimensions();
 
+  // Ensure activeIndex is always within valid bounds
+  const safeActiveIndex = Math.min(Math.max(0, activeIndex), count - 1);
+  
   // Responsive scaling for the thread
   const threadWidth = Math.min(width - 32, 380);
 
-  // Animation values for each bead
-  const beadAnims = useRef(
-    Array.from({ length: count }, () => new Animated.Value(0))
-  ).current;
+  // Animation values for each bead - recreate when count changes
+  const beadAnims = useRef<Animated.Value[]>([]).current;
+  
+  // Update animations array when count changes
+  useEffect(() => {
+    // Clear current animations
+    beadAnims.length = 0;
+    
+    // Create new animations for current count
+    for (let i = 0; i < count; i++) {
+      beadAnims.push(new Animated.Value(0));
+    }
+  }, [count]);
 
   // Calculate bead positions along the SVG thread curve
-  // For demonstration, let's assume the thread SVG is a simple quadratic Bezier curve from (x1,y1) to (x2,y2) with control point (cx,cy)
   const x1 = 32, y1 = 80;
   const x2 = threadWidth - 32, y2 = 80;
   const cx = threadWidth / 2, cy = 10; // Control point for curve
@@ -52,14 +63,15 @@ const Beads: React.FC<BeadsProps> = ({
     };
   }
   
-  const beadPositions = Array.from({ length: count }, (_, i) => {
+  // Calculate positions only if count > 0
+  const beadPositions = count > 0 ? Array.from({ length: count }, (_, i) => {
     const t = count === 1 ? 0.5 : i / (count - 1);
     const pos = getQuadraticBezierXY(t, x1, y1, cx, cy, x2, y2);
     return {
       left: pos.x - 24,
       top: pos.y - 24,
     };
-  });
+  }) : [];
 
   // Pan responder for swipe gestures
   const panResponder = useRef(
@@ -73,51 +85,63 @@ const Beads: React.FC<BeadsProps> = ({
     })
   ).current;
 
-  // Animate bead on advance
+  // Animate bead on advance - with safety checks
   useEffect(() => {
+    // Safety check: ensure animations array is populated and index is valid
+    if (beadAnims.length === 0 || safeActiveIndex >= beadAnims.length) {
+      return;
+    }
+    
     beadAnims.forEach((anim, i) => {
-      if (i !== activeIndex) {
+      if (i !== safeActiveIndex) {
         anim.setValue(0);
       }
     });
+    
     // Animate active bead
     Animated.sequence([
-      Animated.timing(beadAnims[activeIndex], {
+      Animated.timing(beadAnims[safeActiveIndex], {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.timing(beadAnims[activeIndex], {
+      Animated.timing(beadAnims[safeActiveIndex], {
         toValue: 0,
         duration: 0,
         useNativeDriver: true,
       }),
     ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]);
+  }, [safeActiveIndex, count]);
 
   return (
     <View style={[styles.container, { paddingTop: 16 }]} {...panResponder.panHandlers}>
       {/* Counter header: index/total, then round */}
       <View style={styles.counterHeader}>
         <View style={styles.counterIndexRow}>
-          <H3Bold style={styles.currentIndex}>{activeIndex + 1}</H3Bold>
+          <H3Bold style={styles.currentIndex}>{safeActiveIndex + 1}</H3Bold>
           <Body1Title2Bold style={styles.slash}>/</Body1Title2Bold>
           <Body1Title2Bold style={styles.totalCount}>{totalCount}</Body1Title2Bold>
         </View>
-        <Body1Title2Regular style={styles.roundText}>Round {Math.floor(activeIndex / count) + 1}</Body1Title2Regular>
+        <Body1Title2Regular style={styles.roundText}>
+          Round {Math.floor(safeActiveIndex / (count || 1)) + 1}
+        </Body1Title2Regular>
       </View>
 
       {/* Thread and beads */}
       <View style={[styles.threadWrap, { width: threadWidth, height: 120 }]} > 
         {/* SVG thread curve */}
         <Thread width={threadWidth} height={120} style={styles.threadSvg} />
+        
         {beadPositions.map((pos, idx) => {
-          const isActive = idx === activeIndex;
-          const translateX = beadAnims[idx].interpolate({
+          const isActive = idx === safeActiveIndex;
+          
+          // Safety check for animation values
+          const translateX = beadAnims[idx]?.interpolate({
             inputRange: [0, 1],
             outputRange: [0, 20],
-          });
+          }) || new Animated.Value(0);
+          
           return (
             <Pressable
               key={`bead-${idx}`}

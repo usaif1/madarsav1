@@ -199,13 +199,25 @@ const TasbihScreen: React.FC = () => {
   const [customBeadValue, setCustomBeadValue] = useState('');
   const [inputTouched, setInputTouched] = useState(false);
   const { colors } = useThemeStore();
+  
   // Helper to determine if custom is selected
   const isCustomSelected = !PRESET_BEADS.includes(beadCount);
   
+  // Current dua verses - safely access with bounds checking
+  const currentDua = duaList[selectedDuaIndex] || duaList[0];
+  const verseCount = currentDua.verses.length;
+  
+  // Ensure beadIndex is always valid for current dua
+  const safeBeadIndex = Math.min(beadIndex, verseCount - 1);
+  
+  // Get current verse with safety checks
+  const currentVerse = currentDua.verses[safeBeadIndex] || currentDua.verses[0];
+  
   useEffect(() => {
-    // Update bead count when dua changes
-    setBeadCount(duaList[selectedDuaIndex].verses.length);
-    setBeadIndex(0);
+    // Update bead count when dua changes and reset index
+    const newVerseCount = duaList[selectedDuaIndex].verses.length;
+    setBeadCount(newVerseCount);
+    setBeadIndex(0); // Always reset to first verse when changing dua
   }, [selectedDuaIndex]);
 
   useEffect(() => {
@@ -215,24 +227,38 @@ const TasbihScreen: React.FC = () => {
   }, [duaModalVisible]);
 
   const handlePrev = () => {
-    setBeadIndex(i => (i > 0 ? i - 1 : beadCount - 1));
+    setBeadIndex(prevIndex => {
+      // Ensure we stay in bounds
+      if (prevIndex > 0) {
+        return prevIndex - 1;
+      } else {
+        return verseCount - 1; // Loop back
+      }
+    });
   };
   
   const handleNext = () => {
-    setBeadIndex(i => (i < beadCount - 1 ? i + 1 : 0));
+    setBeadIndex(prevIndex => {
+      // Ensure we stay in bounds
+      if (prevIndex < verseCount - 1) {
+        return prevIndex + 1;
+      } else {
+        return 0; // Loop back
+      }
+    });
   };
 
   const handleSelectDua = (idx: number) => {
-    const newVerseCount = duaList[idx].verses.length;
-    setSelectedDuaIndex(idx);
-    setBeadCount(newVerseCount);
-    setBeadIndex(prevIndex => Math.min(prevIndex, newVerseCount - 1)); // Ensure index is within bounds
+    // Ensure selected dua index is valid
+    const validIdx = Math.max(0, Math.min(idx, duaList.length - 1));
+    setSelectedDuaIndex(validIdx);
+    setBeadIndex(0); // Always reset to first verse for safety
     setDuaModalVisible(false);
   };
 
   const handleSelectCounter = (count: number) => {
-    setBeadCount(count);
-    setBeadIndex(0);
+    setBeadCount(Math.max(1, count)); // Ensure count is at least 1
+    setBeadIndex(0); // Reset index when counter changes
     setSelectCounterModalVisible(false);
   };
 
@@ -246,7 +272,7 @@ const TasbihScreen: React.FC = () => {
   const handleCustomBeadSave = () => {
     if (customBeadValue && parseInt(customBeadValue) > 0) {
       setBeadCount(parseInt(customBeadValue));
-      setBeadIndex(0);
+      setBeadIndex(0); // Reset index
       setCustomBeadModalVisible(false);
     }
   };
@@ -256,11 +282,7 @@ const TasbihScreen: React.FC = () => {
   };
 
   const handleAdvanceBead = () => {
-    if (beadIndex < beadCount - 1) {
-      setBeadIndex(beadIndex + 1);
-    } else {
-      handleNext(); // Change dua and reset bead
-    }
+    handleNext(); // Use the same safe next handler
   };
 
   // Enhanced modal toggle function
@@ -279,25 +301,27 @@ const TasbihScreen: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}> 
       <DuaCard
-        arabic={duaList[selectedDuaIndex].verses[beadIndex].arabic}
-        transliteration={duaList[selectedDuaIndex].verses[beadIndex].transliteration}
-        translation={duaList[selectedDuaIndex].verses[beadIndex].translation}
+        arabic={currentVerse.arabic}
+        transliteration={currentVerse.transliteration}
+        translation={currentVerse.translation}
         onPrev={handlePrev}
         onNext={handleNext}
         onChangeDua={() => setDuaModalVisible(true)}
       />
-      {/* <Beads
-        count={beadCount}
-        activeIndex={beadIndex}
+      
+      <Beads
+        count={verseCount}
+        activeIndex={safeBeadIndex}
         onAdvance={handleNext}
-        totalCount={beadCount}
-      /> */}
+        totalCount={verseCount}
+      />
+      
       <View style={styles.counterControlsWrapper}>
         <CounterControls
           selectedCount={beadCount}
           onSelectCounter={() => setSelectCounterModalVisible(true)}
           onReset={handleReset}
-          currentCount={beadIndex}
+          currentCount={safeBeadIndex}
         />
       </View>
       
