@@ -2,7 +2,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
@@ -14,7 +13,11 @@ import Bubble from '@/assets/tasbih/bubble.svg';
 import Close from '@/assets/tasbih/close.svg';
 import LeftFlowerChangeDua from '@/assets/tasbih/leftFlowerChangeDua.svg';
 import RightFlowerChangeDua from '@/assets/tasbih/rightFlowerChangeDua.svg';
-import { verticalScale } from '@/theme/responsive';
+import { scale, verticalScale } from '@/theme/responsive';
+import { useThemeStore } from '@/globalStore';
+import { Body1Title2Bold, Body1Title2Medium, Body2Medium, H5Medium, Title3Bold } from '@/components/Typography/Typography';
+import { ShadowColors } from '@/theme/shadows';
+import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
 
 // Get screen dimensions for calculations
 const { height: screenHeight } = Dimensions.get('window');
@@ -43,20 +46,30 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   onClose,
 }) => {
   // Render individual dua item
+  const { colors } = useThemeStore();
+
   const renderDuaItem = ({ item, index }: { item: Dua; index: number }) => (
     <TouchableOpacity
-      style={styles.duaRow}
+      style={[styles.duaRow, { borderBottomColor: ShadowColors['border-light'] }]}
       onPress={() => onSelect(index)}
       activeOpacity={0.7}
     >
       <View style={styles.duaTextWrap}>
-        <Text style={styles.arabic}>{item.verses[0].arabic}</Text>
-        <Text style={styles.transliteration}>{item.verses[0].transliteration}</Text>
-        <Text style={styles.translation}>{item.verses[0].translation}</Text>
-      </View>
+        <View style={{flexDirection: 'row'}}><H5Medium color='heading' style={[styles.arabic]}>
+          {item.verses[0].arabic}
+        </H5Medium>
       <View style={styles.bubbleWrap}>
-        <Bubble width={32} height={32} />
-        <Text style={styles.bubbleNum}>{index + 1}</Text>
+        <Bubble width={scale(26)} height={scale(26)} />
+        <Body1Title2Bold style={[styles.bubbleNum, { color: ColorPrimary.primary600 }]}>
+          {index + 1}
+        </Body1Title2Bold>
+      </View></View>
+        <Body2Medium style={[styles.transliteration]}>
+          {item.verses[0].transliteration}
+        </Body2Medium>
+        {/* <Body1Title2Medium style={[styles.translation, { color: ColorSecondary.neutral500 }]}>
+          {item.verses[0].translation}
+        </Body1Title2Medium> */}
       </View>
     </TouchableOpacity>
   );
@@ -75,18 +88,20 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
     >
       <View style={styles.sheet}>
         {/* Fixed header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Change dua</Text>
+        <View style={[styles.header, { borderBottomColor: ShadowColors['border-light'] }]}>
+          <Title3Bold style={styles.title}>Change dua</Title3Bold>
           <Pressable onPress={onClose} hitSlop={16}>
-            <Close width={24} height={24} />
+            <Close width={scale(24)} height={scale(24)} />
           </Pressable>
         </View>
         
         {/* Fixed tap row */}
-        <View style={styles.tapRow}>
-          <LeftFlowerChangeDua width={34} height={34} />
-          <Text style={styles.tapText}>Tap to change dua</Text>
-          <RightFlowerChangeDua width={34} height={34} />
+        <View style={[styles.tapRow, { backgroundColor: ColorPrimary.primary50 }]}>
+          <LeftFlowerChangeDua width={scale(34)} height={scale(34)} />
+          <Body1Title2Bold style={[styles.tapText, { color: ColorPrimary.primary500 }]}>
+            Tap to change dua
+          </Body1Title2Bold>
+          <RightFlowerChangeDua width={scale(34)} height={scale(34)} />
         </View>
         
         {/* Scrollable content area */}
@@ -169,12 +184,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
+    borderBottomWidth: 6,
     borderBottomColor: '#F5F5F5',
     backgroundColor: '#fff',
   },
   bubbleWrap: {
-    marginTop: 4,
     marginLeft: 12,
     width: 32,
     height: 32,
@@ -190,8 +204,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     textAlign: 'center',
     textAlignVertical: 'center',
-    fontWeight: '700',
-    fontSize: 17,
+    fontSize: 10,
     color: '#A07CFA',
   },
   duaTextWrap: {
@@ -200,7 +213,7 @@ const styles = StyleSheet.create({
     paddingRight: 0,
   },
   arabic: {
-    fontSize: 22,
+    fontSize: scale(20),
     color: '#222',
     fontWeight: '700',
     textAlign: 'right',
@@ -208,10 +221,10 @@ const styles = StyleSheet.create({
   },
   transliteration: {
     fontSize: 13,
-    color: '#A07CFA',
-    textAlign: 'left',
+    marginLeft: 12,
+    alignSelf: 'flex-start',
     marginBottom: 1,
-    marginTop: 1,
+    marginTop: 8,
   },
   translation: {
     fontSize: 13,

@@ -155,6 +155,31 @@ const duaList = [
       },
     ],
   },
+  {
+    id: '9',
+    verses: [
+      {
+        arabic: 'اللّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ زَوَالِ نِعْمَتِكَ',
+        transliteration: `Allahumma inni a'udhu bika min zawali ni'matik`,
+        translation: 'O Allah, I seek refuge in You from the decline of Your favor.',
+      },
+      {
+        arabic: 'وَتَحَوُّلِ عَافِيَتِكَ',
+        transliteration: `wa tahawwuli 'afiyatika`,
+        translation: 'and the loss of Your well-being.',
+      },
+      {
+        arabic: 'وَفُجَاءَةِ نِقْمَتِكَ',
+        transliteration: `wa fuja'ati niqmatik`,
+        translation: 'and the suddenness of Your punishment.',
+      },
+      {
+        arabic: 'وَجَمِيعِ سَخَطِكَ',
+        transliteration: `wa jami'i sakhatik`,
+        translation: 'and all forms of Your displeasure.',
+      },
+    ],
+  },
 ];
 
 // Preset bead counts for the counter
