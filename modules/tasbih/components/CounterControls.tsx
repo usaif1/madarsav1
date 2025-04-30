@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Text, TouchableOpacity } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import rosaryBead from '@/assets/tasbih/rosaryBead.png';
-import ResetIcon from '@/assets/tasbih/resetViolet.svg';
-import { Body1Title2Bold } from '@/components/Typography/Typography';
+import ResetIconViolet from '@/assets/tasbih/resetViolet.svg';
+import ResetIcon from '@/assets/tasbih/reset.svg';
+import { Body1Title2Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
 import ResetCounterModal from './ResetCounterModal';
 import CustomBeadModal from './CustomBeadModal';
@@ -64,12 +65,12 @@ const CounterControls: React.FC<CounterControlsProps> = ({
     style={[styles.selectBtn, { borderColor: ShadowColors['border-light'] }]}
     onPress={onSelectCounter}
   >
-    <Body1Title2Bold style={[styles.selectCounterText, { color: colors.primary.primary600 }]}>
+    <Body1Title2Medium color='sub-heading' style={styles.selectCounterText}>
       Select counter
-    </Body1Title2Bold>
-    <Body1Title2Bold style={[styles.counterNumber, { color: colors.primary.primary600 }]}>
+    </Body1Title2Medium>
+    <Body1Title2Medium style={[styles.counterNumber, { color: colors.primary.primary600 }]}>
       ({selectedCount})
-    </Body1Title2Bold>
+    </Body1Title2Medium>
   </Pressable>
   <Pressable
     style={[
@@ -81,15 +82,22 @@ const CounterControls: React.FC<CounterControlsProps> = ({
     ]}
     onPress={() => setResetModalVisible(true)}
   >
-    <ResetIcon width={scale(18)} height={scale(18)} style={{ marginRight: scale(4) }} />
-    <Body1Title2Bold 
+    {currentCount > 0 ? <ResetIconViolet width={scale(18)} height={scale(18)} style={{ marginRight: scale(4) }} /> : <ResetIcon width={scale(18)} height={scale(18)} style={{ marginRight: scale(4) }} />}
+    {currentCount > 0 ? <Body1Title2Bold 
       style={[
         styles.resetText, 
-        { color: currentCount > 0 ? colors.primary.primary600 : colors.secondary.neutral500 }
+        { color: colors.primary.primary600 }
       ]}
     >
       Reset
-    </Body1Title2Bold>
+    </Body1Title2Bold> : <Body1Title2Medium 
+    color='sub-heading'
+      style={[
+        styles.resetText
+      ]}
+    >
+      Reset
+    </Body1Title2Medium>}
   </Pressable>
 </View>
       

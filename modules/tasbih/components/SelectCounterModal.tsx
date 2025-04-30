@@ -1,8 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Modal from 'react-native-modal';
-import { Body1Title2Bold } from '@/components/Typography/Typography';
+import { Title3Bold,Body1Title2Medium } from '@/components/Typography/Typography';
 import Pencil from '@/assets/tasbih/pencil.svg';
+import PencilViolet from '@/assets/tasbih/pencilViolet.svg';
+import { useThemeStore } from '@/globalStore';
+import { scale, verticalScale } from '@/theme/responsive';
 
 interface SelectCounterModalProps {
   visible: boolean;
@@ -25,6 +28,10 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
   isCustomSelected = false,
   customValue,
 }) => {
+  const { colors } = useThemeStore();
+
+  const styles = getStyles(colors)
+
   return (
     <Modal
       isVisible={visible}
@@ -35,9 +42,9 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
       animationIn="slideInUp"
       animationOut="slideOutDown"
     >
-      <View style={styles.sheet}>
+      <View style={[styles.sheet, { backgroundColor: 'white'}]}>
         <View style={styles.header}>
-          <Body1Title2Bold style={styles.title}>Select counter</Body1Title2Bold>
+          <Title3Bold style={styles.title}>Select counter</Title3Bold>
           <TouchableOpacity onPress={onClose} hitSlop={16}>
             <Text style={styles.closeButton}>×</Text>
           </TouchableOpacity>
@@ -55,8 +62,8 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
                 ]}
                 onPress={() => onSelectPreset(count)}
               >
-                <Text style={styles.counterNumber}>{count}</Text>
-                <Text style={styles.counterLabel}>Beads</Text>
+                <Title3Bold style={styles.counterNumber}>{count}</Title3Bold>
+                <Body1Title2Medium color='sub-heading' style={styles.counterLabel}>Beads</Body1Title2Medium>
               </TouchableOpacity>
             ))}
           </View>
@@ -71,8 +78,8 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
                 ]}
                 onPress={() => onSelectPreset(presetBeads[2])}
               >
-                <Text style={styles.counterNumber}>{presetBeads[2]}</Text>
-                <Text style={styles.counterLabel}>Beads</Text>
+                <Title3Bold style={styles.counterNumber}>{presetBeads[2]}</Title3Bold>
+                <Body1Title2Medium color='sub-heading' style={styles.counterLabel}>Beads</Body1Title2Medium>
               </TouchableOpacity>
             )}
             
@@ -84,12 +91,12 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
               ]}
               onPress={onCustomBeads}
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>{isCustomSelected && customValue ? (
-                  <Text style={styles.customBeadsValue}>{customValue}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>{isCustomSelected && customValue ? (
+                  <Body1Title2Medium style={styles.customBeadsValue}>{customValue}</Body1Title2Medium>
                 ) : null}
-              <Pencil width={24} height={24} style={styles.pencilIcon} /></View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Text style={styles.customBeadsText}>Set custom beads</Text>
+              {customValue ? <PencilViolet width={24} height={24} style={styles.pencilIcon} /> : <Pencil width={24} height={24} style={styles.pencilIcon} />}</View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Body1Title2Medium color='sub-heading' style={styles.customBeadsText}>Set custom beads</Body1Title2Medium>
               </View>
             </TouchableOpacity>
           </View>
@@ -99,35 +106,31 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors:any) => StyleSheet.create({
   modalContainer: {
     margin: 0,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 24,
-    paddingBottom: 32,
-    paddingHorizontal: 20,
+    borderTopLeftRadius: scale(20),
+    borderTopRightRadius: scale(20),
+    paddingTop: verticalScale(24),
+    paddingBottom: verticalScale(32),
+    paddingHorizontal: scale(20),
     width: '100%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: verticalScale(24),
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#222222',
+    fontSize: scale(17)
   },
   closeButton: {
-    fontSize: 28,
-    color: '#888888',
-    lineHeight: 28,
+    fontSize: scale(32),
+    lineHeight: scale(32),
   },
   countersGrid: {
     width: '100%',
@@ -135,49 +138,41 @@ const styles = StyleSheet.create({
   gridRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: verticalScale(16),
   },
   counterItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: verticalScale(16),
     borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    borderRadius: 16,
-    width: '48%',
-    height: 96,
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.primary.primary100,
+    borderRadius: scale(16),
+    width: scale(163.5),
+    height: scale(76),
   },
   selectedCounterItem: {
-    borderColor: '#8A57DC',
-    backgroundColor: '#F9F5FF',
+    borderColor: colors.primary.primary600,
+    backgroundColor: colors.primary.primary50,
   },
   customCounterItem: {
-    gap: 8,
+    // gap is not supported, use margin if needed
   },
   counterNumber: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#333333',
-    marginBottom: 4,
+    fontSize: scale(17),
+    marginBottom: scale(4),
   },
   counterLabel: {
-    fontSize: 14,
-    color: '#888888',
-    fontWeight: '500',
+    fontSize: scale(14),
   },
   pencilIcon: {
-    color: '#333333',
+    color: colors.primary.primary800,
   },
   customBeadsText: {
-    color: '#777777',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: scale(14),
   },
   customBeadsValue: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginLeft: 4,
+    fontSize: scale(17),
+    marginLeft: scale(4),
   },
 });
 
