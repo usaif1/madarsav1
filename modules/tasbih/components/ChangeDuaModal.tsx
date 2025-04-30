@@ -91,7 +91,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
         <View style={[styles.header, { borderBottomColor: ShadowColors['border-light'] }]}>
           <Title3Bold style={styles.title}>Change dua</Title3Bold>
           <Pressable onPress={onClose} hitSlop={16}>
-            <Close width={scale(24)} height={scale(24)} />
+            <Close width={scale(16)} height={scale(16)} />
           </Pressable>
         </View>
         
