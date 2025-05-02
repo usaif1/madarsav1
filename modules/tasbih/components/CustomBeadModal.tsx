@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import Modal from 'react-native-modal';
-import { Body1Title2Bold } from '@/components/Typography/Typography';
+import { Body1Title2Bold, Title3Bold } from '@/components/Typography/Typography';
 
 interface CustomBeadModalProps {
   visible: boolean;
@@ -43,7 +43,7 @@ const CustomBeadModal: React.FC<CustomBeadModalProps> = ({
       >
         <View style={styles.sheet}>
           <View style={styles.header}>
-            <Body1Title2Bold style={styles.title}>Set custom beads</Body1Title2Bold>
+            <Title3Bold style={styles.title}>Set custom beads</Title3Bold>
             <TouchableOpacity onPress={onClose} hitSlop={{top: 16, right: 16, bottom: 16, left: 16}}>
               <Text style={styles.closeButton}>×</Text>
             </TouchableOpacity>
@@ -51,6 +51,7 @@ const CustomBeadModal: React.FC<CustomBeadModalProps> = ({
           <TextInput
             style={styles.input}
             placeholder="Add number of beads"
+            placeholderTextColor="#888"
             value={value}
             keyboardType="number-pad"
             onChangeText={text => { 
@@ -103,9 +104,9 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   closeButton: {
-    fontSize: 28,
-    color: '#888',
-    fontWeight: '400',
+    fontSize: 32,
+    color: '#000',
+    lineHeight: 32,
   },
   input: {
     borderWidth: 1,
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     color: '#222',
     backgroundColor: '#fff',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   saveBtn: {
     backgroundColor: '#ECECEC',

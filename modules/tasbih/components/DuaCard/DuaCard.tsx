@@ -21,14 +21,8 @@ interface DuaCardProps {
 const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation, onPrev, onNext, onChangeDua }) => {
   const { colors } = useThemeStore();
   const { width } = useWindowDimensions();
-  // Responsive scaling - increased by 20 as requested
-  const cardWidth = Math.min(width - 32, 363); // Increased from 343 to 363
-
-  // Enhanced onChangeDua handler with debug logging
-  const handleChangeDua = () => {
-    console.log("Change dua button pressed");
-    onChangeDua();
-  };
+  const styles = getStyles(colors);
+  const cardWidth = Math.min(width - 32, 363);
 
   return (
     <View style={[styles.cardContainer, { width: cardWidth }]}> 
@@ -52,7 +46,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
             <Body1Title2Medium
               color="accent-yellow-800"
               style={[styles.transliteration]}
-              numberOfLines={1}
+              numberOfLines={3}
               ellipsizeMode="tail"
             >
               {transliteration}
@@ -66,7 +60,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
           <Body1Title2Medium
             color="accent-yellow-800"
             style={[styles.translation]}
-            numberOfLines={1}
+            numberOfLines={3}
             ellipsizeMode="tail"
           >
             {translation}
@@ -93,7 +87,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
       {/* Change Dua Button positioned at bottom center - Fixed onPress handler */}
       <Pressable 
         style={styles.changeDuaBtn} 
-        onPress={handleChangeDua} 
+        onPress={onChangeDua} 
         accessibilityLabel="Change dua"
       >
         <Hamburger width={18} height={18} style={{ marginRight: 4 }} />
@@ -103,119 +97,115 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors:any) => StyleSheet.create({
   cardContainer: {
     position: 'relative',
-    marginTop: 16,
-    marginBottom: 40,
+    marginTop: scale(16),
+    marginBottom: scale(40),
     alignSelf: 'center',
   },
   card: {
-    height: 280, // Adjusted height to work with the bottom-positioned button
-    borderRadius: 16,
-    paddingTop: 20,
-    paddingRight: 24,
-    paddingLeft: 24,
-    paddingBottom: 24, // Increased bottom padding
+    height: scale(280),
+    borderRadius: scale(16),
+    paddingTop: scale(20),
+    paddingRight: scale(24),
+    paddingLeft: scale(24),
+    paddingBottom: scale(24),
     justifyContent: 'flex-start',
     alignItems: 'stretch',
-    shadowColor: '#000',
+    shadowColor: '#000', // overridden inline
     shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowRadius: scale(8),
     elevation: 2,
   },
   arabicWrap: {
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: scale(8),
   },
   arabic: {
-    fontSize: 26,
+    fontSize: scale(20),
     fontWeight: '700',
     textAlign: 'center',
-    lineHeight: 38,
+    lineHeight: scale(28),
   },
   dashedLine: {
     width: '100%',
     height: 1,
     borderWidth: 0,
     borderBottomWidth: 1,
-    borderColor: '#9A7E2A',
     borderStyle: 'dashed',
     alignSelf: 'center',
-    marginVertical: 8,
+    marginVertical: scale(8),
+    borderColor: colors.accent.accent700,
   },
   transRowWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    minHeight: 40,
+    minHeight: scale(40),
   },
   transBg: {
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: scale(8),
+    paddingHorizontal: scale(8),
+    paddingVertical: scale(2),
     alignSelf: 'stretch',
     minWidth: '60%',
   },
   transliteration: {
-    fontSize: 17,
+    fontSize: scale(14),
     textAlign: 'center',
-    fontWeight: '700',
   },
   translationBg: {
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: scale(8),
+    paddingHorizontal: scale(8),
+    paddingVertical: scale(2),
     alignSelf: 'stretch',
-    marginTop: 8,
-    marginBottom: 8,
-    minHeight: 44,
-    maxHeight: 48,
+    marginTop: scale(8),
+    marginBottom: scale(8),
+    minHeight: scale(44),
+    maxHeight: scale(48),
     justifyContent: 'center',
   },
   translation: {
-    fontSize: 15,
+    fontSize: scale(14),
     textAlign: 'center',
-    fontWeight: '400',
-    lineHeight: 22,
+    lineHeight: scale(22),
   },
   arrowBtn: {
     width: scale(24),
     height: scale(24),
     borderRadius: scale(12),
-    backgroundColor: '#F9DF90',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    top: '50%', // Middle of card height
-    transform: [{ translateY: -12 }], // Half of button height for centering
+    top: '50%',
+    transform: [{ translateY: -scale(12) }],
     zIndex: 2,
-    padding: 2,
+    padding: scale(2),
+    backgroundColor: colors.accent.accent300,
   },
   arrowLeft: {
-    left: -12,
+    left: -scale(12),
   },
   arrowRight: {
-    right: -12,
+    right: -scale(12),
   },
   changeDuaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 140,
-    height: 36,
-    borderRadius: 60,
-    backgroundColor: '#9A7E2A',
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderWidth: 2,
-    borderColor: '#9A7E2A',
+    width: scale(140),
+    height: scale(36),
+    borderRadius: scale(60),
+    paddingVertical: scale(4),
+    paddingHorizontal: scale(12),
     position: 'absolute',
-    bottom: -18, // Position halfway outside the card
-    left: '50%', // Center horizontally
-    transform: [{ translateX: -70 }], // Half of button width for centering
+    bottom: -scale(18),
+    left: '50%',
+    transform: [{ translateX: -scale(70) }],
     zIndex: 3,
+    backgroundColor: colors.accent.accent700,
   },
 });
 
