@@ -5,7 +5,7 @@ import { Body1Title2Bold, CaptionMedium, Body1Title2Medium } from '@/components/
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
 
-export interface HadithCardProps {
+export interface HadithListItemProps {
   hadith: {
     id: number;
     title: string;
@@ -16,18 +16,18 @@ export interface HadithCardProps {
   onPress: () => void;
 }
 
-const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
+const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
   const {colors} = useThemeStore();
   const styles = getStyles(colors);
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
-      {/* Top portion with image */}
-      <View style={styles.topPortion}>
+      {/* Left portion with image */}
+      <View style={styles.leftPortion}>
         <FastImage source={{ uri: hadith.image }} style={styles.image} />
       </View>
       
-      {/* Bottom portion with text */}
-      <View style={styles.bottomPortion}>
+      {/* Right portion with text */}
+      <View style={styles.rightPortion}>
         <Body1Title2Bold style={[styles.title]}>
           {hadith.title}
         </Body1Title2Bold>
@@ -38,7 +38,7 @@ const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
           </Body1Title2Medium>
         </View>
         
-        <CaptionMedium style={styles.brief} color="sub-heading" numberOfLines={3}>
+        <CaptionMedium style={styles.brief} color="sub-heading" numberOfLines={2}>
           {hadith.brief}
         </CaptionMedium>
       </View>
@@ -48,59 +48,61 @@ const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: {
-    width: scale(186.5),
-    height: verticalScale(289),
-    paddingBottom: scale(16),
-    gap: scale(10),
+    width: scale(375),
+    height: verticalScale(116),
+    flexDirection: 'row',
+    gap: scale(12),
+    rowGap: scale(4),
     backgroundColor: 'white',
-    overflow: 'hidden',
+    marginBottom: verticalScale(8),
+    borderLeftWidth: 1, 
   },
-  topPortion: {
-    width: scale(186.5),
-    height: verticalScale(175),
-    paddingTop: scale(16),
-    paddingBottom: scale(12),
+  leftPortion: {
+    width: scale(100.21),
+    height: verticalScale(116),
+    paddingTop: verticalScale(10.61),
+    paddingRight: scale(16),
+    paddingBottom: verticalScale(7.95),
+    paddingLeft: scale(16),
     backgroundColor: '#F5F6E6',
+    justifyContent: 'center',
     alignItems: 'center',
+  },
+  rightPortion: {
+    flex: 1,
+    paddingVertical: verticalScale(12),
+    paddingRight: scale(16),
     justifyContent: 'center',
   },
-  bottomPortion: {
-    width: scale(186.5),
-    paddingHorizontal: scale(12),
-    gap: scale(10),
-  },
   image: {
-    width: scale(110),
-    height: verticalScale(130),
+    width: scale(68),
+    height: verticalScale(90),
     borderRadius: scale(8),
   },
   title: {
     fontSize: scale(14),
-    textAlign: 'center',
+    marginBottom: verticalScale(4),
     color: colors.secondary.neutral950
   },
   authorPill: {
-    width: scale(86),
+    width: scale(117),
     height: verticalScale(18),
-    paddingTop: scale(2),
-    paddingRight: scale(8),
-    paddingBottom: scale(2),
-    paddingLeft: scale(8),
-    borderRadius: scale(30),
+    paddingHorizontal: scale(8),
+    paddingVertical: scale(2),
+    borderRadius: scale(29),
     backgroundColor: '#FFECB3',
-    alignItems: 'center',
+    marginBottom: verticalScale(4),
     justifyContent: 'center',
-    alignSelf: 'center',
   },
   authorText: {
     fontSize: scale(10),
-    textAlign: 'center',
   },
   brief: {
     fontSize: scale(10),
-    textAlign: 'center',
-    width: scale(162.5),
+    lineHeight: scale(14),
+    fontFamily: 'Geist',
+    fontWeight: '500',
   },
 });
 
-export default HadithCard;
+export default HadithListItem;

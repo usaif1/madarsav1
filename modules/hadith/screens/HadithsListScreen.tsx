@@ -6,6 +6,8 @@ import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useNavigation } from '@react-navigation/native';
 import HadithCard from '../components/HadithCard';
+import HadithListItem from '../components/HadithListItem';
+import { Body1Title2Bold } from '@/components/Typography/Typography';
 
 // Dummy data for now
 const hadiths = [
@@ -152,7 +154,7 @@ const HadithsListScreen: React.FC = () => {
       data={listHadiths}
       keyExtractor={item => item.id.toString()}
       renderItem={({ item }) => (
-        <HadithCard
+        <HadithListItem
           hadith={item}
           onPress={() => navigation.navigate('hadithInfo', { id: item.id })}
         />
@@ -169,7 +171,9 @@ const HadithsListScreen: React.FC = () => {
           <>
             {renderGrid()}
             {listHadiths.length > 0 && (
-              <Text style={styles.moreText}>More Hadith</Text>
+              <View style={styles.moreHadithContainer}>
+                <Body1Title2Bold style={styles.moreText}>More Hadith</Body1Title2Bold>
+              </View>
             )}
           </>
         }
@@ -194,12 +198,16 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingTop: verticalScale(8),
   },
+  moreHadithContainer: {
+    height: verticalScale(30),
+    backgroundColor: '#F9F6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: scale(4),
+  },
   moreText: {
-    fontSize: scale(13),
-    fontWeight: '600',
-    textAlign: 'center',
-    marginVertical: verticalScale(8),
-    color: '#7C5CFC',
+    fontSize: scale(14),
+    color: '#7C5CFC', // primary500
   },
 });
 
