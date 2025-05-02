@@ -1,12 +1,11 @@
 // modules/hadith/screens/HadithsListScreen.tsx
 
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, FlatList, StyleSheet, Text } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useNavigation } from '@react-navigation/native';
-import { Title3Bold, Body1Title2Medium } from '@/components/Typography/Typography';
-import FastImage from 'react-native-fast-image';
+import HadithCard from '../components/HadithCard';
 
 // Dummy data for now
 const hadiths = [
@@ -117,25 +116,13 @@ const hadiths = [
   }
 ];
 
-const HadithCard = ({ hadith, onPress }: { hadith: any, onPress: () => void }) => {
-  const { colors } = useThemeStore();
-  return (
-    <TouchableOpacity style={[styles.card, { borderColor: colors.primary.primary100 }]} onPress={onPress}>
-      <FastImage source={{ uri: hadith.image }} style={styles.image} />
-      <Title3Bold style={styles.title}>{hadith.title}</Title3Bold>
-      <Body1Title2Medium color="sub-heading" style={styles.author}>{hadith.author}</Body1Title2Medium>
-      <Body1Title2Medium style={styles.brief} numberOfLines={2}>{hadith.brief}</Body1Title2Medium>
-    </TouchableOpacity>
-  );
-};
-
 const HadithsListScreen: React.FC = () => {
   const navigation = useNavigation();
   const { colors } = useThemeStore();
 
   // Split for grid and list
-  const gridHadiths = hadiths.slice(0, 10);
-  const listHadiths = hadiths.slice(10);
+  const gridHadiths = hadiths.slice(0, 6);
+  const listHadiths = hadiths.slice(6);
 
   // Render grid (2 per row)
   const renderGrid = () => {
@@ -163,7 +150,7 @@ const HadithsListScreen: React.FC = () => {
   const renderList = () => (
     <FlatList
       data={listHadiths}
-      keyExtractor={item => item.id}
+      keyExtractor={item => item.id.toString()}
       renderItem={({ item }) => (
         <HadithCard
           hadith={item}
@@ -198,43 +185,11 @@ const HadithsListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: scale(16),
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: verticalScale(16),
-  },
-  card: {
-    flex: 1,
-    marginHorizontal: scale(4),
-    borderRadius: scale(12),
-    borderWidth: 1,
-    backgroundColor: 'white',
-    padding: scale(12),
-    alignItems: 'center',
-    minHeight: verticalScale(180),
-  },
-  image: {
-    width: scale(80),
-    height: scale(110),
-    borderRadius: scale(8),
-    marginBottom: scale(8),
-  },
-  title: {
-    fontSize: scale(15),
-    marginBottom: scale(2),
-    textAlign: 'center',
-  },
-  author: {
-    fontSize: scale(12),
-    marginBottom: scale(2),
-    textAlign: 'center',
-  },
-  brief: {
-    fontSize: scale(11),
-    color: '#888',
-    textAlign: 'center',
   },
   listContainer: {
     paddingTop: verticalScale(8),
