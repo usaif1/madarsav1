@@ -8,6 +8,8 @@ import { useNavigation } from '@react-navigation/native';
 import HadithCard from '../components/HadithCard';
 import HadithListItem from '../components/HadithListItem';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
+import BottomFooterImage from '@/assets/hadith/BottomFooter.png';
+import FastImage from 'react-native-fast-image';
 
 // Define the Hadith type for better type safety
 export interface Hadith {
@@ -135,6 +137,18 @@ const HadithsListScreen: React.FC = () => {
   const gridHadiths = hadiths.slice(0, 6);
   const listHadiths = hadiths.slice(6);
 
+  const BottomFooter = () => {
+    return (
+      <View style={styles.footerContainer}>
+        <FastImage 
+          source={BottomFooterImage} 
+          style={styles.footerImage}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+      </View>
+    );
+  };
+
   // Render grid (2 per row)
   const renderGrid = () => {
     const rows = [];
@@ -170,6 +184,7 @@ const HadithsListScreen: React.FC = () => {
       )}
       scrollEnabled={false}
       contentContainerStyle={styles.listContainer}
+      ListFooterComponent={<BottomFooter />}
     />
   );
 
@@ -217,6 +232,16 @@ const styles = StyleSheet.create({
   moreText: {
     fontSize: scale(14),
     color: '#7C5CFC', // primary500
+  },
+  footerContainer: {
+    width: scale(375),
+    height: verticalScale(221),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerImage: {
+    width: '100%',
+    height: '100%',
   },
 });
 
