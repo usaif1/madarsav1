@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Bold, CaptionMedium, Body1Title2Medium } from '@/components/Typography/Typography';
+import { Body1Title2Bold, CaptionMedium, Body1Title2Medium, CaptionBold } from '@/components/Typography/Typography';
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
 
@@ -33,9 +33,9 @@ const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
         </Body1Title2Bold>
         
         <View style={styles.authorPill}>
-          <Body1Title2Medium color="yellow-700" style={[styles.authorText]}>
+          <CaptionBold color="yellow-700" style={[styles.authorText]}>
             {hadith.author}
-          </Body1Title2Medium>
+          </CaptionBold>
         </View>
         
         <CaptionMedium style={styles.brief} color="sub-heading" numberOfLines={3}>

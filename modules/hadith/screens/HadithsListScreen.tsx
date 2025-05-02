@@ -1,7 +1,7 @@
 // modules/hadith/screens/HadithsListScreen.tsx
 
 import React from 'react';
-import { View, FlatList, StyleSheet, Text } from 'react-native';
+import { View, FlatList, StyleSheet } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useNavigation } from '@react-navigation/native';
@@ -9,117 +9,126 @@ import HadithCard from '../components/HadithCard';
 import HadithListItem from '../components/HadithListItem';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
 
-// Dummy data for now
-const hadiths = [
+// Define the Hadith type for better type safety
+export interface Hadith {
+  id: number;
+  title: string;
+  author: string;
+  image: string;
+  brief: string;
+}
+
+// Hadith collections data
+const hadiths: Hadith[] = [
   {
     id: 1,
-    title: 'The Importance of Intention',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith1.jpg',
-    brief: 'Actions are judged by intentions, and every person will have what they intended.'
+    title: 'Sahih al-Bukhari',
+    author: 'Imam Bukharii',
+    image: 'https://example.com/bukhari.jpg',
+    brief: 'Narrated in: 202-275 AH, Contains roughly 7500 Hadith (with repetitions) in 57 books.'
   },
   {
     id: 2,
-    title: 'Kindness to Neighbors',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith2.jpg',
-    brief: 'He is not a true believer who eats his fill while his neighbor is hungry.'
+    title: 'Sahih Muslim',
+    author: 'Imam Muslim',
+    image: 'https://example.com/muslim.jpg',
+    brief: 'Narrated in: 93-179 AH, Contains roughly 1,720 narrations (including repetitions).'
   },
   {
     id: 3,
-    title: 'Seeking Knowledge',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith3.jpg',
-    brief: 'Seeking knowledge is an obligation upon every Muslim.'
+    title: 'Sunan Abi Dawud',
+    author: 'Imam Abu Dawud',
+    image: 'https://example.com/abudawud.jpg',
+    brief: 'Collection of 5,274 hadith, covering various aspects of life including law, rituals, and ethics.'
   },
   {
     id: 4,
-    title: 'Mercy and Compassion',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith4.jpg',
-    brief: 'Those who show mercy will be shown mercy by the Most Merciful.'
+    title: 'Jami at-Tirmidhi',
+    author: 'Imam Tirmidhi',
+    image: 'https://example.com/tirmidhi.jpg',
+    brief: 'Contains 3,956 hadith and emphasizes legal opinions, categorizing hadith as authentic, good, or weak.'
   },
   {
     id: 5,
-    title: 'Patience in Hardship',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith5.jpg',
-    brief: 'No fatigue, nor disease, nor sorrow, nor sadness, nor hurt, nor distress befalls a Muslim, even if it were the prick he receives from a thorn, but that Allah expiates some of his sins for that.'
+    title: 'Sunan an-Nasa\'i',
+    author: 'Imam Nasa\'i',
+    image: 'https://example.com/nasai.jpg',
+    brief: 'Known for its high standards of authenticity, contains approximately 5,700 hadith.'
   },
   {
     id: 6,
-    title: 'Honesty and Trust',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith6.jpg',
-    brief: 'Honesty leads to righteousness, and righteousness leads to Paradise.'
+    title: 'Sunan Ibn Majah',
+    author: 'Ibn Majah',
+    image: 'https://example.com/ibnmajah.jpg',
+    brief: 'Contains 4,341 hadith, including many unique narrations not found in other collections.'
   },
   {
     id: 7,
-    title: 'Respect for Parents',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith7.jpg',
-    brief: 'Paradise lies at the feet of your mother.'
+    title: 'Muwatta Malik',
+    author: 'Imam Malik ibn Anas',
+    image: 'https://example.com/muwatta.jpg',
+    brief: 'Narrated in: 93-179 AH, Contains roughly 1,720 narrations (including repetitions).'
   },
   {
     id: 8,
-    title: 'Charity and Generosity',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith8.jpg',
-    brief: 'Charity does not decrease wealth.'
+    title: 'Musnad Ahmad',
+    author: 'Imam Ahmad',
+    image: 'https://example.com/ahmad.jpg',
+    brief: 'Largest collection with over 30,000 hadith, arranged according to narrators rather than topics.'
   },
   {
     id: 9,
-    title: 'Forgiveness',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith9.jpg',
-    brief: 'Whoever forgives, Allah will elevate his status.'
+    title: 'Sunan ad-Darimi',
+    author: 'Imam Darimi',
+    image: 'https://example.com/darimi.jpg',
+    brief: 'Contains approximately 3,500 hadith, arranged by subject and legal topics.'
   },
   {
     id: 10,
-    title: 'Good Character',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith10.jpg',
-    brief: 'The best among you are those with the best character.'
+    title: 'Al-Nawawi\'s 40 Hadith',
+    author: 'Imam Nawawi',
+    image: 'https://example.com/nawawi.jpg',
+    brief: 'Collection of 42 foundational hadith covering the core principles of Islam and faith.'
   },
   {
     id: 11,
-    title: 'Moderation in Worship',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith11.jpg',
-    brief: `Do good deeds properly, sincerely and moderately, and rejoice, for no one's good deeds will put them into Paradise.`
+    title: 'Riyadh as-Saliheen',
+    author: 'Imam Nawawi',
+    image: 'https://example.com/riyadh.jpg',
+    brief: 'Collection of approximately 1,900 hadith organized into 372 chapters on various aspects of Islamic ethics.'
   },
   {
     id: 12,
-    title: 'Unity and Brotherhood',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith12.jpg',
-    brief: 'A believer to another believer is like a building whose different parts support each other.'
+    title: 'Bulugh al-Maram',
+    author: 'Ibn Hajar',
+    image: 'https://example.com/bulugh.jpg',
+    brief: 'Collection of 1,358 hadith focusing on Islamic jurisprudence and legal rulings.'
   },
   {
     id: 13,
-    title: 'Cleanliness',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith13.jpg',
-    brief: 'Cleanliness is half of faith.'
+    title: 'Al-Adab Al-Mufrad',
+    author: 'Imam Bukhari',
+    image: 'https://example.com/adab.jpg',
+    brief: 'Collection of 1,322 hadith focusing on Islamic ethics, manners, and character development.'
   },
   {
     id: 14,
-    title: 'Helping Others',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith14.jpg',
-    brief: 'Whoever helps his brother in his time of need, Allah will help him in his time of need.'
+    title: 'Mishkat al-Masabih',
+    author: 'Al-Tabrizi',
+    image: 'https://example.com/mishkat.jpg',
+    brief: 'Expanded version of Masabih al-Sunnah, containing approximately 6,000 hadith from various sources.'
   },
   {
     id: 15,
-    title: 'Gratitude',
-    author: 'Prophet Muhammad (PBUH)',
-    image: 'https://example.com/hadith15.jpg',
-    brief: 'He who does not thank people does not thank Allah.'
+    title: 'Shuab al-Iman',
+    author: 'Al-Bayhaqi',
+    image: 'https://example.com/shuab.jpg',
+    brief: 'Comprehensive work detailing the 77 branches of faith through hadith and scholarly commentary.'
   }
 ];
 
 const HadithsListScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { colors } = useThemeStore();
 
   // Split for grid and list
@@ -152,7 +161,7 @@ const HadithsListScreen: React.FC = () => {
   const renderList = () => (
     <FlatList
       data={listHadiths}
-      keyExtractor={item => item.id.toString()}
+      keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
         <HadithListItem
           hadith={item}
