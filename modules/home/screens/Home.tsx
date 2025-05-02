@@ -20,8 +20,8 @@ type ToolItem = {
 };
 
 const TOOLS: ToolItem[] = [
-  {key: 'duas', title: "Dua's", to: 'dua'},
-  // {key: 'hadith', title: 'Hadith'},
+  // {key: 'duas', title: "Dua's", to: 'dua'},
+  {key: 'hadith', title: 'Hadith', to: 'hadith'},
   {key: 'user', title: 'User', to: 'user'},
   {key: 'tasbih', title: 'Tasbih', to: 'tasbih'},
   {key: 'names', title: '99 Names', to: 'names'},
