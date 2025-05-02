@@ -17,8 +17,9 @@ export interface HadithListItemProps {
 }
 
 const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
-  const {colors} = useThemeStore();
+  const { colors } = useThemeStore();
   const styles = getStyles(colors);
+  
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Left portion with image */}
@@ -28,12 +29,12 @@ const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
       
       {/* Right portion with text */}
       <View style={styles.rightPortion}>
-        <Body1Title2Bold style={[styles.title]}>
+        <Body1Title2Bold style={styles.title}>
           {hadith.title}
         </Body1Title2Bold>
         
         <View style={styles.authorPill}>
-          <Body1Title2Medium color="yellow-700" style={[styles.authorText]}>
+          <Body1Title2Medium color="yellow-700" style={styles.authorText}>
             {hadith.author}
           </Body1Title2Medium>
         </View>
@@ -52,7 +53,6 @@ const getStyles = (colors: any) => StyleSheet.create({
     height: verticalScale(116),
     flexDirection: 'row',
     gap: scale(12),
-    rowGap: scale(4),
     backgroundColor: 'white',
     marginBottom: verticalScale(8),
     borderLeftWidth: 1, 
@@ -75,9 +75,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
   },
   image: {
-    width: scale(68),
-    height: verticalScale(90),
-    borderRadius: scale(8),
+    width: scale(68.21),
+    height: verticalScale(97.44),
+    borderTopLeftRadius: scale(2.14),
+    borderTopRightRadius: scale(6.41),
+    borderBottomRightRadius: scale(6.41),
+    borderBottomLeftRadius: scale(2.14),
+    borderWidth: scale(1.07),
+    borderColor: colors.primary.primary100,
   },
   title: {
     fontSize: scale(14),

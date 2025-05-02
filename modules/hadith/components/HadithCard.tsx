@@ -70,9 +70,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     gap: scale(10),
   },
   image: {
-    width: scale(110),
-    height: verticalScale(130),
-    borderRadius: scale(8),
+    width: scale(102.9),
+    height: verticalScale(147),
+    borderTopLeftRadius: scale(3.22),
+    borderTopRightRadius: scale(9.67),
+    borderBottomRightRadius: scale(9.67),
+    borderBottomLeftRadius: scale(3.22),
+    borderWidth: scale(1.61),
+    borderColor: colors.primary.primary100,
   },
   title: {
     fontSize: scale(14),
