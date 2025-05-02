@@ -1,12 +1,13 @@
 // modules/hadith/screens/HadithInfoScreen.tsx
 
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, TextInput, Text } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import FastImage from 'react-native-fast-image';
 import { Title3Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import SearchInput from '../components/SearchInput';
 
 // Dummy data for demo
 const hadithInfo = {
@@ -37,11 +38,10 @@ const HadithInfoScreen: React.FC = () => {
     <View style={[styles.container, { backgroundColor: 'white' }]}>
       {/* Search Bar */}
       <View style={styles.searchBarContainer}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Salaam, hadith khojein"
-          value={search}
+        <SearchInput 
+          value={search} 
           onChangeText={setSearch}
+          placeholder="Salaam, hadith khojein"
         />
       </View>
 
@@ -90,15 +90,9 @@ const HadithInfoScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: scale(12) },
-  searchBarContainer: { marginBottom: verticalScale(8) },
-  searchBar: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: scale(8),
-    paddingHorizontal: scale(12),
-    height: scale(36),
-    fontSize: scale(14),
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+  searchBarContainer: { 
+    marginBottom: verticalScale(8),
+    alignItems: 'center',
   },
   infoCard: {
     flexDirection: 'row',
