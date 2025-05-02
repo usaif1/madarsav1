@@ -1,12 +1,15 @@
-// dependencies
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Platform} from 'react-native';
+// modules/hadith/navigation/hadith.navigator.tsx
 
-// screens
-import {HadithsList,HadithChaptersList,HadithInfo,HadithComplete} from '../screens';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Platform } from 'react-native';
 
-// components
-import {BackButton, Header} from '@/components';
+// Import your new screens
+import HadithsListScreen from '../screens/HadithsListScreen';
+import HadithInfoScreen from '../screens/HadithInfoScreen';
+import HadithDetailScreen from '../screens/HadithDetailScreen';
+import HadithChaptersScreen from '../screens/HadithChaptersScreen';
+
+import { BackButton, Header } from '@/components';
 
 const HadithNavigator = createNativeStackNavigator({
   screenOptions: {
@@ -16,37 +19,32 @@ const HadithNavigator = createNativeStackNavigator({
   },
   screens: {
     hadithsList: {
-      screen: HadithsList,
+      screen: HadithsListScreen,
       options: {
         title: 'Hadiths',
         headerShown: true,
         headerTitleAlign: 'center',
-        header: () => (
-          <Header title="Hadith"/>
-        ),
-      },
-    },
-    hadithChaptersList: {
-      screen: HadithChaptersList,
-      options: {
-        header: () => (
-          <Header title="Chapters" />
-        ),
+        header: () => <Header title="Hadith" />,
       },
     },
     hadithInfo: {
-      screen: HadithInfo,
+      screen: HadithInfoScreen,
       options: {
-        title: 'Hadith details',
         header: () => <Header title="Hadith details" />,
         headerTitleAlign: 'center',
       },
     },
-    hadithComplete: {
-      screen: HadithComplete,
+    hadithDetail: {
+      screen: HadithDetailScreen,
       options: {
-        title: 'Hadith details',
-        header: () => <Header title="Hadith details" />,
+        header: () => <Header title="Hadith Info" />,
+        headerTitleAlign: 'center',
+      },
+    },
+    hadithChapters: {
+      screen: HadithChaptersScreen,
+      options: {
+        header: () => <Header title="Chapters" />,
         headerTitleAlign: 'center',
       },
     },
