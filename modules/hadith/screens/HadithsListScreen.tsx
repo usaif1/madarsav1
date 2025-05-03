@@ -9,6 +9,8 @@ import HadithCard from '../components/HadithCard';
 import HadithListItem from '../components/HadithListItem';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
 import HadithImageFooter from '../components/HadithImageFooter';
+import MoreHadithsLeftIllustration from '@/assets/hadith/MoreHadithsLeftIllustration.svg';
+import MoreHadithsRightIllustration from '@/assets/hadith/MoreHadithsRightIllustration.svg';
 
 // Define the Hadith type for better type safety
 export interface Hadith {
@@ -172,6 +174,7 @@ const HadithsListScreen: React.FC = () => {
       scrollEnabled={false}
       contentContainerStyle={styles.listContainer}
       ListFooterComponent={<HadithImageFooter />}
+      ListFooterComponentStyle={styles.footerComponentStyle}
     />
   );
 
@@ -183,7 +186,13 @@ const HadithsListScreen: React.FC = () => {
             {renderGrid()}
             {listHadiths.length > 0 && (
               <View style={styles.moreHadithContainer}>
+                <View style={styles.leftIllustration}>
+                  <MoreHadithsLeftIllustration />
+                </View>
                 <Body1Title2Bold style={styles.moreText}>More Hadith</Body1Title2Bold>
+                <View style={styles.rightIllustration}>
+                  <MoreHadithsRightIllustration />
+                </View>
               </View>
             )}
           </>
@@ -208,6 +217,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingTop: verticalScale(8),
+    paddingBottom: 0,
   },
   moreHadithContainer: {
     height: verticalScale(30),
@@ -215,10 +225,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: scale(4),
+    flexDirection: 'row',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  leftIllustration: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  rightIllustration: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
   moreText: {
     fontSize: scale(14),
     color: '#7C5CFC', // primary500
+  },
+  footerComponentStyle: {
+    marginTop: 0,
   },
   footerContainer: {
     width: scale(375),
