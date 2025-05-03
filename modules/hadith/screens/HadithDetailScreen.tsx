@@ -10,6 +10,7 @@ import HadithImageFooter from '../components/HadithImageFooter';
 import LinearGradient from 'react-native-linear-gradient';
 import PlayIcon from '@/assets/hadith/Play.svg';
 import ShareIcon from '@/assets/hadith/Share.svg';
+import { useNavigation } from '@react-navigation/native';
 
 // Dummy data for demo
 const hadithDetail = {
@@ -47,6 +48,11 @@ His Death: Political problems led him to move to Khartank, a village near Samark
 
 const HadithDetailScreen: React.FC = () => {
   const { colors } = useThemeStore();
+  const navigation = useNavigation<any>();
+
+  const handleStartLearning = () => {
+    navigation.navigate('hadithChapters', { id: hadithDetail.id });
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -85,7 +91,10 @@ const HadithDetailScreen: React.FC = () => {
 
           {/* Action Buttons */}
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={[styles.actionBtn, styles.startBtn]}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, styles.startBtn]}
+              onPress={handleStartLearning}
+            >
               <PlayIcon width={20} height={20} />
               <Body1Title2Bold style={styles.startBtnText}>Start learning</Body1Title2Bold>
             </TouchableOpacity>
