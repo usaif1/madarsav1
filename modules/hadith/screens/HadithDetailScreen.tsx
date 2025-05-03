@@ -10,6 +10,7 @@ import HadithImageFooter from '../components/HadithImageFooter';
 import LinearGradient from 'react-native-linear-gradient';
 import PlayIcon from '@/assets/hadith/Play.svg';
 import ShareIcon from '@/assets/hadith/Share.svg';
+import HadithInfoTopIllustration from '@/assets/hadith/HadithInfoTopIllustration.svg';
 import { useNavigation } from '@react-navigation/native';
 
 // Dummy data for demo
@@ -60,7 +61,12 @@ const HadithDetailScreen: React.FC = () => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Top Section */}
       <View style={styles.topSection}>
+        
+      <View style={styles.topIllustrationContainer}>
+            <HadithInfoTopIllustration />
+          </View>
         <View style={styles.innerTopSection}>
+          
           {/* Book Card */}
           <View style={styles.bookCard}>
             {/* Book Image */}
@@ -156,6 +162,13 @@ const styles = StyleSheet.create({
     height: verticalScale(244.7),
     rowGap: scale(16),
     paddingHorizontal: scale(20),
+    position: 'relative',
+  },
+  topIllustrationContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 0,
   },
   bookCard: {
     width: scale(335),
