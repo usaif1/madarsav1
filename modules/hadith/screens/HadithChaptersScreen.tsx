@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     height: scale(152.07),
     justifyContent: 'center',
     alignItems: 'center',
-    opacity: 0.5,
+    opacity: 0.2,
   },
   headerCenter: {
     width: scale(200),

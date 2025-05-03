@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     justifyContent: 'center',
+    opacity: 0.1,
   },
   rightIllustration: {
     position: 'absolute',
@@ -242,6 +243,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     justifyContent: 'center',
+    opacity: 0.1,
   },
   moreText: {
     fontSize: scale(14),
