@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
 import Bookmark from '@/assets/hadith/bookmark.svg';
+import Bookmarked from '@/assets/hadith/bookmarked.svg';
 
 interface SavedButtonProps {
   saved: boolean;
@@ -17,7 +18,7 @@ const SavedButton: React.FC<SavedButtonProps> = ({ saved, onPress }) => {
       ]} 
       onPress={onPress}
     >
-      <Bookmark fill={saved ? '#FFFFFF' : 'transparent'} stroke={saved ? 'transparent' : '#171717'} />
+      {saved ? <Bookmarked /> : <Bookmark />}
       <Text style={[
         styles.text,
         saved ? styles.savedText : styles.unsavedText
