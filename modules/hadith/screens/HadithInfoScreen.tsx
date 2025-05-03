@@ -10,6 +10,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import SearchInput from '../components/SearchInput';
 import HadithInfoCard from '../components/HadithInfoCard';
 import HadithImageFooter from '../components/HadithImageFooter';
+import SavedFooter from '../components/SavedFooter';
 
 // Dummy data for demo
 const hadithInfo = {
@@ -62,7 +63,10 @@ const HadithInfoScreen: React.FC = () => {
         title={hadithInfo.title}
         author={hadithInfo.author}
         brief={hadithInfo.brief}
-        onPress={() => navigation.navigate('hadithDetail', { id: hadithInfo.id })}
+        onPress={() => {
+          // @ts-ignore
+          navigation.navigate('hadithDetail', { id: hadithInfo.id });
+        }}
       />
 
       {/* Chapters List */}
@@ -72,7 +76,10 @@ const HadithInfoScreen: React.FC = () => {
         renderItem={({ item, index }) => (
           <TouchableOpacity
             style={styles.chapterRow}
-            onPress={() => navigation.navigate('hadithChapters', { chapterId: item.id })}
+            onPress={() => {
+              // @ts-ignore
+              navigation.navigate('hadithChapters', { chapterId: item.id });
+            }}
           >
             <View style={styles.indexContainer}>
               <Text style={styles.chapterIndex}>{index + 1}</Text>
@@ -85,7 +92,12 @@ const HadithInfoScreen: React.FC = () => {
         )}
         style={styles.chapterList}
         contentContainerStyle={styles.listContentContainer}
-        ListFooterComponent={<HadithImageFooter />}
+        ListFooterComponent={
+          <>
+            <HadithImageFooter />
+            <SavedFooter />
+          </>
+        }
         showsVerticalScrollIndicator={false}
       />
     </View>
