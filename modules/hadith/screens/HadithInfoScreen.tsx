@@ -65,7 +65,7 @@ const HadithInfoScreen: React.FC = () => {
         brief={hadithInfo.brief}
         onPress={() => {
           // @ts-ignore
-          navigation.navigate('hadithDetail', { id: hadithInfo.id });
+          navigation.navigate('hadithDetail', { id: hadithInfo.id, hadithTitle: hadithInfo.title });
         }}
       />
 
@@ -81,7 +81,7 @@ const HadithInfoScreen: React.FC = () => {
             ]}
             onPress={() => {
               // @ts-ignore
-              navigation.navigate('hadithChapters', { chapterId: item.id });
+              navigation.navigate('hadithChapters', { hadithId: hadithInfo.id, chapterId: item.id, chapterTitle: item.title });
             }}
           >
             <View style={styles.indexContainer}>

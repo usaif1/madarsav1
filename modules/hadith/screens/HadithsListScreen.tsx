@@ -146,12 +146,12 @@ const HadithsListScreen: React.FC = () => {
         <View style={styles.row} key={i}>
           <HadithCard
             hadith={gridHadiths[i]}
-            onPress={() => navigation.navigate('hadithInfo', { id: gridHadiths[i].id })}
+            onPress={() => navigation.navigate('hadithInfo', { id: gridHadiths[i].id, hadithTitle: gridHadiths[i].title })}
           />
           {gridHadiths[i + 1] && (
             <HadithCard
               hadith={gridHadiths[i + 1]}
-              onPress={() => navigation.navigate('hadithInfo', { id: gridHadiths[i + 1].id })}
+              onPress={() => navigation.navigate('hadithInfo', { id: gridHadiths[i + 1].id, hadithTitle: gridHadiths[i + 1].title })}
             />
           )}
         </View>
@@ -168,7 +168,7 @@ const HadithsListScreen: React.FC = () => {
       renderItem={({ item }) => (
         <HadithListItem
           hadith={item}
-          onPress={() => navigation.navigate('hadithInfo', { id: item.id })}
+          onPress={() => navigation.navigate('hadithInfo', { id: item.id, hadithTitle: item.title })}
         />
       )}
       scrollEnabled={false}

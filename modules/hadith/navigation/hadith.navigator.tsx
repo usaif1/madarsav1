@@ -29,24 +29,24 @@ const HadithNavigator = createNativeStackNavigator({
     },
     hadithInfo: {
       screen: HadithInfoScreen,
-      options: {
-        header: () => <Header title="Hadith details" />,
+      options: ({ route }: { route: any }) => ({
+        header: () => <Header title={route.params?.hadithTitle || 'Hadith Info'} />,
         headerTitleAlign: 'center',
-      },
+      }),
     },
     hadithDetail: {
       screen: HadithDetailScreen,
-      options: {
-        header: () => <Header title="Hadith Info" />,
+      options: ({ route }: { route: any }) => ({
+        header: () => <Header title={route.params?.hadithTitle || 'Hadith Detail'} />,
         headerTitleAlign: 'center',
-      },
+      }),
     },
     hadithChapters: {
       screen: HadithChaptersScreen,
-      options: {
-        header: () => <Header title="Chapters" />,
+      options: ({ route }: { route: any }) => ({
+        header: () => <Header title={route.params?.chapterTitle || route.params?.hadithTitle || 'Chapters'} />,
         headerTitleAlign: 'center',
-      },
+      }),
     },
   },
 });

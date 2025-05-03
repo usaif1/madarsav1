@@ -54,7 +54,7 @@ const HadithDetailScreen: React.FC = () => {
   const navigation = useNavigation<any>();
 
   const handleStartLearning = () => {
-    navigation.navigate('hadithChapters', { id: hadithDetail.id });
+    navigation.navigate('hadithChapters', { id: hadithDetail.id, hadithTitle: hadithDetail.title });
   };
 
   return (
