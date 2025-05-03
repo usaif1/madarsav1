@@ -84,28 +84,34 @@ const HadithInfoScreen: React.FC = () => {
           </TouchableOpacity>
         )}
         style={styles.chapterList}
-        contentContainerStyle={{ paddingBottom: verticalScale(32) }}
+        contentContainerStyle={styles.listContentContainer}
+        ListFooterComponent={<HadithImageFooter />}
+        showsVerticalScrollIndicator={false}
       />
-
-      {/* Footer */}
-      <HadithImageFooter />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1,},
+  container: { 
+    flex: 1,
+  },
   searchBarContainer: { 
     marginBottom: verticalScale(8),
     alignItems: 'center',
   },
-  chapterList: { flex: 1 },
+  chapterList: { 
+    flex: 1,
+  },
+  listContentContainer: {
+    paddingBottom: verticalScale(16),
+  },
   chapterRow: {
     flexDirection: 'row',
+    width: scale(300),
     alignItems: 'center',
     height: verticalScale(56),
     paddingHorizontal: scale(16),
-    paddingVertical: verticalScale(16),
     borderBottomWidth: 1,
     borderColor: '#F0F0F0',
   },
@@ -124,27 +130,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   chapterInfo: { 
-    width: scale(343),
-    height: verticalScale(24),
     flexDirection: 'row', 
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   chapterTitle: { 
     fontSize: scale(14),
+    width: scale(256),
     color: '#171717',
   },
   chapterRange: { 
     fontSize: scale(12),
+    textAlign: 'right',
+    width: scale(56),
   },
-  footer: {
-    alignItems: 'center',
-    marginTop: verticalScale(16),
-    marginBottom: verticalScale(8),
-  },
-  footerText: { fontSize: scale(15), fontWeight: '600' },
-  ummah: { color: '#7C5CFC', fontWeight: 'bold' },
-  footerSubText: { fontSize: scale(12), color: '#888' },
 });
 
 export default HadithInfoScreen;
