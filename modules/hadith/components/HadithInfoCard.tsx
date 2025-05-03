@@ -34,7 +34,7 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
     >
       {/* Background SVG Pattern */}
       <View style={styles.backgroundPattern}>
-      <HadithInfoDecoration />
+        <HadithInfoDecoration />
       </View>
 
       {/* Content Container */}
@@ -52,15 +52,10 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
         <View style={styles.textContent}>
           {/* Title and Arrow */}
           <View style={styles.titleRow}>
-            <Body1Title2Bold style={styles.title}>{title}</Body1Title2Bold>
-            <Pressable
-            onPress={onPress} 
-        style={[styles.arrowBtn, styles.arrowRight]} 
-        hitSlop={8} 
-        accessibilityLabel="Next dua"
-      >
-        <ArrowRightIcon width={16} height={16} />
-      </Pressable>
+            <Body1Title2Bold style={styles.title} numberOfLines={1}>{title}</Body1Title2Bold>
+            <View style={styles.arrowBtn}>
+              <ArrowRightIcon width={16} height={16} />
+            </View>
           </View>
 
           {/* Author Pill */}
@@ -85,8 +80,8 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
 const getStyles = (colors: any) => StyleSheet.create({
   container: {
     height: verticalScale(127),
-    paddingTop: scale(16),
-    paddingBottom: scale(16),
+    paddingVertical: scale(16),
+    paddingHorizontal: scale(16),
     backgroundColor: '#FFFDF6',
     borderRadius: scale(8),
     overflow: 'hidden',
@@ -99,14 +94,13 @@ const getStyles = (colors: any) => StyleSheet.create({
     bottom: 0,
     zIndex: 1,
     width: scale(100),
-    height: verticalScale(127),
+    height: '100%',
     opacity: 0.5,
   },
   contentContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    justifyContent: 'center',
-    paddingHorizontal: scale(16),
+    justifyContent: 'flex-start',
     zIndex: 2,
     height: '100%',
   },
@@ -125,15 +119,15 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderColor: '#E5E5E5',
   },
   textContent: {
-    width: scale(280.6),
+    flex: 1,
     justifyContent: 'center',
   },
   titleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: scale(4),
-    width: scale(280.6),
+    width: '100%',
   },
   arrowBtn: {
     width: scale(20),
@@ -141,15 +135,10 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderRadius: scale(36),
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'absolute',
-    top: '50%',
-    transform: [{ translateY: -scale(12) }],
     zIndex: 2,
     padding: scale(2),
     backgroundColor: colors.accent.accent200,
-  },
-  arrowRight: {
-    right: -scale(12),
+    marginLeft: scale(8),
   },
   title: {
     fontSize: scale(18),
@@ -170,7 +159,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center',
   },
   description: {
-    width: scale(280.6),
+    width: '100%',
     height: verticalScale(51),
     color: '#6B7280',
     fontSize: scale(12),
