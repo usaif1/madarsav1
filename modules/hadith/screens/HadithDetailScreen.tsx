@@ -39,7 +39,7 @@ Methods of Classification and Annotation: Imām al-Bukhārī (rahimahullah) impo
 3. The chain must be complete without any missing narrators.
 4. It must be known that consecutive narrators in the chain met each other (this is Imām al-Bukhārī's extra condition).
 
-Imām an-Nawawi (rahimahullah) relates that all scholars in Islām have agreed that Ṣaḥīḥ al-Bukhārī has gained the status of being the most authentic book after the Qur'an. Ṣaḥīḥ al-Bukhārī consists of 7,563 ahādith including those ahādith which have been repeated. Without repetitions however, the total number of hadith is around 2,600.
+Imām an-Nawawi (rahimahullah) relates that all scholars in Islām have agreed that Ṣaḥīḥ al-Bukhārī has gained the status of being the most authentic book after the Qur'an. Ṣaḥīḥ al-Bukhārī consists of 7,563 ahādith including those ahādīth which have been repeated. Without repetitions however, the total number of hadith is around 2,600.
 
 His Students: 
 In the year 864/250, he settled in Nishapur. It was there that he met Muslim ibn Al-Hajjaj, who would be considered his student, and eventually collector and organizer of the hadith collection Ṣaḥīḥ Muslim which is considered second only to that of al-Bukhārī.
@@ -67,7 +67,7 @@ const HadithDetailScreen: React.FC = () => {
             <FastImage 
               source={hadithDetail.image} 
               style={styles.bookImage}
-              resizeMode={FastImage.resizeMode.cover}
+              resizeMode={FastImage.resizeMode.contain}
             />
             
             {/* Book Info */}
@@ -161,8 +161,8 @@ const styles = StyleSheet.create({
     width: scale(335),
     height: verticalScale(188.7),
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
     columnGap: scale(16),
   },
   bookImage: {
@@ -175,22 +175,22 @@ const styles = StyleSheet.create({
   },
   bookInfo: {
     width: scale(186.91),
-    height: verticalScale(180),
-    rowGap: scale(10),
-    justifyContent: 'center',
+    height: verticalScale(188.7),
+    paddingVertical: scale(10),
+    justifyContent: 'flex-start',
   },
   infoSection: {
     width: scale(186.91),
-    height: verticalScale(52),
-    rowGap: scale(4),
+    marginBottom: scale(16),
   },
   bookTitle: {
     fontSize: scale(20),
-    marginBottom: scale(8),
+    marginBottom: scale(16),
   },
   infoLabel: {
     fontSize: scale(10),
-    marginTop: scale(4),
+    marginBottom: scale(4),
+    color: '#737373',
   },
   authorName: {
     fontSize: scale(12),
@@ -199,7 +199,6 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: scale(12),
     color: '#171717',
-    marginBottom: scale(4),
   },
   actionsRow: {
     flexDirection: 'row',
