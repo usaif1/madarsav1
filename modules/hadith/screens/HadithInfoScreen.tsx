@@ -8,6 +8,7 @@ import FastImage from 'react-native-fast-image';
 import { Title3Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SearchInput from '../components/SearchInput';
+import HadithInfoCard from '../components/HadithInfoCard';
 
 // Dummy data for demo
 const hadithInfo = {
@@ -46,18 +47,12 @@ const HadithInfoScreen: React.FC = () => {
       </View>
 
       {/* Hadith Info Card */}
-      <TouchableOpacity
-        style={[styles.infoCard, { borderColor: colors.primary.primary100 }]}
+      <HadithInfoCard
+        title={hadithInfo.title}
+        author={hadithInfo.author}
+        brief={hadithInfo.brief}
         onPress={() => navigation.navigate('hadithDetail', { id: hadithInfo.id })}
-        activeOpacity={0.8}
-      >
-        {/* <FastImage source={{ uri: hadithInfo.image }} style={styles.image} /> */}
-        <View style={styles.infoText}>
-          <Title3Bold style={styles.title}>{hadithInfo.title}</Title3Bold>
-          <Body1Title2Medium color="sub-heading" style={styles.author}>{hadithInfo.author}</Body1Title2Medium>
-          <Body1Title2Medium style={styles.brief} numberOfLines={2}>{hadithInfo.brief}</Body1Title2Medium>
-        </View>
-      </TouchableOpacity>
+      />
 
       {/* Chapters List */}
       <FlatList
@@ -94,25 +89,6 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(8),
     alignItems: 'center',
   },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: scale(10),
-    borderWidth: 1,
-    padding: scale(10),
-    marginBottom: verticalScale(12),
-    backgroundColor: '#FFFDEB',
-  },
-  image: {
-    width: scale(48),
-    height: scale(64),
-    borderRadius: scale(6),
-    marginRight: scale(10),
-  },
-  infoText: { flex: 1 },
-  title: { fontSize: scale(15), marginBottom: scale(2) },
-  author: { fontSize: scale(12), marginBottom: scale(2) },
-  brief: { fontSize: scale(11), color: '#888' },
   chapterList: { flex: 1 },
   chapterRow: {
     flexDirection: 'row',
