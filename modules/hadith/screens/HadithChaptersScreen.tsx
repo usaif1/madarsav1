@@ -13,6 +13,7 @@ import HadithChaptersRightHeading from '@/assets/hadith/HadithChaptersRightHeadi
 import BismillahCalligraphy from '@/assets/hadith/BismillahCalligraphy.svg';
 import Bookmark from '@/assets/hadith/bookmark.svg';
 import ShareAlt from '@/assets/hadith/share_alt.svg';
+import DashedLine from '@/assets/hadith/dashedLine.svg';
 
 // Dummy data for demo
 const chaptersData = [
@@ -55,6 +56,9 @@ const ChapterHeader = ({ chapter, index }: { chapter: any, index: number }) => {
       style={styles.chapterHeader}
     >
       <Body1Title2Medium color="yellow-800" style={styles.chapterNumber}>({index + 1}) Chapter: {chapter.title}</Body1Title2Medium>
+      <View style={styles.dividerContainer}>
+        <DashedLine />
+      </View>
       <Body1Title2Medium color="accent-yellow-900" style={styles.chapterArabic}>{chapter.arabic}</Body1Title2Medium>
     </LinearGradient>
   );
@@ -184,20 +188,22 @@ const styles = StyleSheet.create({
     borderRadius: scale(8),
     alignSelf: 'center',
     rowGap: scale(10),
+    alignItems: 'center',
   },
   chapterNumber: {
     fontSize: scale(14),
-  },
-  chapterTitle: {
-    fontSize: scale(16),
-    fontWeight: 'bold',
-    color: '#171717',
+    textAlign: 'center',
   },
   chapterArabic: {
     fontSize: scale(16),
     fontWeight: 'bold',
     color: '#171717',
-    textAlign: 'right',
+    textAlign: 'center',
+  },
+  dividerContainer: {
+    alignItems: 'center',
+    paddingVertical: scale(8),
+    width: scale(295),
   },
   hadithContainer: {
     width: scale(375),

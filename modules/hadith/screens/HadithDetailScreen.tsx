@@ -41,9 +41,11 @@ Methods of Classification and Annotation: Imām al-Bukhārī (rahimahullah) impo
 
 Imām an-Nawawi (rahimahullah) relates that all scholars in Islām have agreed that Ṣaḥīḥ al-Bukhārī has gained the status of being the most authentic book after the Qur'an. Ṣaḥīḥ al-Bukhārī consists of 7,563 ahādith including those ahādith which have been repeated. Without repetitions however, the total number of hadith is around 2,600.
 
-His Students: In the year 864/250, he settled in Nishapur. It was there that he met Muslim ibn Al-Hajjaj, who would be considered his student, and eventually collector and organizer of the hadith collection Ṣaḥīḥ Muslim which is considered second only to that of al-Bukhārī.
+His Students: 
+In the year 864/250, he settled in Nishapur. It was there that he met Muslim ibn Al-Hajjaj, who would be considered his student, and eventually collector and organizer of the hadith collection Ṣaḥīḥ Muslim which is considered second only to that of al-Bukhārī.
 
-His Death: Political problems led him to move to Khartank, a village near Samarkānd where he died in the year 256 A.H./870 A.D.`,
+His Death: 
+Political problems led him to move to Khartank, a village near Samarkānd where he died in the year 256 A.H./870 A.D.`,
 };
 
 const HadithDetailScreen: React.FC = () => {
