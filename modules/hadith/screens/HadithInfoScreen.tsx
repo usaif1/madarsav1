@@ -5,10 +5,11 @@ import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import FastImage from 'react-native-fast-image';
-import { Title3Bold, Body1Title2Medium } from '@/components/Typography/Typography';
+import { Title3Bold, Body1Title2Medium, Body2Medium } from '@/components/Typography/Typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SearchInput from '../components/SearchInput';
 import HadithInfoCard from '../components/HadithInfoCard';
+import HadithImageFooter from '../components/HadithImageFooter';
 
 // Dummy data for demo
 const hadithInfo = {
@@ -21,7 +22,17 @@ const hadithInfo = {
     { id: '1', title: 'Revelation', range: '1-7' },
     { id: '2', title: 'Belief', range: '8-58' },
     { id: '3', title: 'Knowledge', range: '59-134' },
-    // ... more chapters
+    { id: '4', title: 'Ablutions (Wudu\')', range: '135-248' },
+    { id: '5', title: 'Bathing (Ghusl)', range: '249-293' },
+    { id: '6', title: 'Menstrual Periods', range: '294-330' },
+    { id: '7', title: 'Rubbing hands and feet with dust (Tayammum)', range: '331-348' },
+    { id: '8', title: 'Prayer (Salat)', range: '349-512' },
+    { id: '9', title: 'Times of the Prayers', range: '513-590' },
+    { id: '10', title: 'Call to Prayers (Adhaan)', range: '591-856' },
+    { id: '11', title: 'Friday Prayer', range: '857-941' },
+    { id: '12', title: 'Fear Prayer', range: '942-957' },
+    { id: '14', title: 'The Two Festivals (Eids)', range: '958-964' },
+    // Add more chapters as needed
   ],
 };
 
@@ -63,10 +74,12 @@ const HadithInfoScreen: React.FC = () => {
             style={styles.chapterRow}
             onPress={() => navigation.navigate('hadithChapters', { chapterId: item.id })}
           >
-            <Text style={[styles.chapterIndex, { color: colors.primary.primary600 }]}>{index + 1}</Text>
+            <View style={styles.indexContainer}>
+              <Text style={styles.chapterIndex}>{index + 1}</Text>
+            </View>
             <View style={styles.chapterInfo}>
-              <Text style={styles.chapterTitle}>{item.title}</Text>
-              <Text style={styles.chapterRange}>{item.range}</Text>
+              <Body1Title2Medium style={styles.chapterTitle}>{item.title}</Body1Title2Medium>
+              <Body2Medium color="sub-heading" style={styles.chapterRange}>{item.range}</Body2Medium>
             </View>
           </TouchableOpacity>
         )}
@@ -75,16 +88,13 @@ const HadithInfoScreen: React.FC = () => {
       />
 
       {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Made for <Text style={styles.ummah}>Ummah</Text></Text>
-        <Text style={styles.footerSubText}>Crafted with ❤️ by Madrasa Team, India</Text>
-      </View>
+      <HadithImageFooter />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: scale(12) },
+  container: { flex: 1,},
   searchBarContainer: { 
     marginBottom: verticalScale(8),
     alignItems: 'center',
@@ -93,19 +103,40 @@ const styles = StyleSheet.create({
   chapterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: verticalScale(10),
+    height: verticalScale(56),
+    paddingHorizontal: scale(16),
+    paddingVertical: verticalScale(16),
     borderBottomWidth: 1,
     borderColor: '#F0F0F0',
   },
-  chapterIndex: {
-    fontWeight: 'bold',
-    fontSize: scale(15),
+  indexContainer: {
     width: scale(24),
+    height: scale(24),
+    borderRadius: scale(24),
+    backgroundColor: '#F9F6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: scale(8),
+  },
+  chapterIndex: {
+    fontSize: scale(11.2),
+    color: '#8A57DC',
     textAlign: 'center',
   },
-  chapterInfo: { flex: 1, flexDirection: 'row', justifyContent: 'space-between' },
-  chapterTitle: { fontSize: scale(14) },
-  chapterRange: { fontSize: scale(13), color: '#888' },
+  chapterInfo: { 
+    width: scale(343),
+    height: verticalScale(24),
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  chapterTitle: { 
+    fontSize: scale(14),
+    color: '#171717',
+  },
+  chapterRange: { 
+    fontSize: scale(12),
+  },
   footer: {
     alignItems: 'center',
     marginTop: verticalScale(16),
