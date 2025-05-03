@@ -39,6 +39,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end', 
     paddingHorizontal: scale(24),
+    backgroundColor: '#FAFAFA',
+    marginTop: scale(-8),
   }
 });
 

@@ -73,9 +73,12 @@ const HadithInfoScreen: React.FC = () => {
       <FlatList
         data={filteredChapters}
         keyExtractor={item => item.id}
-        renderItem={({ item, index }) => (
+        renderItem={({ item, index, separators }) => (
           <TouchableOpacity
-            style={styles.chapterRow}
+            style={[
+              styles.chapterRow, 
+              index === filteredChapters.length - 1 && styles.lastChapterRow
+            ]}
             onPress={() => {
               // @ts-ignore
               navigation.navigate('hadithChapters', { chapterId: item.id });
@@ -93,10 +96,10 @@ const HadithInfoScreen: React.FC = () => {
         style={styles.chapterList}
         contentContainerStyle={styles.listContentContainer}
         ListFooterComponent={
-          <>
+            <>
             <HadithImageFooter />
             <SavedFooter />
-          </>
+            </>
         }
         showsVerticalScrollIndicator={false}
       />
@@ -116,7 +119,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContentContainer: {
-    paddingBottom: verticalScale(16),
+    paddingBottom: 0,
   },
   chapterRow: {
     flexDirection: 'row',
@@ -126,6 +129,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(16),
     borderBottomWidth: 1,
     borderColor: '#F0F0F0',
+  },
+  lastChapterRow: {
+    borderBottomWidth: 0,
   },
   indexContainer: {
     width: scale(24),
