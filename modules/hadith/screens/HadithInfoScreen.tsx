@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchBarContainer: { 
-    marginBottom: verticalScale(8),
+    marginVertical: verticalScale(10),
     alignItems: 'center',
   },
   chapterList: { 
