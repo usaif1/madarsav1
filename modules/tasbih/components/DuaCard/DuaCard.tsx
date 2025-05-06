@@ -44,7 +44,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         <View style={styles.transRowWrap}>
           <View style={[styles.transBg]}> 
             <Body1Title2Medium
-              color="accent-yellow-800"
+              color="yellow-800"
               style={[styles.transliteration]}
               numberOfLines={3}
               ellipsizeMode="tail"
@@ -58,7 +58,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         {/* Translation inside card, with truncation and background */}
         <View style={[styles.translationBg]}> 
           <Body1Title2Medium
-            color="accent-yellow-800"
+            color="yellow-800"
             style={[styles.translation]}
             numberOfLines={3}
             ellipsizeMode="tail"
