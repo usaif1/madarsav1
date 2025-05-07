@@ -8,8 +8,8 @@ export const API_URLS = {
 export const API_ENDPOINTS = {
   // Islamic Developers API endpoints
   NAMES_OF_ALLAH: '/v1/al-asma-ul-husna',
-  QIBLA: '/qibla',
-  ISLAMIC_CALENDAR: '/calendar',
+  QIBLA: '/v1/qibla',
+  ISLAMIC_CALENDAR: '/v1/calendar',
   
   // Other endpoints will be added as needed
 };

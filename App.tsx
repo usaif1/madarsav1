@@ -11,6 +11,10 @@ import ParentNavigation from '@/navigator/ParentNavigation';
 import {useGlobalStore} from './globalStore';
 import {StatusBar} from 'react-native';
 
+if (__DEV__) {
+  require("./ReactotronConfig");
+}
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
