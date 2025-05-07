@@ -34,6 +34,7 @@
     "react-native-snap-carousel": "^3.9.1",
     "react-native-svg": "^15.11.2",
     "react-native-url-polyfill": "^2.0.0",
+    "reactotron-react-native": "^5.1.13",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
