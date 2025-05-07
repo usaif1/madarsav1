@@ -1,33 +1,59 @@
-import React, {useState} from 'react';
-import {View, FlatList, StyleSheet, Pressable, Dimensions} from 'react-native';
+import React, { useState } from 'react';
+import { View, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Text } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
 
 // components & data
-import {Name, namesData} from '../../../namesData';
-import {Body1Title2Bold, Body2Medium, Title3Bold} from '@/components';
+import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
 import Share from '@/assets/share-light.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
 import Close from '@/assets/close.svg';
 
 // store
-import {useThemeStore} from '@/globalStore';
+import { useThemeStore } from '@/globalStore';
+
+// API hooks
+import { useAllNames, transformNamesData, TransformedName } from '@/api/hooks/useNames';
 
 const width = Dimensions.get('screen').width;
 const CARD_SIZE = Math.min(width, 375);
 
 const NamesList: React.FC = () => {
-  const {colors} = useThemeStore();
-
+  const { colors } = useThemeStore();
+  const { data, isLoading, error, refetch } = useAllNames();
+  
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
+
+  // Transform the API data to match our component's expected format
+  const namesData = data ? transformNamesData(data) : [];
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8A57DC" />
+        <Text style={styles.loadingText}>Loading names...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading names: {error.message}</Text>
+        <Pressable style={styles.retryButton} onPress={() => refetch()}>
+          <Text style={styles.retryText}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <>
       <FlatList
         data={namesData}
         keyExtractor={item => item.id}
-        renderItem={({index, item}) => (
+        renderItem={({ index, item }) => (
           <NameCard
             index={index}
             item={item}
@@ -43,7 +69,7 @@ const NamesList: React.FC = () => {
         backdropColor="#171717">
         <View style={stylesModal.card}>
           <Pressable
-            style={{position: 'absolute', top: 70, left: 10}}
+            style={{ position: 'absolute', top: 70, left: 10 }}
             onPress={() => setIsVisible(false)}>
             <Close />
           </Pressable>
@@ -76,13 +102,13 @@ const NamesList: React.FC = () => {
               onPress={() => setIsVisible(false)}
               style={[
                 stylesModal.btn,
-                {backgroundColor: colors.secondary.neutral600},
+                { backgroundColor: colors.secondary.neutral600 },
               ]}>
               <Close />
               <Body1Title2Bold color="white">Close</Body1Title2Bold>
             </Pressable>
 
-            <Pressable style={[stylesModal.btn, {backgroundColor: '#8A57DC'}]}>
+            <Pressable style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}>
               <RightTriangle />
               <Body1Title2Bold color="white">Listen</Body1Title2Bold>
             </Pressable>
@@ -90,7 +116,7 @@ const NamesList: React.FC = () => {
             <Pressable
               style={[
                 stylesModal.btn,
-                {backgroundColor: colors.secondary.neutral600},
+                { backgroundColor: colors.secondary.neutral600 },
               ]}>
               <Share />
               <Body1Title2Bold color="white">Share</Body1Title2Bold>
@@ -103,7 +129,7 @@ const NamesList: React.FC = () => {
 };
 
 interface NameCardProps {
-  item: Name; // required – the list item itself
+  item: TransformedName;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   index: number;
   setCurrentItemIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -121,7 +147,7 @@ const NameCard: React.FC<NameCardProps> = ({
         setCurrentItemIndex(index);
         setIsVisible(true);
       }}
-      style={[styles.item, {borderTopWidth: index === 0 ? 1 : 0}]}>
+      style={[styles.item, { borderTopWidth: index === 0 ? 1 : 0 }]}>
       {/* ▶️ The FastImage avatar */}
       <FastImage
         source={require('@/assets/names/ar_rahman_large.png')}
@@ -132,7 +158,7 @@ const NameCard: React.FC<NameCardProps> = ({
       {/* Name & meaning */}
       <View style={styles.textContainer}>
         <Title3Bold>{item.name}</Title3Bold>
-        <Body2Medium color="sub-heading">{item.meaning}</Body2Medium>
+        <Body2Medium color="sub-heading">{item.meaning || 'The name of Allah'}</Body2Medium>
       </View>
 
       {/* Index badge */}
@@ -164,6 +190,48 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#737373',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#8A57DC',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  indexBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F9F6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   name: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -174,18 +242,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 4,
   },
-  indexBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F9F6FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  indexText: {
-    color: '#8A57DC',
-    fontWeight: 'bold',
-  },
 });
 
 const stylesModal = StyleSheet.create({
@@ -194,20 +250,17 @@ const stylesModal = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   card: {
     position: 'relative',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   image: {
     width: CARD_SIZE,
     height: CARD_SIZE, // square
     borderRadius: 12,
   },
-
   /* ---------- actions row ---------- */
   actions: {
     position: 'absolute',
@@ -217,7 +270,6 @@ const stylesModal = StyleSheet.create({
     marginTop: 24,
     gap: 12, // RN ‑‑gap support 0.72+
   },
-
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
