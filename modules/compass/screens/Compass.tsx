@@ -17,7 +17,7 @@ import QiblaIndicator from './components/compass/QiblaIndicator';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 // hooks
-import {useQiblaDirection} from '@/api/hooks/useQibla';
+import {useQiblaDirection} from '../hooks/useQibla';
 import {useLocation} from '@/api/hooks/useLocation';
 
 const Compass: React.FC = () => {

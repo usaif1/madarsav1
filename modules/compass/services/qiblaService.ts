@@ -1,5 +1,5 @@
-import apiClients from '../clients/globalClient';
-import { API_ENDPOINTS } from '../config/apiConfig';
+import apiClients from '../../../api/clients/globalClient';
+import { API_ENDPOINTS } from '../../../api/config/apiConfig';
 
 export interface QiblaResponse {
   coordinates: {

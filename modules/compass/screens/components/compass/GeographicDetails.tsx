@@ -9,7 +9,7 @@ import {useThemeStore} from '@/globalStore';
 import FastImage from 'react-native-fast-image';
 
 // hooks
-import {useQiblaDirection} from '@/api/hooks/useQibla';
+import {useQiblaDirection} from '../../../hooks/useQibla';
 import {useLocation} from '@/api/hooks/useLocation';
 
 // Calculate distance between two coordinates in KM

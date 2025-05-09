@@ -13,7 +13,7 @@ import Close from '@/assets/close.svg';
 import { useThemeStore } from '@/globalStore';
 
 // API hooks
-import { useAllNames, transformNamesData, TransformedName } from '@/api/hooks/useNames';
+import { useAllNames, transformNamesData, TransformedName } from '../../../hooks/useNames';
 
 const width = Dimensions.get('screen').width;
 const CARD_SIZE = Math.min(width, 375);
