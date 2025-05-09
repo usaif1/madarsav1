@@ -1,7 +1,7 @@
 // modules/hadith/screens/HadithsListScreen.tsx
 
-import React from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, FlatList, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useNavigation } from '@react-navigation/native';
@@ -11,18 +11,20 @@ import { Body1Title2Bold } from '@/components/Typography/Typography';
 import HadithImageFooter from '../components/HadithImageFooter';
 import MoreHadithsLeftIllustration from '@/assets/hadith/MoreHadithsLeftIllustration.svg';
 import MoreHadithsRightIllustration from '@/assets/hadith/MoreHadithsRightIllustration.svg';
+import { useCollections } from '../hooks/useHadith';
+import { Collection } from '../services/hadithService';
 
 // Define the Hadith type for better type safety
 export interface Hadith {
-  id: number;
+  id: string | number; // Allow both string and number IDs
   title: string;
   author: string;
   image: string;
   brief: string;
 }
 
-// Hadith collections data
-const hadiths: Hadith[] = [
+// Fallback hadith collections data in case API fails
+const fallbackHadiths: Hadith[] = [
   {
     id: 1,
     title: 'Sahih al-Bukhari',
@@ -130,9 +132,70 @@ const hadiths: Hadith[] = [
   }
 ];
 
+// Map API collection to our Hadith interface
+const mapCollectionToHadith = (collection: Collection): Hadith => {
+  // Find English collection data, fall back to first item or empty
+  const collectionData = collection.collection.find(c => c.lang === 'en') || 
+                         collection.collection[0] || 
+                         { lang: 'en', title: collection.name, shortIntro: '' };
+  
+  // Extract author from shortIntro if possible
+  const authorMatch = collectionData.shortIntro?.match(/([^,]+)/); // Get text before first comma
+  const author = authorMatch ? authorMatch[0] : 'Unknown Author';
+  
+  // Create hadith object with proper data mapping
+  return {
+    id: collection.name,
+    title: collectionData.title || collection.name,
+    author: author,
+    // Use a mapping for known collection images or generate a placeholder
+    image: getHadithImage(collection.name),
+    brief: `Contains ${collection.totalAvailableHadith} hadith${collection.hasBooks ? ' in multiple books' : ''}.`
+  };
+};
+
+// Helper function to get appropriate image for each collection
+const getHadithImage = (collectionName: string): string => {
+  // Map of collection names to image URLs
+  const imageMap: Record<string, string> = {
+    'bukhari': 'https://example.com/bukhari.jpg',
+    'muslim': 'https://example.com/muslim.jpg',
+    'abudawud': 'https://example.com/abudawud.jpg',
+    'tirmidhi': 'https://example.com/tirmidhi.jpg',
+    'nasai': 'https://example.com/nasai.jpg',
+    'ibnmajah': 'https://example.com/ibnmajah.jpg',
+    'malik': 'https://example.com/muwatta.jpg',
+    'ahmad': 'https://example.com/ahmad.jpg',
+    // Add more mappings as needed
+  };
+  
+  // Return the mapped image or a generic placeholder
+  return imageMap[collectionName.toLowerCase()] || 
+         `https://example.com/generic-hadith.jpg`;
+};
+
 const HadithsListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useThemeStore();
+  const [hadiths, setHadiths] = useState<Hadith[]>([]);
+  
+  // Fetch collections from API
+  const { data: collectionsData, isLoading, error } = useCollections();
+  
+  useEffect(() => {
+    if (collectionsData?.data) {
+      const mappedHadiths = collectionsData.data.map(mapCollectionToHadith);
+      setHadiths(mappedHadiths);
+    }
+  }, [collectionsData]);
+  
+  // If API fails, use fallback data
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching collections:', error);
+      setHadiths(fallbackHadiths);
+    }
+  }, [error]);
 
   // Split for grid and list
   const gridHadiths = hadiths.slice(0, 6);
@@ -178,6 +241,16 @@ const HadithsListScreen: React.FC = () => {
     />
   );
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent, { backgroundColor: 'white' }]}>
+        <ActivityIndicator size="large" color="#8A57DC" />
+        <Text style={styles.loadingText}>Loading Hadith Collections...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}>
       <FlatList
@@ -207,6 +280,16 @@ const HadithsListScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: verticalScale(16),
+    fontSize: scale(16),
+    color: '#8A57DC',
+    fontWeight: '500',
+  },
   container: {
     flex: 1,
   },

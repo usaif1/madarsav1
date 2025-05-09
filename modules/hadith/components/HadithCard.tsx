@@ -7,7 +7,7 @@ import { useThemeStore } from '@/globalStore';
 
 export interface HadithCardProps {
   hadith: {
-    id: number;
+    id: string | number;
     title: string;
     author: string;
     image: string;
