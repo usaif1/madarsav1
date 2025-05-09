@@ -37,13 +37,14 @@ const apiClients = {
 };
 
 // Add request/response interceptors if needed
-// Example for adding an API key to all requests to a specific API
-// apiClients.SUNNAH.interceptors.request.use(
-//   (config) => {
-//     config.headers['X-API-Key'] = 'your-api-key-here';
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
+// Add API key to all requests to Sunnah.com API
+apiClients.SUNNAH.interceptors.request.use(
+  (config) => {
+    // Replace with your actual API key from Sunnah.com
+    config.headers['X-API-Key'] = 'SomeTemporaryKeyForDevelopment123';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default apiClients;
