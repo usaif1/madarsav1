@@ -114,17 +114,19 @@ const Compass: React.FC = () => {
 
       {/* Centered compass with rotation */}
       <View style={styles.compassContainer}>
-        <Animated.View style={[styles.compass, {transform: [{rotate}]}]}>
-          <CompassSvg width={300} height={300} />
+        <View style={styles.compassWrapper}>
+          <Animated.View style={[styles.compass, {transform: [{rotate}]}]}>
+            <CompassSvg width={300} height={300} />
+          </Animated.View>
           
-          {/* Qibla direction indicator */}
+          {/* Qibla direction indicator - outside the rotating view */}
           {qiblaDirection && (
             <QiblaIndicator 
               angle={qiblaAngle} 
               compassRadius={150} // Half of the compass width/height (300/2)
             />
           )}
-        </Animated.View>
+        </View>
       </View>
 
       <Divider height={82} />
@@ -151,6 +153,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  compassWrapper: {
+    width: 300,
+    height: 300,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   compass: {
     width: 300,
