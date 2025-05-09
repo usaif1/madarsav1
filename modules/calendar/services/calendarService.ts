@@ -158,15 +158,30 @@ export const fetchCalendarData = async (params: CalendarParams): Promise<Calenda
     });
     console.log('Calendar API Equivalent curl command:\n', curlCommand);
     
-    // Try using URLSearchParams instead of the params option
-    // This ensures parameters are properly formatted in the query string
-    const searchParams = new URLSearchParams();
-    Object.entries(queryParams).forEach(([key, value]) => {
-      searchParams.append(key, String(value));
-    });
+    // Format parameters with proper data types
+    // The API might be strict about parameter types
+    const formattedParams: Record<string, string> = {};
     
-    const url = `${API_ENDPOINTS.ISLAMIC_CALENDAR}?${searchParams.toString()}`;
-    console.log('Calendar API Request with URLSearchParams:', url);
+    // Ensure all parameters are properly formatted as strings
+    formattedParams['calendar'] = 'gregorian';
+    formattedParams['year'] = String(year);
+    if (month !== undefined) formattedParams['month'] = String(month);
+    if (day !== undefined) formattedParams['day'] = String(day);
+    if (method) formattedParams['method'] = String(method);
+    
+    // Format latitude and longitude with fixed precision (6 decimal places)
+    if (latitude !== undefined) formattedParams['latitude'] = latitude.toFixed(6);
+    if (longitude !== undefined) formattedParams['longitude'] = longitude.toFixed(6);
+    
+    console.log('Calendar API Formatted Params:', formattedParams);
+    
+    // Build query string manually to ensure proper formatting
+    const queryString = Object.entries(formattedParams)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+    
+    const url = `${API_ENDPOINTS.ISLAMIC_CALENDAR}?${queryString}`;
+    console.log('Calendar API Request URL with formatted params:', url);
     
     const response = await apiClients.ISLAMIC_DEVELOPERS.get(url);
     
@@ -202,14 +217,33 @@ export const fetchCalendarData = async (params: CalendarParams): Promise<Calenda
         
         console.log('Calendar API Fallback Request Params:', JSON.stringify(fallbackParams, null, 2));
         
-        // Use the same URLSearchParams approach for the fallback request
-        const fallbackSearchParams = new URLSearchParams();
-        Object.entries(fallbackParams).forEach(([key, value]) => {
-          fallbackSearchParams.append(key, String(value));
-        });
+        // Format fallback parameters with proper data types
+        const formattedFallbackParams: Record<string, string> = {};
         
-        const fallbackUrl = `${API_ENDPOINTS.ISLAMIC_CALENDAR}?${fallbackSearchParams.toString()}`;
-        console.log('Calendar API Fallback Request with URLSearchParams:', fallbackUrl);
+        // Ensure all parameters are properly formatted as strings
+        formattedFallbackParams['calendar'] = 'gregorian';
+        formattedFallbackParams['year'] = String(fallbackParams.year);
+        formattedFallbackParams['month'] = String(fallbackParams.month);
+        formattedFallbackParams['day'] = String(fallbackParams.day);
+        if (fallbackParams.method) formattedFallbackParams['method'] = String(fallbackParams.method);
+        
+        // Format latitude and longitude with fixed precision (6 decimal places)
+        if (fallbackParams.latitude !== undefined) {
+          formattedFallbackParams['latitude'] = fallbackParams.latitude.toFixed(6);
+        }
+        if (fallbackParams.longitude !== undefined) {
+          formattedFallbackParams['longitude'] = fallbackParams.longitude.toFixed(6);
+        }
+        
+        console.log('Calendar API Fallback Formatted Params:', formattedFallbackParams);
+        
+        // Build query string manually to ensure proper formatting
+        const fallbackQueryString = Object.entries(formattedFallbackParams)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+          .join('&');
+        
+        const fallbackUrl = `${API_ENDPOINTS.ISLAMIC_CALENDAR}?${fallbackQueryString}`;
+        console.log('Calendar API Fallback Request URL with formatted params:', fallbackUrl);
         
         const fallbackResponse = await apiClients.ISLAMIC_DEVELOPERS.get(fallbackUrl);
         
