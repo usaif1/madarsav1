@@ -1,12 +1,17 @@
-import React, {useMemo} from 'react';
-import {StyleSheet, View, Text} from 'react-native';
-import {Calendar, DateData} from 'react-native-calendars';
+import React, { useMemo, useEffect } from 'react';
+import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import { Calendar, DateData } from 'react-native-calendars';
 import CalendarDay from './CalendarDay';
-import {useThemeStore} from '@/globalStore';
-import {Body1Title2Medium} from '@/components';
-import {islamicEvents} from '../../data/eventsData';
+import { useThemeStore } from '@/globalStore';
+import { Body1Title2Medium } from '@/components';
+// Comment out local data in favor of API
+// import { islamicEvents } from '../../data/eventsData';
 import type { lightColors } from '@/theme/lightColors';
 import { scale, verticalScale } from '@/theme/responsive';
+
+// Import Hijri Calendar API hooks
+import { useHijriCalendar, useSpecialDays } from '../../hooks/useHijriCalendar';
+import { formatDate } from '../../utils/dateUtils';
 
 interface CustomCalendarProps {
   selectedDate: Date;
@@ -33,20 +38,39 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   month,
   year,
 }) => {
-  const {colors} = useThemeStore();
+  const { colors } = useThemeStore();
   const radiusMd = scale(8);
 
+  // Get the current display month and year
+  const displayMonth = typeof month === 'number' ? month + 1 : selectedDate.getMonth() + 1;
+  const displayYear = typeof year === 'number' ? year : selectedDate.getFullYear();
+
   const currentDateString = useMemo(() => {
-    const displayMonth = typeof month === 'number' ? month : selectedDate.getMonth();
-    const displayYear = typeof year === 'number' ? year : selectedDate.getFullYear();
-    return `${displayYear}-${(displayMonth + 1).toString().padStart(2, '0')}-01`;
-  }, [month, year, selectedDate]);
+    return `${displayYear}-${displayMonth.toString().padStart(2, '0')}-01`;
+  }, [displayMonth, displayYear]);
+
+  // Fetch Hijri calendar data for the current month
+  const { data: hijriCalendarData, isLoading: isHijriCalendarLoading, error: hijriCalendarError } = 
+    useHijriCalendar(displayMonth, displayYear);
+
+  // Fetch special days data
+  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays();
+
+  // Log API responses for debugging
+  useEffect(() => {
+    if (hijriCalendarData) {
+      console.log('Hijri Calendar API response:', hijriCalendarData);
+    }
+    if (specialDaysData) {
+      console.log('Special Days API response:', specialDaysData);
+    }
+  }, [hijriCalendarData, specialDaysData]);
 
   const today = new Date();
   const formattedToday = today.toISOString().split('T')[0];
   const formattedSelected = selectedDate.toISOString().split('T')[0];
 
-  // Build markedDates using islamicEvents
+  // Build markedDates using API data
   const markedDates = useMemo(() => {
     const marked: {[key: string]: any} = {};
 
@@ -79,21 +103,49 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
       },
     };
 
-    // Add Islamic holidays from islamicEvents
-    islamicEvents.forEach(event => {
-      const dateString = event.gregorianDateRange.start.toISOString().split('T')[0];
-      if (dateString !== formattedSelected) { // Don't override selected date styling
+    // Add Hijri dates and holidays from API data
+    if (hijriCalendarData?.data) {
+      const calendarData = hijriCalendarData.data;
+      
+      // Process each day in the calendar
+      calendarData.forEach((dayData) => {
+        if (!dayData || !dayData.gregorian || !dayData.hijri) return;
+        
+        // Parse the gregorian date from the API response
+        const gregorianDate = dayData.gregorian;
+        const dateObj = new Date(`${gregorianDate.year}-${gregorianDate.month.number.toString().padStart(2, '0')}-${gregorianDate.day.toString().padStart(2, '0')}`);
+        const dateString = dateObj.toISOString().split('T')[0];
+        
+        // Skip if this is the selected date (to avoid overriding styling)
+        if (dateString === formattedSelected) return;
+        
+        // Get the corresponding Hijri date
+        const hijriDate = dayData.hijri;
+        
+        // Add Hijri date to the marking
         marked[dateString] = {
           ...marked[dateString],
-          marked: true,
-          dotColor: EVENT_COLORS[event.id] ? EVENT_COLORS[event.id](colors) : colors.primary.primary600,
-          holidayName: event.title,
+          hijriDate: {
+            day: hijriDate.day,
+            month: hijriDate.month.en,
+            year: hijriDate.year
+          }
         };
-      }
-    });
+        
+        // Check if this day has any holidays
+        if (hijriDate.holidays && hijriDate.holidays.length > 0) {
+          marked[dateString] = {
+            ...marked[dateString],
+            marked: true,
+            dotColor: colors.primary.primary600,
+            holidayName: hijriDate.holidays[0]
+          };
+        }
+      });
+    }
 
     return marked;
-  }, [formattedToday, formattedSelected, colors, radiusMd]);
+  }, [formattedToday, formattedSelected, colors, radiusMd, hijriCalendarData]);
 
   const handleDayPress = (day: DateData) => {
     const newDate = new Date(day.timestamp);
@@ -117,6 +169,15 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
       </View>
     );
   };
+
+  // Show loading state while fetching calendar data
+  if (isHijriCalendarLoading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={colors.primary.primary600} />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, {backgroundColor: 'white'}]}> 
@@ -160,6 +221,13 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(20),
+    minHeight: verticalScale(300),
   },
   dayNamesContainer: {
     flexDirection: 'row',

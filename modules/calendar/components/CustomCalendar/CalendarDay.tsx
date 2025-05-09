@@ -13,6 +13,11 @@ interface CalendarDayProps {
     marked?: boolean;
     dotColor?: string;
     holidayName?: string;
+    hijriDate?: {
+      day: string;
+      month?: string;
+      year?: string;
+    };
     customStyles?: {
       container?: object;
       text?: object;
@@ -26,7 +31,10 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
   const { colors } = useThemeStore();
   
   const dateObj = new Date(date.timestamp);
-  const hijriDate = gregorianToHijri(dateObj);
+  
+  // The actual Hijri date will be passed via props from the parent component
+  // This allows us to use the API data instead of calculating it directly
+  const hijriDate = marking?.hijriDate || { day: '•' };
   
   const isSelected = marking?.selected;
   const isDisabled = state === 'disabled';
