@@ -1,28 +1,67 @@
-// PrayerRow.tsx
+// NextSalah.tsx
 import React from 'react';
-import {View, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, TouchableOpacity, StyleSheet, ActivityIndicator} from 'react-native';
 
 // components
 import NextSalahIcon from '@/assets/compass/next_salah_icon.svg';
 import {Body2Bold, Body2Medium, Title3Bold} from '@/components';
 import {useThemeStore} from '@/globalStore';
 
+// hooks
+import {useNextPrayer, formatPrayerTime, getNextPrayerName} from '@/api/hooks/usePrayerTimes';
+import {useLocation} from '@/api/hooks/useLocation';
+
 const NextSalah: React.FC = () => {
   const {colors} = useThemeStore();
 
+  // Get user location
+  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocation();
+
+  // Get next prayer time
+  const {
+    data: nextPrayerData,
+    isLoading: nextPrayerLoading,
+    error: nextPrayerError,
+  } = useNextPrayer(latitude || undefined, longitude || undefined);
+
+  // Extract next prayer information
+  const isLoading = locationLoading || nextPrayerLoading;
+  const error = locationError || nextPrayerError;
+
+  // Get next prayer name and time
+  const nextPrayerName = nextPrayerData && nextPrayerData.data?.timings ? 
+    getNextPrayerName(nextPrayerData.data.timings) : '';
+  
+  const nextPrayerTime = nextPrayerData && nextPrayerData.data?.timings ? 
+    Object.values(nextPrayerData.data.timings)[0] as string : '';
+  
+  const {formattedTime, timeRemaining} = formatPrayerTime(nextPrayerTime);
+
+  // Log data for debugging
+  React.useEffect(() => {
+    console.log('Next Prayer Data:', {nextPrayerName, nextPrayerTime, formattedTime, timeRemaining});
+  }, [nextPrayerName, nextPrayerTime, formattedTime, timeRemaining]);
+
   return (
     <View style={styles.container}>
-      {/* ▶ replace this with your icon component or image */}
       <NextSalahIcon />
 
       <View style={styles.textBlock}>
-        <Title3Bold>Isha</Title3Bold>
-        <Body2Medium color="sub-heading">1 hr 29 min 3 secs</Body2Medium>
+        {isLoading ? (
+          <ActivityIndicator size="small" color={colors.primary.primary500} />
+        ) : error ? (
+          <Body2Medium color="warning">Unable to fetch prayer time</Body2Medium>
+        ) : (
+          <>
+            <Title3Bold>{nextPrayerName || 'Next Prayer'}</Title3Bold>
+            <Body2Medium color="sub-heading">{timeRemaining || 'Loading...'}</Body2Medium>
+          </>
+        )}
       </View>
 
       <TouchableOpacity
         style={[styles.pill, {backgroundColor: colors.warning.warning600}]}>
-        <Body2Bold color="white">Next Salah</Body2Bold>
+        <Body2Bold color="white">Next Salah</Body2Bold>
       </TouchableOpacity>
     </View>
   );

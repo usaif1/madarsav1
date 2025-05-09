@@ -47,4 +47,10 @@ apiClients.SUNNAH.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Named exports for specific clients
+export const aladhanClient = apiClients.ALADHAN;
+export const sunnahClient = apiClients.SUNNAH;
+export const quranClient = apiClients.QURAN;
+export const islamicDevelopersClient = apiClients.ISLAMIC_DEVELOPERS;
+
 export default apiClients;

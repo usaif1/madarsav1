@@ -17,5 +17,10 @@ export const API_ENDPOINTS = {
   CHAPTERS: '/chapters',
   HADITHS: '/hadiths',
   
+  // AlAdhan Prayer Times API endpoints
+  PRAYER_TIMES: '/v1/timings',
+  NEXT_PRAYER: '/v1/nextPrayer',
+  PRAYER_METHODS: '/v1/methods',
+  
   // Other endpoints will be added as needed
 };
