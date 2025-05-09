@@ -18,7 +18,11 @@ import { useAllNames, transformNamesData, TransformedName } from '../../../hooks
 const width = Dimensions.get('screen').width;
 const CARD_SIZE = Math.min(width, 375);
 
-const NamesList: React.FC = () => {
+interface NamesListProps {
+  searchQuery?: string;
+}
+
+const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const { colors } = useThemeStore();
   const { data, isLoading, error, refetch } = useAllNames();
   
@@ -27,6 +31,18 @@ const NamesList: React.FC = () => {
 
   // Transform the API data to match our component's expected format
   const namesData = data ? transformNamesData(data) : [];
+  
+  // Filter names based on search query
+  const filteredNames = searchQuery.trim() === '' 
+    ? namesData 
+    : namesData.filter(name => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          name.name.toLowerCase().includes(searchLower) || 
+          name.meaning.toLowerCase().includes(searchLower) ||
+          name.native.toLowerCase().includes(searchLower)
+        );
+      });
 
   if (isLoading) {
     return (
@@ -51,7 +67,7 @@ const NamesList: React.FC = () => {
   return (
     <>
       <FlatList
-        data={namesData}
+        data={filteredNames}
         keyExtractor={item => item.id}
         renderItem={({ index, item }) => (
           <NameCard
@@ -61,6 +77,11 @@ const NamesList: React.FC = () => {
             setCurrentItemIndex={setCurrentItemIndex}
           />
         )}
+        ListEmptyComponent={searchQuery.trim() !== '' ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No names found matching "{searchQuery}"</Text>
+          </View>
+        ) : null}
       />
       <Modal
         isVisible={isVisible}
@@ -241,6 +262,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginTop: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    height: 200,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#737373',
+    textAlign: 'center',
   },
 });
 
