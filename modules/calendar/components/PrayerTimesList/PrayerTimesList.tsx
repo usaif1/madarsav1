@@ -11,7 +11,7 @@ import {
 } from '@/assets/calendar';
 import {useThemeStore} from '@/globalStore';
 import {verticalScale, scale} from '@/theme/responsive';
-import {useCalendarWithLocation, formatPrayerTime} from '../../hooks/useCalendar';
+import {useCalendarPrayerTimes, formatPrayerTime} from '../../hooks/useCalendarPrayerTimes';
 
 interface PrayerTimeItem {
   id: string;
@@ -29,7 +29,7 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
   
   console.log('PrayerTimesList: Rendering with selectedDate:', selectedDate);
   
-  const {data, isLoading, error} = useCalendarWithLocation(selectedDate);
+  const {data, isLoading, error} = useCalendarPrayerTimes(selectedDate);
   
   console.log('PrayerTimesList: API response status:', {
     hasData: !!data,
@@ -40,27 +40,29 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
   
   // Convert API data to our component format
   const getPrayerTimesFromAPI = (): PrayerTimeItem[] => {
-    if (!data || !data.prayerTime) {
+    if (!data || !data.data || !data.data.timings) {
       console.warn('PrayerTimesList: No prayer time data available');
       return [];
     }
     
+    const timings = data.data.timings;
+    
     console.log('PrayerTimesList: Raw prayer time data:', {
-      fajr: data.prayerTime.fajr,
-      sunrise: data.prayerTime.sunrise,
-      dhuhr: data.prayerTime.dhuhr,
-      asr: data.prayerTime.asr,
-      maghrib: data.prayerTime.maghrib,
-      isha: data.prayerTime.isha
+      fajr: timings.Fajr,
+      sunrise: timings.Sunrise,
+      dhuhr: timings.Dhuhr,
+      asr: timings.Asr,
+      maghrib: timings.Maghrib,
+      isha: timings.Isha
     });
     
     return [
-      { id: 'fajr', name: 'Fajr', time: formatPrayerTime(data.prayerTime.fajr), icon: <FazrIcon /> },
-      { id: 'sunrise', name: 'Sunrise', time: formatPrayerTime(data.prayerTime.sunrise), icon: <SunriseIcon /> },
-      { id: 'dhuhr', name: 'Dhuhr', time: formatPrayerTime(data.prayerTime.dhuhr), icon: <DhuhrAsrIcon /> },
-      { id: 'asr', name: 'Asr', time: formatPrayerTime(data.prayerTime.asr), icon: <DhuhrAsrIcon /> },
-      { id: 'maghrib', name: 'Maghrib', time: formatPrayerTime(data.prayerTime.maghrib), icon: <MaghribIcon /> },
-      { id: 'isha', name: 'Isha', time: formatPrayerTime(data.prayerTime.isha), icon: <IshaIcon /> },
+      { id: 'fajr', name: 'Fajr', time: formatPrayerTime(timings.Fajr), icon: <FazrIcon /> },
+      { id: 'sunrise', name: 'Sunrise', time: formatPrayerTime(timings.Sunrise), icon: <SunriseIcon /> },
+      { id: 'dhuhr', name: 'Dhuhr', time: formatPrayerTime(timings.Dhuhr), icon: <DhuhrAsrIcon /> },
+      { id: 'asr', name: 'Asr', time: formatPrayerTime(timings.Asr), icon: <DhuhrAsrIcon /> },
+      { id: 'maghrib', name: 'Maghrib', time: formatPrayerTime(timings.Maghrib), icon: <MaghribIcon /> },
+      { id: 'isha', name: 'Isha', time: formatPrayerTime(timings.Isha), icon: <IshaIcon /> },
     ];
   };
   
