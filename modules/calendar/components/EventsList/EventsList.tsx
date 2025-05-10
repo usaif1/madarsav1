@@ -197,6 +197,11 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate }) => {
   const isLoading = isYearLoading || isNextHolidayLoading || isSpecialDaysLoading || isHolidaysLoading;
   
   const styles = StyleSheet.create({
+    titleWrapper: {
+      flex: 1,
+      marginRight: scale(4),
+      overflow: 'hidden',
+    },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -208,6 +213,7 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate }) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      width: '100%',
     },
     list: {
       paddingHorizontal: scale(8),
@@ -231,13 +237,16 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate }) => {
     },
     eventContent: {
       flex: 1,
+      overflow: 'hidden',
     },
     daysLeft: {
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'flex-end',
       paddingLeft: scale(8),
       flexDirection: 'row',
       gap: scale(4),
+      flexShrink: 0,
+      minWidth: scale(80),
     },
   });
   
@@ -253,16 +262,21 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate }) => {
           </View>
           
           <View style={styles.eventContent}>
-            <View style={styles.titleContainer}><Body1Title2Bold>{item.title}</Body1Title2Bold> {item.daysLeft !== undefined && (
-            <View style={styles.daysLeft}>
-              <DotIcon width={scale(10)} height={scale(10)} />
-              {item.isToday ? (
-                <Body2Medium style={{fontSize: scale(12)}} color="warning">Today</Body2Medium>
-              ) : (
-                <Body2Medium style={{fontSize: scale(12)}} color="warning">{item.daysLeft} days left</Body2Medium>
+            <View style={styles.titleContainer}>
+              <View style={styles.titleWrapper}>
+                <Body1Title2Bold numberOfLines={1} ellipsizeMode="tail">{item.title}</Body1Title2Bold>
+              </View>
+              {item.daysLeft !== undefined && (
+                <View style={styles.daysLeft}>
+                  <DotIcon width={scale(10)} height={scale(10)} />
+                  {item.isToday ? (
+                    <Body2Medium style={{fontSize: scale(12)}} color="warning">Today</Body2Medium>
+                  ) : (
+                    <Body2Medium style={{fontSize: scale(12)}} color="warning">{item.daysLeft} days left</Body2Medium>
+                  )}
+                </View>
               )}
             </View>
-          )}</View>
             <Body2Medium style={{fontSize: scale(12)}} color="sub-heading">{item.islamicDate}</Body2Medium>
           </View>
         </View>
