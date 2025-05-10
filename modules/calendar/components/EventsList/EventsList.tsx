@@ -21,10 +21,16 @@ interface IslamicEvent {
 
 interface EventsListProps {
   selectedDate: Date;
+  displayMonth?: number; // 0-indexed month
+  displayYear?: number;
 }
 
-const EventsList: React.FC<EventsListProps> = ({ selectedDate }) => {
+const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, displayYear }) => {
   const { colors } = useThemeStore();
+  
+  // Use the provided display month/year or default to the selected date
+  const currentDisplayMonth = displayMonth !== undefined ? displayMonth : selectedDate.getMonth();
+  const currentDisplayYear = displayYear !== undefined ? displayYear : selectedDate.getFullYear();
   
   // Get current Islamic year
   const { data: currentIslamicYearData, isLoading: isYearLoading } = useCurrentIslamicYear();
@@ -33,15 +39,15 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate }) => {
   const { data: nextHolidayData, isLoading: isNextHolidayLoading } = useNextHijriHoliday();
   
   // Get special days
-  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays();
+  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays(currentDisplayMonth + 1, currentDisplayYear);
   
   // Get current Islamic year for holidays
   const currentYear = currentIslamicYearData?.data?.hijri?.year 
     ? parseInt(currentIslamicYearData.data.hijri.year) 
     : new Date().getFullYear();
   
-  // Get Hijri holidays for the current year
-  const { data: holidaysData, isLoading: isHolidaysLoading } = useHijriHolidaysByYear(currentYear);
+  // Get Hijri holidays for the display year
+  const { data: holidaysData, isLoading: isHolidaysLoading } = useHijriHolidaysByYear(currentYear, currentDisplayMonth + 1);
   
   // Log API responses for debugging
   useEffect(() => {

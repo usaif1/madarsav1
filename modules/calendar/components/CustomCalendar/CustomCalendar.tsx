@@ -18,6 +18,7 @@ interface CustomCalendarProps {
   onDateSelect: (date: Date) => void;
   month?: number;
   year?: number;
+  onMonthChange?: (month: number, year: number) => void;
 }
 
 // Helper: Map event IDs to theme color keys
@@ -37,6 +38,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   onDateSelect,
   month,
   year,
+  onMonthChange,
 }) => {
   const { colors } = useThemeStore();
   const radiusMd = scale(8);
@@ -187,12 +189,19 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         markingType={'custom'}
         markedDates={markedDates}
         onDayPress={handleDayPress}
-        hideArrows={true}
+        hideArrows={false}
         hideExtraDays={true}
         renderHeader={() => null}
         customHeader={() => null}
         current={currentDateString}
         style={{ backgroundColor: 'white' }}
+        onMonthChange={(monthData) => {
+          const newMonth = monthData.month - 1; // Convert to 0-indexed month
+          const newYear = monthData.year;
+          if (onMonthChange) {
+            onMonthChange(newMonth, newYear);
+          }
+        }}
         theme={{
           calendarBackground: 'white',
           textSectionTitleColor: colors.secondary.neutral800,
@@ -208,7 +217,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         dayComponent={({date, state, marking}) => (
           <CalendarDay
             date={date}
-            state={state}
+            state={state as "" | "disabled" | "today" | undefined}
             marking={marking}
             onPress={handleDayPress}
           />

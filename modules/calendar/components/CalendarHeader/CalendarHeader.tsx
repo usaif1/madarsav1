@@ -1,5 +1,5 @@
 // modules/calendar/components/CalendarHeader/CalendarHeader.tsx
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, Pressable} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Modal from 'react-native-modal';
@@ -26,23 +26,29 @@ const monthNames = [
 interface CalendarHeaderProps {
   onBack?: () => void;
   onMonthYearChange?: (month: string, year: string) => void;
+  currentMonth?: string;
+  currentYear?: string;
 }
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChange}) => {
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChange, currentMonth, currentYear}) => {
   const insets = useSafeAreaInsets();
   const {colors, shadows} = useThemeStore();
 
   // Get current date values
   const now = new Date();
-  const initialMonth = monthNames[now.getMonth()];
-  const initialYear = now.getFullYear().toString();
+  const initialMonth = currentMonth || monthNames[now.getMonth()];
+  const initialYear = currentYear || now.getFullYear().toString();
   // Compute initial Islamic date
   const toInitialIslamicDate = () => {
-    const hijri = toHijri(now.getFullYear(), now.getMonth() + 1, 1);
+    // Use provided month/year if available, otherwise use current date
+    const yearToUse = currentYear ? parseInt(currentYear, 10) : now.getFullYear();
+    const monthToUse = currentMonth ? monthNames.indexOf(currentMonth) + 1 : now.getMonth() + 1;
+    
+    const hijri = toHijri(yearToUse, monthToUse, 1);
     const hijriMonthNames = [
       'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani",
-      'Jumada al-awwal', 'Jumada al-thani', 'Rajab', 'Sha‘ban',
-      'Ramadan', 'Shawwal', 'Dhu al-Qi‘dah', 'Dhu al-Hijjah'
+      'Jumada al-awwal', 'Jumada al-thani', 'Rajab', "Sha'ban",
+      'Ramadan', 'Shawwal', "Dhu al-Qi'dah", "Dhu al-Hijjah"
     ];
     const hijriMonth = hijriMonthNames[hijri.hm - 1];
     return `${hijriMonth}, ${hijri.hy} AH`;
@@ -52,6 +58,27 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [selectedYear, setSelectedYear] = useState(initialYear);
   const [islamicDate, setIslamicDate] = useState(toInitialIslamicDate());
+  
+  // Update when props change
+  useEffect(() => {
+    if (currentMonth && currentYear) {
+      setSelectedMonth(currentMonth);
+      setSelectedYear(currentYear);
+      
+      // Update Islamic date
+      const yearToUse = parseInt(currentYear, 10);
+      const monthToUse = monthNames.indexOf(currentMonth) + 1;
+      
+      const hijri = toHijri(yearToUse, monthToUse, 1);
+      const hijriMonthNames = [
+        'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani",
+        'Jumada al-awwal', 'Jumada al-thani', 'Rajab', "Sha'ban",
+        'Ramadan', 'Shawwal', "Dhu al-Qi'dah", "Dhu al-Hijjah"
+      ];
+      const hijriMonth = hijriMonthNames[hijri.hm - 1];
+      setIslamicDate(`${hijriMonth}, ${hijri.hy} AH`);
+    }
+  }, [currentMonth, currentYear]);
 
   const toggleModal = () => setModalVisible(!isModalVisible);
 

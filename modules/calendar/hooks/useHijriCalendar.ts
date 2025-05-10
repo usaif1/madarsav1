@@ -147,10 +147,12 @@ export const useHijriHoliday = (day: number, month: number) => {
 
 /**
  * Hook to get list of special days in the Hijri calendar
+ * @param month Optional Gregorian month (1-12)
+ * @param year Optional Gregorian year
  */
-export const useSpecialDays = () => {
+export const useSpecialDays = (month?: number, year?: number) => {
   return useQuery<SpecialDaysResponse, Error>({
-    queryKey: ['specialDays'],
+    queryKey: ['specialDays', month, year],
     queryFn: getSpecialDays,
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
     gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
@@ -172,11 +174,12 @@ export const useIslamicMonths = () => {
 /**
  * Hook to get Hijri holidays by year
  * @param year Hijri year
+ * @param month Optional month to filter holidays (1-12)
  * @param method Calendar calculation method (default: HJCoSA)
  */
-export const useHijriHolidaysByYear = (year: number, method: string = 'HJCoSA') => {
+export const useHijriHolidaysByYear = (year: number, month?: number, method: string = 'HJCoSA') => {
   return useQuery<CalendarResponse, Error>({
-    queryKey: ['hijriHolidaysByYear', year, method],
+    queryKey: ['hijriHolidaysByYear', year, month, method],
     queryFn: () => getHijriHolidaysByYear(year, method),
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
     gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
