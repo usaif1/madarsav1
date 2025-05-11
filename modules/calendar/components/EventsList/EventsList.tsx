@@ -97,25 +97,39 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
   const events = useMemo(() => {
     const eventsArray: IslamicEvent[] = [];
     const today = new Date();
+    const todayString = formatDate(today);
+    
+    // Track different types of events for sorting
+    const todayEvents: IslamicEvent[] = [];
+    const selectedDateEvents: IslamicEvent[] = [];
+    const upcomingHolidays: IslamicEvent[] = [];
+    const currentMonthEvents: IslamicEvent[] = [];
+    
+    // Check if selected date is today
+    const isSelectedDateToday = 
+      selectedDate.getDate() === today.getDate() &&
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getFullYear() === today.getFullYear();
     
     // 1. Add today's Hijri date information
     if (selectedDateHijriData?.data?.hijri) {
       const hijriData = selectedDateHijriData.data.hijri;
       const gregorianData = selectedDateHijriData.data.gregorian;
       
-      const isSelectedDateToday = 
-        selectedDate.getDate() === today.getDate() &&
-        selectedDate.getMonth() === today.getMonth() &&
-        selectedDate.getFullYear() === today.getFullYear();
-      
-      eventsArray.push({
+      const eventItem: IslamicEvent = {
         id: 'current-hijri-date',
         date: `${gregorianData.day} ${gregorianData.month.en.substring(0, 3)}`,
         title: `Current Hijri Date`,
         islamicDate: `${hijriData.day} ${hijriData.month.en}, ${hijriData.year} AH`,
         isToday: isSelectedDateToday,
         daysLeft: isSelectedDateToday ? 0 : undefined
-      });
+      };
+      
+      if (isSelectedDateToday) {
+        todayEvents.push(eventItem);
+      } else {
+        selectedDateEvents.push(eventItem);
+      }
     }
     
     // 2. Add holiday for the selected date (if any)
@@ -126,13 +140,19 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
           const hijriData = selectedDateHijriData.data.hijri;
           const gregorianData = selectedDateHijriData.data.gregorian;
           
-          eventsArray.push({
+          const eventItem: IslamicEvent = {
             id: `selected-day-holiday-${index}`,
             date: `${gregorianData.day} ${gregorianData.month.en.substring(0, 3)}`,
             title: holiday,
             islamicDate: `${hijriData.day} ${hijriData.month.en}, ${hijriData.year} AH`,
-            isToday: false
-          });
+            isToday: isSelectedDateToday
+          };
+          
+          if (isSelectedDateToday) {
+            todayEvents.push(eventItem);
+          } else {
+            selectedDateEvents.push(eventItem);
+          }
         }
       });
     }
@@ -154,7 +174,7 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
         
         // Only add if it's in the future
         if (daysLeft > 0) {
-          eventsArray.push({
+          upcomingHolidays.push({
             id: 'next-holiday',
             date: `${gregorianData.day} ${gregorianData.month.en.substring(0, 3)}`,
             title: hijriData.holidays[0],
@@ -200,16 +220,29 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
         );
         
         const daysLeft = Math.ceil((holidayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        const isHolidayToday = 
+          holidayDate.getDate() === today.getDate() &&
+          holidayDate.getMonth() === today.getMonth() &&
+          holidayDate.getFullYear() === today.getFullYear();
         
         // Add all holidays for the month, both past and future
         if (Array.isArray(holiday.hijri.holidays) && holiday.hijri.holidays.length > 0) {
-          eventsArray.push({
+          const eventItem: IslamicEvent = {
             id: `month-holiday-${index}`,
             date: `${holiday.gregorian.day} ${holiday.gregorian.month.en.substring(0, 3)}`,
             title: holiday.hijri.holidays[0],
             islamicDate: `${holiday.hijri.day} ${holiday.hijri.month.en}, ${holiday.hijri.year} AH`,
-            daysLeft: daysLeft > 0 ? daysLeft : undefined
-          });
+            daysLeft: daysLeft > 0 ? daysLeft : undefined,
+            isToday: isHolidayToday
+          };
+          
+          if (isHolidayToday) {
+            todayEvents.push(eventItem);
+          } else if (isSelectedDate) {
+            selectedDateEvents.push(eventItem);
+          } else {
+            currentMonthEvents.push(eventItem);
+          }
         }
       });
     }
@@ -219,47 +252,96 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       specialDaysData.data.forEach((specialDay, index) => {
         if (!specialDay || !specialDay.name) return;
         
-        // For each special day, find its Gregorian date for the current year
-        // This is a simplified approach - in a real app, you would need to convert
-        // from Hijri to Gregorian properly for the current year
         const specialDayMonth = specialDay.month;
         const specialDayDay = specialDay.day;
         
-        // Skip if we don't have a proper conversion method
-        // In a real implementation, you would use the Hijri to Gregorian conversion
-        
-        // For now, we'll just add it if it's a special day in the current month
-        // This is just a placeholder - you'd need proper conversion logic
+        // Only add if it's a special day in the current month
         if (specialDayMonth === currentDisplayMonth + 1) {
-          eventsArray.push({
+          // Create a date for this special day in the current year
+          const specialDayDate = new Date(currentDisplayYear, currentDisplayMonth, specialDayDay);
+          
+          const daysLeft = Math.ceil((specialDayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          const isSpecialDayToday = 
+            specialDayDate.getDate() === today.getDate() &&
+            specialDayDate.getMonth() === today.getMonth() &&
+            specialDayDate.getFullYear() === today.getFullYear();
+          
+          const isSpecialDaySelectedDate = 
+            specialDayDate.getDate() === selectedDate.getDate() &&
+            specialDayDate.getMonth() === selectedDate.getMonth() &&
+            specialDayDate.getFullYear() === selectedDate.getFullYear();
+          
+          const eventItem: IslamicEvent = {
             id: `special-day-${index}`,
             date: `${specialDayDay} ${new Date(0, specialDayMonth - 1).toLocaleString('en', { month: 'short' })}`,
             title: specialDay.name,
-            islamicDate: 'Islamic Special Day'
-          });
+            islamicDate: 'Islamic Special Day',
+            daysLeft: daysLeft > 0 ? daysLeft : undefined,
+            isToday: isSpecialDayToday
+          };
+          
+          if (isSpecialDayToday) {
+            todayEvents.push(eventItem);
+          } else if (isSpecialDaySelectedDate) {
+            selectedDateEvents.push(eventItem);
+          } else {
+            currentMonthEvents.push(eventItem);
+          }
         }
       });
     }
     
-    // Sort events by date (day of month)
-    return eventsArray.sort((a, b) => {
-      // Today always comes first
-      if (a.isToday) return -1;
-      if (b.isToday) return 1;
-      
-      // Then sort by days left
-      const aDaysLeft = typeof a.daysLeft === 'number' ? a.daysLeft : Infinity;
-      const bDaysLeft = typeof b.daysLeft === 'number' ? b.daysLeft : Infinity;
-      
-      if (aDaysLeft !== Infinity && bDaysLeft !== Infinity) {
-        return aDaysLeft - bDaysLeft;
-      }
-      
-      // If days left is not available, sort by date
+    // Sort each category
+    
+    // Sort today's events (if today is selected)
+    todayEvents.sort((a, b) => {
       const aDay = parseInt(a.date.split(' ')[0]);
       const bDay = parseInt(b.date.split(' ')[0]);
       return aDay - bDay;
     });
+    
+    // Sort selected date events
+    selectedDateEvents.sort((a, b) => {
+      const aDay = parseInt(a.date.split(' ')[0]);
+      const bDay = parseInt(b.date.split(' ')[0]);
+      return aDay - bDay;
+    });
+    
+    // Sort upcoming holidays by days left
+    upcomingHolidays.sort((a, b) => {
+      const aDaysLeft = typeof a.daysLeft === 'number' ? a.daysLeft : Infinity;
+      const bDaysLeft = typeof b.daysLeft === 'number' ? b.daysLeft : Infinity;
+      return aDaysLeft - bDaysLeft;
+    });
+    
+    // Sort current month events by date
+    currentMonthEvents.sort((a, b) => {
+      const aDay = parseInt(a.date.split(' ')[0]);
+      const bDay = parseInt(b.date.split(' ')[0]);
+      return aDay - bDay;
+    });
+    
+    // Combine all events in the desired order:
+    // 1. Today's events
+    // 2. Next upcoming holiday
+    // 3. Selected date events (if different from today)
+    // 4. Current month events
+    
+    // First add today's events
+    eventsArray.push(...todayEvents);
+    
+    // Then add the next upcoming holiday
+    eventsArray.push(...upcomingHolidays);
+    
+    // Then add selected date events (if not today)
+    if (!isSelectedDateToday) {
+      eventsArray.push(...selectedDateEvents);
+    }
+    
+    // Finally add all other current month events
+    eventsArray.push(...currentMonthEvents);
+    
+    return eventsArray;
   }, [
     selectedDateHijriData, 
     nextHolidayData, 
