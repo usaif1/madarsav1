@@ -1,7 +1,17 @@
-// modules/splash/screens/SplashScreen1.tsx
-import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, {useEffect, useRef} from 'react';
+import {
+  Animated,
+  Pressable,
+  StatusBar,
+  Text,
+  View,
+  Easing,
+  StyleSheet,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+
+// Auth imports
 import { useAuthStore } from '@/modules/auth/store/authStore';
 import tokenService from '@/modules/auth/services/tokenService';
 import authService from '@/modules/auth/services/authService';
@@ -9,11 +19,40 @@ import { isGoogleSignedIn } from '@/modules/auth/services/googleAuthService';
 import skipLoginService from '@/modules/auth/services/skipLoginService';
 import { useGlobalStore } from '@/globalStore';
 
-const SplashScreen1: React.FC = () => {
-  const navigation = useNavigation();
+// assets
+import SplashGraphic from '@/assets/splash/splash_graphic.svg';
+import MandalaFull from '@/assets/splash/mandala_full.svg';
+
+type RootStackParamList = {
+  SplashScreen2: undefined;
+  screen2: undefined;
+};
+
+const SplashPrimary: React.FC = () => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser, setIsAuthenticated, setIsSkippedLogin } = useAuthStore();
   const { setOnboarded } = useGlobalStore();
-  
+
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 50000, // 👈 10s per full rotation (slow and steady)
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, [rotateAnim]);
+
+  const rotateInterpolate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  // Authentication check effect
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -74,19 +113,41 @@ const SplashScreen1: React.FC = () => {
         }
         
         // If no auth method worked, navigate to splash screen 2
-        navigation.navigate('SplashScreen2' as never);
+        navigation.navigate('SplashScreen2');
       } catch (error) {
         console.error('Auth check failed:', error);
-        navigation.navigate('SplashScreen2' as never);
+        navigation.navigate('SplashScreen2');
       }
     };
     
-    checkAuth();
+    // Start authentication check after animation has had a chance to start
+    const timer = setTimeout(() => {
+      checkAuth();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, [navigation, setUser, setIsAuthenticated, setIsSkippedLogin, setOnboarded]);
-  
+
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#8A57DC" />
+      <StatusBar barStyle="dark-content" />
+      <SplashGraphic />
+
+      <Pressable
+        style={styles.nextButton}
+        onPress={() => navigation.navigate('screen2')}>
+        <Text>Next</Text>
+      </Pressable>
+
+      <Animated.View
+        style={[
+          styles.mandalaWrapper,
+          {
+            transform: [{translateY: 150}, {rotate: rotateInterpolate}],
+          },
+        ]}>
+        <MandalaFull />
+      </Animated.View>
     </View>
   );
 };
@@ -94,10 +155,23 @@ const SplashScreen1: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#411B7F',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    position: 'relative',
+  },
+  nextButton: {
+    backgroundColor: 'white',
+    marginTop: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  mandalaWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    alignSelf: 'center',
   },
 });
 
-export default SplashScreen1;
+export default SplashPrimary;
