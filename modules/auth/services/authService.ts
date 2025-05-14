@@ -1,16 +1,8 @@
 // modules/auth/services/authService.ts
-import axios from 'axios';
+import { madrasaClient } from '@/api';
+import { MADRASA_API_ENDPOINTS } from '@/api/config/madrasaApiConfig';
 import { User } from '../store/authStore';
 import tokenService, { Tokens } from './tokenService';
-
-// Create a dedicated client for auth endpoints
-const authClient = axios.create({
-  baseURL: 'https://api.madrasaapp.com/madrasaapp',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 // Types
 export interface LoginCredentials {
@@ -38,7 +30,7 @@ const authService = {
   // Regular login with email/password
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
-      const response = await authClient.post('/api/v1/users/login', credentials);
+      const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.LOGIN, credentials);
       return response.data;
     } catch (error) {
       console.error('Login failed:', error);
@@ -49,7 +41,7 @@ const authService = {
   // Google OAuth login
   loginWithGoogle: async (idToken: string): Promise<AuthResponse> => {
     try {
-      const response = await authClient.post('/api/v1/users/oauth/google', { idToken });
+      const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.GOOGLE_AUTH, { idToken });
       return response.data;
     } catch (error) {
       console.error('Google login failed:', error);
@@ -60,7 +52,7 @@ const authService = {
   // Facebook OAuth login
   loginWithFacebook: async (accessToken: string): Promise<AuthResponse> => {
     try {
-      const response = await authClient.post('/api/v1/users/oauth/facebook', { accessToken });
+      const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.FACEBOOK_AUTH, { accessToken });
       return response.data;
     } catch (error) {
       console.error('Facebook login failed:', error);
@@ -71,7 +63,7 @@ const authService = {
   // Skip login (anonymous user)
   skipLogin: async (data: SkippedLoginRequest): Promise<SkippedLoginRequest> => {
     try {
-      const response = await authClient.post('/api/v1/skipped-login', data);
+      const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.SKIPPED_LOGIN, data);
       return response.data;
     } catch (error) {
       console.error('Skip login failed:', error);
@@ -87,7 +79,7 @@ const authService = {
         throw new Error('No refresh token available');
       }
       
-      const response = await authClient.post('/api/v1/users/refresh-token', { refreshToken });
+      const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.REFRESH_TOKEN, { refreshToken });
       
       // Store new tokens
       await tokenService.storeTokens({
@@ -108,14 +100,7 @@ const authService = {
   // Get user profile
   getUserProfile: async (): Promise<User> => {
     try {
-      const accessToken = await tokenService.getAccessToken();
-      
-      const response = await authClient.get('/api/v1/users/me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      
+      const response = await madrasaClient.get(MADRASA_API_ENDPOINTS.USER_PROFILE);
       return response.data;
     } catch (error) {
       console.error('Failed to get user profile:', error);
@@ -126,15 +111,7 @@ const authService = {
   // Logout
   logout: async (): Promise<void> => {
     try {
-      const accessToken = await tokenService.getAccessToken();
-      
-      if (accessToken) {
-        await authClient.post('/api/v1/users/logout', {}, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-      }
+      await madrasaClient.post(MADRASA_API_ENDPOINTS.LOGOUT);
       
       // Clear tokens regardless of API response
       await tokenService.clearTokens();

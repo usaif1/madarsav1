@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { mmkvStorage } from '../storage/mmkvStorage';
 import tokenService from '../services/tokenService';
+import authService from '../services/authService';
 
 // User type
 export interface User {
@@ -101,8 +102,28 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       
       refreshTokens: async () => {
-        // Will implement when we create the auth service
-        return false;
+        try {
+          set({ isLoading: true });
+          
+          // Call the auth service to refresh tokens
+          const tokens = await authService.refreshToken();
+          
+          // If successful, update the authenticated state
+          set({ isLoading: false });
+          
+          return true;
+        } catch (error) {
+          // If refresh fails, clear auth state
+          console.error('Token refresh failed:', error);
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'Session expired. Please log in again.',
+          });
+          
+          return false;
+        }
       },
       
       // Reset store

@@ -1,6 +1,9 @@
 // modules/auth/index.ts
+// Export store
 export { useAuthStore, useAuth } from './store/authStore';
 export type { User } from './store/authStore';
+
+// Export services
 export { default as tokenService } from './services/tokenService';
 export type { Tokens } from './services/tokenService';
 export { default as authService } from './services/authService';
@@ -9,4 +12,6 @@ export type {
   AuthResponse, 
   SkippedLoginRequest 
 } from './services/authService';
+
+// Export storage
 export { storage } from './storage/mmkvStorage';
