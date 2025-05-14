@@ -1,4 +1,4 @@
-// dependencies
+// App.tsx
 import * as React from 'react';
 import 'react-native-url-polyfill/auto';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,48 +8,52 @@ import SplashNavigation from './modules/splash/navigation/splash.navigation';
 import ParentNavigation from '@/navigator/ParentNavigation';
 
 // store
-import {useGlobalStore} from './globalStore';
-import {StatusBar} from 'react-native';
+import { useGlobalStore } from './globalStore';
+import { StatusBar } from 'react-native';
+
+// error handling
+import { ErrorBoundary, ErrorToast, OfflineDetector } from '@/modules/error';
 
 if (__DEV__) {
   require("./ReactotronConfig");
 }
 
-// Create a client
+// Create a client with error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      refetchOnWindowFocus: false, // Less relevant for mobile
-      // cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+      refetchOnWindowFocus: false,
+      // // Handle errors globally
+      // onError: (error) => {
+      //   console.error('Query error:', error);
+      // },
+    },
+    mutations: {
+      // Handle errors globally
+      onError: (error) => {
+        console.error('Mutation error:', error);
+      },
     },
   },
 });
 
 export default function App() {
-  const {onboarded} = useGlobalStore();
+  const { onboarded } = useGlobalStore();
 
-  if (!onboarded) {
-    return (
+  return (
+    <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        <OfflineDetector>
           <StatusBar
             barStyle={'light-content'}
             backgroundColor={'transparent'}
             translucent
           />
-          <SplashNavigation />
+          <ErrorToast />
+          {!onboarded ? <SplashNavigation /> : <ParentNavigation />}
+        </OfflineDetector>
       </QueryClientProvider>
-    );
-  }
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar
-          barStyle={'light-content'}
-          backgroundColor={'transparent'}
-          translucent
-        />
-        <ParentNavigation />
-    </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
