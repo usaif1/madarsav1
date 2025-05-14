@@ -1,7 +1,7 @@
-// dependencies
+// modules/splash/screens/SplashScreen2.tsx
 import React from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
-import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // assets
 import FacebookLogin from '@/assets/splash/facebook_login.svg';
@@ -9,54 +9,104 @@ import GoogleLogin from '@/assets/splash/google_login.svg';
 
 // components
 import Carousel from '../components/Carousel';
-import {Body1Title2Bold, Body1Title2Medium, Divider} from '@/components';
+import { Body1Title2Bold, Body1Title2Medium, Divider } from '@/components';
 
 // store
-import {useThemeStore} from '@/globalStore';
-import {useGlobalStore} from '@/globalStore';
+import { useThemeStore } from '@/globalStore';
+import { useGlobalStore } from '@/globalStore';
+
+// auth
+import { useSocialAuth } from '@/modules/auth/hooks/useSocialAuth';
+import { configureGoogleSignIn } from '@/modules/auth/services/googleAuthService';
+
+// Configure Google Sign-In when component loads
+configureGoogleSignIn();
 
 const SplashPrimary: React.FC = () => {
-  const {colors} = useThemeStore();
-  const {setOnboarded} = useGlobalStore();
+  const { colors } = useThemeStore();
+  const { setOnboarded } = useGlobalStore();
+  const { bottom } = useSafeAreaInsets();
+  
+  // Get social auth methods and loading state
+  const { isLoading, signInWithGoogle, loginWithFacebook, skipLogin } = useSocialAuth();
 
-  const {bottom} = useSafeAreaInsets();
+  // Handle Google Sign-In
+  const handleGoogleSignIn = async () => {
+    const success = await signInWithGoogle();
+    if (success) {
+      setOnboarded(true);
+    }
+  };
 
-  console.log('bottom', bottom);
+  // Handle Facebook Login
+  const handleFacebookLogin = async () => {
+    const success = await loginWithFacebook();
+    if (success) {
+      setOnboarded(true);
+    }
+  };
+
+  // Handle Skip Login
+  const handleSkipLogin = async () => {
+    const success = await skipLogin();
+    if (success) {
+      setOnboarded(true);
+    } else {
+      // If skip login fails, still allow user to proceed
+      setOnboarded(true);
+    }
+  };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#FFFFFF'}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View
         style={{
           flex: 1,
           paddingHorizontal: 27,
           alignItems: 'center',
         }}>
-        <View style={{height: 33}} />
+        <View style={{ height: 33 }} />
         <Carousel />
 
-        <View style={{width: '100%', paddingBottom: 20}}>
+        <View style={{ width: '100%', paddingBottom: 20 }}>
           <Pressable
+            onPress={handleGoogleSignIn}
+            disabled={isLoading}
             style={[
               styles.btn,
-              {backgroundColor: colors.secondary.neutral950},
+              { backgroundColor: colors.secondary.neutral950 },
             ]}>
-            <GoogleLogin />
-            <Body1Title2Bold color="white">
-              Continue with Google
-            </Body1Title2Bold>
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <GoogleLogin />
+                <Body1Title2Bold color="white">
+                  Continue with Google
+                </Body1Title2Bold>
+              </>
+            )}
           </Pressable>
           <Divider height={8} />
-          <Pressable style={[styles.btn, {backgroundColor: '#F5F5F5'}]}>
-            <FacebookLogin />
-            <Body1Title2Medium color="heading">
-              Continue with Facebook
-            </Body1Title2Medium>
+          <Pressable 
+            onPress={handleFacebookLogin}
+            disabled={isLoading}
+            style={[styles.btn, { backgroundColor: '#F5F5F5' }]}>
+            {isLoading ? (
+              <ActivityIndicator color="#000000" size="small" />
+            ) : (
+              <>
+                <FacebookLogin />
+                <Body1Title2Medium color="heading">
+                  Continue with Facebook
+                </Body1Title2Medium>
+              </>
+            )}
           </Pressable>
           <Divider height={8} />
           <Pressable
-            onPress={() => {
-              setOnboarded(true);
-            }}
+            onPress={handleSkipLogin}
+            disabled={isLoading}
             style={{
               alignItems: 'center',
               justifyContent: 'center',
