@@ -63,6 +63,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
 const styles = StyleSheet.create({
   header: {
     backgroundColor: '#411B7F',
+    paddingBottom: scale(12),
   },
   headerContent: {
     height: verticalScale(40),
