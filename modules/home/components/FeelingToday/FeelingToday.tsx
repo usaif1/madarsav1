@@ -77,7 +77,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}>
-        <Body1Title2Bold color="white">How are you feeling today?</Body1Title2Bold>
+        <Body1Title2Bold style={styles.headerText} color="white">How are you feeling today?</Body1Title2Bold>
       </LinearGradient>
 
       {/* Emoji Days */}
@@ -139,13 +139,18 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: '#E5E5E5', // Primitives-Neutral-200
   },
+  headerText: {
+    fontSize: scale(16),
+    lineHeight: scale(16 * 1.45),
+    textAlign: 'left',
+  },
   header: {
     width: CARD_WIDTH,
     height: verticalScale(44),
     paddingTop: scale(8),
     paddingHorizontal: scale(16),
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     borderWidth: 1, // Primitives/Regular
   },
   emojiContainer: {

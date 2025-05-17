@@ -18,6 +18,7 @@ import ModuleGrid from '../components/ModuleGrid';
 import FeelingToday from '../components/FeelingToday';
 import DayPrayerTime from '../components/DayPrayerTime';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
+import { scale } from '@/theme/responsive';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 4; // 4 items per row
@@ -54,13 +55,13 @@ const IslamicTools: React.FC = () => {
       <StatusBar barStyle={'light-content'} />
       
       {/* Custom Header */}
-      <HomeHeader 
+      {/* <HomeHeader 
         userName="Mohammad Arbaaz"
         locationText="Get accurate namaz time"
         notificationCount={1}
-      />
+      /> */}
       
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
         {/* Prayer Times Section */}
         <DayPrayerTime
@@ -107,5 +108,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-
+  scrollView: {
+    flex: 1,
+    paddingTop: scale(16),
+  },
 });

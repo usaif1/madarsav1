@@ -7,7 +7,6 @@ import {Home} from '../screens';
 
 // components
 import CustomTabBar from '../components/CustomTabBar';
-import HomeHeader from '../components/HomeHeader';
 
 const Tab = createBottomTabNavigator();
 
