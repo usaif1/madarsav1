@@ -9,6 +9,7 @@ import {
   Pressable,
   StatusBar,
 } from 'react-native';
+import HomeHeader from '../components/HomeHeader';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 4; // 4 items per row
@@ -47,9 +48,19 @@ const IslamicTools: React.FC = () => {
   );
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle={'dark-content'} />
-      <Text style={styles.heading}>Islamic Tools</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle={'light-content'} />
+      
+      {/* Custom Header */}
+      <HomeHeader 
+        userName="Mohammad Arbaaz"
+        locationText="Get accurate namaz time"
+        notificationCount={1}
+      />
+      
+      {/* Islamic Tools Section */}
+      <View style={styles.wrapper}>
+        <Text style={styles.heading}>Islamic Tools</Text>
       <FlatList
         data={TOOLS}
         numColumns={3}
@@ -58,6 +69,7 @@ const IslamicTools: React.FC = () => {
         scrollEnabled={false}
         contentContainerStyle={styles.grid}
       />
+      </View>
     </View>
   );
 };
@@ -65,6 +77,10 @@ const IslamicTools: React.FC = () => {
 export default IslamicTools;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   wrapper: {
     backgroundColor: '#F4F4F4',
     borderRadius: 16,
