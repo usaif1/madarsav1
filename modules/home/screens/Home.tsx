@@ -8,8 +8,11 @@ import {
   Dimensions,
   Pressable,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import HomeHeader from '../components/HomeHeader';
+import Gallery from '../components/Gallery';
+import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 4; // 4 items per row
@@ -33,6 +36,11 @@ const TOOLS: ToolItem[] = [
 
 const IslamicTools: React.FC = () => {
   const navigation = useNavigation();
+  
+  const handleViewAllGallery = () => {
+    console.log('View all gallery pressed');
+    // Navigate to gallery view if needed
+  };
 
   const renderItem = ({item}: {item: ToolItem}) => (
     <Pressable
@@ -58,18 +66,26 @@ const IslamicTools: React.FC = () => {
         notificationCount={1}
       />
       
-      {/* Islamic Tools Section */}
-      <View style={styles.wrapper}>
-        <Text style={styles.heading}>Islamic Tools</Text>
-      <FlatList
-        data={TOOLS}
-        numColumns={3}
-        renderItem={renderItem}
-        keyExtractor={item => item.key}
-        scrollEnabled={false}
-        contentContainerStyle={styles.grid}
-      />
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Islamic Tools Section */}
+        <View style={styles.wrapper}>
+          <Text style={styles.heading}>Islamic Tools</Text>
+          <FlatList
+            data={TOOLS}
+            numColumns={3}
+            renderItem={renderItem}
+            keyExtractor={item => item.key}
+            scrollEnabled={false}
+            contentContainerStyle={styles.grid}
+          />
+        </View>
+        
+        {/* Gallery Section */}
+        <Gallery onViewAllPress={handleViewAllGallery} />
+        
+        {/* Footer */}
+        <HadithImageFooter />
+      </ScrollView>
     </View>
   );
 };
