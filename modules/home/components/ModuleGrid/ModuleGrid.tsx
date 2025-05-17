@@ -4,58 +4,54 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
-
-// Import SVG cards
-import QuranCard from '@/assets/home/quran.svg';
-import MaktabCard from '@/assets/home/maktab-card.svg';
-import QiblahCard from '@/assets/home/qiblah.svg';
-import TasbihCard from '@/assets/home/tasbih.svg';
-import HadithCard from '@/assets/home/hadith.svg';
-import ZakatCard from '@/assets/home/zakat.svg';
+import { ShadowColors } from '@/theme/shadows';
 
 // Get screen dimensions for responsive layout
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - scale(48)) / 2; // 2 cards per row with margins
+const CARD_WIDTH = scale(163.5); // Width of each card
+const CARD_HEIGHT = scale(184); // Height of each card
+const CARD_GAP = scale(12); // Gap between cards in the same row
 
 interface ModuleItem {
   id: string;
-  card: React.FC<any>;
+  image: any;
   route: string;
 }
 
 const modules: ModuleItem[] = [
   {
     id: 'quran',
-    card: QuranCard,
+    image: require('@/assets/home/quran-card.png'),
     route: 'quran',
   },
   {
     id: 'maktab',
-    card: MaktabCard,
+    image: require('@/assets/home/maktab-card.png'),
     route: 'maktab',
   },
   {
     id: 'qiblah',
-    card: QiblahCard,
+    image: require('@/assets/home/qiblah-card.png'),
     route: 'compass',
   },
   {
     id: 'tasbih',
-    card: TasbihCard,
+    image: require('@/assets/home/tasbih-card.png'),
     route: 'tasbih',
   },
   {
     id: 'hadith',
-    card: HadithCard,
+    image: require('@/assets/home/hadith-card.png'),
     route: 'hadith',
   },
   {
     id: 'zakat',
-    card: ZakatCard,
+    image: require('@/assets/home/zakat-card.png'),
     route: 'zakat',
   },
 ];
@@ -83,7 +79,11 @@ const ModuleGrid: React.FC<ModuleGridProps> = ({ title = 'Islamic Modules' }) =>
             activeOpacity={0.8}
             style={styles.cardContainer}
           >
-            <module.card width={CARD_WIDTH} height={verticalScale(160)} />
+            <Image 
+              source={module.image} 
+              style={styles.cardImage} 
+              resizeMode="cover"
+            />
           </TouchableOpacity>
         ))}
       </View>
@@ -108,6 +108,15 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     marginBottom: verticalScale(16),
+    borderRadius: scale(8), // radius-lg
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: ShadowColors['border-light'],
+  },
+  cardImage: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: scale(8), // radius-lg
   },
 });
 
