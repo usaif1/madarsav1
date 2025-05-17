@@ -9,13 +9,12 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Regular, Body1Title2Bold, Body2Medium, Body2Bold, H4Bold } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
 import { ShadowColors } from '@/theme/shadows';
-import {
-  FazrIcon,
-  SunriseIcon,
-  DhuhrAsrIcon,
-  MaghribIcon,
-  IshaIcon,
-} from '@/assets/calendar';
+import FajrIcon from '@/assets/home/fajr.svg';
+import DhuhrIcon from '@/assets/home/dhuhr.svg';
+import AsrIcon from '@/assets/home/asr.svg';
+import MaghribIcon from '@/assets/home/maghrib.svg';
+import IshaIcon from '@/assets/home/isha.svg';
+import PrayerArc from '@/assets/home/prayer-arc.svg';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
@@ -36,17 +35,17 @@ const prayerTimes: Record<string, PrayerTimeData> = {
   fajr: {
     name: 'Fajr',
     time: '5:51',
-    icon: FazrIcon,
+    icon: FajrIcon,
   },
   dhuhr: {
     name: 'Dhuhr',
     time: '12:27',
-    icon: DhuhrAsrIcon,
+    icon: DhuhrIcon,
   },
   asr: {
     name: 'Asr',
     time: '3:21',
-    icon: DhuhrAsrIcon,
+    icon: AsrIcon,
   },
   maghrib: {
     name: 'Maghrib',
@@ -93,22 +92,42 @@ const getGradientDirection = (prayer: PrayerType): { start: { x: number, y: numb
 };
 
 // Calculate position of the indicator ball on the arc
-const calculateBallPosition = (currentPrayer: PrayerType, prayerTimes: Record<string, PrayerTimeData>): { left: number, top: number } => {
-  // For now, return fixed positions based on the prayer type
-  // In a real app, this would calculate based on current time relative to prayer times
+const calculateBallPosition = (currentPrayer: PrayerType): { left: number, top: number } => {
+  // Arc width is 280, so we need to map 5 prayer times to positions along the arc
+  const arcWidth = scale(280);
+  
+  // Calculate the position based on prayer time
   switch (currentPrayer) {
     case 'fajr':
-      return { left: scale(30), top: scale(198) };
+      return { 
+        left: scale(20), 
+        top: scale(120) 
+      };
     case 'dhuhr':
-      return { left: scale(100), top: scale(198) };
+      return { 
+        left: scale(70), 
+        top: scale(70) 
+      };
     case 'asr':
-      return { left: scale(199), top: scale(198) }; // Center
+      return { 
+        left: scale(140), 
+        top: scale(40) 
+      };
     case 'maghrib':
-      return { left: scale(250), top: scale(198) };
+      return { 
+        left: scale(210), 
+        top: scale(70) 
+      };
     case 'isha':
-      return { left: scale(280), top: scale(198) };
+      return { 
+        left: scale(260), 
+        top: scale(120) 
+      };
     default:
-      return { left: scale(199), top: scale(198) }; // Center
+      return { 
+        left: scale(140), 
+        top: scale(40) 
+      };
   }
 };
 
@@ -128,7 +147,7 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
   const gradientDirection = getGradientDirection(currentPrayer);
   
   // Calculate ball position
-  const ballPosition = calculateBallPosition(currentPrayer, prayerTimes);
+  const ballPosition = calculateBallPosition(currentPrayer);
   
   // Get current prayer data
   const currentPrayerData = prayerTimes[currentPrayer];
@@ -150,21 +169,22 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
         
         {/* Header Section */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            {/* Prayer Icon and Name */}
-            <View style={styles.iconContainer}>
-              <currentPrayerData.icon width={scale(24)} height={scale(24)} fill="#FFFFFF" />
+          {/* Prayer Icon and Name with Time Left */}
+          <View style={styles.headerContent}>
+            <View style={styles.headerTop}>
+              <View style={styles.iconNameContainer}>
+                <currentPrayerData.icon width={scale(24)} height={scale(24)} fill="#FFFFFF" />
+                <H4Bold color="white" style={styles.prayerTitle}>{currentPrayerData.name}</H4Bold>
+              </View>
+              
+              {/* Day Pill */}
+              <View style={styles.dayPill}>
+                <Body2Bold color="white">{day}</Body2Bold>
+              </View>
             </View>
             
-            <View style={styles.nameContainer}>
-              <H4Bold color="white">{currentPrayerData.name}</H4Bold>
-              <Body2Medium color="white">{timeLeft}</Body2Medium>
-            </View>
-          </View>
-          
-          {/* Day Pill */}
-          <View style={styles.dayPill}>
-            <Body2Bold color="white">{day}</Body2Bold>
+            {/* Time Left */}
+            <Body2Medium color="white" style={styles.timeLeft}>{timeLeft}</Body2Medium>
           </View>
         </View>
         
@@ -212,7 +232,7 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
         
         {/* Arc with Ball Indicator */}
         <View style={styles.arcContainer}>
-          <View style={styles.arc} />
+          <PrayerArc width={scale(280)} height={scale(140)} />
           <View style={[styles.ball, { left: ballPosition.left, top: ballPosition.top }]} />
         </View>
       </LinearGradient>
@@ -236,28 +256,27 @@ const styles = StyleSheet.create({
     padding: scale(16),
   },
   header: {
-    width: scale(307),
-    height: verticalScale(43),
+    marginBottom: scale(16),
+  },
+  headerContent: {
+    width: '100%',
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: scale(16),
+    marginBottom: scale(2),
   },
-  headerLeft: {
+  iconNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(20),
+    gap: scale(12),
   },
-  iconContainer: {
-    width: scale(24),
-    height: scale(24),
-    justifyContent: 'center',
-    alignItems: 'center',
+  prayerTitle: {
+    marginLeft: scale(8),
   },
-  nameContainer: {
-    width: scale(223),
-    height: verticalScale(43),
-    gap: scale(2),
+  timeLeft: {
+    marginLeft: scale(44), // Align with the prayer name (24px icon + 8px gap + 12px margin)
   },
   dayPill: {
     width: scale(64),
@@ -304,17 +323,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     marginTop: scale(20),
-  },
-  arc: {
-    width: scale(280),
-    height: scale(140),
-    borderTopLeftRadius: scale(140),
-    borderTopRightRadius: scale(140),
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderBottomWidth: 0,
-    position: 'absolute',
-    bottom: 0,
   },
   ball: {
     width: scale(28),

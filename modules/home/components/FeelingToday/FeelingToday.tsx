@@ -94,10 +94,10 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             <View style={styles.emojiCircle}>
               {item.selected ? (
                 item.emoji ? (
-                  <Text style={styles.emojiText}>{item.emoji}</Text>
+                  <Body1Title2Regular style={styles.emojiText}>{item.emoji}</Body1Title2Regular>
                 ) : (
                   <View style={styles.plusContainer}>
-                    <PlusIcon width={scale(16.25)} height={scale(16.25)} fill="#FFFFFF" />
+                    <PlusIcon fill="#FFFFFF" />
                   </View>
                 )
               ) : (
@@ -123,7 +123,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
         activeOpacity={1.0}>
         <Body1Title2Bold color="primary">Explore Dua's</Body1Title2Bold>
         <View style={styles.arrowContainer}>
-          <ExploreArrow width={scale(14.625)} height={scale(14.625)} />
+          <ExploreArrow />
         </View>
       </TouchableOpacity>
     </View>
@@ -177,8 +177,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   plusContainer: {
-    width: scale(20),
-    height: scale(20),
     borderRadius: scale(10),
     backgroundColor: '#8A57DC', // Primitives-Primary-500
     justifyContent: 'center',
@@ -218,8 +216,6 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5E5',
   },
   arrowContainer: {
-    width: scale(18),
-    height: scale(18),
     borderRadius: scale(9),
     backgroundColor: '#8A57DC', // Primitives-Primary-500
     justifyContent: 'center',
