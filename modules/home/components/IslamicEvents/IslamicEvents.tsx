@@ -13,7 +13,7 @@ import {Body1Title2Bold, Body1Title2Medium, Body2Medium} from '@/components/Typo
 import LinearGradient from 'react-native-linear-gradient';
 import DownArrow from '@/assets/calendar/down-arrow.svg';
 import NoEvents from '@/assets/home/no-events.svg';
-import DotIcon from '@/assets/calendar/dot.svg';
+import { ShadowColors } from '@/theme/shadows';
 
 // Mock data for months
 const MONTHS = [
@@ -93,14 +93,14 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
       
       <View style={styles.eventContent}>
         <View style={styles.titleContainer}>
-          <Body1Title2Bold>{item.title}</Body1Title2Bold>
+          <Body1Title2Medium style={styles.eventTitle}>{item.title}</Body1Title2Medium>
           {(item.daysLeft !== undefined) && (
             <View style={styles.daysLeft}>
-              <DotIcon width={scale(10)} height={scale(10)} fill={
-                item.isToday ? '#6E56CF' : 
-                item.isTomorrow ? '#F79009' : 
-                '#F04438'
-              } />
+              <View style={[styles.dotIcon, {
+                backgroundColor: item.isToday ? '#6E56CF' : // primary 500
+                  item.isTomorrow ? '#F79009' : // Primitives/Semantic-Warning/600
+                  '#F04438' // Primitives/Semantic-Error/600
+              }]} />
               {item.isToday ? (
                 <Body2Medium style={styles.todayText}>Today</Body2Medium>
               ) : item.isTomorrow ? (
@@ -203,11 +203,13 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: scale(339),
-    height: verticalScale(217),
+    height: verticalScale(230),
     borderRadius: scale(8),
     alignSelf: 'center',
     marginBottom: verticalScale(16),
     overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: ShadowColors['border-light'],
   },
   gradientContainer: {
     flex: 1,
@@ -252,22 +254,34 @@ const styles = StyleSheet.create({
     paddingVertical: scale(12),
     paddingHorizontal: scale(16),
     alignItems: 'center',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#E5E5E5',
   },
   dateContainer: {
-    width: scale(38),
+    width: scale(34),
+    height: scale(34),
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: scale(16),
+    backgroundColor: '#F5F4FB', // primary 50
+    borderRadius: scale(4), // radius-sm
   },
   dayText: {
-    fontFamily: 'Geist-Bold',
-    fontSize: scale(17),
-    lineHeight: scale(24),
+    fontFamily: 'Geist',
+    fontWeight: '700',
+    fontSize: scale(14),
+    lineHeight: scale(14 * 1.45),
+    letterSpacing: 0,
+    textAlign: 'center',
     color: '#8A57DC',
   },
   monthText: {
-    fontFamily: 'Geist-Medium',
-    fontSize: scale(12),
-    lineHeight: scale(16),
+    fontFamily: 'Geist',
+    fontWeight: '500',
+    fontSize: scale(10),
+    lineHeight: scale(10 * 1.4),
+    letterSpacing: 0,
+    textAlign: 'center',
     color: '#8A57DC',
   },
   eventContent: {
@@ -284,21 +298,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: scale(4),
   },
+  dotIcon: {
+    width: scale(8),
+    height: scale(8),
+    borderRadius: scale(4),
+  },
+  eventTitle: {
+    color: '#101828', // neutral-11
+  },
   todayText: {
+    fontFamily: 'Geist',
+    fontWeight: '500',
     fontSize: scale(12),
-    color: '#6E56CF',
+    lineHeight: scale(12 * 1.4),
+    letterSpacing: 0,
+    color: '#6E56CF', // primary 500
   },
   tomorrowText: {
+    fontFamily: 'Geist',
+    fontWeight: '500',
     fontSize: scale(12),
-    color: '#F79009',
+    lineHeight: scale(12 * 1.4),
+    letterSpacing: 0,
+    color: '#F79009', // Primitives/Semantic-Warning/600
   },
   daysLeftText: {
+    fontFamily: 'Geist',
+    fontWeight: '500',
     fontSize: scale(12),
-    color: '#F04438',
+    lineHeight: scale(12 * 1.4),
+    letterSpacing: 0,
+    color: '#F04438', // Primitives/Semantic-Error/600
   },
   islamicDateText: {
+    fontFamily: 'Geist',
+    fontWeight: '500',
     fontSize: scale(12),
-    color: '#737373',
+    lineHeight: scale(12 * 1.4),
+    letterSpacing: 0,
+    color: '#737373', // Tokens-Sub-heading
   },
   noEventsContainer: {
     flex: 1,
