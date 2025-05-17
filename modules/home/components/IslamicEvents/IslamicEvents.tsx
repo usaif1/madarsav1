@@ -11,7 +11,7 @@ import {
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium} from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
-import DownArrow from '@/assets/calendar/down-arrow.svg';
+import DownArrow from '@/assets/home/down-arrow.svg';
 import NoEvents from '@/assets/home/no-events.svg';
 import { ShadowColors } from '@/theme/shadows';
 
@@ -234,8 +234,7 @@ const styles = StyleSheet.create({
     paddingVertical: scale(2),
     paddingHorizontal: scale(10),
     borderRadius: scale(33),
-    borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.33)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     gap: scale(4),
   },
   contentContainer: {

@@ -10,9 +10,7 @@ import {
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
-import Thermometer from '@/assets/home/face-with-thermometer.svg';
-import HuggingFace from '@/assets/home/hugging-face.svg';
-import SmilingFace from '@/assets/home/smiling-face-with-halo.svg';
+// No need to import PNG images as we'll use require()
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
@@ -22,19 +20,19 @@ const emojiData = [
   {
     id: 'mon',
     day: 'Mon',
-    emoji: <Thermometer />,
+    emoji: require('@/assets/home/face-with-thermometer.png'),
     selected: true,
   },
   {
     id: 'tue',
     day: 'Tue',
-    emoji: <SmilingFace />,
+    emoji: require('@/assets/home/smiling-face-with-halo.png'),
     selected: true,
   },
   {
     id: 'wed',
     day: 'Wed',
-    emoji: <HuggingFace  />,
+    emoji: require('@/assets/home/hugging-face.png'),
     selected: true,
   },
   {
@@ -92,10 +90,10 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             onPress={() => onEmojiPress(item.day)}
             activeOpacity={1.0}>
             {/* Emoji or Icon */}
-            <Vie                  <View style={styles.emojiWrapper}>
-                    {item.emoji}
-                          <Body1Title2Regular style={styles.emojiText}>{item.emoji}</Body1Title2Regular>
-r>
+            <View style={styles.emojiCircle}>
+              {item.selected ? (
+                item.emoji ? (
+                  <Image source={item.emoji} style={styles.emojiImage} resizeMode="contain" />
                 ) : (
                   <View style={styles.plusContainer}>
                     <Text style={styles.plusText}>+</Text>
@@ -182,6 +180,10 @@ const styles = StyleSheet.create({
     lineHeight: scale(30),
     textAlign: 'center',
   },
+  emojiImage: {
+    width: scale(24),
+    height: scale(24),
+  },
   plusContainer: {
     width: scale(20),
     height: scale(20),
@@ -234,7 +236,6 @@ const styles = StyleSheet.create({
     height: scale(18),
     borderRadius: scale(9),
     backgroundColor: '#8A57DC', // Primitives-Primary-500
-    justifyContent: 'center',
     alignItems: 'center',
   },
   arrowText: {
