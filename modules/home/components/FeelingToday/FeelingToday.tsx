@@ -89,7 +89,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             key={item.id}
             style={styles.emojiDayContainer}
             onPress={() => onEmojiPress(item.day)}
-            activeOpacity={0.7}>
+            activeOpacity={1.0}>
             {/* Emoji or Icon */}
             <View style={styles.emojiCircle}>
               {item.selected ? (
@@ -120,7 +120,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
       <TouchableOpacity
         style={styles.exploreDuasContainer}
         onPress={onExploreDuasPress}
-        activeOpacity={0.7}>
+        activeOpacity={1.0}>
         <Body1Title2Bold color="primary">Explore Dua's</Body1Title2Bold>
         <View style={styles.arrowContainer}>
           <ExploreArrow width={scale(14.625)} height={scale(14.625)} />
