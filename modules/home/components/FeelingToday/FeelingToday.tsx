@@ -10,8 +10,6 @@ import {
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
-import ExploreArrow from '@/assets/home/explore-dua-arrow.svg';
-import PlusIcon from '@/assets/home/plus.svg';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
@@ -97,7 +95,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
                   <Body1Title2Regular style={styles.emojiText}>{item.emoji}</Body1Title2Regular>
                 ) : (
                   <View style={styles.plusContainer}>
-                    <PlusIcon fill="#FFFFFF" />
+                    <Text style={styles.plusText}>+</Text>
                   </View>
                 )
               ) : (
@@ -123,7 +121,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
         activeOpacity={1.0}>
         <Body1Title2Bold color="primary">Explore Dua's</Body1Title2Bold>
         <View style={styles.arrowContainer}>
-          <ExploreArrow />
+          <Text style={styles.arrowText}>›</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -177,10 +175,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   plusContainer: {
+    width: scale(20),
+    height: scale(20),
     borderRadius: scale(10),
     backgroundColor: '#8A57DC', // Primitives-Primary-500
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  plusText: {
+    color: '#FFFFFF',
+    fontSize: scale(16),
+    lineHeight: scale(20),
+    textAlign: 'center',
   },
   emptyCircle: {
     width: scale(30),
@@ -216,10 +222,18 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5E5',
   },
   arrowContainer: {
+    width: scale(18),
+    height: scale(18),
     borderRadius: scale(9),
     backgroundColor: '#8A57DC', // Primitives-Primary-500
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  arrowText: {
+    color: '#FFFFFF',
+    fontSize: scale(16),
+    lineHeight: scale(18),
+    textAlign: 'center',
   },
 });
 
