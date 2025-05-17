@@ -60,15 +60,15 @@ const IslamicTools: React.FC = () => {
       />
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Islamic Modules Grid */}
-        <ModuleGrid title="Islamic Tools" />
-        
         {/* Feeling Today Section */}
         <FeelingToday 
           onExploreDuasPress={handleExploreDuas}
           onEmojiPress={handleEmojiPress}
         />
-        
+
+        {/* Islamic Modules Grid */}
+        <ModuleGrid title="Islamic Tools" />
+      
         {/* Islamic Events Section */}
         <IslamicEvents initialMonth="Jun" />
         

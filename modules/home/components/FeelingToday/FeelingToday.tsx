@@ -133,10 +133,13 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
+    height: verticalScale(170),
     alignSelf: 'center',
     marginBottom: verticalScale(16),
     borderRadius: scale(8),
     overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: '#E5E5E5', // Primitives-Neutral-200
   },
   header: {
     width: CARD_WIDTH,
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: scale(16),
     paddingVertical: scale(16),
-    backgroundColor: '#F9F6FF',
+    backgroundColor: '#FFFFFF',
   },
   emojiDayContainer: {
     width: scale(45.57),
