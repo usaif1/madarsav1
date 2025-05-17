@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import HomeHeader from '../components/HomeHeader';
 import Gallery from '../components/Gallery';
+import AudioPlayer from '../components/AudioPlayer';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 const {width} = Dimensions.get('window');
@@ -40,6 +41,11 @@ const IslamicTools: React.FC = () => {
   const handleViewAllGallery = () => {
     console.log('View all gallery pressed');
     // Navigate to gallery view if needed
+  };
+  
+  const handlePlayPause = () => {
+    console.log('Play/pause audio pressed');
+    // Handle audio playback
   };
 
   const renderItem = ({item}: {item: ToolItem}) => (
@@ -79,6 +85,15 @@ const IslamicTools: React.FC = () => {
             contentContainerStyle={styles.grid}
           />
         </View>
+        
+        {/* Audio Player Section */}
+        <AudioPlayer 
+          trackName="Asma-ul-husna"
+          currentTime="0:20"
+          totalTime="3:12"
+          progress={0.1}
+          onPlayPause={handlePlayPause}
+        />
         
         {/* Gallery Section */}
         <Gallery onViewAllPress={handleViewAllGallery} />
