@@ -13,6 +13,7 @@ import {
 import HomeHeader from '../components/HomeHeader';
 import Gallery from '../components/Gallery';
 import AudioPlayer from '../components/AudioPlayer';
+import IslamicEvents from '../components/IslamicEvents';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 const {width} = Dimensions.get('window');
@@ -85,6 +86,9 @@ const IslamicTools: React.FC = () => {
             contentContainerStyle={styles.grid}
           />
         </View>
+        
+        {/* Islamic Events Section */}
+        <IslamicEvents initialMonth="Jun" />
         
         {/* Audio Player Section */}
         <AudioPlayer 
