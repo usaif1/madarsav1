@@ -15,6 +15,7 @@ import Gallery from '../components/Gallery';
 import AudioPlayer from '../components/AudioPlayer';
 import IslamicEvents from '../components/IslamicEvents';
 import ModuleGrid from '../components/ModuleGrid';
+import FeelingToday from '../components/FeelingToday';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 const {width} = Dimensions.get('window');
@@ -34,6 +35,16 @@ const IslamicTools: React.FC = () => {
     console.log('Play/pause audio pressed');
     // Handle audio playback
   };
+  
+  const handleExploreDuas = () => {
+    console.log('Explore Duas pressed');
+    // Navigate to Duas screen
+  };
+  
+  const handleEmojiPress = (day: string) => {
+    console.log(`Emoji for ${day} pressed`);
+    // Handle emoji selection
+  };
 
 
 
@@ -51,6 +62,12 @@ const IslamicTools: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Islamic Modules Grid */}
         <ModuleGrid title="Islamic Tools" />
+        
+        {/* Feeling Today Section */}
+        <FeelingToday 
+          onExploreDuasPress={handleExploreDuas}
+          onEmojiPress={handleEmojiPress}
+        />
         
         {/* Islamic Events Section */}
         <IslamicEvents initialMonth="Jun" />
