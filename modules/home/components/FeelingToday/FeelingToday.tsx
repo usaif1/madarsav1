@@ -21,19 +21,19 @@ const emojiData = [
   {
     id: 'mon',
     day: 'Mon',
-    emoji: '😢', // Sad emoji
+    emoji: '🤒',
     selected: true,
   },
   {
     id: 'tue',
     day: 'Tue',
-    emoji: '😇', // Angel emoji
+    emoji: '😇',
     selected: true,
   },
   {
     id: 'wed',
     day: 'Wed',
-    emoji: '😊', // Happy emoji
+    emoji: '🤗',
     selected: true,
   },
   {
