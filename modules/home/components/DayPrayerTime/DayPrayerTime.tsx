@@ -14,7 +14,7 @@ import DhuhrIcon from '@/assets/home/dhuhr.svg';
 import AsrIcon from '@/assets/home/asr.svg';
 import MaghribIcon from '@/assets/home/maghrib.svg';
 import IshaIcon from '@/assets/home/isha.svg';
-import PrayerArc from '@/assets/home/prayer-arc.svg';
+import { Image } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
@@ -173,18 +173,20 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
           <View style={styles.headerContent}>
             <View style={styles.headerTop}>
               <View style={styles.iconNameContainer}>
+                <View style={{flexDirection:'row',width:'100%',justifyContent:'space-between'}}>
+                  <View style={{flexDirection: 'row'}}>
                 <currentPrayerData.icon width={scale(24)} height={scale(24)} fill="#FFFFFF" />
                 <H4Bold color="white" style={styles.prayerTitle}>{currentPrayerData.name}</H4Bold>
-              </View>
-              
-              {/* Day Pill */}
+                </View>
+                {/* Day Pill */}
               <View style={styles.dayPill}>
                 <Body2Bold color="white">{day}</Body2Bold>
+              </View></View>
+                <View style={{flexDirection: 'row'}}>
+            {/* Time Left */}
+            <Body2Medium color="white" style={styles.timeLeft}>{timeLeft}</Body2Medium></View>
               </View>
             </View>
-            
-            {/* Time Left */}
-            <Body2Medium color="white" style={styles.timeLeft}>{timeLeft}</Body2Medium>
           </View>
         </View>
         
@@ -232,7 +234,11 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
         
         {/* Arc with Ball Indicator */}
         <View style={styles.arcContainer}>
-          <PrayerArc width={scale(280)} height={scale(140)} />
+          <Image 
+            source={require('@/assets/home/arc.png')} 
+            style={styles.arcImage} 
+            resizeMode="contain"
+          />
           <View style={[styles.ball, { left: ballPosition.left, top: ballPosition.top }]} />
         </View>
       </LinearGradient>
@@ -268,19 +274,16 @@ const styles = StyleSheet.create({
     marginBottom: scale(2),
   },
   iconNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scale(12),
+    alignItems: 'flex-start',
   },
   prayerTitle: {
     marginLeft: scale(8),
   },
   timeLeft: {
-    marginLeft: scale(44), // Align with the prayer name (24px icon + 8px gap + 12px margin)
+    marginLeft: scale(4), // Align with the prayer name (24px icon + 8px gap + 12px margin)
   },
   dayPill: {
-    width: scale(64),
-    height: verticalScale(21),
+    width: scale(75),
     paddingVertical: scale(2),
     paddingHorizontal: scale(10),
     borderRadius: scale(60),
@@ -323,6 +326,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     marginTop: scale(20),
+  },
+  arcImage: {
+    width: scale(280),
+    height: scale(140),
   },
   ball: {
     width: scale(28),
