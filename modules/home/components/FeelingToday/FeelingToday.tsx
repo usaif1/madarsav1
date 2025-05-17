@@ -10,6 +10,9 @@ import {
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
+import Thermometer from '@/assets/home/face-with-thermometer.svg';
+import HuggingFace from '@/assets/home/hugging-face.svg';
+import SmilingFace from '@/assets/home/smiling-face-with-halo.svg';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
@@ -19,19 +22,19 @@ const emojiData = [
   {
     id: 'mon',
     day: 'Mon',
-    emoji: '🤒',
+    emoji: <Thermometer />,
     selected: true,
   },
   {
     id: 'tue',
     day: 'Tue',
-    emoji: '😇',
+    emoji: <SmilingFace />,
     selected: true,
   },
   {
     id: 'wed',
     day: 'Wed',
-    emoji: '🤗',
+    emoji: <HuggingFace  />,
     selected: true,
   },
   {
@@ -89,10 +92,10 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             onPress={() => onEmojiPress(item.day)}
             activeOpacity={1.0}>
             {/* Emoji or Icon */}
-            <View style={styles.emojiCircle}>
-              {item.selected ? (
-                item.emoji ? (
-                  <Body1Title2Regular style={styles.emojiText}>{item.emoji}</Body1Title2Regular>
+            <Vie                  <View style={styles.emojiWrapper}>
+                    {item.emoji}
+                          <Body1Title2Regular style={styles.emojiText}>{item.emoji}</Body1Title2Regular>
+r>
                 ) : (
                   <View style={styles.plusContainer}>
                     <Text style={styles.plusText}>+</Text>

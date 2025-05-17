@@ -94,6 +94,8 @@ const IslamicTools: React.FC = () => {
         {/* Gallery Section */}
         <Gallery onViewAllPress={handleViewAllGallery} />
         
+        <View style={styles.emptySpace} />
+
         {/* Footer */}
         <HadithImageFooter />
       </ScrollView>
@@ -111,5 +113,8 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingTop: scale(16),
+  },
+  emptySpace: {
+    height: scale(250),
   },
 });

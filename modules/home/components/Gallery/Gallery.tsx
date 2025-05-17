@@ -67,9 +67,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewAllText: {
-    fontSize: scale(14),
+    fontSize: scale(12),
     lineHeight: scale(20.3), // 145% of font size
-    color: ColorPrimary.primary500,
+    color: '#8A57DC',
     textAlign: 'center',
   },
   galleryItemsContainer: {
