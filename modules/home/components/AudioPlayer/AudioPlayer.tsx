@@ -40,7 +40,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           source={require('@/assets/home/al-husna-background.png')}
           style={styles.trackImageContainer}
           imageStyle={styles.trackImageStyle}>
-          <AlHusnaIcon width={76.11} height={106.56} style={styles.trackIcon} />
+          <View style={styles.iconContainer}>
+            <AlHusnaIcon width={76.11} height={106.56} />
+          </View>
         </ImageBackground>
 
         {/* Play/Pause Button */}
@@ -50,22 +52,21 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
         {/* Track Info and Progress */}
         <View style={styles.trackInfoContainer}>
-          {/* Track Name */}
-          <Body1Title2Medium color="white" style={styles.trackName}>
-            {trackName}
-          </Body1Title2Medium>
+          {/* Track Name and Time */}
+          <View style={styles.trackNameContainer}>
+            <Body1Title2Medium color="white" style={styles.trackName}>
+              {trackName}
+            </Body1Title2Medium>
+            
+            <CaptionMedium style={styles.timeText}>
+              {currentTime} / -{totalTime}
+            </CaptionMedium>
+          </View>
 
           {/* Progress Bar */}
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBarBackground} />
             <View style={[styles.progressBar, {width: `${progress * 100}%`}]} />
-          </View>
-
-          {/* Time Info */}
-          <View style={styles.timeContainer}>
-            <CaptionMedium style={styles.timeText}>
-              {currentTime} / -{totalTime}
-            </CaptionMedium>
           </View>
         </View>
       </ImageBackground>
@@ -114,10 +115,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  trackIcon: {
-    position: 'absolute',
-    top: scale(14.71),
-    left: scale(30.44),
+  iconContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   playPauseButton: {
     position: 'absolute',
@@ -136,14 +138,24 @@ const styles = StyleSheet.create({
     marginBottom: scale(20),
     marginHorizontal: scale(20),
   },
-  trackName: {
+  trackNameContainer: {
+    width: scale(299),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: verticalScale(8),
+  },
+  trackName: {
     fontSize: scale(17),
+  },
+  timeText: {
+    fontSize: scale(10),
+    lineHeight: scale(14),
+    color: '#E5E5E5',
   },
   progressBarContainer: {
     width: scale(299),
     height: verticalScale(4),
-    marginBottom: verticalScale(8),
     borderRadius: scale(2),
     backgroundColor: '#FFFFFF4D',
     overflow: 'hidden',
@@ -157,18 +169,6 @@ const styles = StyleSheet.create({
   progressBar: {
     height: '100%',
     backgroundColor: '#FFFFFF',
-  },
-  timeContainer: {
-    width: scale(299),
-    height: verticalScale(24),
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  timeText: {
-    fontSize: scale(10),
-    lineHeight: scale(14),
-    color: '#E5E5E5',
   },
 });
 
