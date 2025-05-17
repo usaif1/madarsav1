@@ -16,6 +16,7 @@ import AudioPlayer from '../components/AudioPlayer';
 import IslamicEvents from '../components/IslamicEvents';
 import ModuleGrid from '../components/ModuleGrid';
 import FeelingToday from '../components/FeelingToday';
+import DayPrayerTime from '../components/DayPrayerTime';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 const {width} = Dimensions.get('window');
@@ -60,12 +61,20 @@ const IslamicTools: React.FC = () => {
       />
       
       <ScrollView showsVerticalScrollIndicator={false}>
+
+        {/* Prayer Times Section */}
+        <DayPrayerTime
+          currentPrayer="asr"
+          timeLeft="1h 29m 3s left"
+          day="Sunday"
+        />
+
         {/* Feeling Today Section */}
         <FeelingToday 
           onExploreDuasPress={handleExploreDuas}
           onEmojiPress={handleEmojiPress}
         />
-
+        
         {/* Islamic Modules Grid */}
         <ModuleGrid title="Islamic Tools" />
       
