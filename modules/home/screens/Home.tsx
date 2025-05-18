@@ -77,7 +77,7 @@ const IslamicTools: React.FC = () => {
         />
         
         {/* Islamic Modules Grid */}
-        <ModuleGrid title="Islamic Tools" />
+        <ModuleGrid />
       
         {/* Islamic Events Section */}
         <IslamicEvents initialMonth="Jun" />

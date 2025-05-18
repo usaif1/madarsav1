@@ -56,11 +56,9 @@ const modules: ModuleItem[] = [
   },
 ];
 
-interface ModuleGridProps {
-  title?: string;
-}
 
-const ModuleGrid: React.FC<ModuleGridProps> = ({ title = 'Islamic Modules' }) => {
+
+const ModuleGrid: React.FC = () => {
   const navigation = useNavigation<any>();
 
   const handleModulePress = (route: string) => {
@@ -69,8 +67,6 @@ const ModuleGrid: React.FC<ModuleGridProps> = ({ title = 'Islamic Modules' }) =>
 
   return (
     <View style={styles.container}>
-      {title && <Body1Title2Bold style={styles.title}>{title}</Body1Title2Bold>}
-      
       <View style={styles.grid}>
         {modules.map((module) => (
           <TouchableOpacity
