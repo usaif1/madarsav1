@@ -1,6 +1,6 @@
 // modules/splash/screens/SplashScreen2.tsx
-import React from 'react';
-import { Pressable, StyleSheet, View, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Pressable, StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // assets
@@ -17,16 +17,12 @@ import { useGlobalStore } from '@/globalStore';
 
 // auth
 import { useSocialAuth } from '@/modules/auth/hooks/useSocialAuth';
-import { configureGoogleSignIn } from '@/modules/auth/services/googleAuthService';
-
-// Configure Google Sign-In when component loads
-configureGoogleSignIn();
 
 const SplashPrimary: React.FC = () => {
   const { colors } = useThemeStore();
   const { setOnboarded } = useGlobalStore();
   const { bottom } = useSafeAreaInsets();
-  
+
   // Get social auth methods and loading state
   const { isLoading, signInWithGoogle, loginWithFacebook, skipLogin } = useSocialAuth();
 
