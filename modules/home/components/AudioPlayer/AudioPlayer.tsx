@@ -41,7 +41,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           style={styles.trackImageContainer}
           imageStyle={styles.trackImageStyle}>
           <View style={styles.iconContainer}>
-            <AlHusnaIcon width={76.11} height={106.56} />
+            <AlHusnaIcon width={90} height={120} />
           </View>
         </ImageBackground>
 
@@ -104,16 +104,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   trackImageStyle: {
     borderRadius: scale(12),
     resizeMode: 'cover',
-    opacity: 0.9, // Make it slightly transparent to create depth
+    opacity: 0.9,
     flex: 1,
     width: '100%',
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   iconContainer: {
     width: '100%',
