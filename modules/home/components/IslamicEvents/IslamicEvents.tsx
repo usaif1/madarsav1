@@ -68,10 +68,12 @@ const EVENTS: Record<string, IslamicEvent[]> = {
 
 interface IslamicEventsProps {
   initialMonth?: string;
+  onViewCalendarPress?: () => void;
 }
 
 const IslamicEvents: React.FC<IslamicEventsProps> = ({
   initialMonth = MONTHS[new Date().getMonth()],
+  onViewCalendarPress,
 }) => {
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -117,7 +119,11 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
   );
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={onViewCalendarPress}
+      activeOpacity={0.9}
+    >
       <LinearGradient
         colors={['#FDA29B', '#8A57DC']}
         start={{x: 0, y: 0}}
@@ -196,7 +202,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </View>
+    </TouchableOpacity>
   );
 };
 

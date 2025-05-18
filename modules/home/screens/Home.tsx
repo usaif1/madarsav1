@@ -34,6 +34,7 @@ type RootStackParamList = {
   compass: undefined;
   dua: undefined;
   user: undefined;
+  calendar: undefined;
   // Add other routes as needed
 };
 
@@ -66,6 +67,11 @@ const IslamicTools: React.FC = () => {
     console.log('User profile pressed');
     navigation.navigate('user');
   };
+  
+  const handleViewCalendar = () => {
+    console.log('Islamic events pressed');
+    navigation.navigate('calendar');
+  };
 
 
 
@@ -94,7 +100,10 @@ const IslamicTools: React.FC = () => {
         <ModuleGrid />
       
         {/* Islamic Events Section */}
-        <IslamicEvents initialMonth="Jun" />
+        <IslamicEvents 
+          initialMonth="Jun" 
+          onViewCalendarPress={handleViewCalendar}
+        />
         
         {/* Audio Player Section */}
         <AudioPlayer 
