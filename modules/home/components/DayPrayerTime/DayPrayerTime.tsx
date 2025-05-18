@@ -111,7 +111,7 @@ const calculateBallPosition = (currentPrayer: PrayerType): { left: number, top: 
     case 'asr':
       return { 
         left: scale(140), 
-        top: scale(40) 
+        top: scale(10) 
       };
     case 'maghrib':
       return { 
