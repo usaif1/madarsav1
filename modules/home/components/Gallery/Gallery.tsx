@@ -37,7 +37,8 @@ const Gallery: React.FC<GalleryProps> = ({onViewAllPress}) => {
       >
         <View style={styles.galleryItem} />
         <View style={styles.galleryItem} />
-        <View style={[styles.galleryItem, styles.lastItem]} />
+        <View style={[styles.galleryItem]} />
+        <View style={[styles.galleryItem]} />
       </ScrollView>
     </View>
   );
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   },
   galleryItemsContainer: {
     flexDirection: 'row',
-    paddingRight: scale(16), // Add some padding for the last partial item
+    // paddingRight: scale(16), // Add some padding for the last partial item
   },
   galleryItem: {
     width: scale(132),
