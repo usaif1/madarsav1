@@ -1,5 +1,7 @@
 import React from 'react';
-import {View, StyleSheet, Image, Text} from 'react-native';
+import {View, StyleSheet, Image, Text, TouchableOpacity} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ColorPrimary} from '@/theme/lightColors';
 import {scale, verticalScale} from '@/theme/responsive';
@@ -14,19 +16,35 @@ interface HomeHeaderProps {
   notificationCount?: number;
 }
 
+type RootStackParamList = {
+  user: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const HomeHeader: React.FC<HomeHeaderProps> = ({
   userName = 'Mohammad Arbaaz',
   locationText = 'Get accurate namaz time',
   notificationCount = 1,
 }) => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NavigationProp>();
+  
+  const handleUserProfilePress = () => {
+    console.log('User profile pressed');
+    navigation.navigate('user');
+  };
 
   return (
     <View style={[styles.header, {paddingTop: insets.top}]}>
       <View style={styles.headerContent}>
         {/* User Info Section */}
         <View style={styles.userInfo}>
-          <View style={styles.userImageContainer}>
+          <TouchableOpacity 
+            style={styles.userImageContainer}
+            onPress={handleUserProfilePress}
+            activeOpacity={0.8}
+          >
             <Image
               source={require('@/assets/home/image_21.png')}
               style={styles.userImage}
@@ -35,7 +53,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             <View style={styles.menuIconContainer}>
               <NavProfileMenu width={6.875} height={6.875} />
             </View>
-          </View>
+          </TouchableOpacity>
           
           <View style={styles.userTextContainer}>
             <Title3Bold color="white">{userName}</Title3Bold>
