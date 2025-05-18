@@ -10,7 +10,7 @@ import {
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
-// No need to import PNG images as we'll use require()
+import { ShadowColors } from '@/theme/shadows';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
@@ -93,7 +93,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             <View style={styles.emojiCircle}>
               {item.selected ? (
                 item.emoji ? (
-                  <Image source={item.emoji} style={styles.emojiImage} resizeMode="contain" />
+                  <Image source={item.emoji} style={styles.emojiImage} />
                 ) : (
                   <View style={styles.plusContainer}>
                     <Text style={styles.plusText}>+</Text>
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(15),
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5', // For Thursday plus button background
+    backgroundColor: ShadowColors['border-light'], // For Thursday plus button background
   },
   emojiText: {
     fontSize: scale(20),
@@ -181,21 +181,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emojiImage: {
-    width: scale(24),
-    height: scale(24),
+    width: scale(30),
+    height: scale(30),
+    borderRadius: scale(15),
   },
   plusContainer: {
-    width: scale(20),
-    height: scale(20),
-    borderRadius: scale(10),
+    width: scale(16),
+    height: scale(16),
+    borderRadius: scale(8),
     backgroundColor: '#8A57DC', // Primitives-Primary-500
     justifyContent: 'center',
     alignItems: 'center',
   },
   plusText: {
     color: '#FFFFFF',
-    fontSize: scale(16),
-    lineHeight: scale(20),
+    fontSize: scale(12),
+    lineHeight: scale(16),
     textAlign: 'center',
   },
   emptyCircle: {
@@ -236,12 +237,13 @@ const styles = StyleSheet.create({
     height: scale(18),
     borderRadius: scale(9),
     backgroundColor: '#8A57DC', // Primitives-Primary-500
+    justifyContent: 'center',
     alignItems: 'center',
   },
   arrowText: {
     color: '#FFFFFF',
-    fontSize: scale(16),
-    lineHeight: scale(18),
+    fontSize: scale(14),
+    lineHeight: scale(14),
     textAlign: 'center',
   },
 });
