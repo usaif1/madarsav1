@@ -1,5 +1,9 @@
 // dependencies
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import React from 'react';
+
+// components
+import HomeHeader from '@/modules/home/components/HomeHeader';
 
 // navigators
 import UserNavigator from '@/modules/user/navigation/user.navigator';
@@ -11,10 +15,25 @@ import CalendarNavigator from '@/modules/calendar/navigation/calendar.navigator'
 import TasbihNavigator from '@/modules/tasbih/navigation/tasbih.navigator';
 import HadithNavigator from '@/modules/hadith/navigation/hadith.navigator';
 
-// components
-import HomeHeader from '@/modules/home/components/HomeHeader';
+// auth guards
+import { createProtectedScreen, createFullyProtectedScreen } from '@/modules/auth/utils/routeGuards';
 
-const ParentNavigator = createNativeStackNavigator({
+// Protected navigators
+const ProtectedUserNavigator = createFullyProtectedScreen(UserNavigator);
+
+// Define the parent stack param list for type safety
+export type ParentStackParamList = {
+  home: undefined;
+  names: undefined;
+  user: undefined;
+  compass: undefined;
+  dua: undefined;
+  calendar: undefined;
+  tasbih: undefined;
+  hadith: undefined;
+};
+
+const ParentNavigator = createNativeStackNavigator<ParentStackParamList>({
   initialRouteName: 'home',
   screenOptions: {
     headerShown: false,
@@ -29,7 +48,8 @@ const ParentNavigator = createNativeStackNavigator({
     },
     names: NamesNavigator,
     user: {
-      screen: UserNavigator,
+      // Use protected navigator for user profile (requires full authentication)
+      screen: ProtectedUserNavigator,
       options: {
         title: 'Profile',
         headerTitleAlign: 'center',

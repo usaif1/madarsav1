@@ -15,3 +15,15 @@ export type {
 
 // Export storage
 export { storage } from './storage/mmkvStorage';
+
+// Export navigation
+export { default as AuthNavigation } from './navigation/auth.navigation';
+export { default as AuthNavigator } from './navigation/auth.navigator';
+export type { AuthStackParamList } from './navigation/auth.navigator';
+
+// Export route guards
+export { 
+  createProtectedScreen,
+  createFullyProtectedScreen,
+  useRouteGuard 
+} from './utils/routeGuards';

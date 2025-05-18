@@ -28,7 +28,7 @@ type RootStackParamList = {
   screen2: undefined;
 };
 
-const SplashPrimary: React.FC = () => {
+const SplashScreen1: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser, setIsAuthenticated, setIsSkippedLogin } = useAuthStore();
@@ -135,7 +135,7 @@ const SplashPrimary: React.FC = () => {
 
       <Pressable
         style={styles.nextButton}
-        onPress={() => navigation.navigate('screen2')}>
+        onPress={() => navigation.navigate('SplashScreen2')}>
         <Text>Next</Text>
       </Pressable>
 
@@ -174,4 +174,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SplashPrimary;
+export default SplashScreen1;

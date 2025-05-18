@@ -2,10 +2,10 @@
 import * as React from 'react';
 import 'react-native-url-polyfill/auto';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NavigationContainer } from '@react-navigation/native';
 
 // navigators
-import SplashNavigation from './modules/splash/navigation/splash.navigation';
-import ParentNavigation from '@/navigator/ParentNavigation';
+import RootNavigation from '@/navigator/RootNavigation';
 
 // store
 import { useGlobalStore } from './globalStore';
@@ -39,20 +39,20 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
-  const { onboarded } = useGlobalStore();
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <OfflineDetector>
-          <StatusBar
-            barStyle={'light-content'}
-            backgroundColor={'transparent'}
-            translucent
-          />
-          <ErrorToast />
-          {!onboarded ? <SplashNavigation /> : <ParentNavigation />}
-        </OfflineDetector>
+        <NavigationContainer>
+          <OfflineDetector>
+            <StatusBar
+              barStyle={'light-content'}
+              backgroundColor={'transparent'}
+              translucent
+            />
+            <ErrorToast />
+            <RootNavigation />
+          </OfflineDetector>
+        </NavigationContainer>
       </QueryClientProvider>
     </ErrorBoundary>
   );
