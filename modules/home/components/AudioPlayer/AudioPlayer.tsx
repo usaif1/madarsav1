@@ -37,7 +37,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         imageStyle={styles.backgroundImageStyle}>
         {/* Track Image and Icon */}
         <ImageBackground
-          source={require('@/assets/home/al-husna-background.png')}
+          source={require('@/assets/home/al-husna-track-background.png')}
           style={styles.trackImageContainer}
           imageStyle={styles.trackImageStyle}>
           <View style={styles.iconContainer}>
