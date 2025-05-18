@@ -175,7 +175,7 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
               <View style={styles.iconNameContainer}>
                 <View style={{flexDirection:'row',width:'100%',justifyContent:'space-between'}}>
                   <View style={{flexDirection: 'row'}}>
-                <currentPrayerData.icon width={scale(24)} height={scale(24)} fill="#FFFFFF" />
+                <currentPrayerData.icon width={scale(24)} height={scale(24)} fill="white" />
                 <H4Bold color="white" style={styles.prayerTitle}>{currentPrayerData.name}</H4Bold>
                 </View>
                 {/* Day Pill */}
@@ -203,7 +203,7 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
               <prayer.icon 
                 width={scale(24)} 
                 height={scale(24)} 
-                fill="#FFFFFF" 
+                fill="white" 
                 style={prayer.isCurrent ? styles.currentIcon : styles.icon} 
               />
               
@@ -256,10 +256,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 0.5,
     borderColor: ShadowColors['border-light'],
+    paddingBottom: 0,
   },
   gradientContainer: {
     flex: 1,
     padding: scale(16),
+    paddingBottom: 0,
   },
   header: {
     marginBottom: scale(16),
@@ -335,7 +337,7 @@ const styles = StyleSheet.create({
     width: scale(28),
     height: scale(28),
     borderRadius: scale(14),
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'white',
     position: 'absolute',
   },
 });
