@@ -8,56 +8,97 @@ import {
   Dimensions,
   Pressable,
   StatusBar,
+  ScrollView,
 } from 'react-native';
+import HomeHeader from '../components/HomeHeader';
+import Gallery from '../components/Gallery';
+import AudioPlayer from '../components/AudioPlayer';
+import IslamicEvents from '../components/IslamicEvents';
+import ModuleGrid from '../components/ModuleGrid';
+import FeelingToday from '../components/FeelingToday';
+import DayPrayerTime from '../components/DayPrayerTime';
+import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
+import { scale } from '@/theme/responsive';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 4; // 4 items per row
 
-type ToolItem = {
-  title: string;
-  key: string;
-  to?: string;
-};
 
-const TOOLS: ToolItem[] = [
-  // {key: 'duas', title: "Dua's", to: 'dua'},
-  {key: 'hadith', title: 'Hadith', to: 'hadith'},
-  {key: 'user', title: 'User', to: 'user'},
-  {key: 'tasbih', title: 'Tasbih', to: 'tasbih'},
-  {key: 'names', title: '99 Names', to: 'names'},
-  {key: 'calendar', title: 'Calendar', to: 'calendar'},
-  {key: 'qiblah', title: 'Qiblah', to: 'compass'},
-  // {key: 'gallery', title: 'Gallery'},
-];
 
 const IslamicTools: React.FC = () => {
   const navigation = useNavigation();
+  
+  const handleViewAllGallery = () => {
+    console.log('View all gallery pressed');
+    // Navigate to gallery view if needed
+  };
+  
+  const handlePlayPause = () => {
+    console.log('Play/pause audio pressed');
+    // Handle audio playback
+  };
+  
+  const handleExploreDuas = () => {
+    console.log('Explore Duas pressed');
+    // Navigate to Duas screen
+  };
+  
+  const handleEmojiPress = (day: string) => {
+    console.log(`Emoji for ${day} pressed`);
+    // Handle emoji selection
+  };
 
-  const renderItem = ({item}: {item: ToolItem}) => (
-    <Pressable
-      onPress={() => {
-        if (item.to) {
-          navigation.navigate(item.to);
-        }
-      }}
-      style={styles.item}>
-      <View style={styles.iconPlaceholder} />
-      <Text style={styles.title}>{item.title}</Text>
-    </Pressable>
-  );
+
 
   return (
-    <View style={styles.wrapper}>
-      <StatusBar barStyle={'dark-content'} />
-      <Text style={styles.heading}>Islamic Tools</Text>
-      <FlatList
-        data={TOOLS}
-        numColumns={3}
-        renderItem={renderItem}
-        keyExtractor={item => item.key}
-        scrollEnabled={false}
-        contentContainerStyle={styles.grid}
-      />
+    <View style={styles.container}>
+      <StatusBar barStyle={'light-content'} />
+      
+      {/* Custom Header */}
+      {/* <HomeHeader 
+        userName="Mohammad Arbaaz"
+        locationText="Get accurate namaz time"
+        notificationCount={1}
+      /> */}
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+
+        {/* Prayer Times Section */}
+        <DayPrayerTime
+          currentPrayer="asr"
+          timeLeft="1h 29m 3s left"
+          day="Sunday"
+        />
+
+        {/* Feeling Today Section */}
+        <FeelingToday 
+          onExploreDuasPress={handleExploreDuas}
+          onEmojiPress={handleEmojiPress}
+        />
+        
+        {/* Islamic Modules Grid */}
+        <ModuleGrid />
+      
+        {/* Islamic Events Section */}
+        <IslamicEvents initialMonth="Jun" />
+        
+        {/* Audio Player Section */}
+        <AudioPlayer 
+          trackName="Asma-ul-husna"
+          currentTime="0:20"
+          totalTime="3:12"
+          progress={0.1}
+          onPlayPause={handlePlayPause}
+        />
+        
+        {/* Gallery Section */}
+        <Gallery onViewAllPress={handleViewAllGallery} />
+        
+        <View style={styles.emptySpace} />
+
+        {/* Footer */}
+        <HadithImageFooter />
+      </ScrollView>
     </View>
   );
 };
@@ -65,37 +106,15 @@ const IslamicTools: React.FC = () => {
 export default IslamicTools;
 
 const styles = StyleSheet.create({
-  wrapper: {
-    backgroundColor: '#F4F4F4',
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    margin: 16,
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
   },
-  heading: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#000',
+  scrollView: {
+    flex: 1,
+    paddingTop: scale(16),
   },
-  grid: {
-    justifyContent: 'center',
-  },
-  item: {
-    width: ITEM_WIDTH,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  iconPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#E0D7F7', // light purple background
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 14,
-    textAlign: 'center',
-    color: '#000',
+  emptySpace: {
+    height: scale(250),
   },
 });

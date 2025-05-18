@@ -11,6 +11,9 @@ import CalendarNavigator from '@/modules/calendar/navigation/calendar.navigator'
 import TasbihNavigator from '@/modules/tasbih/navigation/tasbih.navigator';
 import HadithNavigator from '@/modules/hadith/navigation/hadith.navigator';
 
+// components
+import HomeHeader from '@/modules/home/components/HomeHeader';
+
 const ParentNavigator = createNativeStackNavigator({
   initialRouteName: 'home',
   screenOptions: {
@@ -21,6 +24,7 @@ const ParentNavigator = createNativeStackNavigator({
       screen: HomeNavigator,
       options: {
         headerShown: true,
+        header: () => <HomeHeader userName="Mohammad Arbaaz" locationText="Get accurate namaz time" notificationCount={1} />
       },
     },
     names: NamesNavigator,
