@@ -262,6 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: scale(16),
     paddingBottom: 0,
+    justifyContent: 'space-between',
   },
   header: {
     marginBottom: scale(16),
@@ -323,15 +324,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   arcContainer: {
-    flex: 1,
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: scale(20),
+    marginTop: 0,
+    width: '100%',
+    overflow: 'hidden',
   },
   arcImage: {
-    width: scale(280),
+    width: scale(340),
     height: scale(140),
+    marginLeft: scale(-1),
+    marginRight: scale(-1),
   },
   ball: {
     width: scale(28),
