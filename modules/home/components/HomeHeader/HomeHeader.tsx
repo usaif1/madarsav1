@@ -51,7 +51,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             />
             {/* Menu Icon positioned on the bottom right of the image */}
             <View style={styles.menuIconContainer}>
-              <NavProfileMenu width={6.875} height={6.875} />
+              <NavProfileMenu width={scale(12)} height={scale(12)} />
             </View>
           </TouchableOpacity>
           
@@ -66,7 +66,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
         
         {/* Notification Bell */}
         <View style={styles.bellContainer}>
-          <BellFill/>
+          <BellFill width={scale(24)} height={scale(24)} />
           {notificationCount > 0 && (
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationText}>{notificationCount}</Text>
@@ -113,13 +113,12 @@ const styles = StyleSheet.create({
     right: 0,
     width: scale(18),
     height: scale(18),
-    borderRadius: scale(500),
+    borderRadius: scale(9),
     borderWidth: 1,
     borderColor: ColorPrimary.primary200,
     backgroundColor: '#F9F6FF',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: scale(2),
   },
   userTextContainer: {
     justifyContent: 'center',
