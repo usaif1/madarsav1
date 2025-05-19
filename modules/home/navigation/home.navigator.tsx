@@ -6,10 +6,8 @@ import {View, Text} from 'react-native';
 
 // screens
 import {Home} from '../screens';
-
-// Placeholder screens
-const PlaceholderScreen = () => <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}><Text>Placeholder</Text></View>;
-
+import MaktabScreen from '@/modules/maktab/screens/MaktabScreen';
+import {AllNames} from '@/modules/names/screens';
 // components
 import CustomTabBar from '../components/CustomTabBar';
 
@@ -33,7 +31,7 @@ const HomeNavigator = () => {
       />
       <Tab.Screen 
         name="maktab" 
-        component={PlaceholderScreen} 
+        component={MaktabScreen} 
         options={{
           tabBarLabel: 'Maktab',
         }}
@@ -48,7 +46,7 @@ const HomeNavigator = () => {
       />
       <Tab.Screen 
         name="al-quran" 
-        component={PlaceholderScreen} 
+        component={AllNames} 
         options={{
           tabBarLabel: 'Al-Quran',
         }}
