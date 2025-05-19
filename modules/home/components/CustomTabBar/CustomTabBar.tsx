@@ -5,8 +5,11 @@ import {scale, verticalScale} from '@/theme/responsive';
 import {ColorPrimary} from '@/theme/lightColors';
 
 // Import SVG icons
-import HomeIcon from '@/assets/home/home-selected.svg';
+import HomeSelectedIcon from '@/assets/home/home-selected.svg';
+import HomeIcon from '@/assets/home/home.svg';
+import MaktabSelectedIcon from '@/assets/home/maktab-selected.svg'; // Using the same icon for now, will be replaced with maktab-selected.svg when available
 import MaktabIcon from '@/assets/home/maktab.svg';
+import AlQuranSelectedIcon from '@/assets/home/al-quran-selected.svg'; // Using the same icon for now, will be replaced with al-quran-selected.svg when available
 import AlQuranIcon from '@/assets/home/al-quran.svg';
 import { Body2Medium } from '@/components';
 
@@ -40,19 +43,25 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
           }
         };
 
-        // Determine which icon to show based on route name
+        // Determine which icon to show based on route name and focus state
         const getIcon = () => {
-          const color = isFocused ? ColorPrimary.primary500 : '#A3A3A3';
-          
           switch (route.name) {
             case 'home':
-              return <HomeIcon width={24} height={24} fill={color} />;
+              return isFocused 
+                ? <HomeSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                : <HomeIcon width={24} height={24} fill="#A3A3A3" />;
             case 'maktab':
-              return <MaktabIcon width={24} height={24} fill={color} />;
+              return isFocused 
+                ? <MaktabSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                : <MaktabIcon width={24} height={24} fill="#A3A3A3" />;
             case 'al-quran':
-              return <AlQuranIcon width={24} height={24} fill={color} />;
+              return isFocused 
+                ? <AlQuranSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                : <AlQuranIcon width={24} height={24} fill="#A3A3A3" />;
             default:
-              return <HomeIcon width={24} height={24} fill={color} />;
+              return isFocused 
+                ? <HomeSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                : <HomeIcon width={24} height={24} fill="#A3A3A3" />;
           }
         };
 
