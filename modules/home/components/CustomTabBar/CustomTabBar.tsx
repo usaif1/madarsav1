@@ -11,7 +11,7 @@ import MaktabSelectedIcon from '@/assets/home/maktab-selected.svg'; // Using the
 import MaktabIcon from '@/assets/home/maktab.svg';
 import AlQuranSelectedIcon from '@/assets/home/al-quran-selected.svg'; // Using the same icon for now, will be replaced with al-quran-selected.svg when available
 import AlQuranIcon from '@/assets/home/al-quran.svg';
-import { Body2Medium } from '@/components';
+import { Body2Medium, Body2Bold } from '@/components';
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({
   state,
@@ -48,19 +48,19 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
           switch (route.name) {
             case 'home':
               return isFocused 
-                ? <HomeSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                ? <HomeSelectedIcon width={24} height={24} fill="#8A57DC" />
                 : <HomeIcon width={24} height={24} fill="#A3A3A3" />;
             case 'maktab':
               return isFocused 
-                ? <MaktabSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                ? <MaktabSelectedIcon width={24} height={24} fill="#8A57DC" />
                 : <MaktabIcon width={24} height={24} fill="#A3A3A3" />;
             case 'al-quran':
               return isFocused 
-                ? <AlQuranSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                ? <AlQuranSelectedIcon width={24} height={24} fill="#8A57DC" />
                 : <AlQuranIcon width={24} height={24} fill="#A3A3A3" />;
             default:
               return isFocused 
-                ? <HomeSelectedIcon width={24} height={24} fill={ColorPrimary.primary500} />
+                ? <HomeSelectedIcon width={24} height={24} fill="#8A57DC" />
                 : <HomeIcon width={24} height={24} fill="#A3A3A3" />;
           }
         };
@@ -75,13 +75,15 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
             onPress={onPress}
             style={styles.tabButton}>
             {getIcon()}
-            <Body2Medium
-              style={[
-                styles.tabText,
-                {color: isFocused ? ColorPrimary.primary500 : '#A3A3A3'},
-              ]}>
-              {String(label)}
-            </Body2Medium>
+            {isFocused ? (
+              <Body2Bold style={[styles.tabText, {color: '#8A57DC'}]}>
+                {String(label)}
+              </Body2Bold>
+            ) : (
+              <Body2Medium style={[styles.tabText, {color: '#A3A3A3'}]}>
+                {String(label)}
+              </Body2Medium>
+            )}
           </TouchableOpacity>
         );
       })}
