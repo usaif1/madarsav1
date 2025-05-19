@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Text, Image, ImageBackground } from 'react-native';
-import { Body1Title2Bold, Body1Title2Medium } from '@/components';
-import { scale, verticalScale } from '@/theme/responsive';
+import { View, StyleSheet, Text, Image, ImageBackground, ScrollView } from 'react-native';
+import { Body1Title2Medium, Divider } from '@/components';
+import { scale } from '@/theme/responsive';
 import LinearGradient from 'react-native-linear-gradient';
 
 // Import assets
@@ -38,13 +38,60 @@ const MaktabScreen: React.FC = () => {
         </View>
       </ImageBackground>
       
+      {/* Spacing */}
+      <Divider height={scale(4)} />
+      
       {/* Content */}
-      <View style={styles.contentContainer}>
-        <Body1Title2Bold style={styles.title}>Maktab Module</Body1Title2Bold>
-        <Text style={styles.description}>
-          This is a placeholder for the Maktab module content.
-        </Text>
-      </View>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+        {/* Salam Image */}
+        <Image 
+          source={require('@/assets/maktab/maktab-salam.png')} 
+          style={styles.salamImage} 
+          resizeMode="contain"
+        />
+        
+        {/* Spacing */}
+        <Divider height={scale(4)} />
+        
+        {/* Welcome Text */}
+        <Body1Title2Medium style={styles.welcomeText}>
+          Find the perfect tutor on Maktab! Choose by course, availability, and gender. As the learning hub of the Madrasa App, Maktab offers two modes: Deen and Duniya, together building a balanced path to succeed in this world and earn rewards in the Hereafter.
+        </Body1Title2Medium>
+        
+        {/* Spacing */}
+        <Divider height={scale(16)} />
+        
+        {/* Learning Modes Container */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.learningModesContainer}
+        >
+          {/* Deen Learning Box */}
+          <View style={styles.learningBox}>
+            <View style={styles.textContainer}>
+              <View style={styles.innerTextContainer}>
+                <Text style={styles.learningHeading}>Deen Learning</Text>
+                <Text style={styles.learningDescription}>
+                  Learn the Quran, Hadith, Arabic, and Islamic Studies through live, one-on-one classes with qualified teachers. Build a strong foundation in Deen with structured, age-appropriate, and spiritually enriching lessons.
+                </Text>
+              </View>
+            </View>
+          </View>
+          
+          {/* Skill Learning Box */}
+          <View style={styles.learningBox}>
+            <View style={styles.textContainer}>
+              <View style={styles.innerTextContainer}>
+                <Text style={styles.learningHeading}>Skill Learning</Text>
+                <Text style={styles.learningDescription}>
+                  Explore practical, future-ready skills such as AI, Digital Marketing, Personal Finance, Investment, and Social Media management etc. — all taught with Islamic values at the core. Prepare to succeed in today's world without compromising your Deen.
+                </Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </ScrollView>
     </View>
   );
 };
@@ -92,21 +139,69 @@ const styles = StyleSheet.create({
     width: scale(50),
     height: scale(50),
   },
-  contentContainer: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  scrollViewContent: {
     alignItems: 'center',
-    padding: scale(20),
+    paddingHorizontal: scale(16),
+    paddingBottom: scale(20),
   },
-  title: {
-    fontSize: scale(24),
-    marginBottom: verticalScale(20),
-    textAlign: 'center',
+  salamImage: {
+    width: scale(262),
+    height: scale(70),
+    marginTop: scale(16),
   },
-  description: {
-    fontSize: scale(16),
+  welcomeText: {
+    width: scale(343),
+    fontSize: scale(14),
+    lineHeight: scale(14 * 1.45),
     textAlign: 'center',
     color: '#666666',
+  },
+  learningModesContainer: {
+    marginVertical: scale(20),
+    paddingLeft: scale(20),
+    gap: scale(16),
+  },
+  learningBox: {
+    width: scale(265),
+    height: scale(239),
+    borderRadius: scale(14),
+    borderWidth: 1,
+    borderColor: '#F3F3F3',
+    backgroundColor: '#FFFCF3',
+  },
+  textContainer: {
+    width: scale(265),
+    height: scale(189),
+    padding: scale(16),
+  },
+  innerTextContainer: {
+    width: scale(233),
+    height: scale(157),
+    gap: scale(4),
+  },
+  learningHeading: {
+    width: scale(233),
+    height: scale(21),
+    fontFamily: 'Poltawski Nowy',
+    fontWeight: '700',
+    fontSize: scale(16),
+    lineHeight: scale(16),
+    letterSpacing: 0,
+    color: '#101010',
+    marginBottom: scale(8),
+  },
+  learningDescription: {
+    width: scale(233),
+    height: scale(132),
+    fontFamily: 'Geist',
+    fontWeight: '400',
+    fontSize: scale(14),
+    lineHeight: scale(22),
+    letterSpacing: -0.01 * scale(14),
+    color: '#595959',
   },
 });
 
