@@ -145,7 +145,8 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
               month: eventMonth,
               title: holiday,
               islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
-              daysLeft: daysLeft,
+              // Only include daysLeft if it's a future event
+              daysLeft: daysLeft > 0 ? daysLeft : undefined,
               isToday: isHolidayToday,
               isTomorrow: isHolidayTomorrow
             };
@@ -188,7 +189,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
       
       <View style={styles.eventContent}>
         <View style={styles.titleContainer}>
-          <Body1Title2Medium style={styles.eventTitle}>{item.title}</Body1Title2Medium>
+          <Body1Title2Medium style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">{item.title}</Body1Title2Medium>
           {(item.daysLeft !== undefined) && (
             <View style={styles.daysLeft}>
               <View style={[styles.dotIcon, {
@@ -466,11 +467,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: scale(4),
+    width: '100%',
   },
   daysLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: scale(4),
+    flexShrink: 0,
   },
   dotIcon: {
     width: scale(8),
@@ -479,6 +482,8 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     color: '#101828', // neutral-11
+    flex: 1,
+    marginRight: scale(8),
   },
   todayText: {
     fontFamily: 'Geist',
