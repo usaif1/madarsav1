@@ -64,6 +64,8 @@ type RootStackParamList = {
   names: undefined;
   tasbih: undefined;
   compass: undefined;
+  dua: undefined;
+  maktab: undefined;
   // Add other routes as needed
 };
 
@@ -79,7 +81,11 @@ const ModuleGrid: React.FC = () => {
         navigation.navigate('hadith');
         break;
       case 'maktab':
-        // Redirect maktab to 99names
+        // Redirect maktab to its own module
+        navigation.navigate('maktab');
+        break;
+      case 'quran':
+        // Redirect Quran to 99names for now
         navigation.navigate('names');
         break;
       case 'tasbih':

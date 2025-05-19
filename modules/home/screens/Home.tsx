@@ -84,11 +84,7 @@ const IslamicTools: React.FC = () => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
         {/* Prayer Times Section */}
-        <DayPrayerTime
-          currentPrayer="asr"
-          timeLeft="1h 29m 3s left"
-          day="Sunday"
-        />
+        <DayPrayerTime/>
 
         {/* Feeling Today Section */}
         <FeelingToday 
