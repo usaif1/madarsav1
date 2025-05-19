@@ -108,7 +108,7 @@ interface DayPrayerTimeProps {}
 
 const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
   const { colors } = useThemeStore();
-  const { prayerTimes, currentPrayer, timeLeft, dayName, isLoading, error } = usePrayerTimes();
+  const { prayerTimes, currentPrayer, nextPrayer, timeLeft, dayName, isLoading, error } = usePrayerTimes();
   // If loading, show loading indicator
   if (isLoading) {
     return (
@@ -136,10 +136,10 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
   // Calculate ball position
   const ballPosition = calculateBallPosition(currentPrayer);
   
-  // Get current prayer data
-  const CurrentPrayerIcon = prayerIcons[currentPrayer];
-  const currentPrayerName = prayerTimes[currentPrayer]?.name || '';
-  const currentPrayerTime = prayerTimes[currentPrayer]?.time || '';
+  // Get next prayer data for the header
+  const NextPrayerIcon = prayerIcons[nextPrayer];
+  const nextPrayerName = prayerTimes[nextPrayer]?.name || '';
+  const nextPrayerTime = prayerTimes[nextPrayer]?.time || '';
   
   // Create array of all prayer times for display
   const allPrayerTimes = Object.keys(prayerTimes).map(key => ({
@@ -166,8 +166,8 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
               <View style={styles.iconNameContainer}>
                 <View style={{flexDirection:'row',width:'100%',justifyContent:'space-between'}}>
                   <View style={{flexDirection: 'row'}}>
-                {CurrentPrayerIcon && <CurrentPrayerIcon width={scale(24)} height={scale(24)} fill="white" />}
-                <H4Bold color="white" style={styles.prayerTitle}>{currentPrayerName}</H4Bold>
+                {NextPrayerIcon && <NextPrayerIcon width={scale(24)} height={scale(24)} fill="white" />}
+                <H4Bold color="white" style={styles.prayerTitle}>{nextPrayerName}</H4Bold>
                 </View>
                 {/* Day Pill */}
               <View style={styles.dayPill}>

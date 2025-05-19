@@ -18,6 +18,7 @@ export const usePrayerTimes = () => {
   const today = new Date();
   const { data, isLoading, error } = useCalendarPrayerTimes(today);
   const [currentPrayer, setCurrentPrayer] = useState<PrayerType>('fajr');
+  const [nextPrayer, setNextPrayer] = useState<PrayerType>('fajr');
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [dayName, setDayName] = useState<string>('');
   const [prayerTimes, setPrayerTimes] = useState<Record<string, PrayerTimeData>>({});
@@ -82,39 +83,35 @@ export const usePrayerTimes = () => {
       isha: convertTimeToMinutes(timings.Isha)
     };
     
-    // Determine current prayer
-    let nextPrayer: PrayerType = 'fajr';
-    let nextPrayerTime = prayerTimesInMinutes.fajr;
+    // Determine current prayer and next prayer, and calculate next prayer time
+    let nextPrayerTime = 0;
     
     if (currentTimeInMinutes < prayerTimesInMinutes.fajr) {
-      nextPrayer = 'fajr';
-      nextPrayerTime = prayerTimesInMinutes.fajr;
       setCurrentPrayer('isha'); // Before Fajr, the current prayer is Isha from yesterday
+      setNextPrayer('fajr');
+      nextPrayerTime = prayerTimesInMinutes.fajr;
     } else if (currentTimeInMinutes < prayerTimesInMinutes.dhuhr) {
-      nextPrayer = 'dhuhr';
-      nextPrayerTime = prayerTimesInMinutes.dhuhr;
       setCurrentPrayer('fajr');
+      setNextPrayer('dhuhr');
+      nextPrayerTime = prayerTimesInMinutes.dhuhr;
     } else if (currentTimeInMinutes < prayerTimesInMinutes.asr) {
-      nextPrayer = 'asr';
-      nextPrayerTime = prayerTimesInMinutes.asr;
       setCurrentPrayer('dhuhr');
+      setNextPrayer('asr');
+      nextPrayerTime = prayerTimesInMinutes.asr;
     } else if (currentTimeInMinutes < prayerTimesInMinutes.maghrib) {
-      nextPrayer = 'maghrib';
-      nextPrayerTime = prayerTimesInMinutes.maghrib;
       setCurrentPrayer('asr');
+      setNextPrayer('maghrib');
+      nextPrayerTime = prayerTimesInMinutes.maghrib;
     } else if (currentTimeInMinutes < prayerTimesInMinutes.isha) {
-      nextPrayer = 'isha';
-      nextPrayerTime = prayerTimesInMinutes.isha;
       setCurrentPrayer('maghrib');
+      setNextPrayer('isha');
+      nextPrayerTime = prayerTimesInMinutes.isha;
     } else {
       // After Isha, the next prayer is Fajr of tomorrow
-      nextPrayer = 'fajr';
-      nextPrayerTime = prayerTimesInMinutes.fajr + 24 * 60; // Add 24 hours
       setCurrentPrayer('isha');
+      setNextPrayer('fajr');
+      nextPrayerTime = prayerTimesInMinutes.fajr + 24 * 60; // Add 24 hours for tomorrow's Fajr
     }
-    
-    // Calculate time left
-    const timeLeftInMinutes = nextPrayerTime - currentTimeInMinutes;
     
     // Update time left every second
     const interval = setInterval(() => {
@@ -139,6 +136,7 @@ export const usePrayerTimes = () => {
   return {
     prayerTimes,
     currentPrayer,
+    nextPrayer,
     timeLeft,
     dayName,
     isLoading,
