@@ -28,7 +28,7 @@ const ResetCounterModal: React.FC<ResetCounterModalProps> = ({ visible, onClose,
             <Body1Title2Bold style={styles.resetAllBtnText}>Reset all counters</Body1Title2Bold>
           </TouchableOpacity>
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Body1Title2Bold style={styles.closeBtnText}>✕ Close</Body1Title2Bold>
+            <Body1Title2Bold style={styles.closeBtnText}>✕  Close</Body1Title2Bold>
           </TouchableOpacity>
         </View>
       </View>
@@ -103,13 +103,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   closeBtn: {
-    marginTop: 2,
+    marginTop: 6,
     alignItems: 'center',
     width: '100%',
+    paddingBottom: 14,
   },
   closeBtnText: {
     color: '#8A57DC',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     marginTop: 2,
   },
