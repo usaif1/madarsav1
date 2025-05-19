@@ -99,7 +99,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
           {hijriDate.day}
         </Body2Regular>
         {isMarked && (
-          <View style={[styles.dotWrapper, { top: verticalScale(12), right: 0 }]}> 
+          <View style={[styles.dotWrapper, { top: verticalScale(8), right: 4 }]}> 
             <View 
               style={[
                 styles.dot, 
