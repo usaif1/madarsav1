@@ -6,7 +6,7 @@ type Props = {
   color?: string;
 };
 
-const Divider: React.FC<Props> = ({height = 10,color='white'}) => {
+const Divider: React.FC<Props> = ({height = 10,color='transparent'}) => {
   return (
     <View style={{
       width: '100%',

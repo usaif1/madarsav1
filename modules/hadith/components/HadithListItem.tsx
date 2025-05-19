@@ -24,7 +24,8 @@ const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Left portion with image */}
       <View style={styles.leftPortion}>
-        <FastImage source={{ uri: hadith.image }} style={styles.image} />
+      {/* <FastImage source={{ uri: hadith.image }} style={styles.image} /> */}
+        <FastImage source={require('@/assets/hadith/BookImageBig.png')} style={styles.image} />
       </View>
       
       {/* Right portion with text */}
