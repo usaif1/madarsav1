@@ -39,7 +39,7 @@ const ResetCounterModal: React.FC<ResetCounterModalProps> = ({ visible, onClose,
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(10,10,10,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
