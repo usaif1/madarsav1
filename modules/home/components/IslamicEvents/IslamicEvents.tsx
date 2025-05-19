@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   FlatList,
   Modal,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium} from '@/components/Typography/Typography';
@@ -14,14 +15,24 @@ import LinearGradient from 'react-native-linear-gradient';
 import DownArrow from '@/assets/home/down-arrow.svg';
 import NoEvents from '@/assets/home/no-events.svg';
 import { ShadowColors } from '@/theme/shadows';
+import { useThemeStore } from '@/globalStore';
 
-// Mock data for months
+// Import Hijri Calendar API hooks
+import { 
+  useNextHijriHoliday, 
+  useSpecialDays, 
+  useHijriHolidaysByYear, 
+  useCurrentIslamicYear,
+  useHijriCalendar
+} from '@/modules/calendar/hooks/useHijriCalendar';
+
+// Month data
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ];
 
-// Mock data for events
+// Interface for Islamic events
 interface IslamicEvent {
   id: string;
   day: number;
@@ -33,39 +44,6 @@ interface IslamicEvent {
   isTomorrow?: boolean;
 }
 
-const EVENTS: Record<string, IslamicEvent[]> = {
-  'Jun': [
-    {
-      id: '1',
-      day: 5,
-      month: 'Jun',
-      title: 'Hajj 2025',
-      islamicDate: 'Thursday, 9 Dhul Hijjah 1446h',
-      daysLeft: 0,
-      isToday: true,
-    },
-    {
-      id: '2',
-      day: 6,
-      month: 'Jun',
-      title: 'Eid Ul Adha 2025',
-      islamicDate: 'Friday, 10 Dhul Hijjah 1446h',
-      daysLeft: 1,
-      isTomorrow: true,
-    },
-    {
-      id: '3',
-      day: 26,
-      month: 'Jun',
-      title: '1st Muharram 2025',
-      islamicDate: 'Thursday, 1st Muharram 1446h',
-      daysLeft: 20,
-    },
-  ],
-  'Apr': [],
-  // Add more months as needed
-};
-
 interface IslamicEventsProps {
   initialMonth?: string;
   onViewCalendarPress?: () => void;
@@ -75,10 +53,125 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
   initialMonth = MONTHS[new Date().getMonth()],
   onViewCalendarPress,
 }) => {
+  const { colors } = useThemeStore();
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   
-  const events = EVENTS[selectedMonth] || [];
+  // Get current date
+  const today = new Date();
+  const currentMonth = selectedMonth === MONTHS[today.getMonth()] ? today.getMonth() + 1 : MONTHS.indexOf(selectedMonth) + 1;
+  const currentYear = today.getFullYear();
+  
+  // Get current Islamic year
+  const { data: currentIslamicYearData, isLoading: isYearLoading } = useCurrentIslamicYear();
+  
+  // Get next Hijri holiday
+  const { data: nextHolidayData, isLoading: isNextHolidayLoading } = useNextHijriHoliday();
+  
+  // Get special days
+  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays();
+  
+  // Get current Islamic year for holidays
+  const currentIslamicYear = currentIslamicYearData?.data 
+    ? (typeof currentIslamicYearData.data === 'number' 
+      ? currentIslamicYearData.data 
+      : parseInt(currentIslamicYearData.data?.hijri?.year || '1445'))
+    : 1445;
+  
+  // Get Hijri holidays for the current Islamic year
+  const { data: holidaysData, isLoading: isHolidaysLoading } = useHijriHolidaysByYear(currentIslamicYear);
+  
+  // Get the Hijri calendar for the current display month
+  const { data: hijriCalendarData, isLoading: isHijriCalendarLoading } = 
+    useHijriCalendar(currentMonth, currentYear);
+  
+  // Show loading state
+  const isLoading = 
+    isYearLoading || 
+    isNextHolidayLoading || 
+    isSpecialDaysLoading || 
+    isHolidaysLoading ||
+    isHijriCalendarLoading;
+  
+  // Process the events data from the API
+  const events = useMemo(() => {
+    if (isLoading || !hijriCalendarData) return [];
+    
+    const eventsArray: IslamicEvent[] = [];
+    const todayDate = new Date();
+    
+    // Process the hijri calendar data to find events for the selected month
+    if (hijriCalendarData?.data && Array.isArray(hijriCalendarData.data)) {
+      // Process each day in the calendar
+      hijriCalendarData.data.forEach((dayData: any, index) => {
+        if (!dayData || !dayData.gregorian || !dayData.hijri) return;
+        
+        // Get the gregorian date
+        const gregorianDate = dayData.gregorian;
+        const hijriDate = dayData.hijri;
+        
+        // Check if this day has any holidays
+        if (hijriDate.holidays && hijriDate.holidays.length > 0) {
+          // Create a date object for this day
+          const holidayDate = new Date(
+            parseInt(gregorianDate.year),
+            gregorianDate.month.number - 1,
+            parseInt(gregorianDate.day)
+          );
+          
+          // Only include events for the selected month
+          const eventMonth = MONTHS[holidayDate.getMonth()];
+          if (eventMonth !== selectedMonth) return;
+          
+          // Calculate days left
+          const daysLeft = Math.ceil((holidayDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          // Check if this is today or tomorrow
+          const isHolidayToday = 
+            holidayDate.getDate() === todayDate.getDate() &&
+            holidayDate.getMonth() === todayDate.getMonth() &&
+            holidayDate.getFullYear() === todayDate.getFullYear();
+          
+          const isHolidayTomorrow = 
+            holidayDate.getDate() === todayDate.getDate() + 1 &&
+            holidayDate.getMonth() === todayDate.getMonth() &&
+            holidayDate.getFullYear() === todayDate.getFullYear();
+          
+          // Add each holiday for this day
+          hijriDate.holidays.forEach((holiday: string, holidayIndex: number) => {
+            const eventItem: IslamicEvent = {
+              id: `calendar-holiday-${index}-${holidayIndex}`,
+              day: parseInt(gregorianDate.day),
+              month: eventMonth,
+              title: holiday,
+              islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
+              daysLeft: daysLeft,
+              isToday: isHolidayToday,
+              isTomorrow: isHolidayTomorrow
+            };
+            
+            eventsArray.push(eventItem);
+          });
+        }
+      });
+    }
+    
+    // Sort events by date
+    eventsArray.sort((a, b) => {
+      if (a.isToday && !b.isToday) return -1;
+      if (!a.isToday && b.isToday) return 1;
+      if (a.isTomorrow && !b.isTomorrow) return -1;
+      if (!a.isTomorrow && b.isTomorrow) return 1;
+      return a.day - b.day;
+    });
+    
+    return eventsArray;
+  }, [
+    isLoading,
+    hijriCalendarData,
+    selectedMonth
+  ]);
+  
   const hasEvents = events.length > 0;
 
   const handleMonthSelect = (month: string) => {
@@ -118,6 +211,82 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
     </View>
   );
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <TouchableOpacity 
+        style={styles.container}
+        onPress={onViewCalendarPress}
+        activeOpacity={0.9}
+      >
+        <LinearGradient
+          colors={['#FDA29B', '#8A57DC']}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+          style={styles.gradientContainer}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Body1Title2Bold color="white">Islamic events</Body1Title2Bold>
+            
+            <TouchableOpacity 
+              style={styles.monthPill}
+              onPress={() => setShowMonthPicker(true)}
+            >
+              <Body1Title2Medium color="white">{selectedMonth}</Body1Title2Medium>
+              <DownArrow width={scale(12)} height={scale(12)} fill="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+          
+          {/* Content */}
+          <View style={styles.contentContainer}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary.primary500} />
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Month Picker Modal */}
+        <Modal
+          visible={showMonthPicker}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowMonthPicker(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setShowMonthPicker(false)}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.monthPickerContainer}>
+                  <FlatList
+                    data={MONTHS}
+                    keyExtractor={item => item}
+                    numColumns={4}
+                    renderItem={({item}) => (
+                      <TouchableOpacity 
+                        style={[
+                          styles.monthItem,
+                          selectedMonth === item && styles.selectedMonthItem
+                        ]}
+                        onPress={() => handleMonthSelect(item)}
+                      >
+                        <Text style={[
+                          styles.monthItemText,
+                          selectedMonth === item && styles.selectedMonthItemText
+                        ]}>
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    contentContainerStyle={styles.monthsList}
+                  />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      </TouchableOpacity>
+    );
+  }
+  
   return (
     <TouchableOpacity 
       style={styles.container}
@@ -354,6 +523,11 @@ const styles = StyleSheet.create({
     lineHeight: scale(20.3),
     textAlign: 'center',
     color: '#919091',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalOverlay: {
     flex: 1,

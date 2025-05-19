@@ -101,7 +101,7 @@ const IslamicTools: React.FC = () => {
       
         {/* Islamic Events Section */}
         <IslamicEvents 
-          initialMonth="Jun" 
+          initialMonth={new Date().toLocaleString('en-US', { month: 'short' })} 
           onViewCalendarPress={handleViewCalendar}
         />
         
