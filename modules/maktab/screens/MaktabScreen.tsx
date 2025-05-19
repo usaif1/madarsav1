@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, Text, Image, ImageBackground, ScrollView } from 'react-native';
-import { Body1Title2Medium, Divider } from '@/components';
+import { View, StyleSheet, Text, Image, ImageBackground, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { Body1Title2Medium, Body1Title2Bold, Divider } from '@/components';
 import { scale } from '@/theme/responsive';
 import LinearGradient from 'react-native-linear-gradient';
+import { ColorPrimary } from '@/theme/lightColors';
 
 // Import assets
 import MaktabTopDesign from '@/assets/maktab/maktab-top-design.svg';
@@ -91,6 +92,19 @@ const MaktabScreen: React.FC = () => {
             </View>
           </View>
         </ScrollView>
+        
+        {/* Spacing */}
+        <Divider height={scale(20)} />
+        
+        {/* Pre-Register Button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={styles.registerButton}
+            onPress={() => Linking.openURL('https://docs.google.com/forms/d/e/1FAIpQLSdi5S4j8hRDsBSzsCe2eSMy0fXkp2yUzUJBxFZqHDWGAPzxkA/viewform')}
+          >
+            <Body1Title2Bold style={styles.buttonText}>Pre-Register as a Tutor</Body1Title2Bold>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -202,6 +216,31 @@ const styles = StyleSheet.create({
     lineHeight: scale(22),
     letterSpacing: -0.01 * scale(14),
     color: '#595959',
+  },
+  buttonContainer: {
+    width: scale(375),
+    height: scale(36),
+    paddingHorizontal: scale(20),
+    marginBottom: scale(20),
+  },
+  registerButton: {
+    width: scale(335),
+    height: scale(36),
+    paddingVertical: scale(4),
+    paddingHorizontal: scale(16),
+    borderRadius: scale(60),
+    backgroundColor: ColorPrimary.primary600,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    width: scale(158),
+    height: scale(20),
+    fontSize: scale(12),
+    lineHeight: scale(14 * 1.45),
+    letterSpacing: 0,
+    textAlign: 'center',
+    color: '#FFFFFF',
   },
 });
 
