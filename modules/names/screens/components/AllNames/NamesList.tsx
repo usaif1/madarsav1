@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Text } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
@@ -9,11 +9,24 @@ import Share from '@/assets/share-light.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
 import Close from '@/assets/close.svg';
 
+// hooks
+import { useNameAudio } from '../../../hooks/useNameAudio';
+
+// local data
+import {allNames} from '../../../data/allNames';
+
 // store
 import { useThemeStore } from '@/globalStore';
 
-// API hooks
-import { useAllNames, transformNamesData, TransformedName } from '../../../hooks/useNames';
+// Define the Name interface based on our local data
+interface Name {
+  id: number;
+  classicalArabic: string;
+  ipa: string;
+  translation: string;
+  reference: string;
+  gTypeb: string;
+}
 
 const width = Dimensions.get('screen').width;
 const CARD_SIZE = Math.min(width, 375);
@@ -24,51 +37,48 @@ interface NamesListProps {
 
 const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const { colors } = useThemeStore();
-  const { data, isLoading, error, refetch } = useAllNames();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
-
-  // Transform the API data to match our component's expected format
-  const namesData = data ? transformNamesData(data) : [];
   
+  // Audio playback state and functions
+  const { isPlaying, isLoading: isAudioLoading, error: audioError, playAudio, stopAudio } = useNameAudio();
+  
+  // Clean up audio when component unmounts
+  useEffect(() => {
+    return () => {
+      stopAudio();
+    };
+  }, []);
+  
+  // Handle audio playback
+  const handleAudioPlayback = () => {
+    if (isPlaying) {
+      stopAudio();
+    } else {
+      // Use the name ID for audio playback (1-99)
+      playAudio(allNames[currentItemIndex].id);
+    }
+  };
+
   // Filter names based on search query
   const filteredNames = searchQuery.trim() === '' 
-    ? namesData 
-    : namesData.filter(name => {
+    ? allNames 
+    : allNames.filter(name => {
         const searchLower = searchQuery.toLowerCase();
         return (
-          name.name.toLowerCase().includes(searchLower) || 
-          name.meaning.toLowerCase().includes(searchLower) ||
-          name.native.toLowerCase().includes(searchLower)
+          name.ipa.toLowerCase().includes(searchLower) || 
+          name.translation.toLowerCase().includes(searchLower) ||
+          name.classicalArabic.includes(searchLower)
         );
       });
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8A57DC" />
-        <Text style={styles.loadingText}>Loading names...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error loading names: {error.message}</Text>
-        <Pressable style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
-      </View>
-    );
-  }
 
   return (
     <>
       <FlatList
         data={filteredNames}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         renderItem={({ index, item }) => (
           <NameCard
             index={index}
@@ -129,9 +139,15 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               <Body1Title2Bold color="white">Close</Body1Title2Bold>
             </Pressable>
 
-            <Pressable style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}>
-              <RightTriangle />
-              <Body1Title2Bold color="white">Listen</Body1Title2Bold>
+            <Pressable 
+              style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}
+              onPress={handleAudioPlayback}
+            >
+              {isPlaying ? <RightTriangle /> : <RightTriangle />}
+              <Body1Title2Bold color="white">
+                {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
+              </Body1Title2Bold>
+              {audioError && <Text style={styles.audioErrorText}>Error playing audio</Text>}
             </Pressable>
 
             <Pressable
@@ -150,7 +166,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
 };
 
 interface NameCardProps {
-  item: TransformedName;
+  item: Name;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   index: number;
   setCurrentItemIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -178,8 +194,8 @@ const NameCard: React.FC<NameCardProps> = ({
 
       {/* Name & meaning */}
       <View style={styles.textContainer}>
-        <Title3Bold>{item.name}</Title3Bold>
-        <Body2Medium color="sub-heading">{item.meaning || 'The name of Allah'}</Body2Medium>
+        <Title3Bold>{item.ipa}</Title3Bold>
+        <Body2Medium color="sub-heading">{item.translation}</Body2Medium>
       </View>
 
       {/* Index badge */}
@@ -274,6 +290,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#737373',
     textAlign: 'center',
+  },
+  audioErrorText: {
+    color: '#FF4D4F', 
+    fontSize: 10, 
+    marginTop: 2,
   },
 });
 

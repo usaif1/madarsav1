@@ -10,13 +10,18 @@ import MaktabTopDesign from '@/assets/maktab/maktab-top-design.svg';
 
 const MaktabScreen: React.FC = () => {
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.containerContent}>
       {/* Top header with background image */}
       <ImageBackground 
         source={require('@/assets/maktab/maktab-header-image.png')} 
         style={styles.headerImage}
-        imageStyle={{ opacity: 0.5 }}
+        imageStyle={{ opacity: 0.8 }}
       >
+        {/* Shadow overlay */}
+        <Image
+          source={require('@/assets/maktab/maktab-header-image-shadow.png')}
+          style={styles.headerShadow}
+        />
         {/* SVG Top Design - rotated 90 degrees */}
         <View style={styles.topDesignContainer}>
           <MaktabTopDesign width={scale(190)} height={scale(95)} style={styles.topDesign} />
@@ -41,10 +46,8 @@ const MaktabScreen: React.FC = () => {
       
       {/* Spacing */}
       <Divider height={scale(4)} />
-      
-      {/* Content */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-        {/* Salam Image */}
+        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          {/* Salam Image */}
         <Image 
           source={require('@/assets/maktab/maktab-salam.png')} 
           style={styles.salamImage} 
@@ -58,16 +61,14 @@ const MaktabScreen: React.FC = () => {
         <Body1Title2Medium style={styles.welcomeText}>
           Find the perfect tutor on Maktab! Choose by course, availability, and gender. As the learning hub of the Madrasa App, Maktab offers two modes: Deen and Duniya, together building a balanced path to succeed in this world and earn rewards in the Hereafter.
         </Body1Title2Medium>
+        </View>
         
         {/* Spacing */}
         <Divider height={scale(16)} />
         
-        {/* Learning Modes Container */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.learningModesContainer}
-        >
+
+
+          <View style={styles.learningModesContainer}>
           {/* Deen Learning Box */}
           <View style={styles.learningBox}>
             <View style={styles.textContainer}>
@@ -91,7 +92,7 @@ const MaktabScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        </ScrollView>
+        </View>
         
         {/* Spacing */}
         <Divider height={scale(20)} />
@@ -105,8 +106,7 @@ const MaktabScreen: React.FC = () => {
             <Body1Title2Bold style={styles.buttonText}>Pre-Register as a Tutor</Body1Title2Bold>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -115,12 +115,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  containerContent: {
+    flexGrow: 1,
+  },
   headerImage: {
     width: '100%',
     height: scale(164),
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+  },
+  headerShadow: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    opacity: 0.5,
   },
   topDesignContainer: {
     width: '100%',
@@ -153,14 +162,6 @@ const styles = StyleSheet.create({
     width: scale(50),
     height: scale(50),
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    alignItems: 'center',
-    paddingHorizontal: scale(16),
-    paddingBottom: scale(20),
-  },
   salamImage: {
     width: scale(262),
     height: scale(70),
@@ -177,6 +178,7 @@ const styles = StyleSheet.create({
     marginVertical: scale(20),
     paddingLeft: scale(20),
     gap: scale(16),
+    flexDirection: 'row',
   },
   learningBox: {
     width: scale(265),
