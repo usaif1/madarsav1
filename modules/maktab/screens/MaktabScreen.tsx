@@ -34,7 +34,7 @@ const MaktabScreen: React.FC = () => {
           
           {/* SVG Top Design - centered and larger */}
           <View style={styles.topDesignContainer}>
-            <MaktabTopDesign width={scale(380)} height={scale(190)} style={styles.topDesign} />
+            <MaktabTopDesign width={scale(300)} height={scale(150)} style={styles.topDesign} />
           </View>
         
           {/* Circle with calendar icon */}
@@ -79,31 +79,36 @@ const MaktabScreen: React.FC = () => {
         
 
 
-          <View style={styles.learningModesContainer}>
-          {/* Deen Learning Box */}
-          <View style={styles.learningBox}>
-            <View style={styles.textContainer}>
-              <View style={styles.innerTextContainer}>
-                <Text style={styles.learningHeading}>Deen Learning</Text>
-                <Text style={styles.learningDescription}>
-                  Learn the Quran, Hadith, Arabic, and Islamic Studies through live, one-on-one classes with qualified teachers. Build a strong foundation in Deen with structured, age-appropriate, and spiritually enriching lessons.
-                </Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.learningModesScrollContent}
+            style={styles.learningModesOuterContainer} 
+          >
+            {/* Deen Learning Box */}
+            <View style={styles.learningBox}>
+              <View style={styles.textContainer}>
+                <View style={styles.innerTextContainer}>
+                  <Text style={styles.learningHeading}>Deen Learning</Text>
+                  <Text style={styles.learningDescription}>
+                    Learn the Quran, Hadith, Arabic, and Islamic Studies through live, one-on-one classes with qualified teachers. Build a strong foundation in Deen with structured, age-appropriate, and spiritually enriching lessons.
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-          
-          {/* Skill Learning Box */}
-          <View style={styles.learningBox}>
-            <View style={styles.textContainer}>
-              <View style={styles.innerTextContainer}>
-                <Text style={styles.learningHeading}>Skill Learning</Text>
-                <Text style={styles.learningDescription}>
-                  Explore practical, future-ready skills such as AI, Digital Marketing, Personal Finance, Investment, and Social Media management etc. — all taught with Islamic values at the core. Prepare to succeed in today's world without compromising your Deen.
-                </Text>
+            
+            {/* Skill Learning Box */}
+            <View style={styles.learningBox}>
+              <View style={styles.textContainer}>
+                <View style={styles.innerTextContainer}>
+                  <Text style={styles.learningHeading}>Skill Learning</Text>
+                  <Text style={styles.learningDescription}>
+                    Explore practical, future-ready skills such as AI, Digital Marketing, Personal Finance, Investment, and Social Media management etc. — all taught with Islamic values at the core. Prepare to succeed in today's world without compromising your Deen.
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        </View>
+          </ScrollView>
         
         {/* Spacing */}
         <Divider height={scale(20)} />
@@ -167,9 +172,9 @@ const styles = StyleSheet.create({
   },
   topDesign: {
     position: 'absolute',
-    top: -scale(95),
+    top: -scale(75),
     left: '50%',
-    transform: [{ translateX: -scale(190) }],
+    transform: [{ translateX: -scale(150) }],
   },
   circleContainer: {
     alignItems: 'center',
@@ -202,11 +207,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666666',
   },
-  learningModesContainer: {
-    marginVertical: scale(20),
+  learningModesOuterContainer: { 
+    marginVertical: scale(20), 
+    height: scale(260), 
+  },
+  learningModesScrollContent: { 
     paddingLeft: scale(20),
+    paddingRight: scale(20), 
     gap: scale(16),
-    flexDirection: 'row',
+    alignItems: 'flex-start', 
   },
   learningBox: {
     width: scale(265),
