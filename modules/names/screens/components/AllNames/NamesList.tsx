@@ -8,7 +8,7 @@ import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
 import Share from '@/assets/share-light.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
 import Close from '@/assets/close.svg';
-
+import Pause from '@/assets/home/pause.svg';
 // hooks
 import { useNameAudio } from '../../../hooks/useNameAudio';
 
@@ -121,11 +121,26 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             </Body1Title2Bold>
           </View>
 
-          <FastImage
-            source={require('@/assets/names/name_xxl.png')}
-            style={stylesModal.image}
-            resizeMode={FastImage.resizeMode.cover}
-          />
+          <View style={stylesModal.imageContainer}>
+            <FastImage
+              source={require('@/assets/names/name-modal-image.jpg')}
+              style={stylesModal.image}
+              resizeMode={FastImage.resizeMode.cover}
+            />
+            
+            {/* Dynamic Text Overlay */}
+            <View style={stylesModal.textOverlay}>
+              <Text style={stylesModal.arabicText}>
+                {filteredNames[currentItemIndex].classicalArabic}
+              </Text>
+              <Text style={stylesModal.nameText}>
+                {filteredNames[currentItemIndex].ipa}
+              </Text>
+              <Text style={stylesModal.meaningText}>
+                {filteredNames[currentItemIndex].translation}
+              </Text>
+            </View>
+          </View>
 
           {/* Action Buttons */}
           <View style={stylesModal.actions}>
@@ -143,7 +158,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}
               onPress={handleAudioPlayback}
             >
-              {isPlaying ? <RightTriangle /> : <RightTriangle />}
+              {isPlaying ? <Pause /> : <RightTriangle />}
               <Body1Title2Bold color="white">
                 {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
               </Body1Title2Bold>
@@ -185,12 +200,17 @@ const NameCard: React.FC<NameCardProps> = ({
         setIsVisible(true);
       }}
       style={[styles.item, { borderTopWidth: index === 0 ? 1 : 0 }]}>
-      {/* ▶️ The FastImage avatar */}
-      <FastImage
-        source={require('@/assets/names/ar_rahman_large.png')}
-        style={styles.avatar}
-        resizeMode={FastImage.resizeMode.contain}
-      />
+      {/* Background image with text overlay */}
+      <View style={styles.avatarContainer}>
+        <FastImage
+          source={require('@/assets/names/name-image.jpg')}
+          style={styles.avatar}
+          resizeMode={FastImage.resizeMode.cover}
+        />
+        
+        {/* Arabic text overlay */}
+        <Text style={styles.avatarArabicText}>{item.classicalArabic}</Text>
+      </View>
 
       {/* Name & meaning */}
       <View style={styles.textContainer}>
@@ -218,11 +238,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
   },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    marginRight: 12,
+    position: 'relative',
+  },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 8,
-    marginRight: 12,
+  },
+  avatarArabicText: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -20 }, { translateY: -12 }],
+    color: '#8A57DC',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   textContainer: {
     flex: 1,
@@ -310,10 +345,47 @@ const stylesModal = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  imageContainer: {
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    borderRadius: 12,
+    position: 'relative',
+    overflow: 'hidden',
+  },
   image: {
     width: CARD_SIZE,
     height: CARD_SIZE, // square
     borderRadius: 12,
+  },
+  textOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  arabicText: {
+    color: '#8A57DC',
+    fontSize: 40,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  nameText: {
+    color: '#8A57DC',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  meaningText: {
+    color: '#666666',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   /* ---------- actions row ---------- */
   actions: {

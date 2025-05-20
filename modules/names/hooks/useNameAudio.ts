@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Linking, Platform } from 'react-native';
+import Sound from 'react-native-sound';
+import { Linking } from 'react-native';
 
-// Since we're not using the external Sound library, we'll implement a simpler version
-// that works with the fetch API
+// Enable playback in silent mode
+Sound.setCategory('Playback');
 
 interface UseNameAudioReturn {
   isPlaying: boolean;
@@ -13,65 +14,86 @@ interface UseNameAudioReturn {
 }
 
 export const useNameAudio = (): UseNameAudioReturn => {
+  const [sound, setSound] = useState<Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentNameNumber, setCurrentNameNumber] = useState<number | null>(null);
 
-  // In a real implementation, we would use a proper audio library like react-native-sound
-  // or react-native-track-player. For now, we'll simulate the audio playback behavior.
-  
-  // Simulate audio playback with a timer
+  // Clean up sound when component unmounts
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    
-    if (isPlaying) {
-      // Simulate audio duration (5 seconds)
-      timer = setTimeout(() => {
-        setIsPlaying(false);
-      }, 5000);
-    }
-    
     return () => {
-      if (timer) {
-        clearTimeout(timer);
+      if (sound) {
+        sound.stop();
+        sound.release();
       }
     };
-  }, [isPlaying]);
+  }, [sound]);
 
   const playAudio = (nameNumber: number) => {
     // Format the number with leading zeros (e.g., 1 -> "01")
     const formattedNumber = nameNumber.toString().padStart(2, '0');
     const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
     
-    // If already playing, stop first
-    if (isPlaying) {
-      stopAudio();
+    // Stop any currently playing audio
+    if (sound) {
+      sound.stop();
+      sound.release();
+      setSound(null);
     }
     
     setIsLoading(true);
     setError(null);
-    setCurrentNameNumber(nameNumber);
     
-    // Simulate loading delay
-    setTimeout(() => {
+    console.log(`Loading audio for name #${nameNumber}: ${audioUrl}`);
+    
+    try {
+      // For remote URLs, we need to specify the correct parameters
+      // The second parameter should be an empty string for remote URLs
+      const newSound = new Sound(audioUrl, '', (error) => {
+        setIsLoading(false);
+        
+        if (error) {
+          console.error('Failed to load the sound', error);
+          setError(`Failed to load the sound: ${error.message}`);
+          
+          // Fallback: open in browser if loading fails in the app
+          Linking.openURL(audioUrl).catch(err => {
+            console.error('Failed to open URL', err);
+          });
+          
+          return;
+        }
+        
+        console.log('Sound loaded successfully');
+        setSound(newSound);
+        setIsPlaying(true);
+        
+        // Play the sound
+        newSound.play((success) => {
+          console.log('Sound playback finished', success);
+          if (!success) {
+            setError('Playback failed due to audio decoding errors');
+          }
+          setIsPlaying(false);
+        });
+      });
+    } catch (err) {
+      console.error('Error creating Sound object', err);
       setIsLoading(false);
-      setIsPlaying(true);
+      setError(`Error initializing audio: ${err instanceof Error ? err.message : String(err)}`);
       
-      // In a real implementation, we would play the audio here
-      console.log(`Playing audio for name #${nameNumber}: ${audioUrl}`);
-      
-      // For development/testing, we could open the URL in the browser
-      // Linking.openURL(audioUrl).catch(err => {
-      //   setError(`Failed to open audio URL: ${err.message}`);
-      //   setIsPlaying(false);
-      // });
-    }, 500);
+      // Fallback: open in browser
+      Linking.openURL(audioUrl).catch(linkErr => {
+        console.error('Failed to open URL', linkErr);
+      });
+    }
   };
 
   const stopAudio = () => {
-    setIsPlaying(false);
-    // In a real implementation, we would stop the audio here
+    if (sound) {
+      sound.stop();
+      setIsPlaying(false);
+    }
   };
 
   return {
