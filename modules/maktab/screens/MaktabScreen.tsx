@@ -15,7 +15,7 @@ const MaktabScreen: React.FC = () => {
       <ImageBackground 
         source={require('@/assets/maktab/maktab-header-image.png')} 
         style={styles.headerImage}
-        imageStyle={{ opacity: 0.8 }}
+        imageStyle={{ opacity: 0.1 }}
       >
         {/* Shadow overlay */}
         <Image
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
   topDesignContainer: {
     width: '100%',
-    height: scale(95),
+    height: scale(200),
     overflow: 'hidden',
     flex: 1,
     justifyContent: 'center',

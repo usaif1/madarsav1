@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Sound from 'react-native-sound';
-import { Linking } from 'react-native';
+import { Platform } from 'react-native';
 
 // Enable playback in silent mode
 Sound.setCategory('Playback');
@@ -18,6 +18,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string>('');
 
   // Clean up sound when component unmounts
   useEffect(() => {
@@ -33,6 +34,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
     // Format the number with leading zeros (e.g., 1 -> "01")
     const formattedNumber = nameNumber.toString().padStart(2, '0');
     const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
+    setCurrentAudioUrl(audioUrl);
     
     // Stop any currently playing audio
     if (sound) {
@@ -46,21 +48,25 @@ export const useNameAudio = (): UseNameAudioReturn => {
     
     console.log(`Loading audio for name #${nameNumber}: ${audioUrl}`);
     
+    // Configure sound for different platforms
+    Sound.setCategory('Playback', true); // Allow mixing with other audio
+    
+    // For iOS, we need to use the streaming option for remote URLs
+    const basePath = Platform.OS === 'ios' ? '' : '';
+    const initPath = Platform.OS === 'ios' ? audioUrl : audioUrl;
+    
     try {
-      // For remote URLs, we need to specify the correct parameters
-      // The second parameter should be an empty string for remote URLs
-      const newSound = new Sound(audioUrl, '', (error) => {
+      // Create a new Sound instance
+      // For remote URLs on iOS, use the streaming option
+      const newSound = new Sound(initPath, basePath, (error) => {
         setIsLoading(false);
         
         if (error) {
           console.error('Failed to load the sound', error);
           setError(`Failed to load the sound: ${error.message}`);
           
-          // Fallback: open in browser if loading fails in the app
-          Linking.openURL(audioUrl).catch(err => {
-            console.error('Failed to open URL', err);
-          });
-          
+          // Try again with a different approach instead of opening browser
+          retryLoadingWithAlternativeMethod(audioUrl, nameNumber);
           return;
         }
         
@@ -82,11 +88,38 @@ export const useNameAudio = (): UseNameAudioReturn => {
       setIsLoading(false);
       setError(`Error initializing audio: ${err instanceof Error ? err.message : String(err)}`);
       
-      // Fallback: open in browser
-      Linking.openURL(audioUrl).catch(linkErr => {
-        console.error('Failed to open URL', linkErr);
-      });
+      // Try again with a different approach instead of opening browser
+      retryLoadingWithAlternativeMethod(audioUrl, nameNumber);
     }
+  };
+  
+  // Alternative method to load audio if the first attempt fails
+  const retryLoadingWithAlternativeMethod = (audioUrl: string, nameNumber: number) => {
+    console.log('Retrying with alternative method...');
+    setIsLoading(true);
+    
+    // Try with a different configuration
+    const newSound = new Sound(audioUrl, Sound.MAIN_BUNDLE, (error) => {
+      setIsLoading(false);
+      
+      if (error) {
+        console.error('Alternative method also failed', error);
+        setError(`Could not play audio. Please check your internet connection.`);
+        return;
+      }
+      
+      console.log('Alternative method succeeded');
+      setSound(newSound);
+      setIsPlaying(true);
+      
+      newSound.play((success) => {
+        if (!success) {
+          setError('Playback failed');
+        }
+        setIsPlaying(false);
+      });
+    });
+  
   };
 
   const stopAudio = () => {
