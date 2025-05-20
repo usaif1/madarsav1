@@ -12,37 +12,48 @@ const MaktabScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.containerContent}>
       {/* Top header with background image */}
-      <ImageBackground 
-        source={require('@/assets/maktab/maktab-header-image.png')} 
-        style={styles.headerImage}
-        imageStyle={{ opacity: 0.1 }}
-      >
-        {/* Shadow overlay */}
-        <Image
-          source={require('@/assets/maktab/maktab-header-image-shadow.png')}
-          style={styles.headerShadow}
-        />
-        {/* SVG Top Design - rotated 90 degrees */}
-        <View style={styles.topDesignContainer}>
-          <MaktabTopDesign width={scale(190)} height={scale(95)} style={styles.topDesign} />
-        </View>
-        
-        {/* Circle with calendar icon */}
-        <View style={styles.circleContainer}>
+      <View style={styles.headerContainer}>
+        <ImageBackground 
+          source={require('@/assets/maktab/maktab-header-image.png')} 
+          style={styles.headerImage}
+          imageStyle={{ opacity: 0.2 }}
+        >
+          {/* Gradient overlay for smooth transition */}
           <LinearGradient
-            colors={['#FFFFFF', '#F2DEFF']}
+            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
+            style={styles.gradientOverlay}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.circle}
-          >
-            <Image 
-              source={require('@/assets/maktab/maktab-calendar.png')} 
-              style={styles.calendarIcon} 
-              resizeMode="contain"
-            />
-          </LinearGradient>
-        </View>
-      </ImageBackground>
+            end={{ x: 0, y: 1 }}
+          />
+          
+          {/* Shadow overlay */}
+          <Image
+            source={require('@/assets/maktab/maktab-header-image-shadow.png')}
+            style={styles.headerShadow}
+          />
+          
+          {/* SVG Top Design - centered and larger */}
+          <View style={styles.topDesignContainer}>
+            <MaktabTopDesign width={scale(380)} height={scale(190)} style={styles.topDesign} />
+          </View>
+        
+          {/* Circle with calendar icon */}
+          <View style={styles.circleContainer}>
+            <LinearGradient
+              colors={['#FFFFFF', '#F2DEFF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.circle}
+            >
+              <Image 
+                source={require('@/assets/maktab/maktab-calendar.png')} 
+                style={styles.calendarIcon} 
+                resizeMode="contain"
+              />
+            </LinearGradient>
+          </View>
+        </ImageBackground>
+      </View>
       
       {/* Spacing */}
       <Divider height={scale(4)} />
@@ -118,6 +129,10 @@ const styles = StyleSheet.create({
   containerContent: {
     flexGrow: 1,
   },
+  headerContainer: {
+    position: 'relative',
+    width: '100%',
+  },
   headerImage: {
     width: '100%',
     height: scale(164),
@@ -125,24 +140,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
   },
+  gradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: scale(32),
+    zIndex: 2,
+  },
   headerShadow: {
     position: 'absolute',
     width: '100%',
     height: '100%',
     opacity: 0.5,
+    zIndex: 1,
   },
   topDesignContainer: {
     width: '100%',
-    height: scale(200),
+    height: scale(90),
     overflow: 'hidden',
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 3,
   },
   topDesign: {
     position: 'absolute',
-    top: -scale(47.5),
-    left: -scale(47.5),
+    top: -scale(95),
+    left: '50%',
+    transform: [{ translateX: -scale(190) }],
   },
   circleContainer: {
     alignItems: 'center',
@@ -157,6 +184,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    zIndex: 4,
   },
   calendarIcon: {
     width: scale(50),
