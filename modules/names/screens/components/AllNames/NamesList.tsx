@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Text } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
@@ -9,8 +9,11 @@ import Share from '@/assets/share-light.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
 import Close from '@/assets/close.svg';
 import Pause from '@/assets/home/pause.svg';
-// hooks
-import { useNameAudio } from '../../../hooks/useNameAudio';
+// Audio playback
+import Sound from 'react-native-sound';
+
+// Enable playback in silent mode
+Sound.setCategory('Playback');
 
 // local data
 import {allNames} from '../../../data/allNames';
@@ -43,23 +46,80 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
   
-  // Audio playback state and functions
-  const { isPlaying, isLoading: isAudioLoading, error: audioError, playAudio, stopAudio } = useNameAudio();
+  // Audio playback state
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isAudioLoading, setIsAudioLoading] = useState<boolean>(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [audioPlayer, setAudioPlayer] = useState<Sound | null>(null);
   
   // Clean up audio when component unmounts
   useEffect(() => {
     return () => {
-      stopAudio();
+      if (audioPlayer) {
+        audioPlayer.stop();
+        audioPlayer.release();
+      }
     };
-  }, []);
+  }, [audioPlayer]);
   
   // Handle audio playback
   const handleAudioPlayback = () => {
-    if (isPlaying) {
-      stopAudio();
+    if (isPlaying && audioPlayer) {
+      // Stop audio if playing
+      audioPlayer.pause();
+      setIsPlaying(false);
     } else {
-      // Use the name ID for audio playback (1-99)
+      // Play audio for the selected name
       playAudio(allNames[currentItemIndex].id);
+    }
+  };
+  
+  // Play audio function
+  const playAudio = (nameNumber: number) => {
+    // Format the number with leading zeros (e.g., 1 -> "01")
+    const formattedNumber = nameNumber.toString().padStart(2, '0');
+    const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
+    
+    console.log(`Loading audio for name #${nameNumber}: ${audioUrl}`);
+    
+    // Stop any currently playing audio
+    if (audioPlayer) {
+      audioPlayer.stop();
+      audioPlayer.release();
+    }
+    
+    setIsAudioLoading(true);
+    setAudioError(null);
+    
+    try {
+      // Create a new Sound instance
+      // For remote URLs, the second parameter should be empty string
+      const newSound = new Sound(audioUrl, '', (error) => {
+        setIsAudioLoading(false);
+        
+        if (error) {
+          console.error('Failed to load the sound', error);
+          setAudioError(`Failed to load the sound: ${error.message}`);
+          return;
+        }
+        
+        console.log('Sound loaded successfully');
+        setAudioPlayer(newSound);
+        setIsPlaying(true);
+        
+        // Play the sound
+        newSound.play((success) => {
+          console.log('Sound playback finished', success);
+          if (!success) {
+            setAudioError('Playback failed due to audio decoding errors');
+          }
+          setIsPlaying(false);
+        });
+      });
+    } catch (err) {
+      console.error('Error creating Sound object', err);
+      setIsAudioLoading(false);
+      setAudioError(`Error initializing audio: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
