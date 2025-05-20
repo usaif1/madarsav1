@@ -68,18 +68,18 @@ const getGradientDirection = (prayer: PrayerType): { start: { x: number, y: numb
 const calculateBallPosition = (currentPrayer: PrayerType): { left: number, top: number } => {
   // Arc width is 280, so we need to map 5 prayer times to positions along the arc
   const arcWidth = scale(280);
-  
+
   // Calculate the position based on prayer time
   switch (currentPrayer) {
     case 'fajr':
       return { 
         left: scale(20), 
-        top: scale(65) 
+        top: scale(50) 
       };
     case 'dhuhr':
       return { 
         left: scale(70), 
-        top: scale(70) 
+        top: scale(20) 
       };
     case 'asr':
       return { 
@@ -89,7 +89,7 @@ const calculateBallPosition = (currentPrayer: PrayerType): { left: number, top: 
     case 'maghrib':
       return { 
         left: scale(210), 
-        top: scale(70) 
+        top: scale(25) 
       };
     case 'isha':
       return { 
