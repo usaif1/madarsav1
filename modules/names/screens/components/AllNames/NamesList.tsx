@@ -17,6 +17,7 @@ import {allNames} from '../../../data/allNames';
 
 // store
 import { useThemeStore } from '@/globalStore';
+import { ColorPrimary } from '@/theme/lightColors';
 
 // Define the Name interface based on our local data
 interface Name {
@@ -210,12 +211,14 @@ const NameCard: React.FC<NameCardProps> = ({
         
         {/* Arabic text overlay */}
         <Text style={styles.avatarArabicText}>{item.classicalArabic}</Text>
+        <Text style={styles.avatarEnglishText}>{item.ipa}</Text>
+        <Text style={styles.avatarTranslationText}>{item.translation}</Text>
       </View>
 
       {/* Name & meaning */}
       <View style={styles.textContainer}>
-        <Title3Bold>{item.ipa}</Title3Bold>
-        <Body2Medium color="sub-heading">{item.translation}</Body2Medium>
+        <Title3Bold style={{fontSize: 17}}>{item.ipa}</Title3Bold>
+        <Body2Medium style={{fontSize: 12,maxWidth: '80%'}} color="sub-heading">{item.translation}</Body2Medium>
       </View>
 
       {/* Index badge */}
@@ -253,11 +256,32 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -20 }, { translateY: -12 }],
-    color: '#8A57DC',
-    fontSize: 16,
+    transform: [{ translateX: -14 }, { translateY: -10 }],
+    color: ColorPrimary.primary900,
+    fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  avatarEnglishText: {
+    position: 'absolute',
+    top: '80%',
+    left: '50%',
+    transform: [{ translateX: -10 }, { translateY: -10 }],
+    color: ColorPrimary.primary900,
+    fontSize: 4,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  avatarTranslationText: {
+    position: 'absolute',
+    top: '90%',
+    left: '50%',
+    transform: [{ translateX: -16 }, { translateY: -10 }],
+    color: ColorPrimary.primary900,
+    fontSize: 2,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    width: '60%',
   },
   textContainer: {
     flex: 1,
@@ -359,7 +383,7 @@ const stylesModal = StyleSheet.create({
   },
   textOverlay: {
     position: 'absolute',
-    top: 0,
+    top: 52,
     left: 0,
     right: 0,
     bottom: 0,
@@ -368,24 +392,26 @@ const stylesModal = StyleSheet.create({
     padding: 20,
   },
   arabicText: {
-    color: '#8A57DC',
-    fontSize: 40,
+    color: ColorPrimary.primary800,
+    fontSize: 44,
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
   },
   nameText: {
-    color: '#8A57DC',
-    fontSize: 24,
+    color: ColorPrimary.primary500,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
     textAlign: 'center',
   },
   meaningText: {
-    color: '#666666',
-    fontSize: 16,
+    color: ColorPrimary.primary700,
+    fontSize: 10,
     textAlign: 'center',
-    lineHeight: 22,
+    width: '60%',
+    marginTop: 4,
+    lineHeight: 14,
   },
   /* ---------- actions row ---------- */
   actions: {
