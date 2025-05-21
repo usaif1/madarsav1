@@ -1,7 +1,7 @@
 // modules/hadith/screens/HadithInfoScreen.tsx
 
-import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import FastImage from 'react-native-fast-image';
@@ -11,13 +11,15 @@ import SearchInput from '../components/SearchInput';
 import HadithInfoCard from '../components/HadithInfoCard';
 import HadithImageFooter from '../components/HadithImageFooter';
 import SavedFooter from '../components/SavedFooter';
+import { useCollection, useBooks } from '../hooks/useHadith';
+import LoadingIndicator from '@/components/LoadingIndicator';
+import ErrorMessage from '@/components/ErrorMessage';
 
-// Dummy data for demo
-const hadithInfo = {
+// Fallback data in case API fails
+const fallbackHadithInfo = {
   id: 'bukhari',
   title: 'Sahih al-Bukhari',
   author: 'Imam Bukhari',
-//   image: 'https://your-image-url.com/bukhari.jpg',
   brief: 'Sahih al-Bukhari is a collection of hadith compiled by Abu Abdullah Muhammad Ibn Isma\'il al-Bukhari...',
   chapters: [
     { id: '1', title: 'Revelation', range: '1-7' },
@@ -37,15 +39,119 @@ const hadithInfo = {
   ],
 };
 
+// Define interfaces for API data - match the actual API response structure
+interface Book {
+  bookNumber: string;
+  book: {
+    lang: string;
+    name: string;
+  }[];
+}
+
+interface CollectionInfo {
+  name: string;
+  hasBooks: boolean;
+  hasChapters: boolean;
+  collection: {
+    lang: string;
+    title: string;
+    shortIntro: string;
+  }[];
+  totalHadith: number;
+  totalAvailableHadith: number;
+}
+
 const HadithInfoScreen: React.FC = () => {
   const { colors } = useThemeStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
+  const route = useRoute();
+  const { id } = route.params as { id: string };
   const [search, setSearch] = useState('');
 
+  // Fetch collection details and books
+  const { 
+    data: collectionData, 
+    isLoading: collectionLoading, 
+    error: collectionError 
+  } = useCollection(id);
+  
+  const { 
+    data: booksData, 
+    isLoading: booksLoading, 
+    error: booksError 
+  } = useBooks(id);
+
+  // Log API responses for debugging
+  useEffect(() => {
+    if (collectionData) {
+      console.log('Collection API Response:', collectionData);
+    }
+    if (collectionError) {
+      console.error('Collection API Error:', collectionError);
+    }
+    if (booksData) {
+      console.log('Books API Response:', booksData);
+    }
+    if (booksError) {
+      console.error('Books API Error:', booksError);
+    }
+  }, [collectionData, collectionError, booksData, booksError]);
+
+  // Prepare data for UI
+  const collection: CollectionInfo = collectionData || {
+    name: fallbackHadithInfo.id,
+    hasBooks: true,
+    hasChapters: true,
+    collection: [{ 
+      title: fallbackHadithInfo.title, 
+      shortIntro: fallbackHadithInfo.brief, 
+      lang: 'en' 
+    }],
+    totalHadith: 0,
+    totalAvailableHadith: 0
+  };
+
+  const books: Book[] = booksData?.data || [];
+  
+  // Map books to chapters format for UI
+  const chapters = books.map(book => {
+    // Get the book name from the first non-empty name in the book array
+    const bookName = book.book.find(b => b.name && b.name.trim() !== '')?.name || `Book ${book.bookNumber}`;
+    
+    // Since the API doesn't provide hadith range directly, we'll use book numbers as placeholders
+    // In a real implementation, you might want to fetch this data separately
+    return {
+      id: book.bookNumber,
+      title: bookName,
+      range: `${book.bookNumber}` // Using book number as a placeholder for range
+    };
+  });
+
   // Filter chapters by search
-  const filteredChapters = hadithInfo.chapters.filter(ch =>
+  const filteredChapters = chapters.filter(ch =>
     ch.title.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Get collection title and author
+  const collectionTitle = collection.collection.find(c => c.lang === 'en')?.title || collection.name;
+  const collectionIntro = collection.collection.find(c => c.lang === 'en')?.shortIntro || '';
+  const authorMatch = collectionIntro.match(/([^,]+)/);
+  const author = authorMatch ? authorMatch[0] : 'Unknown Author';
+
+  // Show loading state
+  if (collectionLoading || booksLoading) {
+    return <LoadingIndicator color={colors.primary.primary500} />;
+  }
+
+  // Show error state
+  if (collectionError || booksError) {
+    return (
+      <ErrorMessage 
+        message={(collectionError || booksError)?.toString() || 'Failed to load hadith information'} 
+        onRetry={() => navigation.replace('hadithInfo', { id })}
+      />
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}>
@@ -60,12 +166,11 @@ const HadithInfoScreen: React.FC = () => {
 
       {/* Hadith Info Card */}
       <HadithInfoCard
-        title={hadithInfo.title}
-        author={hadithInfo.author}
-        brief={hadithInfo.brief}
+        title={collectionTitle}
+        author={author}
+        brief={collectionIntro || fallbackHadithInfo.brief}
         onPress={() => {
-          // @ts-ignore
-          navigation.navigate('hadithDetail', { id: hadithInfo.id, hadithTitle: hadithInfo.title });
+          navigation.navigate('hadithDetail', { id: collection.name, hadithTitle: collectionTitle });
         }}
       />
 
@@ -80,8 +185,11 @@ const HadithInfoScreen: React.FC = () => {
               index === filteredChapters.length - 1 && styles.lastChapterRow
             ]}
             onPress={() => {
-              // @ts-ignore
-              navigation.navigate('hadithChapters', { hadithId: hadithInfo.id, chapterId: item.id, chapterTitle: item.title });
+              navigation.navigate('hadithChapters', { 
+                hadithId: collection.name, 
+                chapterId: item.id, 
+                chapterTitle: item.title 
+              });
             }}
           >
             <View style={styles.indexContainer}>
@@ -96,10 +204,15 @@ const HadithInfoScreen: React.FC = () => {
         style={styles.chapterList}
         contentContainerStyle={styles.listContentContainer}
         ListFooterComponent={
-            <>
+          <>
             <HadithImageFooter />
             <SavedFooter />
-            </>
+          </>
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Body1Title2Medium>No chapters found</Body1Title2Medium>
+          </View>
         }
         showsVerticalScrollIndicator={false}
       />
@@ -160,6 +273,11 @@ const styles = StyleSheet.create({
     fontSize: scale(12),
     textAlign: 'right',
     width: scale(56),
+  },
+  emptyContainer: {
+    padding: scale(20),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

@@ -7,7 +7,7 @@ import { useThemeStore } from '@/globalStore';
 
 export interface HadithCardProps {
   hadith: {
-    id: number;
+    id: string | number;
     title: string;
     author: string;
     image: string;
@@ -23,7 +23,7 @@ const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Top portion with image */}
       <View style={styles.topPortion}>
-        <FastImage source={{ uri: hadith.image }} style={styles.image} />
+        <FastImage source={require('@/assets/hadith/BookImageBig.png')} style={styles.image} />
       </View>
       
       {/* Bottom portion with text */}

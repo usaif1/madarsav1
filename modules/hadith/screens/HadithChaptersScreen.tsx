@@ -1,11 +1,11 @@
 // modules/hadith/screens/HadithChaptersScreen.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { H5Bold, Body1Title2Medium, Body1Title2Bold, Body1Title2Regular, CaptionMedium } from '@/components/Typography/Typography';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import HadithImageFooter from '../components/HadithImageFooter';
 import HadithChaptersLeftHeading from '@/assets/hadith/HadithChaptersLeftHeading.svg';
@@ -14,6 +14,9 @@ import BismillahCalligraphy from '@/assets/hadith/BismillahCalligraphy.svg';
 import Bookmark from '@/assets/hadith/bookmark.svg';
 import ShareAlt from '@/assets/hadith/share_alt.svg';
 import DashedLine from '@/assets/hadith/dashedLine.svg';
+import { useChapters, useHadiths } from '../hooks/useHadith';
+import LoadingIndicator from '@/components/LoadingIndicator';
+import ErrorMessage from '@/components/ErrorMessage';
 
 // Dummy data for demo
 const chaptersData = [
@@ -102,23 +105,148 @@ const ChapterSection = ({ chapter, index }: { chapter: any, index: number }) => 
   );
 };
 
+// Define interfaces for API data
+interface Chapter {
+  id: string;
+  chapterId: string;
+  title: string;
+  arabic: string;
+  hadiths: Hadith[];
+}
+
+interface Hadith {
+  id: string;
+  hadithNumber: string;
+  arabic: string;
+  translation: string;
+  narrator: string;
+  reference: string;
+}
+
 const HadithChaptersScreen: React.FC = () => {
   const { colors } = useThemeStore();
+  const navigation = useNavigation<any>();
   const route = useRoute();
-  const { id } = route.params as { id: string };
-  const [visibleChapters, setVisibleChapters] = useState(chaptersData.length);
+  const { hadithId, chapterId, chapterTitle } = route.params as { hadithId: string; chapterId: string; chapterTitle: string };
+  const [visibleChapters, setVisibleChapters] = useState(1);
+  
+  // Fetch chapters and hadiths from API
+  const { 
+    data: chaptersData, 
+    isLoading: chaptersLoading, 
+    error: chaptersError 
+  } = useChapters(hadithId, chapterId);
+  
+  const { 
+    data: hadithsData, 
+    isLoading: hadithsLoading, 
+    error: hadithsError 
+  } = useHadiths(hadithId, chapterId);
+
+  // Log API responses for debugging
+  useEffect(() => {
+    if (chaptersData) {
+      console.log('Chapters API Response:', chaptersData);
+    }
+    if (chaptersError) {
+      console.error('Chapters API Error:', chaptersError);
+    }
+    if (hadithsData) {
+      console.log('Hadiths API Response:', hadithsData);
+    }
+    if (hadithsError) {
+      console.error('Hadiths API Error:', hadithsError);
+    }
+  }, [chaptersData, chaptersError, hadithsData, hadithsError]);
+
+  // Process API data or use fallback
+  const processedChapters: Chapter[] = React.useMemo(() => {
+    if (!chaptersData?.data || !hadithsData?.data) {
+      return [];
+    }
+    
+    // Map API data to our UI format
+    const chapters = chaptersData.data.map((chapter: any) => {
+      const chapterHadiths = hadithsData.data.filter((hadith: any) => 
+        hadith.chapterNumber === chapter.chapterNumber
+      ).map((hadith: any) => ({
+        id: hadith.hadithNumber,
+        hadithNumber: hadith.hadithNumber,
+        arabic: hadith.hadithArabic || '',
+        translation: hadith.hadithEnglish || '',
+        narrator: hadith.narrator || 'Unknown Narrator',
+        reference: `${hadithId} - ${hadith.hadithNumber}`
+      }));
+      
+      return {
+        id: chapter.chapterNumber,
+        chapterId: chapter.chapterNumber,
+        title: chapter.chapterEnglish || '',
+        arabic: chapter.chapterArabic || `باب (${chapter.chapterNumber})`,
+        hadiths: chapterHadiths
+      };
+    });
+    
+    return chapters;
+  }, [chaptersData, hadithsData, hadithId]);
 
   // Infinite scroll handler
   const handleEndReached = () => {
-    if (visibleChapters < chaptersData.length) {
-      setVisibleChapters(prev => Math.min(prev + 2, chaptersData.length));
+    if (visibleChapters < processedChapters.length) {
+      setVisibleChapters(prev => Math.min(prev + 2, processedChapters.length));
     }
   };
+
+  // Show loading state
+  if (chaptersLoading || hadithsLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+            <HadithChaptersLeftHeading />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <BismillahCalligraphy width={200} height={40} />
+          </View>
+          <TouchableOpacity style={styles.headerButton}>
+            <HadithChaptersRightHeading />
+          </TouchableOpacity>
+        </View>
+        <LoadingIndicator color={colors.primary.primary500} />
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (chaptersError || hadithsError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+            <HadithChaptersLeftHeading />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <BismillahCalligraphy width={200} height={40} />
+          </View>
+          <TouchableOpacity style={styles.headerButton}>
+            <HadithChaptersRightHeading />
+          </TouchableOpacity>
+        </View>
+        <ErrorMessage 
+          message={(chaptersError || hadithsError)?.toString() || 'Failed to load hadith chapters'} 
+          onRetry={() => navigation.replace('hadithChapters', { hadithId, chapterId, chapterTitle })}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // If no chapters found, use fallback data or empty array
+  const displayChapters = processedChapters.length > 0 ? processedChapters : chaptersData?.data || [];
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
           <HadithChaptersLeftHeading />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
@@ -129,16 +257,23 @@ const HadithChaptersScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
       
-      <FlatList
-        data={chaptersData.slice(0, visibleChapters)}
-        keyExtractor={item => item.id}
-        renderItem={({ item, index }) => <ChapterSection chapter={item} index={index} />}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.5}
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={<HadithImageFooter />}
-      />
+      {displayChapters && displayChapters.length > 0 ? (
+        <FlatList
+          data={displayChapters.slice(0, visibleChapters)}
+          keyExtractor={item => item.id}
+          renderItem={({ item, index }) => <ChapterSection chapter={item} index={index} />}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={<HadithImageFooter />}
+        />
+      ) : (
+        <View style={styles.noContentContainer}>
+          <Body1Title2Medium>No chapters found</Body1Title2Medium>
+          <HadithImageFooter />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -173,6 +308,12 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingBottom: verticalScale(32),
+  },
+  noContentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(20),
   },
   chapterSection: {
     width: scale(375),

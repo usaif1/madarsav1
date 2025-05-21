@@ -2,6 +2,19 @@
 // This is a simplified representation - you would use a more robust library for a real app
 
 /**
+ * Format a date to DD-MM-YYYY format for AlAdhan API
+ * @param date Date to format
+ * @returns Formatted date string
+ */
+export const formatDate = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+};
+
+/**
  * Converts Gregorian date to Hijri date
  * This is a simplified implementation and should be replaced with a proper library
  */

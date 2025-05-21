@@ -11,9 +11,11 @@ type TabType = 'salah' | 'fasting' | 'events';
 interface TabBarProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  onTodayPress: () => void;
+  isTodaySelected?: boolean;
 }
 
-const TabBar: React.FC<TabBarProps> = ({activeTab, onTabChange}) => {
+const TabBar: React.FC<TabBarProps> = ({activeTab, onTabChange, onTodayPress, isTodaySelected = false}) => {
   const {colors} = useThemeStore();
 
   return (
@@ -38,7 +40,7 @@ const TabBar: React.FC<TabBarProps> = ({activeTab, onTabChange}) => {
           activeColor={colors.primary.primary600}
         />
       </View>
-      <TodayPill isActive={activeTab === 'salah'} />
+      <TodayPill isActive={isTodaySelected} onPress={onTodayPress} />
     </View>
   );
 };
@@ -70,11 +72,13 @@ const TabButton: React.FC<TabButtonProps> = ({
 
 interface TodayPillProps {
   isActive: boolean;
+  onPress: () => void;
 }
 
-const TodayPill: React.FC<TodayPillProps> = ({isActive}) => {
+const TodayPill: React.FC<TodayPillProps> = ({isActive, onPress}) => {
   return (
-    <View
+    <Pressable
+      onPress={onPress}
       style={[
         styles.todayPill,
         {backgroundColor: isActive ? '#F5F4FB' : '#F5F5F5'},
@@ -82,7 +86,7 @@ const TodayPill: React.FC<TodayPillProps> = ({isActive}) => {
       <Body1Title2Medium color={isActive ? 'primary' : 'sub-heading'}>
         Today
       </Body1Title2Medium>
-    </View>
+    </Pressable>
   );
 };
 

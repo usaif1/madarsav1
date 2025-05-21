@@ -1,6 +1,6 @@
 // modules/calendar/components/PrayerTimesList/PrayerTimesList.tsx
 import React from 'react';
-import {View, StyleSheet, FlatList} from 'react-native';
+import {View, StyleSheet, FlatList, ActivityIndicator, Text} from 'react-native';
 import {Body1Title2Bold, Body1Title2Medium} from '@/components';
 import {
   FazrIcon,
@@ -11,34 +11,81 @@ import {
 } from '@/assets/calendar';
 import {useThemeStore} from '@/globalStore';
 import {verticalScale, scale} from '@/theme/responsive';
+import {useCalendarPrayerTimes, formatPrayerTime} from '../../hooks/useCalendarPrayerTimes';
 
-interface PrayerTime {
+interface PrayerTimeItem {
   id: string;
   name: string;
   time: string;
-  icon: React.ReactNode; // This would be your SVG component
+  icon: React.ReactNode;
 }
 
 interface PrayerTimesListProps {
   selectedDate: Date;
 }
 
-// Mock data - in real app, you would fetch this based on location and date
-const getPrayerTimes = (date: Date): PrayerTime[] => {
-  // This would be replaced with actual API call or calculation
-  return [
-    { id: 'fazr', name: 'Fazr', time: '5:45 AM', icon: <FazrIcon /> },
-    { id: 'sunrise', name: 'Sunrise', time: '5:45 AM', icon: <SunriseIcon /> },
-    { id: 'dhuhr', name: 'Dhuhr', time: '5:45 AM', icon: <DhuhrAsrIcon /> },
-    { id: 'asr', name: 'Asr', time: '5:45 AM', icon: <DhuhrAsrIcon /> },
-    { id: 'maghrib', name: 'Maghrib', time: '5:45 AM', icon: <MaghribIcon /> },
-    { id: 'isha', name: 'Isha', time: '5:45 AM', icon: <IshaIcon /> },
-  ];
-};
-
 const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
   const {colors} = useThemeStore();
-  const prayerTimes = getPrayerTimes(selectedDate);
+  
+  console.log('PrayerTimesList: Rendering with selectedDate:', selectedDate);
+  
+  const {data, isLoading, error} = useCalendarPrayerTimes(selectedDate);
+  
+  console.log('PrayerTimesList: API response status:', {
+    hasData: !!data,
+    isLoading,
+    hasError: !!error,
+    errorDetails: error instanceof Error ? error.message : String(error)
+  });
+  
+  // Convert API data to our component format
+  const getPrayerTimesFromAPI = (): PrayerTimeItem[] => {
+    if (!data || !data.data || !data.data.timings) {
+      console.warn('PrayerTimesList: No prayer time data available');
+      return [];
+    }
+    
+    const timings = data.data.timings;
+    
+    console.log('PrayerTimesList: Raw prayer time data:', {
+      fajr: timings.Fajr,
+      sunrise: timings.Sunrise,
+      dhuhr: timings.Dhuhr,
+      asr: timings.Asr,
+      maghrib: timings.Maghrib,
+      isha: timings.Isha
+    });
+    
+    return [
+      { id: 'fajr', name: 'Fajr', time: formatPrayerTime(timings.Fajr), icon: <FazrIcon /> },
+      { id: 'sunrise', name: 'Sunrise', time: formatPrayerTime(timings.Sunrise), icon: <SunriseIcon /> },
+      { id: 'dhuhr', name: 'Dhuhr', time: formatPrayerTime(timings.Dhuhr), icon: <DhuhrAsrIcon /> },
+      { id: 'asr', name: 'Asr', time: formatPrayerTime(timings.Asr), icon: <DhuhrAsrIcon /> },
+      { id: 'maghrib', name: 'Maghrib', time: formatPrayerTime(timings.Maghrib), icon: <MaghribIcon /> },
+      { id: 'isha', name: 'Isha', time: formatPrayerTime(timings.Isha), icon: <IshaIcon /> },
+    ];
+  };
+  
+  const prayerTimes = getPrayerTimesFromAPI();
+  console.log('PrayerTimesList: Formatted prayer times:', prayerTimes);
+  
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary.primary600} />
+        <Text style={styles.loadingText}>Loading prayer times...</Text>
+      </View>
+    );
+  }
+  
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading prayer times</Text>
+        <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : String(error)}</Text>
+      </View>
+    );
+  }
   
   return (
     <FlatList
@@ -105,5 +152,33 @@ const styles = StyleSheet.create({
   },
   name: {
     marginLeft: scale(12),
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(20),
+  },
+  loadingText: {
+    marginTop: scale(10),
+    fontSize: scale(14),
+    color: '#737373',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(20),
+  },
+  errorText: {
+    fontSize: scale(16),
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: scale(8),
+  },
+  errorSubtext: {
+    fontSize: scale(14),
+    color: '#737373',
+    textAlign: 'center',
   }
 });

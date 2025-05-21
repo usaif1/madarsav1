@@ -1,6 +1,6 @@
 // modules/calendar/components/FastingView/FastingView.tsx
 import React, {useState} from 'react';
-import {View, StyleSheet, Pressable, ScrollView} from 'react-native';
+import {View, StyleSheet, Pressable, ScrollView, ActivityIndicator, Text} from 'react-native';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium, Title3Bold} from '@/components';
 import {FazrIcon, MaghribIcon, FazrWhiteIcon, MaghribWhiteIcon,SehriDua, IftarDua} from '@/assets/calendar';
 import {ShadowColors} from '@/theme/shadows';
@@ -9,6 +9,9 @@ import {scale, verticalScale} from '@/theme/responsive';
 // store
 import {useThemeStore} from '@/globalStore';
 
+// hooks
+import {useCalendarWithLocation, formatPrayerTime} from '../../hooks/useCalendar';
+
 interface FastingViewProps {
   selectedDate: Date;
 }
@@ -16,12 +19,51 @@ interface FastingViewProps {
 const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProps) => {
   const {colors} = useThemeStore();
   const [activeType, setActiveType] = useState<'sehri' | 'iftar'>('sehri');
-
-  // This would be fetched from an API or calculated
-  const sehriTime = '5:46 AM';
-  const iftarTime = '6:03 PM';
+  
+  console.log('FastingView: Rendering with selectedDate:', selectedDate);
+  
+  const {data, isLoading, error} = useCalendarWithLocation(selectedDate);
+  
+  console.log('FastingView: API response status:', {
+    hasData: !!data,
+    isLoading,
+    hasError: !!error,
+    errorDetails: error instanceof Error ? error.message : String(error)
+  });
+  
+  if (data) {
+    console.log('FastingView: Prayer time data available:', {
+      hasPrayerTime: !!data.prayerTime,
+      fajrTime: data.prayerTime?.fajr,
+      maghribTime: data.prayerTime?.maghrib
+    });
+  }
+  
+  // Get fasting times from API data
+  const sehriTime = data ? formatPrayerTime(data.prayerTime.fajr) : ''; // Sehri time is Fajr time
+  const iftarTime = data ? formatPrayerTime(data.prayerTime.maghrib) : ''; // Iftar time is Maghrib time
+  
+  console.log('FastingView: Formatted times:', { sehriTime, iftarTime });
 
   const styles = getStyles(colors);
+  
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary.primary600} />
+        <Text style={styles.loadingText}>Loading fasting times...</Text>
+      </View>
+    );
+  }
+  
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading fasting times</Text>
+        <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : String(error)}</Text>
+      </View>
+    );
+  }
   
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -190,5 +232,33 @@ const getStyles =  (colors: any) => StyleSheet.create({
   translationText: {
     textAlign: 'center',
     color: colors.primary.primary500,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(20),
+  },
+  loadingText: {
+    marginTop: scale(10),
+    fontSize: scale(14),
+    color: '#737373',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(20),
+  },
+  errorText: {
+    fontSize: scale(16),
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: scale(8),
+  },
+  errorSubtext: {
+    fontSize: scale(14),
+    color: '#737373',
+    textAlign: 'center',
   },
 });

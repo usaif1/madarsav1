@@ -13,6 +13,11 @@ interface CalendarDayProps {
     marked?: boolean;
     dotColor?: string;
     holidayName?: string;
+    hijriDate?: {
+      day: string;
+      month?: string;
+      year?: string;
+    };
     customStyles?: {
       container?: object;
       text?: object;
@@ -26,7 +31,10 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
   const { colors } = useThemeStore();
   
   const dateObj = new Date(date.timestamp);
-  const hijriDate = gregorianToHijri(dateObj);
+  
+  // The actual Hijri date will be passed via props from the parent component
+  // This allows us to use the API data instead of calculating it directly
+  const hijriDate = marking?.hijriDate || { day: '•' };
   
   const isSelected = marking?.selected;
   const isDisabled = state === 'disabled';
@@ -43,8 +51,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
   // Responsive and theme-based styles
   const containerRadius = scale(8);
   const containerSize = scale(38);
-  const dayContainerWidth = scale(36);
-  const dayContainerHeight = verticalScale(45);
+  const dayContainerWidth = scale(38);
+  const dayContainerHeight = verticalScale(38);
   const dotSize = scale(5);
   const dotRadius = dotSize / 2;
 
@@ -71,27 +79,27 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
             borderRadius: containerRadius,
           },
           isSelected && { 
-            backgroundColor: colors.primary.primary600, 
+            backgroundColor: '#8A57DC', 
           },
           !isSelected && isToday && { 
-            backgroundColor: colors.primary.primary300, 
+            backgroundColor: '#C5ABED', 
           }
         ]}
       >
         <Body2Medium 
-          color={isSelected ? 'white' : isDisabled ? 'secondary' : 'heading'}
+          color={isSelected ? 'white' : isDisabled ? 'secondary' : !isSelected && isToday ? 'white' : 'heading'}
           style={styles.gregorianText}
         >
           {date.day}
         </Body2Medium>
         <Body2Regular 
-          color={isSelected ? 'white' : 'sub-heading'}
+          color={isSelected ? 'white' : !isSelected && isToday ? 'white' : 'sub-heading'}
           style={styles.hijriText}
         >
           {hijriDate.day}
         </Body2Regular>
         {isMarked && (
-          <View style={[styles.dotWrapper, { top: verticalScale(12), right: 0 }]}> 
+          <View style={[styles.dotWrapper, { top: verticalScale(8), right: 4 }]}> 
             <View 
               style={[
                 styles.dot, 

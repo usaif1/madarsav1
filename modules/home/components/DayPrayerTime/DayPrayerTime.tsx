@@ -4,9 +4,10 @@ import {
   Text,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Regular, Body1Title2Bold, Body2Medium, Body2Bold, H4Bold } from '@/components/Typography/Typography';
+import { Body1Title2Regular, Body1Title2Bold, Body2Medium, Body2Bold, H4Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
 import { ShadowColors } from '@/theme/shadows';
 import FajrIcon from '@/assets/home/fajr.svg';
@@ -15,48 +16,20 @@ import AsrIcon from '@/assets/home/asr.svg';
 import MaghribIcon from '@/assets/home/maghrib.svg';
 import IshaIcon from '@/assets/home/isha.svg';
 import { Image } from 'react-native';
+import { usePrayerTimes, PrayerType } from '../../hooks/usePrayerTimes';
+import { useThemeStore } from '@/globalStore';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
 const CARD_HEIGHT = verticalScale(279);
 
-// Prayer time types
-type PrayerType = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
-
-// Prayer time data structure
-interface PrayerTimeData {
-  name: string;
-  time: string;
-  icon: React.FC<any>;
-}
-
-// Prayer times data
-const prayerTimes: Record<string, PrayerTimeData> = {
-  fajr: {
-    name: 'Fajr',
-    time: '5:51',
-    icon: FajrIcon,
-  },
-  dhuhr: {
-    name: 'Dhuhr',
-    time: '12:27',
-    icon: DhuhrIcon,
-  },
-  asr: {
-    name: 'Asr',
-    time: '3:21',
-    icon: AsrIcon,
-  },
-  maghrib: {
-    name: 'Maghrib',
-    time: '5:40',
-    icon: MaghribIcon,
-  },
-  isha: {
-    name: 'Isha',
-    time: '7:04',
-    icon: IshaIcon,
-  },
+// Map prayer types to their icons
+const prayerIcons: Record<string, React.FC<any>> = {
+  fajr: FajrIcon,
+  dhuhr: DhuhrIcon,
+  asr: AsrIcon,
+  maghrib: MaghribIcon,
+  isha: IshaIcon,
 };
 
 // Get gradient colors based on prayer type
@@ -95,33 +68,33 @@ const getGradientDirection = (prayer: PrayerType): { start: { x: number, y: numb
 const calculateBallPosition = (currentPrayer: PrayerType): { left: number, top: number } => {
   // Arc width is 280, so we need to map 5 prayer times to positions along the arc
   const arcWidth = scale(280);
-  
+
   // Calculate the position based on prayer time
   switch (currentPrayer) {
     case 'fajr':
       return { 
         left: scale(20), 
-        top: scale(120) 
+        top: scale(50) 
       };
     case 'dhuhr':
       return { 
         left: scale(70), 
-        top: scale(70) 
+        top: scale(20) 
       };
     case 'asr':
       return { 
         left: scale(140), 
-        top: scale(40) 
+        top: scale(10) 
       };
     case 'maghrib':
       return { 
         left: scale(210), 
-        top: scale(70) 
+        top: scale(25) 
       };
     case 'isha':
       return { 
-        left: scale(260), 
-        top: scale(120) 
+        left: scale(270), 
+        top: scale(65) 
       };
     default:
       return { 
@@ -131,17 +104,31 @@ const calculateBallPosition = (currentPrayer: PrayerType): { left: number, top: 
   }
 };
 
-interface DayPrayerTimeProps {
-  currentPrayer: PrayerType;
-  timeLeft: string;
-  day: string;
-}
+interface DayPrayerTimeProps {}
 
-const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
-  currentPrayer = 'asr',
-  timeLeft = '1h 29m 3s left',
-  day = 'Sunday',
-}) => {
+const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
+  const { colors } = useThemeStore();
+  const { prayerTimes, currentPrayer, nextPrayer, timeLeft, dayName, isLoading, error } = usePrayerTimes();
+  // If loading, show loading indicator
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#8A57DC" />
+        <Text style={styles.loadingText}>Loading prayer times...</Text>
+      </View>
+    );
+  }
+
+  // If error, show error message
+  if (error) {
+    return (
+      <View style={[styles.container, styles.errorContainer]}>
+        <Text style={styles.errorText}>Error loading prayer times</Text>
+        <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : String(error)}</Text>
+      </View>
+    );
+  }
+  
   // Get gradient colors and direction based on current prayer
   const gradientColors = getGradientColors(currentPrayer);
   const gradientDirection = getGradientDirection(currentPrayer);
@@ -149,13 +136,17 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
   // Calculate ball position
   const ballPosition = calculateBallPosition(currentPrayer);
   
-  // Get current prayer data
-  const currentPrayerData = prayerTimes[currentPrayer];
+  // Get next prayer data for the header
+  const NextPrayerIcon = prayerIcons[nextPrayer];
+  const nextPrayerName = prayerTimes[nextPrayer]?.name || '';
+  const nextPrayerTime = prayerTimes[nextPrayer]?.time || '';
   
   // Create array of all prayer times for display
   const allPrayerTimes = Object.keys(prayerTimes).map(key => ({
     key,
-    ...prayerTimes[key as PrayerType],
+    name: prayerTimes[key]?.name || '',
+    time: prayerTimes[key]?.time || '',
+    icon: prayerIcons[key],
     isCurrent: key === currentPrayer,
   }));
 
@@ -175,12 +166,12 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
               <View style={styles.iconNameContainer}>
                 <View style={{flexDirection:'row',width:'100%',justifyContent:'space-between'}}>
                   <View style={{flexDirection: 'row'}}>
-                <currentPrayerData.icon width={scale(24)} height={scale(24)} fill="white" />
-                <H4Bold color="white" style={styles.prayerTitle}>{currentPrayerData.name}</H4Bold>
+                {NextPrayerIcon && <NextPrayerIcon width={scale(24)} height={scale(24)} fill="white" />}
+                <H4Bold color="white" style={styles.prayerTitle}>{nextPrayerName}</H4Bold>
                 </View>
                 {/* Day Pill */}
               <View style={styles.dayPill}>
-                <Body2Bold color="white">{day}</Body2Bold>
+                <Body2Bold color="white">{dayName}</Body2Bold>
               </View></View>
                 <View style={{flexDirection: 'row'}}>
             {/* Time Left */}
@@ -209,20 +200,20 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = ({
               
               {/* Prayer Name */}
               {prayer.isCurrent ? (
-                <Body1Title2Bold color="white" style={styles.prayerName}>
+                <Body1Title2Bold color="white" style={styles.prayerNameBold}>
                   {prayer.name}
                 </Body1Title2Bold>
               ) : (
-                <Body1Title2Regular color="white" style={styles.prayerName}>
+                <Body1Title2Medium color="white" style={styles.prayerName}>
                   {prayer.name}
-                </Body1Title2Regular>
+                </Body1Title2Medium>
               )}
               
               {/* Prayer Time */}
               {prayer.isCurrent ? (
-                <Body1Title2Bold color="white" style={styles.prayerTime}>
+                <Body1Title2Regular color="white" style={styles.prayerTime}>
                   {prayer.time}
-                </Body1Title2Bold>
+                </Body1Title2Regular>
               ) : (
                 <Body1Title2Regular color="white" style={styles.prayerTime}>
                   {prayer.time}
@@ -257,6 +248,33 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: ShadowColors['border-light'],
     paddingBottom: 0,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  loadingText: {
+    marginTop: scale(10),
+    fontSize: scale(14),
+    color: '#737373',
+  },
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: scale(20),
+  },
+  errorText: {
+    fontSize: scale(16),
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: scale(8),
+  },
+  errorSubtext: {
+    fontSize: scale(14),
+    color: '#737373',
+    textAlign: 'center',
   },
   gradientContainer: {
     flex: 1,
@@ -318,6 +336,11 @@ const styles = StyleSheet.create({
   prayerName: {
     fontSize: scale(14),
     textAlign: 'center',
+  },
+  prayerNameBold: {
+    fontSize: scale(14),
+    textAlign: 'center',
+    fontWeight: '700',
   },
   prayerTime: {
     fontSize: scale(14),

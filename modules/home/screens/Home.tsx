@@ -1,4 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React from 'react';
 import {
   View,
@@ -25,8 +26,22 @@ const ITEM_WIDTH = width / 4; // 4 items per row
 
 
 
+type RootStackParamList = {
+  home: undefined;
+  hadith: undefined;
+  names: undefined;
+  tasbih: undefined;
+  compass: undefined;
+  dua: undefined;
+  user: undefined;
+  calendar: undefined;
+  // Add other routes as needed
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const IslamicTools: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   
   const handleViewAllGallery = () => {
     console.log('View all gallery pressed');
@@ -40,12 +55,22 @@ const IslamicTools: React.FC = () => {
   
   const handleExploreDuas = () => {
     console.log('Explore Duas pressed');
-    // Navigate to Duas screen
+    navigation.navigate('dua');
   };
   
   const handleEmojiPress = (day: string) => {
     console.log(`Emoji for ${day} pressed`);
-    // Handle emoji selection
+    // Handle emoji selection - no navigation needed
+  };
+  
+  const handleUserProfilePress = () => {
+    console.log('User profile pressed');
+    navigation.navigate('user');
+  };
+  
+  const handleViewCalendar = () => {
+    console.log('Islamic events pressed');
+    navigation.navigate('calendar');
   };
 
 
@@ -54,21 +79,12 @@ const IslamicTools: React.FC = () => {
     <View style={styles.container}>
       <StatusBar barStyle={'light-content'} />
       
-      {/* Custom Header */}
-      {/* <HomeHeader 
-        userName="Mohammad Arbaaz"
-        locationText="Get accurate namaz time"
-        notificationCount={1}
-      /> */}
+      {/* Custom Header - Handled in ParentNavigator */}
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
         {/* Prayer Times Section */}
-        <DayPrayerTime
-          currentPrayer="asr"
-          timeLeft="1h 29m 3s left"
-          day="Sunday"
-        />
+        <DayPrayerTime/>
 
         {/* Feeling Today Section */}
         <FeelingToday 
@@ -80,7 +96,10 @@ const IslamicTools: React.FC = () => {
         <ModuleGrid />
       
         {/* Islamic Events Section */}
-        <IslamicEvents initialMonth="Jun" />
+        <IslamicEvents 
+          initialMonth={new Date().toLocaleString('en-US', { month: 'short' })} 
+          onViewCalendarPress={handleViewCalendar}
+        />
         
         {/* Audio Player Section */}
         <AudioPlayer 

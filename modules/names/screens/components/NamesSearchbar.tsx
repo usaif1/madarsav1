@@ -2,7 +2,12 @@ import React, {useState} from 'react';
 import {StyleSheet, TextInput, View} from 'react-native';
 import Search from '@/assets/search.svg';
 
-const NamesSearchbar: React.FC = () => {
+interface NamesSearchbarProps {
+  onSearch: (text: string) => void;
+  searchQuery: string;
+}
+
+const NamesSearchbar: React.FC<NamesSearchbarProps> = ({ onSearch, searchQuery }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
@@ -18,6 +23,8 @@ const NamesSearchbar: React.FC = () => {
         style={styles.input}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
+        value={searchQuery}
+        onChangeText={onSearch}
       />
     </View>
   );

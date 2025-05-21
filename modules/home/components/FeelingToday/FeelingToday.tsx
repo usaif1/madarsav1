@@ -173,7 +173,6 @@ const styles = StyleSheet.create({
     borderRadius: scale(15),
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: ShadowColors['border-light'], // For Thursday plus button background
   },
   emojiText: {
     fontSize: scale(20),
