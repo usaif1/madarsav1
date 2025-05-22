@@ -7,6 +7,7 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
 import { ShadowColors } from '@/theme/shadows';
@@ -58,11 +59,46 @@ const modules: ModuleItem[] = [
 
 
 
+type RootStackParamList = {
+  hadith: undefined;
+  names: undefined;
+  tasbih: undefined;
+  compass: undefined;
+  dua: undefined;
+  maktab: undefined;
+  // Add other routes as needed
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const ModuleGrid: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
 
   const handleModulePress = (route: string) => {
-    navigation.navigate(route);
+    // Only navigate to implemented modules
+    switch (route) {
+      case 'hadith':
+        navigation.navigate('hadith');
+        break;
+      case 'maktab':
+        // Redirect maktab to its own module
+        navigation.navigate('maktab');
+        break;
+      case 'quran':
+        // Redirect Quran to 99names for now
+        navigation.navigate('names');
+        break;
+      case 'tasbih':
+        navigation.navigate('tasbih');
+        break;
+      case 'compass':
+        navigation.navigate('compass');
+        break;
+      default:
+        // Do nothing for modules not yet created
+        console.log(`Module ${route} not yet implemented`);
+        break;
+    }
   };
 
   return (

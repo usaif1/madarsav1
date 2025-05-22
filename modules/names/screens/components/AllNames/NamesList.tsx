@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Text } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
@@ -8,12 +8,29 @@ import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
 import Share from '@/assets/share-light.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
 import Close from '@/assets/close.svg';
+import Pause from '@/assets/home/pause.svg';
+// Audio playback
+import Sound from 'react-native-sound';
+
+// Enable playback in silent mode
+Sound.setCategory('Playback');
+
+// local data
+import {allNames} from '../../../data/allNames';
 
 // store
 import { useThemeStore } from '@/globalStore';
+import { ColorPrimary } from '@/theme/lightColors';
 
-// API hooks
-import { useAllNames, transformNamesData, TransformedName } from '../../../hooks/useNames';
+// Define the Name interface based on our local data
+interface Name {
+  id: number;
+  classicalArabic: string;
+  ipa: string;
+  translation: string;
+  reference: string;
+  gTypeb: string;
+}
 
 const width = Dimensions.get('screen').width;
 const CARD_SIZE = Math.min(width, 375);
@@ -24,51 +41,105 @@ interface NamesListProps {
 
 const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const { colors } = useThemeStore();
-  const { data, isLoading, error, refetch } = useAllNames();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
-
-  // Transform the API data to match our component's expected format
-  const namesData = data ? transformNamesData(data) : [];
   
+  // Audio playback state
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isAudioLoading, setIsAudioLoading] = useState<boolean>(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [audioPlayer, setAudioPlayer] = useState<Sound | null>(null);
+  
+  // Clean up audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioPlayer) {
+        audioPlayer.stop();
+        audioPlayer.release();
+      }
+    };
+  }, [audioPlayer]);
+  
+  // Handle audio playback
+  const handleAudioPlayback = () => {
+    if (isPlaying && audioPlayer) {
+      // Stop audio if playing
+      audioPlayer.pause();
+      setIsPlaying(false);
+    } else {
+      // Play audio for the selected name
+      playAudio(allNames[currentItemIndex].id);
+    }
+  };
+  
+  // Play audio function
+  const playAudio = (nameNumber: number) => {
+    // Format the number with leading zeros (e.g., 1 -> "01")
+    const formattedNumber = nameNumber.toString().padStart(2, '0');
+    const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
+    
+    console.log(`Loading audio for name #${nameNumber}: ${audioUrl}`);
+    
+    // Stop any currently playing audio
+    if (audioPlayer) {
+      audioPlayer.stop();
+      audioPlayer.release();
+    }
+    
+    setIsAudioLoading(true);
+    setAudioError(null);
+    
+    try {
+      // Create a new Sound instance
+      // For remote URLs, the second parameter should be empty string
+      const newSound = new Sound(audioUrl, '', (error) => {
+        setIsAudioLoading(false);
+        
+        if (error) {
+          console.error('Failed to load the sound', error);
+          setAudioError(`Failed to load the sound: ${error.message}`);
+          return;
+        }
+        
+        console.log('Sound loaded successfully');
+        setAudioPlayer(newSound);
+        setIsPlaying(true);
+        
+        // Play the sound
+        newSound.play((success) => {
+          console.log('Sound playback finished', success);
+          if (!success) {
+            setAudioError('Playback failed due to audio decoding errors');
+          }
+          setIsPlaying(false);
+        });
+      });
+    } catch (err) {
+      console.error('Error creating Sound object', err);
+      setIsAudioLoading(false);
+      setAudioError(`Error initializing audio: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
+
   // Filter names based on search query
   const filteredNames = searchQuery.trim() === '' 
-    ? namesData 
-    : namesData.filter(name => {
+    ? allNames 
+    : allNames.filter(name => {
         const searchLower = searchQuery.toLowerCase();
         return (
-          name.name.toLowerCase().includes(searchLower) || 
-          name.meaning.toLowerCase().includes(searchLower) ||
-          name.native.toLowerCase().includes(searchLower)
+          name.ipa.toLowerCase().includes(searchLower) || 
+          name.translation.toLowerCase().includes(searchLower) ||
+          name.classicalArabic.includes(searchLower)
         );
       });
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8A57DC" />
-        <Text style={styles.loadingText}>Loading names...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error loading names: {error.message}</Text>
-        <Pressable style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
-      </View>
-    );
-  }
 
   return (
     <>
       <FlatList
         data={filteredNames}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         renderItem={({ index, item }) => (
           <NameCard
             index={index}
@@ -111,11 +182,26 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             </Body1Title2Bold>
           </View>
 
-          <FastImage
-            source={require('@/assets/names/name_xxl.png')}
-            style={stylesModal.image}
-            resizeMode={FastImage.resizeMode.cover}
-          />
+          <View style={stylesModal.imageContainer}>
+            <FastImage
+              source={require('@/assets/names/name-modal-image.jpg')}
+              style={stylesModal.image}
+              resizeMode={FastImage.resizeMode.cover}
+            />
+            
+            {/* Dynamic Text Overlay */}
+            <View style={stylesModal.textOverlay}>
+              <Text style={stylesModal.arabicText}>
+                {filteredNames[currentItemIndex].classicalArabic}
+              </Text>
+              <Text style={stylesModal.nameText}>
+                {filteredNames[currentItemIndex].ipa}
+              </Text>
+              <Text style={stylesModal.meaningText}>
+                {filteredNames[currentItemIndex].translation}
+              </Text>
+            </View>
+          </View>
 
           {/* Action Buttons */}
           <View style={stylesModal.actions}>
@@ -129,9 +215,15 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               <Body1Title2Bold color="white">Close</Body1Title2Bold>
             </Pressable>
 
-            <Pressable style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}>
-              <RightTriangle />
-              <Body1Title2Bold color="white">Listen</Body1Title2Bold>
+            <Pressable 
+              style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}
+              onPress={handleAudioPlayback}
+            >
+              {isPlaying ? <Pause /> : <RightTriangle />}
+              <Body1Title2Bold color="white">
+                {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
+              </Body1Title2Bold>
+              {audioError && <Text style={styles.audioErrorText}>Error playing audio</Text>}
             </Pressable>
 
             <Pressable
@@ -150,7 +242,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
 };
 
 interface NameCardProps {
-  item: TransformedName;
+  item: Name;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   index: number;
   setCurrentItemIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -169,17 +261,24 @@ const NameCard: React.FC<NameCardProps> = ({
         setIsVisible(true);
       }}
       style={[styles.item, { borderTopWidth: index === 0 ? 1 : 0 }]}>
-      {/* ▶️ The FastImage avatar */}
-      <FastImage
-        source={require('@/assets/names/ar_rahman_large.png')}
-        style={styles.avatar}
-        resizeMode={FastImage.resizeMode.contain}
-      />
+      {/* Background image with text overlay */}
+      <View style={styles.avatarContainer}>
+        <FastImage
+          source={require('@/assets/names/name-image.jpg')}
+          style={styles.avatar}
+          resizeMode={FastImage.resizeMode.cover}
+        />
+        
+        {/* Arabic text overlay */}
+        <Text style={styles.avatarArabicText}>{item.classicalArabic}</Text>
+        <Text style={styles.avatarEnglishText}>{item.ipa}</Text>
+        <Text style={styles.avatarTranslationText}>{item.translation}</Text>
+      </View>
 
       {/* Name & meaning */}
       <View style={styles.textContainer}>
-        <Title3Bold>{item.name}</Title3Bold>
-        <Body2Medium color="sub-heading">{item.meaning || 'The name of Allah'}</Body2Medium>
+        <Title3Bold style={{fontSize: 17}}>{item.ipa}</Title3Bold>
+        <Body2Medium style={{fontSize: 12,maxWidth: '80%'}} color="sub-heading">{item.translation}</Body2Medium>
       </View>
 
       {/* Index badge */}
@@ -202,11 +301,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
   },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    marginRight: 12,
+    position: 'relative',
+  },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 8,
-    marginRight: 12,
+  },
+  avatarArabicText: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -14 }, { translateY: -10 }],
+    color: ColorPrimary.primary900,
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  avatarEnglishText: {
+    position: 'absolute',
+    top: '80%',
+    left: '50%',
+    transform: [{ translateX: -10 }, { translateY: -10 }],
+    color: ColorPrimary.primary900,
+    fontSize: 4,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  avatarTranslationText: {
+    position: 'absolute',
+    top: '90%',
+    left: '50%',
+    transform: [{ translateX: -16 }, { translateY: -10 }],
+    color: ColorPrimary.primary900,
+    fontSize: 2,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    width: '60%',
   },
   textContainer: {
     flex: 1,
@@ -275,6 +410,11 @@ const styles = StyleSheet.create({
     color: '#737373',
     textAlign: 'center',
   },
+  audioErrorText: {
+    color: '#FF4D4F', 
+    fontSize: 10, 
+    marginTop: 2,
+  },
 });
 
 const stylesModal = StyleSheet.create({
@@ -289,10 +429,49 @@ const stylesModal = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  imageContainer: {
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    borderRadius: 12,
+    position: 'relative',
+    overflow: 'hidden',
+  },
   image: {
     width: CARD_SIZE,
     height: CARD_SIZE, // square
     borderRadius: 12,
+  },
+  textOverlay: {
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  arabicText: {
+    color: ColorPrimary.primary800,
+    fontSize: 44,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  nameText: {
+    color: ColorPrimary.primary500,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  meaningText: {
+    color: ColorPrimary.primary700,
+    fontSize: 10,
+    textAlign: 'center',
+    width: '60%',
+    marginTop: 4,
+    lineHeight: 14,
   },
   /* ---------- actions row ---------- */
   actions: {

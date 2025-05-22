@@ -14,6 +14,7 @@ import DuaNavigator from '@/modules/dua/navigation/dua.navigator';
 import CalendarNavigator from '@/modules/calendar/navigation/calendar.navigator';
 import TasbihNavigator from '@/modules/tasbih/navigation/tasbih.navigator';
 import HadithNavigator from '@/modules/hadith/navigation/hadith.navigator';
+import MaktabNavigator from '@/modules/maktab/navigation/maktab.navigator';
 
 // auth guards
 import { createProtectedScreen, createFullyProtectedScreen } from '@/modules/auth/utils/routeGuards';

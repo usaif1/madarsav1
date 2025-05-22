@@ -1,10 +1,13 @@
 // dependencies
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {useNavigation} from '@react-navigation/native';
+import {View, Text} from 'react-native';
 
 // screens
 import {Home} from '../screens';
-
+import MaktabScreen from '@/modules/maktab/screens/MaktabScreen';
+import {AllNames} from '@/modules/names/screens';
 // components
 import CustomTabBar from '../components/CustomTabBar';
 
@@ -28,17 +31,33 @@ const HomeNavigator = () => {
       />
       <Tab.Screen 
         name="maktab" 
-        component={Home} 
+        component={MaktabScreen} 
         options={{
           tabBarLabel: 'Maktab',
         }}
+        listeners={({navigation}) => ({
+          tabPress: (e) => {
+            // Prevent default action
+            e.preventDefault();
+            // Navigate to the maktab module
+            navigation.navigate('maktab');
+          },
+        })}
       />
       <Tab.Screen 
         name="al-quran" 
-        component={Home} 
+        component={AllNames} 
         options={{
           tabBarLabel: 'Al-Quran',
         }}
+        listeners={({navigation}) => ({
+          tabPress: (e) => {
+            // Prevent default action
+            e.preventDefault();
+            // Navigate to the 99 names module for now
+            navigation.navigate('names');
+          },
+        })}
       />
     </Tab.Navigator>
   );
