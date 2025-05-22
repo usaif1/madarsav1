@@ -52,7 +52,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
   const containerRadius = scale(8);
   const containerSize = scale(38);
   const dayContainerWidth = scale(38);
-  const dayContainerHeight = verticalScale(38);
+  const dayContainerHeight = verticalScale(40);
   const dotSize = scale(5);
   const dotRadius = dotSize / 2;
 
