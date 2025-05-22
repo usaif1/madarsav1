@@ -6,6 +6,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 import { useGlobalStore } from '@/globalStore';
 
+// Direct imports instead of lazy loading
+import ParentNavigator from './ParentNavigator';
+import AuthNavigator from '@/modules/auth/navigation/auth.navigator';
+
 // Define the root stack param list for type safety
 export type RootStackParamList = {
   Auth: undefined;
@@ -14,9 +18,9 @@ export type RootStackParamList = {
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
-// Import these dynamically to avoid circular dependencies
-const ParentNavigation = React.lazy(() => import('./ParentNavigation'));
-const AuthNavigation = React.lazy(() => import('@/modules/auth/navigation/auth.navigation'));
+// No lazy loading - direct component references
+// const ParentNavigation = ParentNavigator;
+// const AuthNavigation = AuthNavigator;
 
 const RootNavigator: React.FC = () => {
   const { isAuthenticated, isSkippedLogin } = useAuthStore();
@@ -29,9 +33,8 @@ const RootNavigator: React.FC = () => {
   // Note: Auth screens include splash screens for onboarding
   
   return (
-    <React.Suspense fallback={null}>
-      {!userHasAccess ? <AuthNavigation /> : <ParentNavigation />}
-    </React.Suspense>
+    // No need for Suspense since we're not using lazy loading
+    !userHasAccess ? <AuthNavigator /> : <ParentNavigator />
   );
 };
 

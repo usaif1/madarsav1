@@ -1,7 +1,4 @@
-import {createStaticNavigation} from '@react-navigation/native';
-
+// Direct export of the auth navigator to avoid nested NavigationContainers
 import AuthNavigator from './auth.navigator';
 
-const AuthNavigation = createStaticNavigation(AuthNavigator);
-
-export default AuthNavigation;
+export default AuthNavigator;
