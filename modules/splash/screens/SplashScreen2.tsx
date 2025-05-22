@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Pressable, StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 // assets
 import FacebookLogin from '@/assets/splash/facebook_login.svg';
@@ -22,6 +23,7 @@ const SplashPrimary: React.FC = () => {
   const { colors } = useThemeStore();
   const { setOnboarded } = useGlobalStore();
   const { bottom } = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   // Get social auth methods and loading state
   const { isLoading, signInWithGoogle, loginWithFacebook, skipLogin } = useSocialAuth();
@@ -44,6 +46,7 @@ const SplashPrimary: React.FC = () => {
 
   // Handle Skip Login
   const handleSkipLogin = async () => {
+    // navigation.navigate('ParentNavigator', { screen: 'home' });
     const success = await skipLogin();
     if (success) {
       setOnboarded(true);

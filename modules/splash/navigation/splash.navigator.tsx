@@ -1,4 +1,5 @@
 // dependencies
+import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Platform} from 'react-native';
 
@@ -11,15 +12,22 @@ export type SplashStackParamList = {
   SplashScreen2: undefined;
 };
 
-const SplashStack = createNativeStackNavigator<SplashStackParamList>({
-  screenOptions: {
-    headerShown: false,
-    presentation: Platform.OS === 'android' ? 'transparentModal' : 'card',
-  },
-  screens: {
-    SplashScreen1: SplashScreen1,
-    SplashScreen2: SplashScreen2,
-  },
-});
+// Create the navigator
+const Stack = createNativeStackNavigator<SplashStackParamList>();
 
-export default SplashStack;
+// Define the navigator component
+const SplashNavigator = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        presentation: Platform.OS === 'android' ? 'transparentModal' : 'card',
+      }}
+    >
+      <Stack.Screen name="SplashScreen1" component={SplashScreen1} />
+      <Stack.Screen name="SplashScreen2" component={SplashScreen2} />
+    </Stack.Navigator>
+  );
+};
+
+export default SplashNavigator;
