@@ -42,84 +42,99 @@ interface NamesListProps {
 const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const { colors } = useThemeStore();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
   
-  // Audio playback state
+  // Audio state
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isAudioLoading, setIsAudioLoading] = useState<boolean>(false);
   const [audioError, setAudioError] = useState<string | null>(null);
-  const [audioPlayer, setAudioPlayer] = useState<Sound | null>(null);
-  
-  // Clean up audio when component unmounts
+  const audioRef = useRef<Sound | null>(null);
+
+  // Clean up audio when component unmounts or modal closes
   useEffect(() => {
     return () => {
-      if (audioPlayer) {
-        audioPlayer.stop();
-        audioPlayer.release();
+      if (audioRef.current) {
+        audioRef.current.stop();
+        audioRef.current.release();
+        audioRef.current = null;
       }
     };
-  }, [audioPlayer]);
-  
+  }, []);
+
+  // Clean up audio when modal closes
+  useEffect(() => {
+    if (!isVisible && audioRef.current) {
+      audioRef.current.stop();
+      audioRef.current.release();
+      audioRef.current = null;
+      setIsPlaying(false);
+    }
+  }, [isVisible]);
+
   // Handle audio playback
-  const handleAudioPlayback = () => {
-    if (isPlaying && audioPlayer) {
-      // Stop audio if playing
-      audioPlayer.pause();
+  const handleAudioPlayback = async () => {
+    if (isPlaying && audioRef.current) {
+      // Pause audio if playing
+      audioRef.current.pause();
       setIsPlaying(false);
     } else {
       // Play audio for the selected name
-      playAudio(allNames[currentItemIndex].id);
+      await playAudio(allNames[currentItemIndex].id);
     }
   };
-  
+
   // Play audio function
-  const playAudio = (nameNumber: number) => {
-    // Format the number with leading zeros (e.g., 1 -> "01")
-    const formattedNumber = nameNumber.toString().padStart(2, '0');
-    const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
-    
-    console.log(`Loading audio for name #${nameNumber}: ${audioUrl}`);
-    
-    // Stop any currently playing audio
-    if (audioPlayer) {
-      audioPlayer.stop();
-      audioPlayer.release();
-    }
-    
-    setIsAudioLoading(true);
-    setAudioError(null);
-    
+  const playAudio = async (nameNumber: number) => {
     try {
-      // Create a new Sound instance
-      // For remote URLs, the second parameter should be empty string
-      const newSound = new Sound(audioUrl, '', (error) => {
-        setIsAudioLoading(false);
-        
-        if (error) {
-          console.error('Failed to load the sound', error);
-          setAudioError(`Failed to load the sound: ${error.message}`);
-          return;
-        }
-        
-        console.log('Sound loaded successfully');
-        setAudioPlayer(newSound);
-        setIsPlaying(true);
-        
-        // Play the sound
-        newSound.play((success) => {
-          console.log('Sound playback finished', success);
-          if (!success) {
-            setAudioError('Playback failed due to audio decoding errors');
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.stop();
+        audioRef.current.release();
+        audioRef.current = null;
+      }
+
+      setIsAudioLoading(true);
+      setAudioError(null);
+      
+      const formattedNumber = nameNumber.toString().padStart(2, '0');
+      const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
+
+      // Create a promise to handle the audio loading
+      await new Promise<void>((resolve, reject) => {
+        audioRef.current = new Sound(audioUrl, Sound.MAIN_BUNDLE, (error) => {
+          if (error) {
+            console.error('Failed to load the sound', error);
+            setAudioError('Failed to load audio');
+            setIsAudioLoading(false);
+            reject(error);
+            return;
           }
-          setIsPlaying(false);
+
+          setIsAudioLoading(false);
+          setIsPlaying(true);
+          
+          // Play the sound
+          audioRef.current?.play((success) => {
+            setIsPlaying(false);
+            if (!success) {
+              console.log('Playback failed');
+              setAudioError('Playback failed');
+            }
+            // Release after playback completes
+            if (audioRef.current) {
+              audioRef.current.release();
+              audioRef.current = null;
+            }
+          });
+          
+          resolve();
         });
       });
-    } catch (err) {
-      console.error('Error creating Sound object', err);
+    } catch (error) {
+      console.error('Error in playAudio:', error);
       setIsAudioLoading(false);
-      setAudioError(`Error initializing audio: ${err instanceof Error ? err.message : String(err)}`);
+      setAudioError('Error playing audio');
     }
   };
 
@@ -216,15 +231,22 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             </Pressable>
 
             <Pressable 
-              style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}
-              onPress={handleAudioPlayback}
-            >
-              {isPlaying ? <Pause /> : <RightTriangle />}
-              <Body1Title2Bold color="white">
-                {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
-              </Body1Title2Bold>
-              {audioError && <Text style={styles.audioErrorText}>Error playing audio</Text>}
-            </Pressable>
+          style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}
+          onPress={handleAudioPlayback}
+          disabled={isAudioLoading}
+        >
+          {isAudioLoading ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : isPlaying ? (
+            <Pause />
+          ) : (
+            <RightTriangle />
+          )}
+          <Body1Title2Bold color="white">
+            {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
+          </Body1Title2Bold>
+          {audioError && <Text style={styles.audioErrorText}>{audioError}</Text>}
+        </Pressable>
 
             <Pressable
               style={[
