@@ -144,8 +144,8 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    top: -6,
+    right: -4,
     width: scale(16),
     height: scale(16),
     borderRadius: scale(20),

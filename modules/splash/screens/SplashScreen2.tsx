@@ -75,7 +75,7 @@ const SplashPrimary: React.FC = () => {
         <View style={{ height: 33 }} />
         <Carousel />
 
-        <View style={{ width: '100%', paddingBottom: 20 }}>
+        <View style={{width: '100%', paddingBottom: 28, rowGap: 2}}>
           <Pressable
             onPress={handleGoogleSignIn}
             disabled={isLoading}
