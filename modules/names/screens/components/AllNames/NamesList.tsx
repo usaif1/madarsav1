@@ -270,8 +270,15 @@ const NameCard: React.FC<NameCardProps> = ({
         />
         
         {/* Arabic text overlay */}
-        <Text style={styles.avatarArabicText}>{item.classicalArabic}</Text>
-        <Text style={styles.avatarEnglishText}>{item.ipa}</Text>
+        <Text 
+          style={styles.avatarArabicText}
+          numberOfLines={1}
+          ellipsizeMode="clip"
+        >
+          {item.classicalArabic}
+        </Text>
+        <Text numberOfLines={1}
+          ellipsizeMode="clip" style={styles.avatarEnglishText}>{item.ipa}</Text>
         <Text style={styles.avatarTranslationText}>{item.translation}</Text>
       </View>
 
@@ -325,6 +332,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
+    overflow: 'hidden',
   },
   avatarEnglishText: {
     position: 'absolute',
