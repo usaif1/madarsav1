@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useCalendarPrayerTimes, formatPrayerTime } from '@/modules/calendar/hooks/useCalendarPrayerTimes';
 import { PrayerTiming } from '@/api/services/prayerTimesService';
+import { useLocation } from '@/api/hooks/useLocation';
 
 // Prayer time types
 export type PrayerType = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -16,12 +17,36 @@ export interface PrayerTimeData {
 
 export const usePrayerTimes = () => {
   const today = new Date();
-  const { data, isLoading, error } = useCalendarPrayerTimes(today);
+  
+  // Get location data with fallback support
+  const { 
+    latitude, 
+    longitude, 
+    loading: locationLoading, 
+    error: locationError,
+    usingFallback,
+    fallbackSource,
+    refreshLocation: refreshLocationData
+  } = useLocation();
+  
+  // Get prayer times data
+  const { 
+    data, 
+    isLoading: prayerTimesLoading, 
+    error: prayerTimesError,
+    refetch,
+    setCustomLocation
+  } = useCalendarPrayerTimes(today);
+  
   const [currentPrayer, setCurrentPrayer] = useState<PrayerType>('fajr');
   const [nextPrayer, setNextPrayer] = useState<PrayerType>('fajr');
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [dayName, setDayName] = useState<string>('');
   const [prayerTimes, setPrayerTimes] = useState<Record<string, PrayerTimeData>>({});
+  
+  // Combine loading and error states
+  const isLoading = locationLoading || prayerTimesLoading;
+  const error = locationError || prayerTimesError;
   
   // Update time left every second
   useEffect(() => {
@@ -133,6 +158,12 @@ export const usePrayerTimes = () => {
     return () => clearInterval(interval);
   }, [data]);
   
+  // Function to refresh location and prayer times
+  const refreshLocation = () => {
+    refreshLocationData();
+    refetch();
+  };
+  
   return {
     prayerTimes,
     currentPrayer,
@@ -140,7 +171,11 @@ export const usePrayerTimes = () => {
     timeLeft,
     dayName,
     isLoading,
-    error
+    error,
+    usingFallback,
+    fallbackSource,
+    refreshLocation,
+    setCustomLocation
   };
 };
 

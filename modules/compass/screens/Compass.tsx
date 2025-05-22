@@ -1,6 +1,6 @@
 // dependencies
 import React, {useEffect, useRef, useState} from 'react';
-import {View, StyleSheet, StatusBar, Animated, Easing, Text, ActivityIndicator} from 'react-native';
+import {View, StyleSheet, StatusBar, Animated, Easing, Text, ActivityIndicator, TouchableOpacity, Alert} from 'react-native';
 import {
   magnetometer,
   setUpdateIntervalForType,
@@ -15,38 +15,39 @@ import {Divider} from '@/components';
 import GeographicDetails from './components/compass/GeographicDetails';
 import QiblaIndicator from './components/compass/QiblaIndicator';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {Body1Title2Bold, Body2Medium} from '@/components/Typography/Typography';
 
 // hooks
 import {useQiblaDirection} from '../hooks/useQibla';
-import {useLocation} from '@/api/hooks/useLocation';
 
 const Compass: React.FC = () => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const {bottom} = useSafeAreaInsets();
   const [currentHeading, setCurrentHeading] = useState<number>(0);
   
-  // Get user location
-  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocation();
-  
-  // Log location data for debugging
-  useEffect(() => {
-    console.log('Location data:', { latitude, longitude, locationLoading, locationError });
-  }, [latitude, longitude, locationLoading, locationError]);
-  
-  // Get Qibla direction from API
+  // Get Qibla direction from API with built-in location handling
   const {
     data: qiblaData,
     isLoading: qiblaLoading,
     error: qiblaError,
-  } = useQiblaDirection(latitude || undefined, longitude || undefined);
+    usingFallback,
+    fallbackSource,
+    refetch
+  } = useQiblaDirection();
 
   // Log Qibla data for debugging
   useEffect(() => {
-    console.log('Qibla data:', { qiblaData, qiblaLoading, qiblaError });
-  }, [qiblaData, qiblaLoading, qiblaError]);
+    console.log('Qibla data:', { 
+      qiblaData, 
+      qiblaLoading, 
+      qiblaError,
+      usingFallback,
+      fallbackSource 
+    });
+  }, [qiblaData, qiblaLoading, qiblaError, usingFallback, fallbackSource]);
 
-  const isLoading = locationLoading || qiblaLoading;
-  const error = locationError || (qiblaError ? qiblaError.message : null);
+  const isLoading = qiblaLoading;
+  const error = qiblaError ? (qiblaError instanceof Error ? qiblaError.message : String(qiblaError)) : null;
 
   // Get qibla direction angle
   const qiblaDirection = qiblaData ? qiblaData.degrees : null;
@@ -103,6 +104,12 @@ const Compass: React.FC = () => {
       <View style={[styles.topContainer, styles.errorContainer]}>
         <StatusBar barStyle="light-content" />
         <Text style={styles.errorText}>Error: {error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => refetch()}
+        >
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -111,6 +118,24 @@ const Compass: React.FC = () => {
     <View style={styles.topContainer}>
       <StatusBar barStyle="light-content" />
       <NextSalah />
+
+      {/* Fallback location notice */}
+      {usingFallback && (
+        <View style={styles.fallbackNotice}>
+          <Body1Title2Bold color="warning">Using estimated location</Body1Title2Bold>
+          <Body2Medium color="sub-heading" style={styles.fallbackText}>
+            {fallbackSource?.includes('custom_') 
+              ? `Using ${fallbackSource.replace('custom_', '')} as reference location` 
+              : 'Using default location (Mecca)'}
+          </Body2Medium>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => refetch()}
+          >
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Centered compass with rotation */}
       <View style={styles.compassContainer}>
@@ -185,6 +210,32 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 16,
     textAlign: 'center',
+    marginBottom: 16,
+  },
+  fallbackNotice: {
+    backgroundColor: '#FEF9C3',
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  fallbackText: {
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  retryButton: {
+    backgroundColor: '#8A57DC',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

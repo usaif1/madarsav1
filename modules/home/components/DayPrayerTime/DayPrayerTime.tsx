@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Regular, Body1Title2Bold, Body2Medium, Body2Bold, H4Bold, Body1Title2Medium } from '@/components/Typography/Typography';
@@ -108,7 +109,20 @@ interface DayPrayerTimeProps {}
 
 const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
   const { colors } = useThemeStore();
-  const { prayerTimes, currentPrayer, nextPrayer, timeLeft, dayName, isLoading, error } = usePrayerTimes();
+  const { 
+    prayerTimes, 
+    currentPrayer, 
+    nextPrayer, 
+    timeLeft, 
+    dayName, 
+    isLoading, 
+    error,
+    usingFallback,
+    fallbackSource,
+    refreshLocation
+  } = usePrayerTimes();
+  
+  // The hook now provides fallback location information
   // If loading, show loading indicator
   if (isLoading) {
     return (
@@ -125,6 +139,12 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
       <View style={[styles.container, styles.errorContainer]}>
         <Text style={styles.errorText}>Error loading prayer times</Text>
         <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : String(error)}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => refreshLocation()}
+        >
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -152,6 +172,15 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
 
   return (
     <View style={styles.container}>
+      {usingFallback && (
+        <View style={styles.fallbackBanner}>
+          <Text style={styles.fallbackText}>
+            {fallbackSource?.includes('custom_') 
+              ? `Using ${fallbackSource.replace('custom_', '')} as location reference` 
+              : 'Using estimated location'}
+          </Text>
+        </View>
+      )}
       <LinearGradient
         colors={gradientColors}
         start={gradientDirection.start}
@@ -248,6 +277,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: ShadowColors['border-light'],
     paddingBottom: 0,
+    position: 'relative',
   },
   loadingContainer: {
     justifyContent: 'center',
@@ -275,6 +305,34 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
     color: '#737373',
     textAlign: 'center',
+    marginBottom: scale(12),
+  },
+  retryButton: {
+    backgroundColor: '#8A57DC',
+    paddingVertical: scale(8),
+    paddingHorizontal: scale(16),
+    borderRadius: scale(20),
+    marginTop: scale(8),
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: scale(14),
+    fontWeight: '600',
+  },
+  fallbackBanner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(251, 191, 36, 0.9)',
+    paddingVertical: scale(4),
+    zIndex: 10,
+  },
+  fallbackText: {
+    fontSize: scale(12),
+    color: '#78350F',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   gradientContainer: {
     flex: 1,
