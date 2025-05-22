@@ -17,11 +17,11 @@ import {useThemeStore} from '@/globalStore';
 import {Divider} from '@/components';
 import {Body2Medium, CaptionBold, Title3Bold} from '@/components';
 
-import { useWindowDimensions } from 'react-native';
+import {useWindowDimensions} from 'react-native';
 
 const AppVersion = () => {
   const {shadows} = useThemeStore();
-  const { width } = useWindowDimensions();
+  const {width} = useWindowDimensions();
   const isWide = width >= 700; // iPad and larger screens
 
   return (
@@ -83,12 +83,23 @@ const AppVersion = () => {
       </View>
       <Divider height={14} />
       {isWide ? (
-        <View style={{flexDirection: 'row', columnGap: 12, width: '100%', justifyContent: 'center'}}>
-          <TnCGraphicWide/>
+        <View
+          style={{
+            flexDirection: 'row',
+            columnGap: 12,
+            width: '100%',
+            justifyContent: 'center',
+          }}>
+          <TnCGraphicWide />
           <PrivacyPolicyGraphicWide />
         </View>
       ) : (
-        <View style={{flexDirection: 'row', columnGap: 12}}>
+        <View
+          style={{
+            flexDirection: 'row',
+            columnGap: 12,
+            justifyContent: 'space-between',
+          }}>
           <TnCGraphic />
           <PrivacyPolicyGraphic />
         </View>

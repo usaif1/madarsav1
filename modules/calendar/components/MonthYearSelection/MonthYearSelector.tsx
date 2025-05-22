@@ -1,11 +1,19 @@
 // modules/calendar/components/MonthYearSelector/MonthYearSelector.tsx
 import React, {useState, useRef, useEffect} from 'react';
-import {View, StyleSheet, Pressable, FlatList, Dimensions} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  FlatList,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
 import {Body1Title2Bold, Title3Bold} from '@/components';
 
 // store
 import {useThemeStore} from '@/globalStore';
-import { ShadowColors } from '@/theme/shadows';
+import {ShadowColors} from '@/theme/shadows';
 
 interface MonthYearSelectorProps {
   initialMonth: string;
@@ -15,19 +23,30 @@ interface MonthYearSelectorProps {
 }
 
 const months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
-// Get current year and add/subtract some years
 const currentYear = new Date().getFullYear();
-const years = Array.from({length: 7}, (_, i) => (currentYear - 3 + i).toString());
+const years = Array.from({length: 7}, (_, i) =>
+  (currentYear - 3 + i).toString(),
+);
 
-// Sample mapping function for Islamic months (simplified)
-const getIslamicDate = (month: string, year: string) => {
-  // This would be replaced with a proper conversion library
-  return 'Jumada al-Awwal, 1446 AH';
-};
+const getIslamicDate = () => 'Jumada al-Awwal, 1446 AH'; // placeholder
+
+const ITEM_HEIGHT = 50;
+
+/* ───────────────────────────────────────────── */
 
 const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
   initialMonth,
@@ -36,116 +55,99 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
   onClose,
 }) => {
   const {colors} = useThemeStore();
+
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [selectedYear, setSelectedYear] = useState(initialYear);
   const [hasChanged, setHasChanged] = useState(false);
-  
-  const yearListRef = useRef<FlatList>(null);
-  const monthListRef = useRef<FlatList>(null);
-  
-  // Calculate initial indices for scrolling
-  const initialYearIndex = years.findIndex(year => year === initialYear);
-  const initialMonthIndex = months.findIndex(month => month === initialMonth);
-  
-  // Monitor changes to selection
-  useEffect(() => {
-    setHasChanged(selectedMonth !== initialMonth || selectedYear !== initialYear);
-  }, [selectedMonth, selectedYear, initialMonth, initialYear]);
-  
-  // Initial scroll to position
-  useEffect(() => {
-    // Use setTimeout to ensure the FlatList has rendered before scrolling
-    setTimeout(() => {
-      if (yearListRef.current && initialYearIndex >= 0) {
-        yearListRef.current.scrollToOffset({
-          offset: (initialYearIndex - 1) * ITEM_HEIGHT,
-          animated: false,
-        });
-      }
-      
-      if (monthListRef.current && initialMonthIndex >= 0) {
-        monthListRef.current.scrollToOffset({
-          offset: (initialMonthIndex - 1) * ITEM_HEIGHT,
-          animated: false,
-        });
-      }
-    }, 100);
-  }, [initialYearIndex, initialMonthIndex]);
 
-  const handleConfirm = () => {
-    if (hasChanged) {
-      onConfirm(
-        selectedMonth,
-        selectedYear,
-        getIslamicDate(selectedMonth, selectedYear)
-      );
-    }
+  const monthRef = useRef<FlatList>(null);
+  const yearRef = useRef<FlatList>(null);
+
+  const initialMonthIndex = months.findIndex(m => m === initialMonth);
+  const initialYearIndex = years.findIndex(y => y === initialYear);
+
+  /* mark if user changed selection */
+  useEffect(() => {
+    setHasChanged(
+      selectedMonth !== initialMonth || selectedYear !== initialYear,
+    );
+  }, [selectedMonth, selectedYear, initialMonth, initialYear]);
+
+  /* scroll to initial */
+  useEffect(() => {
+    setTimeout(() => {
+      yearRef.current?.scrollToOffset({
+        offset: Math.max(0, initialYearIndex - 1) * ITEM_HEIGHT,
+        animated: false,
+      });
+      monthRef.current?.scrollToOffset({
+        offset: Math.max(0, initialMonthIndex - 1) * ITEM_HEIGHT,
+        animated: false,
+      });
+    }, 60);
+  }, [initialMonthIndex, initialYearIndex]);
+
+  /* helper: centre index from scroll offset */
+  const indexFromOffset = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    return Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT) + 1;
   };
-  
-  const renderYearItem = ({item}: {item: string}) => (
+
+  /* update selected when user scrolls */
+  const onYearScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const idx = Math.min(Math.max(0, indexFromOffset(e)), years.length - 1);
+    setSelectedYear(years[idx]);
+  };
+
+  const onMonthScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const idx = Math.min(Math.max(0, indexFromOffset(e)), months.length - 1);
+    setSelectedMonth(months[idx]);
+  };
+
+  /* row renderers */
+  const renderYear = ({item}: {item: string}) => (
     <Pressable
-      style={[
-        styles.option,
-        selectedYear === item && {
-          backgroundColor: ShadowColors['border-light'],
-          borderTopRightRadius: 0,
-          borderBottomRightRadius: 0,
-        },
-      ]}
+      style={styles.option}
       onPress={() => {
         setSelectedYear(item);
-        if (yearListRef.current) {
-          const index = years.findIndex(year => year === item);
-          yearListRef.current.scrollToOffset({
-            offset: (index - 1) * ITEM_HEIGHT,
-            animated: true,
-          });
-        }
+        const idx = years.findIndex(y => y === item);
+        yearRef.current?.scrollToOffset({
+          offset: Math.max(0, idx - 1) * ITEM_HEIGHT,
+          animated: true,
+        });
       }}>
-      <Body1Title2Bold
-        color={selectedYear === item ? 'heading' : 'secondary'}>
+      <Body1Title2Bold color={item === selectedYear ? 'heading' : 'secondary'}>
         {item}
       </Body1Title2Bold>
     </Pressable>
   );
-  
-  const renderMonthItem = ({item}: {item: string}) => (
+
+  const renderMonth = ({item}: {item: string}) => (
     <Pressable
-      style={[
-        styles.option,
-        selectedMonth === item && {
-          backgroundColor: ShadowColors['border-light'],
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        },
-      ]}
+      style={styles.option}
       onPress={() => {
         setSelectedMonth(item);
-        if (monthListRef.current) {
-          const index = months.findIndex(month => month === item);
-          monthListRef.current.scrollToOffset({
-            offset: (index - 1) * ITEM_HEIGHT,
-            animated: true,
-          });
-        }
+        const idx = months.findIndex(m => m === item);
+        monthRef.current?.scrollToOffset({
+          offset: Math.max(0, idx - 1) * ITEM_HEIGHT,
+          animated: true,
+        });
       }}>
-      <Body1Title2Bold
-        color={selectedMonth === item ? 'heading' : 'secondary'}>
+      <Body1Title2Bold color={item === selectedMonth ? 'heading' : 'secondary'}>
         {item}
       </Body1Title2Bold>
     </Pressable>
   );
-  
-  const handleScrollError = (error: any) => {
-    console.log('Scroll to index failed:', error);
+
+  const IS_LARGE = Dimensions.get('window').width >= 600;
+
+  const handleConfirm = () => {
+    if (hasChanged) onConfirm(selectedMonth, selectedYear, getIslamicDate());
   };
 
-  // Responsive breakpoint for tablet
-  const SCREEN_WIDTH = Dimensions.get('window').width;
-  const IS_LARGE_SCREEN = SCREEN_WIDTH >= 600;
-
+  /* ─────────── UI ─────────── */
   return (
-    <View style={IS_LARGE_SCREEN ? styles.containerLarge : styles.containerSmall}>
+    <View style={IS_LARGE ? styles.containerLarge : styles.containerSmall}>
+      {/* header */}
       <View style={styles.header}>
         <Title3Bold>Change year</Title3Bold>
         <Pressable onPress={onClose} hitSlop={10}>
@@ -153,58 +155,77 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         </Pressable>
       </View>
 
+      {/* pickers */}
       <View style={styles.selectionArea}>
-        {/* Year Column */}
+        {/* years */}
         <View style={styles.column}>
           <FlatList
-            ref={yearListRef}
+            ref={yearRef}
             data={years}
-            renderItem={renderYearItem}
-            keyExtractor={item => item}
-            showsVerticalScrollIndicator={false}
+            renderItem={renderYear}
+            keyExtractor={it => it}
             snapToInterval={ITEM_HEIGHT}
             decelerationRate="fast"
-            onScrollToIndexFailed={handleScrollError}
-            contentContainerStyle={styles.scrollContent}
-            getItemLayout={(data, index) => ({
+            showsVerticalScrollIndicator={false}
+            onMomentumScrollEnd={onYearScrollEnd}
+            getItemLayout={(_, i) => ({
               length: ITEM_HEIGHT,
-              offset: ITEM_HEIGHT * index,
-              index,
+              offset: ITEM_HEIGHT * i,
+              index: i,
             })}
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              styles.highlightBox,
+              {borderBottomRightRadius: 0, borderTopRightRadius: 0},
+            ]}
           />
         </View>
 
-        {/* Month Column */}
+        {/* months */}
         <View style={styles.column}>
           <FlatList
-            ref={monthListRef}
+            ref={monthRef}
             data={months}
-            renderItem={renderMonthItem}
-            keyExtractor={item => item}
-            showsVerticalScrollIndicator={false}
+            renderItem={renderMonth}
+            keyExtractor={it => it}
             snapToInterval={ITEM_HEIGHT}
             decelerationRate="fast"
-            onScrollToIndexFailed={handleScrollError}
-            contentContainerStyle={styles.scrollContent}
-            getItemLayout={(data, index) => ({
+            showsVerticalScrollIndicator={false}
+            onMomentumScrollEnd={onMonthScrollEnd}
+            getItemLayout={(_, i) => ({
               length: ITEM_HEIGHT,
-              offset: ITEM_HEIGHT * index,
-              index,
+              offset: ITEM_HEIGHT * i,
+              index: i,
             })}
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              styles.highlightBox,
+              {
+                borderBottomLeftRadius: 0,
+                borderTopLeftRadius: 0,
+              },
+            ]}
           />
         </View>
       </View>
 
+      {/* confirm */}
       <Pressable
         style={[
-          styles.confirmButton, 
-          hasChanged 
+          styles.confirmButton,
+          hasChanged
             ? {backgroundColor: colors.primary.primary600}
-            : styles.disabledButton
+            : styles.disabledButton,
         ]}
         onPress={handleConfirm}
         disabled={!hasChanged}>
-        <Body1Title2Bold color={hasChanged ? "white" : "heading"}>Confirm</Body1Title2Bold>
+        <Body1Title2Bold color={hasChanged ? 'white' : 'heading'}>
+          Confirm
+        </Body1Title2Bold>
       </Pressable>
     </View>
   );
@@ -212,8 +233,7 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
 
 export default MonthYearSelector;
 
-const ITEM_HEIGHT = 50; // Height of each option
-
+/* ───────────── styles ───────────── */
 const styles = StyleSheet.create({
   containerLarge: {
     backgroundColor: 'white',
@@ -224,7 +244,7 @@ const styles = StyleSheet.create({
     minWidth: 280,
     alignSelf: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
@@ -240,20 +260,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    alignSelf: 'flex-end',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     height: 60,
-    paddingRight: 20, 
-    paddingLeft: 20,  
+    paddingHorizontal: 20,
     marginBottom: 20,
-    borderBottomWidth: 1, 
+    borderBottomWidth: 1,
     borderBottomColor: '#F5F5F5',
-    borderTopLeftRadius: 8, 
-    borderTopRightRadius: 8, 
   },
   selectionArea: {
     flexDirection: 'row',
@@ -263,26 +279,30 @@ const styles = StyleSheet.create({
   },
   column: {
     flex: 1,
-    padding: 0,
     height: ITEM_HEIGHT * 3,
     overflow: 'hidden',
-  },
-  scrollContent: {
-    paddingTop: 0,
-    paddingBottom: 0,
+    position: 'relative',
   },
   option: {
     height: ITEM_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  highlightBox: {
+    position: 'absolute',
+    top: ITEM_HEIGHT,
+    left: 0,
+    right: 0,
+    height: ITEM_HEIGHT,
     borderRadius: 10,
-    marginBottom: 0, 
+    borderColor: ShadowColors['border-light'],
+    backgroundColor: ShadowColors['border-light'],
+    zIndex: -1,
   },
   confirmButton: {
     padding: 15,
     borderRadius: 60,
     alignItems: 'center',
-    marginTop: 10,
   },
   disabledButton: {
     backgroundColor: '#F5F5F5',
