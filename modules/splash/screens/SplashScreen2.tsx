@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Pressable, StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ParentStackParamList } from '@/navigator/ParentNavigator';
 
 // assets
 import FacebookLogin from '@/assets/splash/facebook_login.svg';
@@ -23,7 +25,7 @@ const SplashPrimary: React.FC = () => {
   const { colors } = useThemeStore();
   const { setOnboarded } = useGlobalStore();
   const { bottom } = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<ParentStackParamList>>();
 
   // Get social auth methods and loading state
   const { isLoading, signInWithGoogle, loginWithFacebook, skipLogin } = useSocialAuth();
@@ -46,14 +48,20 @@ const SplashPrimary: React.FC = () => {
 
   // Handle Skip Login
   const handleSkipLogin = async () => {
-    // navigation.navigate('ParentNavigator', { screen: 'home' });
-    const success = await skipLogin();
-    if (success) {
-      setOnboarded(true);
-    } else {
-      // If skip login fails, still allow user to proceed
-      setOnboarded(true);
-    }
+    // Comment out the actual login flow for now
+    // const success = await skipLogin();
+    // if (success) {
+    //   setOnboarded(true);
+    // } else {
+    //   // If skip login fails, still allow user to proceed
+    //   setOnboarded(true);
+    // }
+    
+    // Set the skipped login flag in the auth store
+    await skipLogin();
+    
+    // Also set the onboarded flag to true to prevent returning to splash
+    setOnboarded(true);
   };
 
   return (

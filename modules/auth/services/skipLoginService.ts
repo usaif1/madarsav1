@@ -25,7 +25,7 @@ export const skipLogin = async (deviceToken: string = ''): Promise<boolean> => {
     };
     
     // Send skip login request to backend
-    const response = await authService.skipLogin(skipLoginData);
+    // const response = await authService.skipLogin(skipLoginData);
     
     // Store device ID in MMKV storage
     storage.set('device_id', deviceId);
