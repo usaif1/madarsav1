@@ -1,191 +1,150 @@
-// dependencies
-import React, {useEffect, useRef, useState} from 'react';
-import {View, StyleSheet, StatusBar, Animated, Easing, Text, ActivityIndicator} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import {
-  magnetometer,
-  setUpdateIntervalForType,
-  SensorTypes,
-} from 'react-native-sensors';
-import {map} from 'rxjs/operators';
-
-// components
-import {FindMosqueButton, NextSalah} from './components/compass';
-import CompassSvg from '@/assets/compass/compass.svg';
-import {Divider} from '@/components';
-import GeographicDetails from './components/compass/GeographicDetails';
+  View,
+  StyleSheet,
+  Text,
+  PermissionsAndroid,
+  Platform,
+} from 'react-native';
+import CompassHeading from 'react-native-compass-heading';
+import Geolocation from '@react-native-community/geolocation';
+import Svg, {Circle, Line} from 'react-native-svg';
+import geomagnetism from 'geomagnetism';
 import QiblaIndicator from './components/compass/QiblaIndicator';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-// hooks
-import {useQiblaDirection} from '../hooks/useQibla';
-import {useLocation} from '@/api/hooks/useLocation';
+/* --- Kaaba coordinates --- */
+const MAKKAH_LAT = 21.4225;
+const MAKKAH_LON = 39.8262;
 
-const Compass: React.FC = () => {
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const {bottom} = useSafeAreaInsets();
-  const [currentHeading, setCurrentHeading] = useState<number>(0);
-  
-  // Get user location
-  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocation();
-  
-  // Log location data for debugging
+/* --- Bearing from (lat,lon) to Kaaba (true-north) --- */
+function qiblaBearing(lat: number, lon: number): number {
+  const φ1 = (lat * Math.PI) / 180;
+  const φ2 = (MAKKAH_LAT * Math.PI) / 180;
+  const Δλ = ((MAKKAH_LON - lon) * Math.PI) / 180;
+
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x =
+    Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+  const θ = (Math.atan2(y, x) * 180) / Math.PI;
+  return (θ + 360) % 360;
+}
+
+/* --- Android runtime permission helper --- */
+async function requestLocation(): Promise<boolean> {
+  if (Platform.OS !== 'android') return true;
+  const granted = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+    {
+      title: 'Location permission',
+      message: 'We need your location to calculate accurate Qibla direction.',
+      buttonPositive: 'OK',
+    },
+  );
+  return granted === PermissionsAndroid.RESULTS.GRANTED;
+}
+
+const QiblaCompass: React.FC = () => {
+  const [magHeading, setMagHeading] = useState(0); // magnetic heading °
+  const [declination, setDeclination] = useState(0); // local declination °
+  const [qibla, setQibla] = useState<number | null>(null);
+
+  /* ---- acquire location once & compute declination + bearing ---- */
   useEffect(() => {
-    console.log('Location data:', { latitude, longitude, locationLoading, locationError });
-  }, [latitude, longitude, locationLoading, locationError]);
-  
-  // Get Qibla direction from API
-  const {
-    data: qiblaData,
-    isLoading: qiblaLoading,
-    error: qiblaError,
-  } = useQiblaDirection(latitude || undefined, longitude || undefined);
+    (async () => {
+      if (!(await requestLocation())) return;
 
-  // Log Qibla data for debugging
+      Geolocation.getCurrentPosition(
+        ({coords}) => {
+          const {latitude, longitude} = coords;
+
+          // 1) Qibla bearing (true)
+          setQibla(qiblaBearing(latitude, longitude));
+
+          // 2) Magnetic declination at that point
+          const modelPoint = geomagnetism.model().point([latitude, longitude]);
+          setDeclination(modelPoint.decl); // `decl` already in degrees
+        },
+        err => console.warn('Location error', err),
+        {enableHighAccuracy: true, timeout: 15000},
+      );
+    })();
+  }, []);
+
+  /* ---- start compass sensor (tilt-compensated) ---- */
   useEffect(() => {
-    console.log('Qibla data:', { qiblaData, qiblaLoading, qiblaError });
-  }, [qiblaData, qiblaLoading, qiblaError]);
+    const DEGREE_DELTA = 3; // callback threshold
+    CompassHeading.start(DEGREE_DELTA, ({heading}: {heading: any}) => {
+      setMagHeading(heading); // magnetic heading °
+    });
+    return () => CompassHeading.stop();
+  }, []);
 
-  const isLoading = locationLoading || qiblaLoading;
-  const error = locationError || (qiblaError ? qiblaError.message : null);
+  /* ---- convert magnetic heading → true heading ---- */
+  const trueHeading = (magHeading + declination + 360) % 360;
 
-  // Get qibla direction angle
-  const qiblaDirection = qiblaData ? qiblaData.degrees : null;
+  /* ---- rotation needed for Qibla arrow ---- */
+  const rotation = qibla !== null ? (qibla - trueHeading + 360) % 360 : 0;
+  const transformStr = `rotate(${rotation}, 150, 150)`;
 
-  // Calculate the angle to rotate the compass to point to Qibla
-  const qiblaAngle = qiblaDirection ? (360 - currentHeading + qiblaDirection) % 360 : 0;
-
-  useEffect(() => {
-    setUpdateIntervalForType(SensorTypes.magnetometer, 100);
-
-    const subscription = magnetometer
-      .pipe(
-        map(({x, y}) => {
-          // Calculate compass heading
-          let heading = Math.atan2(y, x) * (180 / Math.PI);
-          // Convert negative angles to positive
-          if (heading < 0) {
-            heading += 360;
-          }
-          // Reverse rotation for proper compass display
-          return 360 - heading;
-        }),
-      )
-      .subscribe(heading => {
-        setCurrentHeading(heading);
-        Animated.timing(rotateAnim, {
-          toValue: heading,
-          duration: 100,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }).start();
-      });
-
-    return () => subscription.unsubscribe();
-  }, [rotateAnim]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 360],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  if (isLoading) {
-    return (
-      <View style={[styles.topContainer, styles.loadingContainer]}>
-        <StatusBar barStyle="light-content" />
-        <ActivityIndicator size="large" color="#6D2DD3" />
-        <Text style={styles.loadingText}>Getting your location and qibla direction...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={[styles.topContainer, styles.errorContainer]}>
-        <StatusBar barStyle="light-content" />
-        <Text style={styles.errorText}>Error: {error}</Text>
-      </View>
-    );
-  }
+  // return <QiblaIndicator angle={qibla} compassRadius={150} />;
 
   return (
-    <View style={styles.topContainer}>
-      <StatusBar barStyle="light-content" />
-      <NextSalah />
+    <View style={styles.root}>
+      <Svg height="300" width="300">
+        {/* fixed compass face */}
+        <Circle
+          cx="150"
+          cy="150"
+          r="140"
+          stroke="#000"
+          strokeWidth="2"
+          fill="#fafafa"
+        />
+        <Line
+          x1="150"
+          y1="150"
+          x2="150"
+          y2="10"
+          stroke="#888"
+          strokeWidth="2"
+        />
+        <Text style={styles.nLabel}>N</Text>
 
-      {/* Centered compass with rotation */}
-      <View style={styles.compassContainer}>
-        <View style={styles.compassWrapper}>
-          <Animated.View style={[styles.compass, {transform: [{rotate}]}]}>
-            <CompassSvg width={300} height={300} />
-          </Animated.View>
-          
-          {/* Qibla direction indicator - outside the rotating view */}
-          {qiblaDirection && (
-            <QiblaIndicator 
-              angle={qiblaAngle} 
-              compassRadius={150} // Half of the compass width/height (300/2)
-            />
-          )}
-        </View>
-      </View>
+        {/* Qibla arrow */}
+        {qibla !== null && (
+          <Line
+            x1="150"
+            y1="150"
+            x2="150"
+            y2="40"
+            stroke="green"
+            strokeWidth="4"
+            transform={transformStr}
+          />
+        )}
+      </Svg>
 
-      <Divider height={82} />
-      <GeographicDetails />
-      <View
-        style={{
-          position: 'absolute',
-          bottom: bottom ? bottom : 10,
-          width: '100%',
-        }}>
-        <FindMosqueButton />
-      </View>
+      {qibla !== null && (
+        <Text style={styles.subtitle}>
+          Qibla&nbsp;{Math.round(qibla)}° | Decl&nbsp;
+          {declination.toFixed(1)}°
+        </Text>
+      )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  topContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  compassContainer: {
-    paddingTop: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  compassWrapper: {
-    width: 300,
-    height: 300,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  compass: {
-    width: 300,
-    height: 300,
-    position: 'relative',
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 20,
-    color: '#6D2DD3',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  errorContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-});
+export default QiblaCompass;
 
-export default Compass;
+/* ---- styles ---- */
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  nLabel: {position: 'absolute', top: 6, left: 143, fontWeight: '700'},
+  subtitle: {marginTop: 18, fontSize: 15, fontWeight: '600'},
+});
