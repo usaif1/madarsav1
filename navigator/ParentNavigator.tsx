@@ -68,7 +68,7 @@ const ParentNavigator = () => {
       />
       <Stack.Screen 
         name="user" 
-        component={ProtectedUserNavigator}
+        component={UserNavigator}
         options={{
           title: 'Profile',
           headerTitleAlign: 'center',

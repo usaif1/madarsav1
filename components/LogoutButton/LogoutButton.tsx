@@ -6,20 +6,15 @@ import LogoutMadarsa from '@/assets/logout.svg';
 
 // store
 import { useAuthStore } from '@/modules/auth/store/authStore';
-import tokenService from '@/modules/auth/services/tokenService';
-import { mmkvStorage } from '@/modules/auth/storage/mmkvStorage';
 import { useNavigation } from '@react-navigation/native';
 import { Alert } from 'react-native';
 
 // Auth services
 import { signOutFromGoogle, isGoogleSignedIn } from '@/modules/auth/services/googleAuthService';
 import { logoutFromFacebook, isFacebookLoggedIn } from '@/modules/auth/services/facebookAuthService';
+import authService from '@/modules/auth/services/authService';
 
 const LogoutButton = () => {
-  const resetAuthStore = useAuthStore((state) => state.resetAuthStore);
-  const setUser = useAuthStore((state) => state.setUser);
-  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
-  const setIsSkippedLogin = useAuthStore((state) => state.setIsSkippedLogin);
   const user = useAuthStore((state) => state.user);
   const navigation = useNavigation();
 
@@ -43,31 +38,9 @@ const LogoutButton = () => {
         console.log('Logging out from Facebook...');
         await logoutFromFacebook();
       }
-      
-      // Always clear tokens regardless of auth method
-      console.log('Clearing tokens...');
-      await tokenService.clearTokens();
-      
-      // Clear MMKV storage
-      console.log('Clearing storage...');
-      try {
-        mmkvStorage.removeItem('auth-storage');
-        mmkvStorage.removeItem('device_id');
-        mmkvStorage.removeItem('onboarded');
-        // Add any other known keys here
-      } catch (e) {
-        console.warn('Error clearing MMKV storage:', e);
-      }
-      
-      // Reset auth state
-      console.log('Resetting auth state...');
-      resetAuthStore();
-      setUser(null);
-      setIsAuthenticated(false);
-      setIsSkippedLogin(false);
-      
-      console.log('Logout successful');
-      
+
+      authService.logOutByDeletingTokens();
+
       // Uncomment this if you want to navigate back to auth screen after logout
       // navigation.reset({
       //   index: 0,

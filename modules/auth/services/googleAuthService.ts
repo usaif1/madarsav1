@@ -69,7 +69,7 @@ import {
       
       // Update auth state
       // useAuthStore.getState().setUser(authResponse.user);
-      useAuthStore.getState().setUser(userInfo.data?.user);
+      useAuthStore.getState().setUser(userInfo.data?.user || null);
       useAuthStore.getState().setIsAuthenticated(true);
       useAuthStore.getState().setIsSkippedLogin(false);
       useAuthStore.getState().setError(null);

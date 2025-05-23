@@ -20,7 +20,7 @@ const ProfileDetails: React.FC = () => {
         alignItems: 'center',
         paddingTop: 32,
       }}>
-      <Avatar imageUrl={user?.photoUrl || ''} />
+      <Avatar imageUrl={user?.photoUrl || user?.photo || ''} />
       <Divider height={24} />
       <View style={styles.form}>
         <View

@@ -3,6 +3,8 @@ import { madrasaClient } from '@/api';
 import { MADRASA_API_ENDPOINTS } from '@/api/config/madrasaApiConfig';
 import { User } from '../store/authStore';
 import tokenService, { Tokens } from './tokenService';
+import { useAuthStore } from '../store/authStore';
+import { mmkvStorage } from '../storage/mmkvStorage';
 
 // Types
 export interface LoginCredentials {
@@ -24,6 +26,7 @@ export interface SkippedLoginRequest {
   country?: string;
   voipToken?: string;
 }
+
 
 // Auth service methods
 const authService = {
@@ -115,6 +118,39 @@ const authService = {
       
       // Clear tokens regardless of API response
       await tokenService.clearTokens();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still clear tokens even if API call fails
+      await tokenService.clearTokens();
+      throw error;
+    }
+  },
+
+  logOutByDeletingTokens: async (): Promise<void> => {
+    try {
+      // Always clear tokens regardless of auth method
+      console.log('Clearing tokens...');
+      await tokenService.clearTokens();
+      
+      // Clear MMKV storage
+      console.log('Clearing storage...');
+      try {
+        mmkvStorage.removeItem('auth-storage');
+        mmkvStorage.removeItem('device_id');
+        mmkvStorage.removeItem('onboarded');
+        // Add any other known keys here
+      } catch (e) {
+        console.warn('Error clearing MMKV storage:', e);
+      }
+      
+      // Reset auth state
+      console.log('Resetting auth state...');
+      useAuthStore.getState().resetAuthStore();
+      useAuthStore.getState().setUser(null);
+      useAuthStore.getState().setIsAuthenticated(false);
+      useAuthStore.getState().setIsSkippedLogin(false);
+      
+      console.log('Logout successful');
     } catch (error) {
       console.error('Logout failed:', error);
       // Still clear tokens even if API call fails

@@ -7,13 +7,15 @@ import { AppVersion } from '../components/Profile';
 import { Divider } from '@/components';
 import ProfileNotLoggedDetails from '../components/Profile/ProfileNotLoggedDetails';
 import { ActionList } from '../components/Profile';
+import authService from '@/modules/auth/services/authService';
 
 const ProfileNotLoggedIn: React.FC = () => {
-  // You can add navigation logic to the login screen in ProfileNoLoggedIn if needed
+  const { logOutByDeletingTokens } = authService;
+  
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
-      <ProfileNotLoggedDetails />
+      <ProfileNotLoggedDetails onLoginPress={logOutByDeletingTokens} />
       <Divider color='secondary' height={8} />
       <ActionList profileNotLoggedIn={true} />
       <Divider color='secondary' height={8} />
