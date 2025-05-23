@@ -86,7 +86,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             activeOpacity={0.8}
           >
             <Image
-              source={user?.photo ? {uri: user.photo} : require('@/assets/home/image_21.png')}
+              source={user?.photoUrl || user?.photo ? {uri: user?.photoUrl || user?.photo} : require('@/assets/home/image_21.png')}
               style={styles.userImage}
             />
             {/* Menu Icon positioned on the bottom right of the image */}
