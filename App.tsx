@@ -18,6 +18,7 @@ if (__DEV__) {
   require("./ReactotronConfig");
 }
 
+
 // Create a client with error handling
 const queryClient = new QueryClient({
   defaultOptions: {

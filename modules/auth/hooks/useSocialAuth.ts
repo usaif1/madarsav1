@@ -38,6 +38,7 @@ export const useSocialAuth = () => {
   
   // Facebook Login
   const loginWithFacebook = useCallback(async () => {
+    console.log('Facebook login usesocialauth');
     try {
       setLocalLoading(true);
       setIsLoading(true);

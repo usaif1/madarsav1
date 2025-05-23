@@ -1,7 +1,9 @@
 import React from 'react';
-import {View, StyleSheet, Image, Text, TouchableOpacity} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {View, StyleSheet, Image, Text, TouchableOpacity, Alert} from 'react-native';
+import {useNavigation, CompositeNavigationProp, CommonActions} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {ParentStackParamList} from '@/navigator/ParentNavigator';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ColorPrimary} from '@/theme/lightColors';
 import {scale, verticalScale} from '@/theme/responsive';
@@ -9,6 +11,10 @@ import {Title3Bold, Body2Medium} from '@/components/Typography/Typography';
 import BellFill from '@/assets/home/Bell-fill.svg';
 import MapPinFill from '@/assets/home/map-pin-fill.svg';
 import NavProfileMenu from '@/assets/home/nav-ptofile-menu.svg';
+import { useAuthStore } from '@/modules/auth/store/authStore';
+import tokenService from '@/modules/auth/services/tokenService';
+import { mmkvStorage } from '@/modules/auth/storage/mmkvStorage';
+import { User } from '@/modules/auth/store/authStore';
 
 interface HomeHeaderProps {
   userName: string;
@@ -16,11 +22,18 @@ interface HomeHeaderProps {
   notificationCount?: number;
 }
 
-type RootStackParamList = {
-  user: undefined;
+// Define local navigation param list for the home tab navigator
+type HomeTabParamList = {
+  home: undefined;
+  maktab: undefined;
+  'al-quran': undefined;
 };
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+// Create a composite navigation prop that can navigate in both navigators
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<HomeTabParamList>,
+  NativeStackNavigationProp<ParentStackParamList>
+>;
 
 const HomeHeader: React.FC<HomeHeaderProps> = ({
   userName = 'Mohammad Arbaaz',
@@ -29,10 +42,37 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  
-  const handleUserProfilePress = () => {
-    console.log('User profile pressed');
-    navigation.navigate('user');
+  const resetAuthStore = useAuthStore((state) => state.resetAuthStore);
+  const setUser = useAuthStore((state) => state.setUser);
+  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
+  const setIsSkippedLogin = useAuthStore((state) => state.setIsSkippedLogin);
+  const user = useAuthStore((state) => state.user);
+  // Handle user profile press - navigate to profile then logout
+  const handleUserProfilePress = async () => {
+    console.log('User profile pressed - navigating to profile');
+    
+    try {
+      // First navigate to the user profile screen
+      // This needs to be done before logout since we're using a protected navigator
+      // The 'user' screen is defined in ParentStackParamList
+      if (user) {
+        navigation.navigate('user', { screen: 'profile' });
+      }else{
+        navigation.navigate('user', { screen: 'profileNotLoggedIn' });
+      }
+      
+      // Navigate to the auth flow by resetting navigation stack
+      // This ensures we don't have any previous screens in the history
+      // navigation.dispatch(
+      //   CommonActions.reset({
+      //     index: 0,
+      //     routes: [{ name: 'auth' }],
+      //   })
+      // );
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      Alert.alert('Navigation Failed', 'Could not navigate to profile. Please try again.');
+    }
   };
 
   return (
@@ -46,7 +86,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             activeOpacity={0.8}
           >
             <Image
-              source={require('@/assets/home/image_21.png')}
+              source={user?.photo ? {uri: user.photo} : require('@/assets/home/image_21.png')}
               style={styles.userImage}
             />
             {/* Menu Icon positioned on the bottom right of the image */}
@@ -56,7 +96,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           </TouchableOpacity>
           
           <View style={styles.userTextContainer}>
-            <Title3Bold color="white">{userName}</Title3Bold>
+            <Title3Bold color="white">{user?.name || 'User'}</Title3Bold>
             <View style={styles.locationContainer}>
               <MapPinFill width={14} height={14} />
               <Body2Medium style={styles.locationText}>{locationText}</Body2Medium>

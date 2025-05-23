@@ -82,30 +82,32 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 loginWithGoogle: async () => {
     try {
       set({ isLoading: true, error: null });
-      
+      console.log('loginWithGoogle');
       // Check if Google Play Services are available
-      await GoogleSignin.hasPlayServices();
+      const hasPlayServices = await GoogleSignin.hasPlayServices();
+      console.log('hasPlayServices', hasPlayServices);
       
       // Perform Google Sign-In
       const userInfo = await GoogleSignin.signIn();
-      
+      console.log('userInfo', userInfo);
       // Check if we got an ID token
-      if (!userInfo.idToken) {
+      if (!userInfo.data?.idToken) {
         throw new Error('No ID token received from Google');
       }
       
       // Send ID token to backend
-      const authResponse = await authService.loginWithGoogle(userInfo.idToken);
-      
-      // Store tokens securely
-      await tokenService.storeTokens({
-        accessToken: authResponse.accessToken,
-        refreshToken: authResponse.refreshToken,
-      });
+      // const authResponse = await authService.loginWithGoogle(userInfo.idToken);
+      // console.log('authResponse', authResponse);
+      // // Store tokens securely
+      // await tokenService.storeTokens({
+      //   accessToken: authResponse.accessToken,
+      //   refreshToken: authResponse.refreshToken,
+      // });
       
       // Update auth state
       set({
-        user: authResponse.user,
+        // user: authResponse.user,
+        user: userInfo.data?.user,
         isAuthenticated: true,
         isSkippedLogin: false,
         isLoading: false,
@@ -139,29 +141,31 @@ loginWithGoogle: async () => {
       
       // Perform Facebook Login
       const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-      
+      console.log("We using auth store too")
       if (result.isCancelled) {
         throw new Error('Login cancelled by user');
       }
       
       // Get access token
       const data = await AccessToken.getCurrentAccessToken();
+      console.log("We using auth store too 2")
       if (!data) {
         throw new Error('Failed to get access token from Facebook');
       }
       
       // Send access token to backend
-      const authResponse = await authService.loginWithFacebook(data.accessToken);
+      // const authResponse = await authService.loginWithFacebook(data.accessToken);
+      // console.log("We using auth store too 3",authResponse)
       
-      // Store tokens securely
-      await tokenService.storeTokens({
-        accessToken: authResponse.accessToken,
-        refreshToken: authResponse.refreshToken,
-      });
+      // // Store tokens securely
+      // await tokenService.storeTokens({
+      //   accessToken: authResponse.accessToken,
+      //   refreshToken: authResponse.refreshToken,
+      // });
       
       // Update auth state
       set({
-        user: authResponse.user,
+        // user: authResponse.user,
         isAuthenticated: true,
         isSkippedLogin: false,
         isLoading: false,

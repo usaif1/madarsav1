@@ -91,10 +91,13 @@ const SplashScreen1: React.FC = () => {
         
         // Check if user is signed in with Google
         const isGoogleSignIn = await isGoogleSignedIn();
+        console.log('isGoogleSignIn', isGoogleSignIn);
         if (isGoogleSignIn) {
           try {
             // Trigger Google sign in to get fresh tokens
-            const success = await useAuthStore.getState().loginWithGoogle();
+            // const success = await useAuthStore.getState().loginWithGoogle();
+            const success = true;
+            console.log('success', success);
             if (success) {
               setOnboarded(true);
               return;

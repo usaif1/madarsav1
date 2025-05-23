@@ -9,6 +9,7 @@ import {SplashScreen1, SplashScreen2} from '@/modules/splash/screens';
 // Define the auth stack param list for type safety
 export type AuthStackParamList = {
   SplashScreen1: undefined;
+  SplashScreen2: undefined;
 };
 
 // Create the navigator

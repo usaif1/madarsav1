@@ -14,7 +14,7 @@ import {
   export const configureGoogleSignIn = () => {
     GoogleSignin.configure({
       // Get this from Google Cloud Console
-      webClientId: 'YOUR_WEB_CLIENT_ID_HERE',
+      webClientId: '195416187581-qpimoedkpn9ar93kf13sss1ape1s8lv4.apps.googleusercontent.com',
       offlineAccess: true,
       forceCodeForRefreshToken: true,
     });
@@ -51,24 +51,25 @@ import {
       
       // Perform Google Sign-In
       const userInfo = await GoogleSignin.signIn();
-      
+      console.log('userInfo inside google auth service', userInfo);
       // Extract ID token
-      const idToken = userInfo.idToken;
+      const idToken = userInfo.data?.idToken;
       if (!idToken) {
         throw new Error('No ID token received from Google');
       }
       
-      // Send ID token to backend for verification
-      const authResponse = await authService.loginWithGoogle(idToken);
+      // // Send ID token to backend for verification
+      // const authResponse = await authService.loginWithGoogle(idToken);
       
-      // Store tokens securely
-      await tokenService.storeTokens({
-        accessToken: authResponse.accessToken,
-        refreshToken: authResponse.refreshToken,
-      });
+      // // Store tokens securely
+      // await tokenService.storeTokens({
+      //   accessToken: authResponse.accessToken,
+      //   refreshToken: authResponse.refreshToken,
+      // });
       
       // Update auth state
-      useAuthStore.getState().setUser(authResponse.user);
+      // useAuthStore.getState().setUser(authResponse.user);
+      useAuthStore.getState().setUser(userInfo.data?.user);
       useAuthStore.getState().setIsAuthenticated(true);
       useAuthStore.getState().setIsSkippedLogin(false);
       useAuthStore.getState().setError(null);
