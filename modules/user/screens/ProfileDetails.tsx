@@ -7,8 +7,11 @@ import {Avatar} from './components/ProfileDetails';
 import CustomTextInput from './components/ProfileDetails/CustomTextInput';
 import {Divider} from '@/components';
 import {Body1Title2Bold} from '@/components';
+import {useAuthStore} from '@/modules/auth/store/authStore';
 
 const ProfileDetails: React.FC = () => {
+  const {user} = useAuthStore();
+
   return (
     <View
       style={{
@@ -17,7 +20,7 @@ const ProfileDetails: React.FC = () => {
         alignItems: 'center',
         paddingTop: 32,
       }}>
-      <Avatar />
+      <Avatar imageUrl={user?.photoUrl} />
       <Divider height={24} />
       <View style={styles.form}>
         <View
@@ -29,23 +32,23 @@ const ProfileDetails: React.FC = () => {
             overflow: 'scroll',
           }}>
           <View style={{flex: 1}}>
-            <CustomTextInput label="First Name" value="Mohammad" disabled />
+            <CustomTextInput label="First Name" value={user?.name.split(' ')[0]} disabled />
           </View>
           <View style={{flex: 1}}>
-            <CustomTextInput label="Last Name" value="Arbaz" disabled />
+            <CustomTextInput label="Last Name" value={user?.name.split(' ')[1]} disabled />
           </View>
         </View>
         <View>
-          <CustomTextInput label="Email" value="arbz@gmail.com" disabled />
+          <CustomTextInput label="Email" value={user?.email || ''} disabled />
         </View>
         <View>
-          <CustomTextInput label="Phone number" value="" />
+          <CustomTextInput label="Phone number" value={user?.phone || ''} />
         </View>
         <View>
-          <CustomTextInput label="Gender" value="" />
+          <CustomTextInput label="Gender" value={user?.gender || ''} />
         </View>
         <View>
-          <CustomTextInput label="Date of Birth" value="" />
+          <CustomTextInput label="Date of Birth" value={user?.dob || ''} />
         </View>
 
         <Pressable style={styles.submitBtn}>

@@ -1,11 +1,12 @@
 // modules/auth/services/facebookAuthService.ts
 import { LoginManager, AccessToken, Profile } from 'react-native-fbsdk-next';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore, User } from '../store/authStore';
 import authService from './authService';
 import tokenService from './tokenService';
 import { useErrorStore } from '@/modules/error/store/errorStore';
 import { ErrorType } from '@/api/utils/errorHandling';
 import { Settings } from 'react-native-fbsdk-next';
+import { mmkvStorage } from '../storage/mmkvStorage';
 
 // Configure Facebook SDK
 export const configureFacebookSDK = () => {
@@ -76,18 +77,13 @@ export const loginWithFacebook = async (): Promise<boolean> => {
     useAuthStore.getState().setIsLoading(true);
     console.log('Facebook login starting...');
     
-    // First run the test function to see if basic login works
-    // const testResult = await testFacebookLogin();
-    // console.log('Test login result:', testResult);
+    // Initialize SDK
+    Settings.initializeSDK();
     
-    // if (!testResult.success) {
-    //   throw new Error(`Basic Facebook login failed: ${JSON.stringify(testResult.error)}`);
-    // }
-    
-    // If test succeeded, try the full login flow
-    console.log('Requesting email permission...');
+    // Request permissions
+    console.log('Requesting permissions...');
     const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-    console.log('Full login result:', JSON.stringify(result));
+    console.log('Login permissions result:', JSON.stringify(result));
     
     if (result.isCancelled) {
       throw new Error('Login cancelled by user');
@@ -100,12 +96,51 @@ export const loginWithFacebook = async (): Promise<boolean> => {
     }
     console.log('Access token received:', data.accessToken.toString().substring(0, 10) + '...');
     
-    // Send access token to backend for verification
+    // Get user profile information
+    console.log('Fetching user profile...');
+    const userProfile = await Profile.getCurrentProfile();
+    console.log('User profile received:', userProfile ? JSON.stringify(userProfile) : 'No profile');
+    
+    // Create a user object from the profile
+    if (userProfile) {
+      // Create a valid User object that matches your User interface
+      const user: User = {
+        id: userProfile.userID || 'fb_user', // Ensure id is never undefined
+        name: userProfile.name || 'Facebook User',
+        email: userProfile.email || '', // Email is not available directly from Profile
+        photoUrl: userProfile.imageURL || '',
+      };
+      
+      console.log('Created user object:', JSON.stringify(user));
+      
+      // Update auth state with the user profile
+      useAuthStore.getState().setUser(user);
+    } else {
+      // If no profile is available, create a minimal user object
+      console.warn('No profile information available, creating minimal user');
+      const minimalUser: User = {
+        id: 'fb_' + Date.now().toString(),
+        name: 'Facebook User',
+        photoUrl: '',
+      };
+      useAuthStore.getState().setUser(minimalUser);
+    }
+    
+    // Mark user as onboarded in global store to enable navigation to home
+    // This is critical for routing to home screen
+    try {
+      // Set onboarded flag in storage
+      mmkvStorage.setItem('onboarded', 'true');
+    } catch (e) {
+      console.warn('Failed to set onboarded flag:', e);
+    }
+    
+    // Send access token to backend for verification (commented out for now)
     // console.log('Sending token to backend...');
     // const authResponse = await authService.loginWithFacebook(data.accessToken);
     // console.log('Backend auth response received');
     
-    // Store tokens securely
+    // Store tokens securely (commented out for now)
     // await tokenService.storeTokens({
     //   accessToken: authResponse.accessToken,
     //   refreshToken: authResponse.refreshToken,
@@ -113,7 +148,6 @@ export const loginWithFacebook = async (): Promise<boolean> => {
     // console.log('Tokens stored securely');
     
     // Update auth state
-    // useAuthStore.getState().setUser(authResponse.user);
     useAuthStore.getState().setIsAuthenticated(true);
     useAuthStore.getState().setIsSkippedLogin(false);
     useAuthStore.getState().setError(null);
