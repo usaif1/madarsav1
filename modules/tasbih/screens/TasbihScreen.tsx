@@ -1,386 +1,173 @@
-// TasbihScreen.tsx
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, DeviceEventEmitter } from 'react-native';
-import { DuaCard, Beads, CounterControls } from '../components';
-import ChangeDuaModal from '../components/ChangeDuaModal';
-import CustomBeadModal from '../components/CustomBeadModal';
-import SelectCounterModal from '../components/SelectCounterModal';
-import { useThemeStore } from '@/globalStore';
-import { verticalScale } from '@/theme/responsive';
+import React, {useState, useRef, useEffect} from 'react';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Text,
+  FlatList,
+  UIManager,
+  Platform,
+  Animated,
+  LayoutAnimation,
+} from 'react-native';
 
-// --- Famous multi-verse duas ---
-const duaList = [
-  {
-    id: '1',
-    verses: [
-      {
-        arabic: 'اللّهُـمَّ أَنْتَ السَّلاَمُ وَمِنْكَ السَّلاَمُ',
-        transliteration: 'Allahumma antas-salaamu wa minkas-salaam',
-        translation: 'O Allah, You are Peace and from You is peace.',
-      },
-      {
-        arabic: 'تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ',
-        transliteration: 'Tabaarakta yaa Dhal-Jalaali wal-Ikraam',
-        translation: 'Blessed are You, O Possessor of majesty and honor.',
-      },
-    ],
-  },
-  {
-    id: '2',
-    verses: [
-      {
-        arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ',
-        transliteration: 'Rabbi ighfir li wa tub alayya',
-        translation: 'My Lord, forgive me and turn to me in mercy.',
-      },
-      {
-        arabic: 'إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ',
-        transliteration: 'Innaka anta at-Tawwaabur-Raheem',
-        translation: 'Indeed, You are the Accepting of repentance, the Merciful.',
-      },
-      {
-        arabic: 'اللّهُمَّ اغْفِرْ لِي وَارْحَمْنِي',
-        transliteration: 'Allahumma ighfir li warhamni',
-        translation: 'O Allah, forgive me and have mercy on me.',
-      },
-    ],
-  },
-  {
-    id: '3',
-    verses: [
-      {
-        arabic: 'سُبْحَانَ اللّٰهِ',
-        transliteration: 'Subhanallah',
-        translation: 'Glory is to Allah.',
-      },
-      {
-        arabic: 'الْحَمْدُ لِلّٰهِ',
-        transliteration: 'Alhamdulillah',
-        translation: 'All praise is for Allah.',
-      },
-      {
-        arabic: 'اللّٰهُ أَكْبَرُ',
-        transliteration: 'Allahu Akbar',
-        translation: 'Allah is the Greatest.',
-      },
-    ],
-  },
-  {
-    id: '4',
-    verses: [
-      {
-        arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
-        transliteration: 'Allahumma salli ala Muhammad',
-        translation: 'O Allah, send prayers upon Muhammad.',
-      },
-      {
-        arabic: 'وَعَلَى آلِ مُحَمَّدٍ',
-        transliteration: 'wa ala aali Muhammad',
-        translation: 'and upon the family of Muhammad.',
-      },
-    ],
-  },
-  {
-    id: '5',
-    verses: [
-      {
-        arabic: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً',
-        transliteration: 'Rabbana atina fid-dunya hasanah',
-        translation: 'Our Lord, give us in this world [that which is] good',
-      },
-      {
-        arabic: 'وَفِي الْآخِرَةِ حَسَنَةً',
-        transliteration: 'wa fil-akhirati hasanah',
-        translation: 'and in the Hereafter [that which is] good',
-      },
-      {
-        arabic: 'وَقِنَا عَذَابَ النَّارِ',
-        transliteration: 'wa qina adhaban-nar',
-        translation: 'and protect us from the punishment of the Fire.',
-      },
-    ],
-  },
-  {
-    id: '6',
-    verses: [
-      {
-        arabic: 'اللّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ',
-        transliteration: `Allahumma inni as'aluka al-'afwa wal-'afiyah`,
-        translation: 'O Allah, I ask You for pardon and well-being.',
-      },
-      {
-        arabic: 'فِي الدُّنْيَا وَالآخِرَةِ',
-        transliteration: 'fid-dunya wal-akhirah',
-        translation: 'in this world and the Hereafter.',
-      },
-    ],
-  },
-  {
-    id: '7',
-    verses: [
-      {
-        arabic: 'اللّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ',
-        transliteration: 'Allahumma ihdini fiman hadayt',
-        translation: 'O Allah, guide me among those You have guided.',
-      },
-      {
-        arabic: 'وَعَافِنِي فِيمَنْ عَافَيْتَ',
-        transliteration: 'wa aafini fiman aafayt',
-        translation: 'and grant me well-being among those You have granted well-being.',
-      },
-    ],
-  },
-  {
-    id: '8',
-    verses: [
-      {
-        arabic: 'اللّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ زَوَالِ نِعْمَتِكَ',
-        transliteration: `Allahumma inni a'udhu bika min zawali ni'matik`,
-        translation: 'O Allah, I seek refuge in You from the decline of Your favor.',
-      },
-      {
-        arabic: 'وَتَحَوُّلِ عَافِيَتِكَ',
-        transliteration: `wa tahawwuli 'afiyatika`,
-        translation: 'and the loss of Your well-being.',
-      },
-      {
-        arabic: 'وَفُجَاءَةِ نِقْمَتِكَ',
-        transliteration: `wa fuja'ati niqmatik`,
-        translation: 'and the suddenness of Your punishment.',
-      },
-      {
-        arabic: 'وَجَمِيعِ سَخَطِكَ',
-        transliteration: `wa jami'i sakhatik`,
-        translation: 'and all forms of Your displeasure.',
-      },
-    ],
-  },
-  {
-    id: '9',
-    verses: [
-      {
-        arabic: 'اللّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ زَوَالِ نِعْمَتِكَ',
-        transliteration: `Allahumma inni a'udhu bika min zawali ni'matik`,
-        translation: 'O Allah, I seek refuge in You from the decline of Your favor.',
-      },
-      {
-        arabic: 'وَتَحَوُّلِ عَافِيَتِكَ',
-        transliteration: `wa tahawwuli 'afiyatika`,
-        translation: 'and the loss of Your well-being.',
-      },
-      {
-        arabic: 'وَفُجَاءَةِ نِقْمَتِكَ',
-        transliteration: `wa fuja'ati niqmatik`,
-        translation: 'and the suddenness of Your punishment.',
-      },
-      {
-        arabic: 'وَجَمِيعِ سَخَطِكَ',
-        transliteration: `wa jami'i sakhatik`,
-        translation: 'and all forms of Your displeasure.',
-      },
-    ],
-  },
-];
+if (Platform.OS === 'android') {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
 
-// Preset bead counts for the counter
-const PRESET_BEADS = [11, 33, 99];
+const CIRCLE_SIZE = 30;
+const INITIAL_LIST1 = ['A', 'B', 'C', 'D'];
+const INITIAL_LIST2 = ['E', 'F', 'G'];
+const MAX_LIST2_LENGTH = 3;
 
-/**
- * TasbihScreen component displaying Islamic prayer beads with duas
- * Manages the state and UI for digital tasbih counter
-*/
-const TasbihScreen: React.FC = () => {
-  const [selectedDuaIndex, setSelectedDuaIndex] = useState(0);
-  const [beadIndex, setBeadIndex] = useState(0);
-  const [beadCount, setBeadCount] = useState(duaList[selectedDuaIndex].verses.length); // Verses per dua
-  const [duaModalVisible, setDuaModalVisible] = useState(false);
-  const [selectCounterModalVisible, setSelectCounterModalVisible] = useState(false);
-  const [customBeadModalVisible, setCustomBeadModalVisible] = useState(false);
-  const [customBeadValue, setCustomBeadValue] = useState('');
-  const [inputTouched, setInputTouched] = useState(false);
-  const { colors } = useThemeStore();
-  
-  // Helper to determine if custom is selected
-  const isCustomSelected = !PRESET_BEADS.includes(beadCount);
-  
-  // Current dua verses - safely access with bounds checking
-  const currentDua = duaList[selectedDuaIndex] || duaList[0];
-  const verseCount = currentDua.verses.length;
-  
-  // Ensure beadIndex is always valid for current dua
-  const safeBeadIndex = Math.min(beadIndex, verseCount - 1);
-  
-  // Get current verse with safety checks
-  const currentVerse = currentDua.verses[safeBeadIndex] || currentDua.verses[0];
-  
-  useEffect(() => {
-    // Update bead count when dua changes and reset index
-    const newVerseCount = duaList[selectedDuaIndex].verses.length;
-    setBeadCount(newVerseCount);
-    setBeadIndex(0); // Always reset to first verse when changing dua
-  }, [selectedDuaIndex]);
+const ShiftingCircles: React.FC = () => {
+  const [list1, setList1] = useState(INITIAL_LIST1);
+  const [list2, setList2] = useState(INITIAL_LIST2);
+  const [counter, setCounter] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [movingItem, setMovingItem] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (__DEV__) {
-      console.log("Modal visibility state in TasbihScreen:", duaModalVisible);
-    }
-  }, [duaModalVisible]);
+  const animatedX = useRef(new Animated.Value(0)).current;
+  const rightListTranslate = useRef(new Animated.Value(0)).current;
 
-  const handlePrev = () => {
-    setBeadIndex(prevIndex => {
-      // Ensure we stay in bounds
-      if (prevIndex > 0) {
-        return prevIndex - 1;
-      } else {
-        return verseCount - 1; // Loop back
+  const handlePress = () => {
+    if (list1.length === 0 || isAnimating) return;
+
+    const movedItem = list1[list1.length - 1];
+    setMovingItem(movedItem);
+    setIsAnimating(true);
+
+    animatedX.setValue(0);
+    rightListTranslate.setValue(0);
+
+    Animated.parallel([
+      Animated.timing(animatedX, {
+        toValue: 120,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rightListTranslate, {
+        toValue: 40,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+      const newList1 = [
+        String.fromCharCode(88 + (counter % 26)),
+        ...list1.slice(0, -1),
+      ];
+      let newList2 = [movedItem, ...list2];
+      if (newList2.length > MAX_LIST2_LENGTH) {
+        newList2 = newList2.slice(0, MAX_LIST2_LENGTH);
       }
-    });
-  };
-  
-  const handleNext = () => {
-    setBeadIndex(prevIndex => {
-      // Ensure we stay in bounds
-      if (prevIndex < verseCount - 1) {
-        return prevIndex + 1;
-      } else {
-        return 0; // Loop back
-      }
+
+      setList1(newList1);
+      setList2(newList2);
+      setCounter(counter + 1);
+      setMovingItem(null);
+      animatedX.setValue(0);
+      rightListTranslate.setValue(0);
+      setIsAnimating(false);
     });
   };
 
-  const handleSelectDua = (idx: number) => {
-    // Ensure selected dua index is valid
-    const validIdx = Math.max(0, Math.min(idx, duaList.length - 1));
-    setSelectedDuaIndex(validIdx);
-    setBeadIndex(0); // Always reset to first verse for safety
-    setDuaModalVisible(false);
-  };
+  const renderCircle = (item: string, index: number) => (
+    <View key={item + index} style={styles.circle}>
+      <Text style={styles.label}>{item}</Text>
+    </View>
+  );
 
-  const handleSelectCounter = (count: number) => {
-    setBeadCount(Math.max(1, count)); // Ensure count is at least 1
-    setBeadIndex(0); // Reset index when counter changes
-    setSelectCounterModalVisible(false);
-  };
-
-  const handleCustomBeadOpen = () => {
-    setCustomBeadValue('');
-    setInputTouched(false);
-    setCustomBeadModalVisible(true);
-    setSelectCounterModalVisible(false);
-  };
-
-  const handleCustomBeadSave = () => {
-    if (customBeadValue && parseInt(customBeadValue) > 0) {
-      setBeadCount(parseInt(customBeadValue));
-      setBeadIndex(0); // Reset index
-      setCustomBeadModalVisible(false);
+  const getDisplayList2 = () => {
+    if (isAnimating) {
+      return list2.slice(0, MAX_LIST2_LENGTH - 1);
     }
-  };
-
-  const handleReset = () => {
-    setBeadIndex(0);
-  };
-
-  const handleAdvanceBead = () => {
-    handleNext(); // Use the same safe next handler
-  };
-
-  // Enhanced modal toggle function
-  const toggleDuaModal = () => {
-    if (__DEV__) {
-      console.log("Toggling dua modal from:", duaModalVisible, "to:", !duaModalVisible);
-    }
-    setDuaModalVisible(prevState => !prevState);
-    
-    // Emit an event for debugging in dev tools
-    if (__DEV__) {
-      DeviceEventEmitter.emit('MODAL_TOGGLE', { visible: !duaModalVisible });
-    }
+    return list2.slice(0, MAX_LIST2_LENGTH);
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: 'white' }]}> 
-      <DuaCard
-        arabic={currentVerse.arabic}
-        transliteration={currentVerse.transliteration}
-        translation={currentVerse.translation}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        onChangeDua={() => setDuaModalVisible(true)}
-      />
-      
-      <Beads
-        count={verseCount}
-        activeIndex={safeBeadIndex}
-        onAdvance={handleNext}
-        totalCount={verseCount}
-      />
-      
-      <View style={styles.counterControlsWrapper}>
-        <CounterControls
-          selectedCount={beadCount}
-          onSelectCounter={() => setSelectCounterModalVisible(true)}
-          onReset={handleReset}
-          currentCount={safeBeadIndex}
+    <Pressable style={styles.container} onPress={handlePress}>
+      <View style={styles.rowContainer}>
+        <FlatList
+          horizontal
+          data={list1.filter(item => item !== movingItem)}
+          renderItem={({item, index}) => renderCircle(item, index)}
+          keyExtractor={(item, index) => 'L1-' + index + item}
+          contentContainerStyle={styles.list}
+          showsHorizontalScrollIndicator={false}
         />
+        <View style={styles.verticalSeparator} />
+        <Animated.View style={{transform: [{translateX: rightListTranslate}]}}>
+          <FlatList
+            horizontal
+            data={getDisplayList2()}
+            renderItem={({item, index}) => renderCircle(item, index)}
+            keyExtractor={(item, index) => 'L2-' + index + item}
+            contentContainerStyle={styles.list}
+            showsHorizontalScrollIndicator={false}
+          />
+        </Animated.View>
       </View>
-      
-      {/* Dua selection modal */}
-      <ChangeDuaModal
-        visible={duaModalVisible}
-        duaList={duaList}
-        selectedIndex={selectedDuaIndex}
-        onSelect={handleSelectDua}
-        onClose={() => {
-          if (__DEV__) {
-            console.log("Closing modal");
-          }
-          setDuaModalVisible(false);
-        }}
-      />
 
-      {/* Counter selection modal */}
-      <SelectCounterModal
-        visible={selectCounterModalVisible}
-        onClose={() => setSelectCounterModalVisible(false)}
-        onSelectPreset={handleSelectCounter}
-        onCustomBeads={handleCustomBeadOpen}
-        presetBeads={PRESET_BEADS}
-        selectedCount={beadCount}
-        isCustomSelected={!PRESET_BEADS.includes(beadCount)}
-        customValue={!PRESET_BEADS.includes(beadCount) ? beadCount : undefined}
-      />
-      
-      {/* Custom bead count modal */}
-      <CustomBeadModal
-        visible={customBeadModalVisible}
-        value={customBeadValue}
-        onChangeValue={setCustomBeadValue}
-        onSave={handleCustomBeadSave}
-        onClose={() => setCustomBeadModalVisible(false)}
-        inputTouched={inputTouched}
-        setInputTouched={setInputTouched}
-      />
-    </View>
+      {movingItem && (
+        <Animated.View
+          style={[
+            styles.circle,
+            styles.movingCircle,
+            {
+              transform: [{translateX: animatedX}],
+            },
+          ]}>
+          <Text style={styles.label}>{movingItem}</Text>
+        </Animated.View>
+      )}
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
     alignItems: 'center',
-    rowGap: verticalScale(52),
   },
-  counterControlsWrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+  rowContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: verticalScale(32),
-    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  list: {
+    gap: 12,
+    paddingHorizontal: 10,
+  },
+  verticalSeparator: {
+    width: 32,
+  },
+  circle: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
+    backgroundColor: '#8A57DC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 2,
+  },
+  movingCircle: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -CIRCLE_SIZE / 2,
+    marginLeft: -CIRCLE_SIZE / 2,
+    zIndex: 2,
+  },
+  label: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
 
-export default TasbihScreen;
+export default ShiftingCircles;

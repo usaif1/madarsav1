@@ -1,265 +1,123 @@
-import React, { useRef, useEffect } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  Animated, 
-  Pressable, 
-  useWindowDimensions, 
-  PanResponder
+import React, {useCallback, useRef} from 'react';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  PanResponder,
+  useWindowDimensions,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+import Svg, {Path} from 'react-native-svg';
+import svgPathProperties from 'svg-path-properties';
 import rosaryBead from '@/assets/tasbih/rosaryBead.png';
-import Thread from '@/assets/tasbih/thread.svg';
-import { Body1Title2Bold, Body1Title2Regular, H3Bold } from '@/components';
+import {Body1Title2Regular, H3Bold} from '@/components';
 
 interface BeadsProps {
-  count?: number;
-  activeIndex?: number;
-  onAdvance?: () => void;
-  totalCount?: number;
-  currentCount?: number;
+  totalCount?: number; // 33 by default
+  currentCount?: number; // current index (0-based)
+  onAdvance?: () => void; // callback when bead moves
 }
 
-const DEFAULT_BEAD_COUNT = 8;
+const ITEM = 64; // bead img size
 
 const Beads: React.FC<BeadsProps> = ({
-  count = DEFAULT_BEAD_COUNT,
-  activeIndex = 0,
-  onAdvance,
   totalCount = 33,
-  currentCount = 0
+  currentCount = 0,
+  onAdvance,
 }) => {
-  const { width } = useWindowDimensions();
+  /* 1️⃣ build a curved path */
+  const {width} = useWindowDimensions();
+  const threadW = Math.min(width - 32, 380);
+  const pathD = `M0 90 Q ${threadW * 0.5} 0 ${threadW} 90`;
+  const path = svgPathProperties(pathD); // function → helper object
+  const LEN = path.getTotalLength();
 
-  // Ensure activeIndex is always within valid bounds
-  const safeActiveIndex = Math.min(Math.max(0, activeIndex), count - 1);
-  
-  // Responsive scaling for the thread
-  const threadWidth = Math.min(width - 32, 380);
+  /* 2️⃣ shared progress 0-1 */
+  const progress = useSharedValue((currentCount % totalCount) / totalCount);
 
-  // Animation values for each bead - recreate when count changes
-  const beadAnims = useRef<Animated.Value[]>([]).current;
-  
-  // Update animations array when count changes
-  useEffect(() => {
-    // Clear current animations
-    beadAnims.length = 0;
-    
-    // Create new animations for current count
-    for (let i = 0; i < count; i++) {
-      beadAnims.push(new Animated.Value(0));
-    }
-  }, [count]);
-
-  // Calculate bead positions along the SVG thread curve
-  const x1 = 32, y1 = 80;
-  const x2 = threadWidth - 32, y2 = 80;
-  const cx = threadWidth / 2, cy = 10; // Control point for curve
-  
-  function getQuadraticBezierXY(t: number, sx: number, sy: number, cx: number, cy: number, ex: number, ey: number) {
+  /* 3️⃣ map progress → (x,y) */
+  const beadStyle = useAnimatedStyle(() => {
+    const {x, y} = path.getPointAtLength(progress.value * LEN);
     return {
-      x: Math.pow(1 - t, 2) * sx + 2 * (1 - t) * t * cx + Math.pow(t, 2) * ex,
-      y: Math.pow(1 - t, 2) * sy + 2 * (1 - t) * t * cy + Math.pow(t, 2) * ey,
+      transform: [{translateX: x - ITEM / 2}, {translateY: y - ITEM / 2}],
     };
-  }
-  
-  // Calculate positions only if count > 0
-  const beadPositions = count > 0 ? Array.from({ length: count }, (_, i) => {
-    const t = count === 1 ? 0.5 : i / (count - 1);
-    const pos = getQuadraticBezierXY(t, x1, y1, cx, cy, x2, y2);
-    return {
-      left: pos.x - 24,
-      top: pos.y - 24,
-    };
-  }) : [];
+  });
 
-  // Pan responder for swipe gestures
+  /* 4️⃣ advance handler */
+  const moveNext = useCallback(() => {
+    progress.value = withTiming((progress.value + 1 / totalCount) % 1, {
+      duration: 120,
+      easing: Easing.out(Easing.quad),
+    });
+    onAdvance?.();
+  }, [progress, totalCount, onAdvance]);
+
+  /* 5️⃣ swipe gesture */
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx > 50) {
-          if (onAdvance) onAdvance();
-        }
+      onPanResponderRelease: (_, g) => {
+        if (g.dx > 40) moveNext();
       },
-    })
+    }),
   ).current;
 
-  // Animate bead on advance - with safety checks
-  useEffect(() => {
-    // Safety check: ensure animations array is populated and index is valid
-    if (beadAnims.length === 0 || safeActiveIndex >= beadAnims.length) {
-      return;
-    }
-    
-    beadAnims.forEach((anim, i) => {
-      if (i !== safeActiveIndex) {
-        anim.setValue(0);
-      }
-    });
-    
-    // Animate active bead
-    Animated.sequence([
-      Animated.timing(beadAnims[safeActiveIndex], {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(beadAnims[safeActiveIndex], {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [safeActiveIndex, count]);
-
   return (
-    <View style={[styles.container, { paddingTop: 16 }]} {...panResponder.panHandlers}>
-      {/* Counter header: index/total, then round */}
-      <View style={styles.counterHeader}>
-        <View style={styles.counterIndexRow}>
-          <H3Bold style={styles.currentIndex}>{safeActiveIndex + 1}</H3Bold>
-          <Body1Title2Bold style={styles.slash}>/</Body1Title2Bold>
-          <Body1Title2Bold style={styles.totalCount}>{totalCount}</Body1Title2Bold>
-        </View>
-        <Body1Title2Regular style={styles.roundText}>
-          Round {Math.floor(safeActiveIndex / (count || 1)) + 1}
+    <View style={styles.root} {...panResponder.panHandlers}>
+      {/* counter header */}
+      <View style={styles.counter}>
+        <H3Bold style={styles.curIdx}>{(currentCount % totalCount) + 1}</H3Bold>
+        <Body1Title2Regular style={styles.slash}>/</Body1Title2Regular>
+        <Body1Title2Regular style={styles.total}>
+          {totalCount}
         </Body1Title2Regular>
       </View>
 
-      {/* Thread and beads */}
-      <View style={[styles.threadWrap, { width: threadWidth, height: 120 }]} > 
-        {/* SVG thread curve */}
-        <Thread width={threadWidth} height={120} style={styles.threadSvg} />
-        
-        {beadPositions.map((pos, idx) => {
-          const isActive = idx === safeActiveIndex;
-          
-          // Safety check for animation values
-          const translateX = beadAnims[idx]?.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 20],
-          }) || new Animated.Value(0);
-          
-          return (
-            <Pressable
-              key={`bead-${idx}`}
-              onPress={() => isActive && onAdvance && onAdvance()}
-              style={[
-                styles.beadWrap,
-                { left: pos.left, top: pos.top },
-              ]}
-            >
-              <Animated.View
-                style={[
-                  styles.bead,
-                  isActive && styles.activeBead,
-                  { transform: [{ translateX }] },
-                ]}
-              >
-                <FastImage
-                  source={rosaryBead}
-                  style={styles.beadImg}
-                  resizeMode={FastImage.resizeMode.contain}
-                />
-              </Animated.View>
-            </Pressable>
-          );
-        })}
-      </View>
+      {/* thread curve */}
+      <Svg width={threadW} height={120}>
+        <Path d={pathD} stroke="#D0D0D0" strokeWidth={2} fill="none" />
+      </Svg>
 
-      <Body1Title2Regular color="sub-heading" style={styles.swipeHint}>Click or swipe to count</Body1Title2Regular>
+      {/* bead */}
+      <Pressable onPress={moveNext} style={StyleSheet.absoluteFill}>
+        <Animated.Image
+          source={rosaryBead}
+          resizeMode={FastImage.resizeMode.contain}
+          style={[styles.bead, beadStyle]}
+        />
+      </Pressable>
+
+      <Body1Title2Regular style={styles.hint}>
+        Tap or swipe to count
+      </Body1Title2Regular>
     </View>
   );
 };
 
+export default Beads;
+
+/* ---------- styles ---------- */
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
+  root: {width: '100%', alignItems: 'center', paddingTop: 16},
+  bead: {
+    position: 'absolute',
+    width: ITEM,
+    height: ITEM,
   },
-  counterHeader: {
-    width: '100%',
-    alignItems: 'flex-start',
-    paddingLeft: 8,
-  },
-  counterIndexRow: {
+  counter: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    alignSelf: 'flex-start',
+    marginLeft: 24,
   },
-  currentIndex: {
-    fontSize: 38,
-    color: '#8A57DC',
-    fontWeight: '700',
-    marginRight: 2,
-  },
-  slash: {
-    fontSize: 32,
-    color: '#888',
-    fontWeight: '700',
-    marginRight: 2,
-  },
-  totalCount: {
-    fontSize: 32,
-    color: '#888',
-    fontWeight: '700',
-  },
-  roundText: {
-    fontSize: 18,
-    color: '#222',
-    fontWeight: '600',
-    marginTop: 2,
-    marginBottom: 0,
-    marginLeft: 2,
-  },
-  threadWrap: {
-    height: 120,
-    position: 'relative',
-    marginVertical: 16,
-  },
-  threadSvg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 0,
-  },
-  beadWrap: {
-    position: 'absolute',
-    width: 48,
-    height: 48,
-    zIndex: 1,
-  },
-  bead: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  beadImg: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  activeBead: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  swipeHint: {
-    color: '#666',
-    fontSize: 16,
-    marginTop: 16,
-    textAlign: 'center',
-  },
+  curIdx: {fontSize: 36, color: '#8A57DC', fontWeight: '700'},
+  slash: {fontSize: 26, color: '#888', marginHorizontal: 2},
+  total: {fontSize: 26, color: '#888'},
+  hint: {marginTop: 20, color: '#666', fontSize: 16, textAlign: 'center'},
 });
-
-export default Beads;
