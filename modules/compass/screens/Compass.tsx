@@ -92,8 +92,7 @@ const Compass: React.FC = () => {
     inputRange: [0, 360],
     outputRange: ['0deg', '360deg'],
   });
-  const qiblaAngle =
-    qiblaBearing != null ? (360 - trueHeading + qiblaBearing) % 360 : 0;
+  const qiblaAngle = qiblaBearing != null ? (qiblaBearing - trueHeading + 360) % 360 : 0;
 
   // ───── loading / error UI ─────
   if (!coords && !locError) {

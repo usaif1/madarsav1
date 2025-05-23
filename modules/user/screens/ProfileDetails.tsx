@@ -20,7 +20,7 @@ const ProfileDetails: React.FC = () => {
         alignItems: 'center',
         paddingTop: 32,
       }}>
-      <Avatar imageUrl={user?.photoUrl} />
+      <Avatar imageUrl={user?.photoUrl || ''} />
       <Divider height={24} />
       <View style={styles.form}>
         <View
@@ -32,10 +32,10 @@ const ProfileDetails: React.FC = () => {
             overflow: 'scroll',
           }}>
           <View style={{flex: 1}}>
-            <CustomTextInput label="First Name" value={user?.name.split(' ')[0]} disabled />
+            <CustomTextInput label="First Name" value={user?.name.split(' ')[0] || ''} disabled />
           </View>
           <View style={{flex: 1}}>
-            <CustomTextInput label="Last Name" value={user?.name.split(' ')[1]} disabled />
+            <CustomTextInput label="Last Name" value={user?.name.split(' ')[1] || ''} disabled />
           </View>
         </View>
         <View>

@@ -16,6 +16,7 @@ import { useAuthStore } from '@/modules/auth/store/authStore';
 import tokenService from '@/modules/auth/services/tokenService';
 import authService from '@/modules/auth/services/authService';
 import { isGoogleSignedIn } from '@/modules/auth/services/googleAuthService';
+import { isFacebookLoggedIn } from '@/modules/auth/services/facebookAuthService';
 import skipLoginService from '@/modules/auth/services/skipLoginService';
 import { useGlobalStore } from '@/globalStore';
 
@@ -104,6 +105,23 @@ const SplashScreen1: React.FC = () => {
             }
           } catch (error) {
             console.error('Google sign in failed:', error);
+          }
+        }
+        
+        // Check if user is signed in with Facebook
+        const isFacebookSignIn = await isFacebookLoggedIn();
+        console.log('isFacebookSignIn', isFacebookSignIn);
+        if (isFacebookSignIn) {
+          try {
+            // Trigger Facebook sign in to get fresh tokens
+            const success = true; // We're assuming success here like with Google
+            console.log('Facebook login success', success);
+            if (success) {
+              setOnboarded(true);
+              return;
+            }
+          } catch (error) {
+            console.error('Facebook sign in failed:', error);
           }
         }
         

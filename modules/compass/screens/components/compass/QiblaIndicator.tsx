@@ -11,6 +11,8 @@ const QiblaIndicator: React.FC<QiblaIndicatorProps> = ({ angle, compassRadius })
   // Calculate the position on the edge of the circle
   // We need to convert angle to radians for Math.cos and Math.sin
   const radians = (angle * Math.PI) / 180;
+  const posX = compassRadius * Math.sin(radians);
+  const posY = -compassRadius * Math.cos(radians);
   
   // Calculate the position for the indicator
   // The indicator should be positioned on the edge of the compass
@@ -19,8 +21,8 @@ const QiblaIndicator: React.FC<QiblaIndicatorProps> = ({ angle, compassRadius })
   const halfIndicatorSize = indicatorSize / 2;
   
   // Calculate position from center of compass
-  const posX = compassRadius * Math.sin(radians);
-  const posY = -compassRadius * Math.cos(radians);
+  // const posX = compassRadius * Math.sin(radians);
+  // const posY = -compassRadius * Math.cos(radians);
   
   // Adjust to position the center of the indicator on the edge
   const centerX = posX - halfIndicatorSize;
