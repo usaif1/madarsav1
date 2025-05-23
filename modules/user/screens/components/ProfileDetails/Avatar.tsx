@@ -14,7 +14,7 @@ const Avatar = ({imageUrl}: {imageUrl: string}) => {
       <FastImage
         source={imageUrl ? {uri: imageUrl} : require('@/assets/profile/face.png')}
         resizeMode={FastImage.resizeMode.contain}
-        style={{width: 100, height: 100}}
+        style={[styles.avatar,{width: 100, height: 100}]}
       />
       <Pressable style={styles.cameraBtn}>
         <Camera />
@@ -32,10 +32,12 @@ const styles = StyleSheet.create({
   avatar: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
-    borderRadius: 100,
+    borderWidth:4,
+    borderRadius: 50,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    borderColor:'lightgrey'
   },
 
   cameraBtn: {
@@ -44,7 +46,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     backgroundColor: '#8A57DC',
     position: 'absolute',
-    bottom: -CAMERA_SIZE / 2 + 8,
+    bottom: -CAMERA_SIZE / 2 ,
     left: '50%',
     transform: [{translateX: -CAMERA_SIZE / 2}],
     right: 0,

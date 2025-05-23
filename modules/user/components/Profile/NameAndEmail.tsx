@@ -42,7 +42,7 @@ const Avatar = () => {
   return (
     <LinearGradient colors={['#FFFFFF', '#F2DEFF']} style={{borderRadius: 100}}>
       <View style={styles.avatar}>
-        {user?.photoUrl ? <FastImage source={{uri: user?.photoUrl}} style={{width: 100, height: 100, borderRadius: 100}} /> : <H2Bold color="primary">{user?.name?.split(' ').map((name: string) => name[0]).join('')}</H2Bold>}
+        {user?.photoUrl || user?.photo ? <FastImage source={{uri: user?.photoUrl || user?.photo}} style={{width: 100, height: 100, borderRadius: 100}} /> : <H2Bold color="primary">{user?.name?.split(' ').map((name: string) => name[0]).join('')}</H2Bold>}
       </View>
     </LinearGradient>
   );
