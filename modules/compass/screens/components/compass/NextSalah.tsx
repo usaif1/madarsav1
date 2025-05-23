@@ -44,7 +44,7 @@ const NextSalah: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <NextSalahIcon />
+      {NextSalahIcon && <NextSalahIcon />}
 
       <View style={styles.textBlock}>
         {isLoading ? (
