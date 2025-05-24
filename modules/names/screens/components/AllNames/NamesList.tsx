@@ -1,28 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
 
-// components & data
+// Components & Data
 import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
 import Share from '@/assets/share-light.svg';
 import RightTriangle from '@/assets/right-triangle.svg';
 import Close from '@/assets/close.svg';
 import Pause from '@/assets/home/pause.svg';
-// Audio playback
-import Sound from 'react-native-sound';
 
-// Enable playback in silent mode
-Sound.setCategory('Playback');
+// Custom Hook
+import { useNameAudio } from '../../../hooks/useNameAudio'; // Adjust path as needed
 
-// local data
-import {allNames} from '../../../data/allNames';
+// Local Data
+import { allNames } from '../../../data/allNames';
 
-// store
+// Store
 import { useThemeStore } from '@/globalStore';
 import { ColorPrimary } from '@/theme/lightColors';
 
-// Define the Name interface based on our local data
+/**
+ * Interface for Name data structure
+ */
 interface Name {
   id: number;
   classicalArabic: string;
@@ -39,164 +39,160 @@ interface NamesListProps {
   searchQuery?: string;
 }
 
+/**
+ * Main component for displaying list of Islamic names
+ * Features: Search, Modal view, Audio playback
+ */
 const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const { colors } = useThemeStore();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Modal state
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
   
-  // Audio state
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [isAudioLoading, setIsAudioLoading] = useState<boolean>(false);
-  const [audioError, setAudioError] = useState<string | null>(null);
-  const audioRef = useRef<Sound | null>(null);
+  // Audio hook
+  const { 
+    isPlaying, 
+    isLoading: isAudioLoading, 
+    error: audioError, 
+    playAudio, 
+    pauseAudio, 
+    clearError 
+  } = useNameAudio();
 
-  // Clean up audio when component unmounts or modal closes
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.stop();
-        audioRef.current.release();
-        audioRef.current = null;
-      }
-    };
-  }, []);
+  /**
+   * Filter names based on search query with multiple criteria
+   */
+  const filteredNames = React.useMemo(() => {
+    if (searchQuery.trim() === '') return allNames;
+    
+    const searchLower = searchQuery.toLowerCase().trim();
+    
+    return allNames.filter(name => {
+      return (
+        name.ipa.toLowerCase().includes(searchLower) || 
+        name.translation.toLowerCase().includes(searchLower) ||
+        name.classicalArabic.includes(searchLower) ||
+        name.id.toString().includes(searchLower) // Allow searching by number
+      );
+    });
+  }, [searchQuery]);
 
-  // Clean up audio when modal closes
-  useEffect(() => {
-    if (!isVisible && audioRef.current) {
-      audioRef.current.stop();
-      audioRef.current.release();
-      audioRef.current = null;
-      setIsPlaying(false);
-    }
-  }, [isVisible]);
-
-  // Handle audio playback
-  const handleAudioPlayback = async () => {
-    if (isPlaying && audioRef.current) {
-      // Pause audio if playing
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      // Play audio for the selected name
-      await playAudio(allNames[currentItemIndex].id);
-    }
-  };
-
-  // Play audio function
-  const playAudio = async (nameNumber: number) => {
+  /**
+   * Handle audio playback with error handling
+   */
+  const handleAudioPlayback = () => {
     try {
-      // Stop any currently playing audio
-      if (audioRef.current) {
-        audioRef.current.stop();
-        audioRef.current.release();
-        audioRef.current = null;
+      if (isPlaying) {
+        pauseAudio();
+      } else {
+        // Clear any previous errors
+        if (audioError) {
+          clearError();
+        }
+        
+        // Get the actual name ID from filtered results
+        const currentName = filteredNames[currentItemIndex];
+        if (currentName) {
+          playAudio(currentName.id);
+        } else {
+          Alert.alert('Error', 'Unable to find the selected name.');
+        }
       }
-
-      setIsAudioLoading(true);
-      setAudioError(null);
-      
-      const formattedNumber = nameNumber.toString().padStart(2, '0');
-      const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
-
-      // Create a promise to handle the audio loading
-      await new Promise<void>((resolve, reject) => {
-        audioRef.current = new Sound(audioUrl, Sound.MAIN_BUNDLE, (error) => {
-          if (error) {
-            console.error('Failed to load the sound', error);
-            setAudioError('Failed to load audio');
-            setIsAudioLoading(false);
-            reject(error);
-            return;
-          }
-
-          setIsAudioLoading(false);
-          setIsPlaying(true);
-          
-          // Play the sound
-          audioRef.current?.play((success) => {
-            setIsPlaying(false);
-            if (!success) {
-              console.log('Playback failed');
-              setAudioError('Playback failed');
-            }
-            // Release after playback completes
-            if (audioRef.current) {
-              audioRef.current.release();
-              audioRef.current = null;
-            }
-          });
-          
-          resolve();
-        });
-      });
     } catch (error) {
-      console.error('Error in playAudio:', error);
-      setIsAudioLoading(false);
-      setAudioError('Error playing audio');
+      console.error('Error in handleAudioPlayback:', error);
+      Alert.alert('Audio Error', 'Failed to play audio. Please try again.');
     }
   };
 
-  // Filter names based on search query
-  const filteredNames = searchQuery.trim() === '' 
-    ? allNames 
-    : allNames.filter(name => {
-        const searchLower = searchQuery.toLowerCase();
-        return (
-          name.ipa.toLowerCase().includes(searchLower) || 
-          name.translation.toLowerCase().includes(searchLower) ||
-          name.classicalArabic.includes(searchLower)
-        );
-      });
+  /**
+   * Handle modal close with cleanup
+   */
+  const handleCloseModal = () => {
+    setIsVisible(false);
+    // Optional: Stop audio when closing modal
+    // pauseAudio();
+  };
+
+  /**
+   * Show error alert for audio issues
+   */
+  useEffect(() => {
+    if (audioError) {
+      Alert.alert(
+        'Audio Error',
+        audioError,
+        [
+          { text: 'OK', onPress: clearError }
+        ]
+      );
+    }
+  }, [audioError, clearError]);
 
   return (
     <>
       <FlatList
         data={filteredNames}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item) => `name-${item.id}`}
         renderItem={({ index, item }) => (
           <NameCard
             index={index}
             item={item}
-            setIsVisible={setIsVisible}
-            setCurrentItemIndex={setCurrentItemIndex}
+            onPress={() => {
+              setCurrentItemIndex(index);
+              setIsVisible(true);
+            }}
           />
         )}
         ListEmptyComponent={searchQuery.trim() !== '' ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No names found matching "{searchQuery}"</Text>
+            <Text style={styles.emptyText}>
+              No names found matching "{searchQuery}"
+            </Text>
           </View>
         ) : null}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={15}
+        getItemLayout={(data, index) => ({
+          length: 92, // Approximate item height
+          offset: 92 * index,
+          index,
+        })}
       />
+
+      {/* Modal for detailed view */}
       <Modal
         isVisible={isVisible}
         backdropOpacity={0.9}
         style={stylesModal.modal}
-        backdropColor="#171717">
+        backdropColor="#171717"
+        onBackdropPress={handleCloseModal}
+        onBackButtonPress={handleCloseModal}
+        animationIn="fadeIn"
+        animationOut="fadeOut"
+      >
         <View style={stylesModal.card}>
+          {/* Close button */}
           <Pressable
-            style={{ position: 'absolute', top: 70, left: 10 }}
-            onPress={() => setIsVisible(false)}>
+            style={stylesModal.closeButton}
+            onPress={handleCloseModal}
+            accessibilityLabel="Close modal"
+            accessibilityRole="button"
+          >
             <Close />
           </Pressable>
 
-          <View
-            style={{
-              position: 'absolute',
-              top: 70,
-              backgroundColor: colors.secondary.neutral600,
-              paddingHorizontal: 12,
-              borderRadius: 100,
-              paddingVertical: 3,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
+          {/* Counter badge */}
+          <View style={[stylesModal.counterBadge, { backgroundColor: colors.secondary.neutral600 }]}>
             <Body1Title2Bold color="white">
               {currentItemIndex + 1}/99
             </Body1Title2Bold>
           </View>
 
+          {/* Main image with text overlay */}
           <View style={stylesModal.imageContainer}>
             <FastImage
               source={require('@/assets/names/name-modal-image.jpg')}
@@ -207,13 +203,13 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             {/* Dynamic Text Overlay */}
             <View style={stylesModal.textOverlay}>
               <Text style={stylesModal.arabicText}>
-                {filteredNames[currentItemIndex].classicalArabic}
+                {filteredNames[currentItemIndex]?.classicalArabic}
               </Text>
               <Text style={stylesModal.nameText}>
-                {filteredNames[currentItemIndex].ipa}
+                {filteredNames[currentItemIndex]?.ipa}
               </Text>
               <Text style={stylesModal.meaningText}>
-                {filteredNames[currentItemIndex].translation}
+                {filteredNames[currentItemIndex]?.translation}
               </Text>
             </View>
           </View>
@@ -221,38 +217,39 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
           {/* Action Buttons */}
           <View style={stylesModal.actions}>
             <Pressable
-              onPress={() => setIsVisible(false)}
-              style={[
-                stylesModal.btn,
-                { backgroundColor: colors.secondary.neutral600 },
-              ]}>
+              onPress={handleCloseModal}
+              style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
+              accessibilityLabel="Close"
+              accessibilityRole="button"
+            >
               <Close />
               <Body1Title2Bold color="white">Close</Body1Title2Bold>
             </Pressable>
 
             <Pressable 
-          style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}
-          onPress={handleAudioPlayback}
-          disabled={isAudioLoading}
-        >
-          {isAudioLoading ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : isPlaying ? (
-            <Pause />
-          ) : (
-            <RightTriangle />
-          )}
-          <Body1Title2Bold color="white">
-            {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
-          </Body1Title2Bold>
-          {audioError && <Text style={styles.audioErrorText}>{audioError}</Text>}
-        </Pressable>
+              style={[
+                stylesModal.btn, 
+                { 
+                  backgroundColor: isAudioLoading ? '#666' : '#8A57DC',
+                  opacity: isAudioLoading ? 0.7 : 1
+                }
+              ]}
+              onPress={handleAudioPlayback}
+              disabled={isAudioLoading}
+              accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
+              accessibilityRole="button"
+            >
+              {isPlaying ? <Pause /> : <RightTriangle />}
+              <Body1Title2Bold color="white">
+                {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
+              </Body1Title2Bold>
+            </Pressable>
 
             <Pressable
-              style={[
-                stylesModal.btn,
-                { backgroundColor: colors.secondary.neutral600 },
-              ]}>
+              style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
+              accessibilityLabel="Share"
+              accessibilityRole="button"
+            >
               <Share />
               <Body1Title2Bold color="white">Share</Body1Title2Bold>
             </Pressable>
@@ -263,26 +260,23 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   );
 };
 
+/**
+ * Individual name card component
+ */
 interface NameCardProps {
   item: Name;
-  setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   index: number;
-  setCurrentItemIndex: React.Dispatch<React.SetStateAction<number>>;
+  onPress: () => void;
 }
 
-const NameCard: React.FC<NameCardProps> = ({
-  item,
-  index,
-  setIsVisible,
-  setCurrentItemIndex,
-}) => {
+const NameCard: React.FC<NameCardProps> = ({ item, index, onPress }) => {
   return (
     <Pressable
-      onPress={() => {
-        setCurrentItemIndex(index);
-        setIsVisible(true);
-      }}
-      style={[styles.item, { borderTopWidth: index === 0 ? 1 : 0 }]}>
+      onPress={onPress}
+      style={[styles.item, { borderTopWidth: index === 0 ? 1 : 0 }]}
+      accessibilityLabel={`${item.ipa}, ${item.translation}`}
+      accessibilityRole="button"
+    >
       {/* Background image with text overlay */}
       <View style={styles.avatarContainer}>
         <FastImage
@@ -291,23 +285,24 @@ const NameCard: React.FC<NameCardProps> = ({
           resizeMode={FastImage.resizeMode.cover}
         />
         
-        {/* Arabic text overlay */}
-        <Text 
-          style={styles.avatarArabicText}
-          numberOfLines={1}
-          ellipsizeMode="clip"
-        >
-          {item.classicalArabic}
+        {/* Text overlays */}
+        <Text style={styles.avatarArabicText}>{item.classicalArabic}</Text>
+        <Text style={styles.avatarEnglishText}>{item.ipa}</Text>
+        <Text style={styles.avatarTranslationText} numberOfLines={2}>
+          {item.translation}
         </Text>
-        <Text numberOfLines={1}
-          ellipsizeMode="clip" style={styles.avatarEnglishText}>{item.ipa}</Text>
-        <Text style={styles.avatarTranslationText}>{item.translation}</Text>
       </View>
 
       {/* Name & meaning */}
       <View style={styles.textContainer}>
-        <Title3Bold style={{fontSize: 17}}>{item.ipa}</Title3Bold>
-        <Body2Medium style={{fontSize: 12,maxWidth: '80%'}} color="sub-heading">{item.translation}</Body2Medium>
+        <Title3Bold style={styles.nameTitle}>{item.ipa}</Title3Bold>
+        <Body2Medium 
+          style={styles.meaningSubtitle} 
+          color="sub-heading"
+          numberOfLines={2}
+        >
+          {item.translation}
+        </Body2Medium>
       </View>
 
       {/* Index badge */}
@@ -320,6 +315,7 @@ const NameCard: React.FC<NameCardProps> = ({
 
 export default NamesList;
 
+// Styles
 const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
@@ -329,39 +325,34 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 16,
+    minHeight: 92,
   },
   avatarContainer: {
     width: 60,
     height: 60,
     marginRight: 12,
     position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 8,
-    position: 'absolute',
   },
   avatarArabicText: {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: '50%',
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    transform: [{ translateX: -14 }, { translateY: -10 }],
     color: ColorPrimary.primary900,
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
-    overflow: 'hidden',
   },
   avatarEnglishText: {
     position: 'absolute',
-    top: '70%',
+    top: '80%',
     left: '50%',
-    width: '50%',
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    transform: [{ translateX: -10 }, { translateY: -10 }],
     color: ColorPrimary.primary900,
     fontSize: 4,
     fontWeight: 'bold',
@@ -369,51 +360,26 @@ const styles = StyleSheet.create({
   },
   avatarTranslationText: {
     position: 'absolute',
-    top: '80%',
+    top: '90%',
     left: '50%',
-    width: '50%',
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    transform: [{ translateX: -16 }, { translateY: -10 }],
     color: ColorPrimary.primary900,
     fontSize: 2,
     fontWeight: 'bold',
     textAlign: 'center',
+    width: 32,
   },
   textContainer: {
     flex: 1,
+    paddingRight: 8,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  nameTitle: {
+    fontSize: 17,
+    marginBottom: 4,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#737373',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#EF4444',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#8A57DC',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+  meaningSubtitle: {
+    fontSize: 12,
+    maxWidth: '90%',
   },
   indexBadge: {
     width: 28,
@@ -423,38 +389,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  meaning: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 4,
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
-    height: 200,
+    minHeight: 200,
   },
   emptyText: {
     fontSize: 16,
     color: '#737373',
     textAlign: 'center',
   },
-  audioErrorText: {
-    color: '#FF4D4F', 
-    fontSize: 10, 
-    marginTop: 2,
-  },
 });
 
 const stylesModal = StyleSheet.create({
   modal: {
-    margin: 0, // use the whole screen
+    margin: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -463,6 +414,23 @@ const stylesModal = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 70,
+    left: 10,
+    zIndex: 1,
+    padding: 8, // Larger touch area
+  },
+  counterBadge: {
+    position: 'absolute',
+    top: 70,
+    paddingHorizontal: 12,
+    borderRadius: 100,
+    paddingVertical: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
   },
   imageContainer: {
     width: CARD_SIZE,
@@ -473,7 +441,7 @@ const stylesModal = StyleSheet.create({
   },
   image: {
     width: CARD_SIZE,
-    height: CARD_SIZE, // square
+    height: CARD_SIZE,
     borderRadius: 12,
   },
   textOverlay: {
@@ -508,21 +476,21 @@ const stylesModal = StyleSheet.create({
     marginTop: 4,
     lineHeight: 14,
   },
-  /* ---------- actions row ---------- */
   actions: {
     position: 'absolute',
     bottom: 30,
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 24,
-    gap: 12, // RN ‑‑gap support 0.72+
+    gap: 12,
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 32,
-    columnGap: 2,
+    columnGap: 8,
+    minHeight: 44, // Better touch target
   },
 });
