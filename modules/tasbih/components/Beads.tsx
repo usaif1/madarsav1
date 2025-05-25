@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Pressable,
   Text,
-  FlatList,
   UIManager,
   Platform,
   Animated,
@@ -44,11 +43,6 @@ interface BeadsProps {
   isWhite?: boolean;
 }
 
-interface BeadPosition {
-  left: number;
-  top: number;
-}
-
 interface BeadData {
   id: string;
   verseNumber: number;
@@ -57,21 +51,41 @@ interface BeadData {
 
 // Constants for bead display and animation
 const BEAD_SIZE = 40;
-const DISPLAY_BEADS_COUNT = 8; // Always show 8 beads like original component
-const MAX_COMPLETED_BEADS = 3; // Maximum beads shown on completed side
 const ANIMATION_DURATION = 300;
 const THREAD_PADDING = 32;
 const MAX_THREAD_WIDTH = 380;
+const MAX_RIGHT_BEADS = 3; // Maximum beads shown on right (completed) side
 
 /**
- * Beads component with shifting animation logic
+ * Get the distribution of beads for left and right sides based on total verses
+ * Logic: 
+ * - 2 verses: 1 left, 1 right
+ * - 3-6 verses: split evenly (3 left, 3 right for 6 verses)
+ * - 7+ verses: always 4 left, 3 right (carousel behavior)
+ */
+const getBeadDistribution = (totalVerses: number): { leftCount: number; rightCount: number } => {
+  if (totalVerses === 2) {
+    return { leftCount: 1, rightCount: 1 };
+  } else if (totalVerses <= 6) {
+    const leftCount = Math.ceil(totalVerses / 2);
+    const rightCount = totalVerses - leftCount;
+    return { leftCount, rightCount };
+  } else {
+    return { leftCount: 4, rightCount: 3 };
+  }
+};
+
+/**
+ * Beads component with proper left/right separation and carousel logic
  * Displays prayer beads that move from left to right as verses are completed
  * 
  * Features:
- * - Responsive design with proper accessibility
+ * - Proper left/right separation based on total verses
+ * - Carousel behavior for 7+ verses
  * - Smooth animations with proper cleanup
  * - Error handling and edge case management
  * - Performance optimized with memoization
+ * - Full accessibility support
  */
 const Beads: React.FC<BeadsProps> = ({
   totalVerses,
@@ -89,14 +103,21 @@ const Beads: React.FC<BeadsProps> = ({
   const sanitizedCurrentIndex = Math.max(0, Math.min(currentVerseIndex, sanitizedTotalVerses - 1));
   const sanitizedTotalCount = Math.max(0, totalCount);
   
-  // State for animation logic
-  const [activeBead, setActiveBead] = useState<number | null>(null);
-  const [completedBeads, setCompletedBeads] = useState<number[]>([]);
+  // Get bead distribution
+  const { leftCount, rightCount } = useMemo(() => 
+    getBeadDistribution(sanitizedTotalVerses), 
+    [sanitizedTotalVerses]
+  );
+  
+  // State for animation and bead management
+  const [leftBeads, setLeftBeads] = useState<number[]>([]);
+  const [rightBeads, setRightBeads] = useState<number[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [movingBead, setMovingBead] = useState<number | null>(null);
   
   // Animation values with proper cleanup
   const animatedX = useRef(new Animated.Value(0)).current;
-  const completedListTranslate = useRef(new Animated.Value(0)).current;
+  const rightListTranslate = useRef(new Animated.Value(0)).current;
   
   // Memoized responsive sizing
   const threadWidth = useMemo(() => 
@@ -111,58 +132,70 @@ const Beads: React.FC<BeadsProps> = ({
   );
   
   /**
-   * Generate active beads list with proper error handling
+   * Initialize bead lists based on current verse index and distribution
    */
-  const generateActiveBeadsList = useCallback((): BeadData[] => {
-    const beads: BeadData[] = [];
-    const displayCount = Math.min(DISPLAY_BEADS_COUNT, sanitizedTotalVerses);
+  const initializeBeads = useCallback(() => {
+    const left: number[] = [];
+    const right: number[] = [];
     
-    for (let i = 0; i < displayCount; i++) {
-      const verseNumber = ((sanitizedCurrentIndex + i) % sanitizedTotalVerses) + 1;
-      beads.push({
-        id: `active-${verseNumber}-${i}`,
-        verseNumber,
-        index: i,
-      });
+    // Generate verse numbers starting from current verse
+    for (let i = 0; i < leftCount; i++) {
+      const verseNum = ((sanitizedCurrentIndex + i) % sanitizedTotalVerses) + 1;
+      left.push(verseNum);
     }
     
-    return beads;
-  }, [sanitizedCurrentIndex, sanitizedTotalVerses]);
+    // Right side starts with some initial completed verses (can be empty initially)
+    // This will be populated as user advances through verses
+    
+    setLeftBeads(left);
+    setRightBeads(right);
+  }, [sanitizedCurrentIndex, sanitizedTotalVerses, leftCount]);
   
-  const [activeBeadsList, setActiveBeadsList] = useState<BeadData[]>(generateActiveBeadsList);
-  
-  // Update active beads when verse changes
+  // Initialize beads on mount and when verse changes (but not during animation)
   useEffect(() => {
     if (!isAnimating) {
-      setActiveBeadsList(generateActiveBeadsList());
+      initializeBeads();
     }
-  }, [generateActiveBeadsList, isAnimating]);
+  }, [initializeBeads, isAnimating]);
   
   // Cleanup animations on unmount
   useEffect(() => {
     return () => {
       animatedX.stopAnimation();
-      completedListTranslate.stopAnimation();
+      rightListTranslate.stopAnimation();
     };
-  }, [animatedX, completedListTranslate]);
+  }, [animatedX, rightListTranslate]);
   
   /**
-   * Calculate bead positions along curved path with proper validation
+   * Calculate horizontal positions for beads in each section
    */
-  const calculateBeadPositions = useCallback((count: number): BeadPosition[] => {
+  const calculateBeadPositions = useCallback((
+    count: number, 
+    isRightSide: boolean = false
+  ): { left: number; top: number }[] => {
     if (count <= 0) return [];
     
-    const positions: BeadPosition[] = [];
-    const availableWidth = threadWidth - 100;
-    const spacing = count > 1 ? Math.min(45, availableWidth / (count - 1)) : 0;
+    const positions: { left: number; top: number }[] = [];
+    const sectionWidth = (threadWidth - 60) / 2; // Split width, account for separator
+    const spacing = count > 1 ? Math.min(50, sectionWidth / count) : 0;
     
     for (let i = 0; i < count; i++) {
-      const progress = count > 1 ? i / (count - 1) : 0;
-      const x = 50 + (i * spacing);
-      const y = 60 + Math.sin(progress * Math.PI) * 20; // Curved path
+      const progress = count > 1 ? i / (count - 1) : 0.5;
+      
+      let x: number;
+      if (isRightSide) {
+        // Right side: start from center-right
+        x = (threadWidth / 2) + 30 + (i * spacing);
+      } else {
+        // Left side: end at center-left
+        x = (threadWidth / 2) - 30 - ((count - 1 - i) * spacing);
+      }
+      
+      // Curved path for visual appeal
+      const y = 60 + Math.sin(progress * Math.PI) * 15;
       
       positions.push({
-        left: Math.max(0, x - BEAD_SIZE / 2),
+        left: Math.max(0, Math.min(x - BEAD_SIZE / 2, threadWidth - BEAD_SIZE)),
         top: Math.max(0, y - BEAD_SIZE / 2),
       });
     }
@@ -171,34 +204,31 @@ const Beads: React.FC<BeadsProps> = ({
   }, [threadWidth]);
   
   // Memoized bead positions
-  const activeBeadPositions = useMemo(() => 
-    calculateBeadPositions(activeBeadsList.length),
-    [calculateBeadPositions, activeBeadsList.length]
+  const leftBeadPositions = useMemo(() => 
+    calculateBeadPositions(leftBeads.length, false),
+    [calculateBeadPositions, leftBeads.length]
   );
   
-  const completedBeadPositions = useMemo(() => 
-    calculateBeadPositions(Math.min(completedBeads.length, MAX_COMPLETED_BEADS)),
-    [calculateBeadPositions, completedBeads.length]
+  const rightBeadPositions = useMemo(() => 
+    calculateBeadPositions(rightBeads.length, true),
+    [calculateBeadPositions, rightBeads.length]
   );
   
   /**
-   * Handle bead advancement with animation and proper error handling
+   * Handle bead advancement with proper carousel logic
    */
   const handleBeadAdvance = useCallback(() => {
-    if (activeBeadsList.length === 0 || isAnimating || disabled) return;
+    if (leftBeads.length === 0 || isAnimating || disabled) return;
     
     try {
-      // Get the last bead to move
-      const lastBead = activeBeadsList[activeBeadsList.length - 1];
-      if (!lastBead) return;
-      
-      const movingBeadValue = lastBead.verseNumber;
-      setActiveBead(movingBeadValue);
+      // Get the rightmost bead from left side to move
+      const movingBeadValue = leftBeads[leftBeads.length - 1];
+      setMovingBead(movingBeadValue);
       setIsAnimating(true);
       
       // Reset animation values
       animatedX.setValue(0);
-      completedListTranslate.setValue(0);
+      rightListTranslate.setValue(0);
       
       // Start parallel animations
       Animated.parallel([
@@ -207,7 +237,7 @@ const Beads: React.FC<BeadsProps> = ({
           duration: ANIMATION_DURATION,
           useNativeDriver: true,
         }),
-        Animated.timing(completedListTranslate, {
+        Animated.timing(rightListTranslate, {
           toValue: 40,
           duration: ANIMATION_DURATION,
           useNativeDriver: true,
@@ -222,23 +252,23 @@ const Beads: React.FC<BeadsProps> = ({
             duration: 200,
           });
           
-          // Update lists after animation
-          const nextVerseNum = ((sanitizedCurrentIndex + DISPLAY_BEADS_COUNT) % sanitizedTotalVerses) + 1;
-          const newActiveBeads = generateActiveBeadsList();
+          // Update left beads: remove last bead and add new one at the beginning
+          const nextVerseInSequence = leftBeads[leftBeads.length - 1] % sanitizedTotalVerses + 1;
+          const newLeftBeads = [nextVerseInSequence, ...leftBeads.slice(0, -1)];
           
-          // Update completed beads
-          let newCompletedBeads = [movingBeadValue, ...completedBeads];
-          if (newCompletedBeads.length > MAX_COMPLETED_BEADS) {
-            newCompletedBeads = newCompletedBeads.slice(0, MAX_COMPLETED_BEADS);
+          // Update right beads: add moved bead to the beginning
+          let newRightBeads = [movingBeadValue, ...rightBeads];
+          if (newRightBeads.length > MAX_RIGHT_BEADS) {
+            newRightBeads = newRightBeads.slice(0, MAX_RIGHT_BEADS);
           }
           
-          setActiveBeadsList(newActiveBeads);
-          setCompletedBeads(newCompletedBeads);
-          setActiveBead(null);
+          setLeftBeads(newLeftBeads);
+          setRightBeads(newRightBeads);
+          setMovingBead(null);
           
           // Reset animation values
           animatedX.setValue(0);
-          completedListTranslate.setValue(0);
+          rightListTranslate.setValue(0);
           setIsAnimating(false);
           
           // Announce to screen reader
@@ -251,7 +281,7 @@ const Beads: React.FC<BeadsProps> = ({
         } catch (error) {
           console.error('Error updating bead state:', error);
           setIsAnimating(false);
-          setActiveBead(null);
+          setMovingBead(null);
         }
       });
     } catch (error) {
@@ -259,15 +289,14 @@ const Beads: React.FC<BeadsProps> = ({
       setIsAnimating(false);
     }
   }, [
-    activeBeadsList,
+    leftBeads,
+    rightBeads,
     isAnimating,
     disabled,
     animatedX,
-    completedListTranslate,
+    rightListTranslate,
     sanitizedCurrentIndex,
     sanitizedTotalVerses,
-    completedBeads,
-    generateActiveBeadsList,
     onAdvance,
   ]);
   
@@ -275,12 +304,13 @@ const Beads: React.FC<BeadsProps> = ({
    * Render individual bead component with proper accessibility
    */
   const renderBead = useCallback((
-    beadData: BeadData,
-    position: BeadPosition,
-    isCompleted: boolean = false
+    verseNumber: number,
+    position: { left: number; top: number },
+    isCompleted: boolean = false,
+    key: string
   ) => (
     <View 
-      key={beadData.id}
+      key={key}
       style={[
         styles.beadWrapper,
         {
@@ -290,9 +320,9 @@ const Beads: React.FC<BeadsProps> = ({
       ]}
       accessible={true}
       accessibilityRole="button"
-      accessibilityLabel={`Verse ${beadData.verseNumber}${isCompleted ? ' completed' : ''}`}
+      accessibilityLabel={`Verse ${verseNumber}${isCompleted ? ' completed' : ''}`}
     >
-      <View style={[styles.beadContainer]}>
+      <View style={styles.beadContainer}>
         <View style={[styles.bead, isCompleted && styles.completedBead]}>
           <FastImage
             source={isWhite ? rosaryBeadWhite : rosaryBead}
@@ -304,40 +334,48 @@ const Beads: React.FC<BeadsProps> = ({
             style={[styles.beadNumber, isCompleted && styles.completedBeadNumber]}
             accessible={false}
           >
-            {beadData.verseNumber}
+            {verseNumber}
           </Text>
         </View>
       </View>
     </View>
-  ), [isWhite, rosaryBead, rosaryBeadWhite]);
+  ), [isWhite]);
   
   /**
-   * Render active beads list
+   * Render left side beads (active/upcoming)
    */
-  const renderActiveBeads = useMemo(() => {
-    const visibleBeads = activeBeadsList.filter(bead => bead.verseNumber !== activeBead);
+  const renderLeftBeads = useMemo(() => {
+    const visibleBeads = leftBeads.filter(bead => bead !== movingBead);
     
-    return visibleBeads.map((bead, index) => {
-      const position = activeBeadPositions[index];
-      return position ? renderBead(bead, position, false) : null;
+    return visibleBeads.map((verseNumber, index) => {
+      const position = leftBeadPositions[index];
+      return position ? renderBead(
+        verseNumber, 
+        position, 
+        false, 
+        `left-${verseNumber}-${index}`
+      ) : null;
     }).filter(Boolean);
-  }, [activeBeadsList, activeBead, activeBeadPositions, renderBead]);
+  }, [leftBeads, movingBead, leftBeadPositions, renderBead]);
   
   /**
-   * Render completed beads list
+   * Render right side beads (completed)
    */
-  const renderCompletedBeads = useMemo(() => {
-    return completedBeads.slice(0, MAX_COMPLETED_BEADS).map((verseNumber, index) => {
-      const position = completedBeadPositions[index];
-      const beadData: BeadData = {
-        id: `completed-${verseNumber}-${index}`,
-        verseNumber,
-        index,
-      };
-      
-      return position ? renderBead(beadData, position, true) : null;
+  const renderRightBeads = useMemo(() => {
+    const displayBeads = isAnimating ? 
+      rightBeads.slice(0, MAX_RIGHT_BEADS - 1) : 
+      rightBeads.slice(0, MAX_RIGHT_BEADS);
+    
+    return displayBeads.map((verseNumber, index) => {
+      const position = rightBeadPositions[index];
+      return position ? renderBead(
+        verseNumber, 
+        position, 
+        true, 
+        `right-${verseNumber}-${index}`
+      ) : null;
     }).filter(Boolean);
-  }, [completedBeads, completedBeadPositions, renderBead]);
+  }, [rightBeads, rightBeadPositions, renderBead, isAnimating]);
   
   return (
     <View style={styles.container}>
@@ -374,7 +412,7 @@ const Beads: React.FC<BeadsProps> = ({
         accessibilityRole="button"
         accessibilityLabel={
           accessibilityLabel || 
-          `Prayer beads. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. Tap to advance to next verse.`
+          `Prayer beads. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. ${leftCount} beads on left, ${rightBeads.length} completed beads on right. Tap to advance to next verse.`
         }
         accessibilityHint="Double tap to advance to the next verse"
         accessibilityState={{
@@ -391,28 +429,23 @@ const Beads: React.FC<BeadsProps> = ({
             accessible={false}
           />
           
-          <View style={styles.rowContainer}>
-            {/* Active beads (left side) */}
-            <View style={styles.activeBeadsContainer}>
-              {renderActiveBeads}
-            </View>
-            
-            {/* Separator */}
-            <View style={styles.separator} />
-            
-            {/* Completed beads (right side) */}
-            <Animated.View 
-              style={[
-                styles.completedBeadsContainer,
-                { transform: [{ translateX: completedListTranslate }] }
-              ]}
-            >
-              {renderCompletedBeads}
-            </Animated.View>
+          {/* Left side beads container */}
+          <View style={styles.leftBeadsContainer}>
+            {renderLeftBeads}
           </View>
           
+          {/* Right side beads container */}
+          <Animated.View 
+            style={[
+              styles.rightBeadsContainer,
+              { transform: [{ translateX: rightListTranslate }] }
+            ]}
+          >
+            {renderRightBeads}
+          </Animated.View>
+          
           {/* Moving bead animation */}
-          {activeBead && (
+          {movingBead && (
             <Animated.View
               style={[
                 styles.movingBeadContainer,
@@ -430,7 +463,7 @@ const Beads: React.FC<BeadsProps> = ({
                   accessible={false}
                 />
                 <Text style={styles.beadNumber} accessible={false}>
-                  {activeBead}
+                  {movingBead}
                 </Text>
               </View>
             </Animated.View>
@@ -508,29 +541,23 @@ const styles = StyleSheet.create({
     left: 0,
     zIndex: 0,
   },
-  rowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+  leftBeadsContainer: {
+    position: 'absolute',
+    width: '100%',
     height: '100%',
+    zIndex: 1,
   },
-  activeBeadsContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  completedBeadsContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  separator: {
-    width: 32,
+  rightBeadsContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    zIndex: 1,
   },
   beadWrapper: {
     position: 'absolute',
     width: BEAD_SIZE + 8,
     height: BEAD_SIZE + 8,
-    zIndex: 1,
+    zIndex: 2,
   },
   beadContainer: {
     width: BEAD_SIZE,
@@ -553,8 +580,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   completedBead: {
-    opacity: 0.7,
-    transform: [{ scale: 0.9 }],
+    opacity: 0.8,
+    transform: [{ scale: 0.95 }],
   },
   beadImg: {
     width: BEAD_SIZE,
@@ -563,7 +590,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   completedBeadImg: {
-    opacity: 0.8,
+    opacity: 0.9,
   },
   beadNumber: {
     color: 'white',
@@ -576,13 +603,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   completedBeadNumber: {
-    fontSize: 10,
-    opacity: 0.9,
+    fontSize: 11,
+    opacity: 0.95,
   },
   movingBeadContainer: {
     position: 'absolute',
     top: '50%',
-    left: '30%',
+    left: '25%',
     marginTop: -BEAD_SIZE / 2,
     marginLeft: -BEAD_SIZE / 2,
     zIndex: 10,
