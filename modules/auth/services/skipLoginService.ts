@@ -7,22 +7,35 @@ import { storage } from '../storage/mmkvStorage';
 import { useErrorStore } from '@/modules/error/store/errorStore';
 import { ErrorType } from '@/api/utils/errorHandling';
 import tokenService from './tokenService';
+import { useLocationStore } from '@/modules/location/store/locationStore';
 
 // Skip login and register device
-export const skipLogin = async (deviceToken: string = ''): Promise<boolean> => {
+export const skipLogin = async (): Promise<boolean> => {
   try {
     // Set loading state
     useAuthStore.getState().setIsLoading(true);
     
     // Get device ID
     const deviceId = await DeviceInfo.getUniqueId();
+    const deviceToken = await DeviceInfo.getInstanceId() || deviceId;
+    
+    // Get location data from location store
+    const locationData = useLocationStore.getState();
+    console.log('🌍 Using location data for skip login:', {
+      latitude: locationData.latitude,
+      longitude: locationData.longitude,
+      city: locationData.city,
+      country: locationData.country,
+    });
     
     // Create skip login request
     const skipLoginData: SkippedLoginRequest = {
       deviceId,
       deviceToken,
       deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
-      // Optional location data can be added here
+      // Include location data if available
+      city: locationData.city || undefined,
+      country: locationData.country || undefined,
     };
     
     // Send skip login request to backend

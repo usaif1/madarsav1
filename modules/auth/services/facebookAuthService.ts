@@ -1,14 +1,15 @@
 // modules/auth/services/facebookAuthService.ts
-import { LoginManager, AccessToken, Profile, GraphRequest, GraphRequestManager } from 'react-native-fbsdk-next';
+import { AccessToken, LoginManager, Profile } from 'react-native-fbsdk-next';
+import { GraphRequest, GraphRequestManager } from 'react-native-fbsdk-next';
 import { useAuthStore, User } from '../store/authStore';
 import authService, { AuthenticateRequest } from './authService';
-import tokenService from './tokenService';
+import DeviceInfo from 'react-native-device-info';
+import { Platform } from 'react-native';
+import { useLocationStore } from '@/modules/location/store/locationStore';
 import { useErrorStore } from '@/modules/error/store/errorStore';
 import { ErrorType } from '@/api/utils/errorHandling';
 import { Settings } from 'react-native-fbsdk-next';
 import { mmkvStorage, storage } from '../storage/mmkvStorage';
-import { Platform } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 
 // Configure Facebook SDK
 export const configureFacebookSDK = () => {
@@ -145,11 +146,14 @@ export const loginWithFacebook = async (): Promise<boolean> => {
     const userProfile = await Profile.getCurrentProfile();
     console.log('Basic profile received:', userProfile ? JSON.stringify(userProfile) : 'No profile');
     
-    // Get location data from storage if available
-    const latitude = parseFloat(storage.getString('user_latitude') || '0');
-    const longitude = parseFloat(storage.getString('user_longitude') || '0');
-    const city = storage.getString('user_city') || '';
-    const country = storage.getString('user_country') || '';
+    // Get location data from location store
+    const locationData = useLocationStore.getState();
+    console.log('🌍 Using location data for Facebook auth:', {
+      latitude: locationData.latitude,
+      longitude: locationData.longitude,
+      city: locationData.city,
+      country: locationData.country,
+    });
     
     // Prepare user data for authentication, prioritizing Graph API data
     const userData = {
@@ -160,10 +164,10 @@ export const loginWithFacebook = async (): Promise<boolean> => {
       lastName: fbUserData?.last_name || userProfile?.lastName || '',
       photoUrl: fbUserData?.picture?.data?.url || userProfile?.imageURL || '',
       // Location data
-      city: city || fbUserData?.location?.name?.split(',')[0] || '',
-      country: country || fbUserData?.location?.name?.split(',')[1]?.trim() || '',
-      latitude: latitude || 0,
-      longitude: longitude || 0,
+      city: locationData.city || fbUserData?.location?.name?.split(',')[0] || '',
+      country: locationData.country || fbUserData?.location?.name?.split(',')[1]?.trim() || '',
+      latitude: locationData.latitude || 0,
+      longitude: locationData.longitude || 0,
     };
     
     // Prepare data for authenticate endpoint
@@ -174,15 +178,15 @@ export const loginWithFacebook = async (): Promise<boolean> => {
       profileImage: userData.photoUrl,
       profileId: userData.id,
       userId: data.accessToken.toString(), // Send FB token as userId as requested
-      deviceId: deviceId,
-      deviceToken: deviceToken,
+      deviceId,
+      deviceToken,
       deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
       loginWith: 'FACEBOOK',
-      password: '', // Empty for social logins
-      city: userData.city,
-      country: userData.country,
-      latitude: userData.latitude,
-      longitude: userData.longitude,
+      // Use location data from the location store, falling back to user data if needed
+      latitude: locationData.latitude !== null ? locationData.latitude : userData.latitude,
+      longitude: locationData.longitude !== null ? locationData.longitude : userData.longitude,
+      city: locationData.city || userData.city || undefined,
+      country: locationData.country || userData.country || undefined,
     };
     
     // Send data to authenticate endpoint with detailed logging

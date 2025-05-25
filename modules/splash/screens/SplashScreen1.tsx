@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Animated,
   Pressable,
@@ -20,6 +20,10 @@ import { isFacebookLoggedIn } from '@/modules/auth/services/facebookAuthService'
 import skipLoginService from '@/modules/auth/services/skipLoginService';
 import { useGlobalStore } from '@/globalStore';
 
+// Location imports
+import locationService from '@/modules/location/services/locationService';
+import { useLocationStore } from '@/modules/location/store/locationStore';
+
 // assets
 import SplashGraphic from '@/assets/splash/splash_graphic.svg';
 import MandalaFull from '@/assets/splash/mandala_full.svg';
@@ -34,7 +38,8 @@ const SplashScreen1: React.FC = () => {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser, setIsAuthenticated, setIsSkippedLogin } = useAuthStore();
   const { setOnboarded } = useGlobalStore();
-
+  const [locationInitialized, setLocationInitialized] = useState(false);
+  
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -53,10 +58,40 @@ const SplashScreen1: React.FC = () => {
     outputRange: ['0deg', '360deg'],
   });
 
+  // Initialize location data
+  useEffect(() => {
+    const initLocation = async () => {
+      try {
+        console.log('🌍 Initializing location data...');
+        await locationService.initializeLocation();
+        console.log('🌍 Location data initialized successfully');
+        setLocationInitialized(true);
+      } catch (error) {
+        console.error('🌍 Error initializing location:', error);
+        // Even if location initialization fails, we should continue with auth
+        setLocationInitialized(true);
+      }
+    };
+    
+    initLocation();
+  }, []);
+
   // Authentication check effect
   useEffect(() => {
+    // Only proceed with auth check after location is initialized
+    if (!locationInitialized) return;
+    
     const checkAuth = async () => {
       try {
+        // Get location data for authentication requests
+        const locationData = useLocationStore.getState();
+        console.log('🌍 Using location data for auth:', {
+          latitude: locationData.latitude,
+          longitude: locationData.longitude,
+          city: locationData.city,
+          country: locationData.country,
+        });
+        
         // First check for stored tokens
         const tokens = await tokenService.getTokens();
         
@@ -147,7 +182,7 @@ const SplashScreen1: React.FC = () => {
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [navigation, setUser, setIsAuthenticated, setIsSkippedLogin, setOnboarded]);
+  }, [navigation, setUser, setIsAuthenticated, setIsSkippedLogin, setOnboarded, locationInitialized]);
 
   return (
     <View style={styles.container}>

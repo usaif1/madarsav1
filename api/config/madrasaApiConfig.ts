@@ -17,6 +17,11 @@ export const MADRASA_API_ENDPOINTS = {
   // Skip login
   SKIPPED_LOGIN: '/api/v1/skipped-login',
   
+  // Islamic tools endpoints
+  NAMES_99: '/api/v1/99names',
+  DUAS: '/api/v1/duas',
+  DUAS_TASBIH: '/api/v1/duas/tasbih',
+  
   // Other endpoints will be added as needed
 };
 

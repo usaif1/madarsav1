@@ -12,6 +12,7 @@ import {
   import { Platform } from 'react-native';
   import { storage } from '../storage/mmkvStorage';
   import DeviceInfo from 'react-native-device-info';
+  import { useLocationStore } from '@/modules/location/store/locationStore';
   
   // Configure Google Sign-In
   export const configureGoogleSignIn = () => {
@@ -56,11 +57,14 @@ import {
       const deviceId = await DeviceInfo.getUniqueId();
       const deviceToken = await DeviceInfo.getInstanceId() || deviceId; // Fallback to device ID if instance ID not available
       
-      // Get location data from storage if available
-      const latitude = parseFloat(storage.getString('user_latitude') || '0');
-      const longitude = parseFloat(storage.getString('user_longitude') || '0');
-      const city = storage.getString('user_city') || '';
-      const country = storage.getString('user_country') || '';
+      // Get location data from location store
+      const locationData = useLocationStore.getState();
+      console.log('🌍 Using location data for Google auth:', {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        city: locationData.city,
+        country: locationData.country,
+      });
       
       // Perform Google Sign-In
       const userInfo = await GoogleSignin.signIn();
@@ -91,10 +95,11 @@ import {
         deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
         loginWith: 'GOOGLE',
         password: '', // Empty for social logins
-        city: city,
-        country: country,
-        latitude: latitude,
-        longitude: longitude,
+        // Use location data from the location store
+        city: locationData.city || undefined,
+        country: locationData.country || undefined,
+        latitude: locationData.latitude !== null ? locationData.latitude : undefined,
+        longitude: locationData.longitude !== null ? locationData.longitude : undefined,
       };
       
       // Send data to authenticate endpoint with detailed logging

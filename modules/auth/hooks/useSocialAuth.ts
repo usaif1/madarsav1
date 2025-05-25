@@ -54,11 +54,11 @@ export const useSocialAuth = () => {
   }, []);
   
   // Skip Login
-  const skipLogin = useCallback(async (deviceToken?: string) => {
+  const skipLogin = useCallback(async () => {
     try {
       setLocalLoading(true);
       setIsLoading(true);
-      const result = await skipLoginService.skipLogin(deviceToken);
+      const result = await skipLoginService.skipLogin();
       return result;
     } catch (error) {
       console.error('Skip login error:', error);
