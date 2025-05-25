@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Text, TouchableOpacity } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import rosaryBead from '@/assets/tasbih/rosaryBead.png';
+import rosaryBeadWhite from '@/assets/tasbih/rosaryBeadWhite.png';
 import ResetIconViolet from '@/assets/tasbih/resetViolet.svg';
 import ResetIcon from '@/assets/tasbih/reset.svg';
 import { Body1Title2Bold, Body1Title2Medium } from '@/components/Typography/Typography';
@@ -19,6 +20,7 @@ interface CounterControlsProps {
   onSelectCounter: () => void; // Changed to not expect a count parameter
   onReset: () => void;
   onCustomBead?: (count: number) => void;
+  onSelectBead?: () => void;
 }
 
 const CounterControls: React.FC<CounterControlsProps> = ({ 
@@ -26,13 +28,15 @@ const CounterControls: React.FC<CounterControlsProps> = ({
   selectedCount, 
   onSelectCounter, 
   onReset, 
-  onCustomBead
+  onCustomBead,
+  onSelectBead
 }) => {
   const { colors } = useThemeStore();
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [customBeadModalVisible, setCustomBeadModalVisible] = useState(false);
   const [customBeadValue, setCustomBeadValue] = useState('');
   const [inputTouched, setInputTouched] = useState(false);
+  const [isWhite, setIsWhite] = useState(false);
 
   const handleCustomBeadSave = () => {
     if (customBeadValue && parseInt(customBeadValue) > 0) {
@@ -53,14 +57,23 @@ const CounterControls: React.FC<CounterControlsProps> = ({
     onReset();
   };
 
+  const changeBead = () => {
+    setIsWhite(!isWhite);
+    if (onSelectBead) {
+      onSelectBead();
+    }
+  };
+
   return (
     <>
       <View style={[styles.row, { borderTopColor: colors.primary.primary100 }]}>
+        <Pressable onPress={() => changeBead()}>
   <FastImage
-    source={rosaryBead}
+    source={isWhite ? rosaryBeadWhite : rosaryBead}
     style={styles.beadImg}
     resizeMode={FastImage.resizeMode.contain}
   />
+  </Pressable>
   <Pressable
     style={[styles.selectBtn, { borderColor: ShadowColors['border-light'] }]}
     onPress={onSelectCounter}
