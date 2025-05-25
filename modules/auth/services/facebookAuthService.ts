@@ -1,5 +1,5 @@
 // modules/auth/services/facebookAuthService.ts
-import { LoginManager, AccessToken, Profile } from 'react-native-fbsdk-next';
+import { LoginManager, AccessToken, Profile, GraphRequest, GraphRequestManager } from 'react-native-fbsdk-next';
 import { useAuthStore, User } from '../store/authStore';
 import authService, { AuthenticateRequest } from './authService';
 import tokenService from './tokenService';
@@ -8,6 +8,7 @@ import { ErrorType } from '@/api/utils/errorHandling';
 import { Settings } from 'react-native-fbsdk-next';
 import { mmkvStorage, storage } from '../storage/mmkvStorage';
 import { Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 
 // Configure Facebook SDK
 export const configureFacebookSDK = () => {
@@ -35,6 +36,35 @@ export const getCurrentFacebookProfile = async (): Promise<Profile | null> => {
     console.error('Failed to get current Facebook profile:', error);
     return null;
   }
+};
+
+// Get detailed Facebook user data including email
+export const getFacebookUserData = (accessToken: string): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    console.log('Getting detailed Facebook user data...');
+    const request = new GraphRequest(
+      '/me',
+      {
+        accessToken,
+        parameters: {
+          fields: {
+            string: 'id,name,email,picture.type(large),first_name,last_name,location'
+          }
+        }
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Error fetching Facebook user data:', error);
+          reject(error);
+        } else {
+          console.log('Facebook user data received:', JSON.stringify(result));
+          resolve(result);
+        }
+      }
+    );
+    
+    new GraphRequestManager().addRequest(request).start();
+  });
 };
 
 // Simple test function for Facebook login - use this for debugging
@@ -83,7 +113,7 @@ export const loginWithFacebook = async (): Promise<boolean> => {
     
     // Request permissions
     console.log('Requesting permissions...');
-    const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+    const result = await LoginManager.logInWithPermissions(['public_profile', 'email', 'user_location']);
     console.log('Login permissions result:', JSON.stringify(result));
     
     if (result.isCancelled) {
@@ -97,72 +127,98 @@ export const loginWithFacebook = async (): Promise<boolean> => {
     }
     console.log('Access token received:', data.accessToken.toString().substring(0, 10) + '...');
     
-    // Get user profile information
-    console.log('Fetching user profile...');
-    const userProfile = await Profile.getCurrentProfile();
-    console.log('User profile received:', userProfile ? JSON.stringify(userProfile) : 'No profile');
+    // Get device info
+    const deviceId = await DeviceInfo.getUniqueId();
+    const deviceToken = await DeviceInfo.getInstanceId() || deviceId; // Fallback to device ID if instance ID not available
     
-    // Prepare user data for authentication
-    let userData;
-    if (userProfile) {
-      userData = {
-        id: userProfile.userID || 'fb_user',
-        name: userProfile.name || 'Facebook User',
-        email: userProfile.email || '', 
-        photoUrl: userProfile.imageURL || '',
-      };
-    } else {
-      // If no profile is available, create minimal user data
-      console.warn('No profile information available, creating minimal user data');
-      userData = {
-        id: 'fb_' + Date.now().toString(),
-        name: 'Facebook User',
-        photoUrl: '',
-      };
+    // Get detailed user data from Graph API
+    let fbUserData;
+    try {
+      fbUserData = await getFacebookUserData(data.accessToken.toString());
+      console.log('Detailed FB user data:', JSON.stringify(fbUserData));
+    } catch (error) {
+      console.warn('Failed to get detailed Facebook user data:', error);
+      // Continue with basic profile
     }
+    
+    // Get user profile as fallback
+    const userProfile = await Profile.getCurrentProfile();
+    console.log('Basic profile received:', userProfile ? JSON.stringify(userProfile) : 'No profile');
+    
+    // Get location data from storage if available
+    const latitude = parseFloat(storage.getString('user_latitude') || '0');
+    const longitude = parseFloat(storage.getString('user_longitude') || '0');
+    const city = storage.getString('user_city') || '';
+    const country = storage.getString('user_country') || '';
+    
+    // Prepare user data for authentication, prioritizing Graph API data
+    const userData = {
+      id: (fbUserData?.id || userProfile?.userID || 'fb_' + Date.now().toString()),
+      name: fbUserData?.name || userProfile?.name || 'Facebook User',
+      email: fbUserData?.email || '',
+      firstName: fbUserData?.first_name || userProfile?.firstName || '',
+      lastName: fbUserData?.last_name || userProfile?.lastName || '',
+      photoUrl: fbUserData?.picture?.data?.url || userProfile?.imageURL || '',
+      // Location data
+      city: city || fbUserData?.location?.name?.split(',')[0] || '',
+      country: country || fbUserData?.location?.name?.split(',')[1]?.trim() || '',
+      latitude: latitude || 0,
+      longitude: longitude || 0,
+    };
     
     // Prepare data for authenticate endpoint
     const authenticateData: AuthenticateRequest = {
       email: userData.email,
-      firstName: userData.name?.split(' ')[0] || '',
-      lastName: userData.name?.split(' ').slice(1).join(' ') || '',
+      firstName: userData.firstName || userData.name?.split(' ')[0] || '',
+      lastName: userData.lastName || userData.name?.split(' ').slice(1).join(' ') || '',
       profileImage: userData.photoUrl,
       profileId: userData.id,
+      userId: data.accessToken.toString(), // Send FB token as userId as requested
+      deviceId: deviceId,
+      deviceToken: deviceToken,
       deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
       loginWith: 'FACEBOOK',
       password: '', // Empty for social logins
+      city: userData.city,
+      country: userData.country,
+      latitude: userData.latitude,
+      longitude: userData.longitude,
     };
     
-    // Send data to authenticate endpoint
-    console.log('Sending authenticate request for Facebook login:', JSON.stringify(authenticateData));
-    const authResponse = await authService.authenticate(authenticateData);
-    console.log('Received authenticate response:', JSON.stringify(authResponse));
+    // Send data to authenticate endpoint with detailed logging
+    console.log('🔄 SENDING FB AUTH REQUEST:', JSON.stringify(authenticateData, null, 2));
     
-    // Create user object from response
-    const user: User = {
-      id: authResponse.userId,
-      email: authResponse.email || userData.email,
-      name: userData.name,
-      photoUrl: userData.photoUrl,
-    };
-    
-    // Store login method
-    storage.set('login_method', 'facebook');
-    
-    // Mark user as onboarded in global store
     try {
+      const authResponse = await authService.authenticate(authenticateData);
+      console.log('✅ RECEIVED FB AUTH RESPONSE:', JSON.stringify(authResponse, null, 2));
+      
+      // Create user object from response
+      const user: User = {
+        id: authResponse.userId || userData.id,
+        email: authResponse.email || userData.email,
+        name: userData.name,
+        photoUrl: userData.photoUrl,
+      };
+      
+      // Store login method and token
+      storage.set('login_method', 'facebook');
+      storage.set('fb_token', data.accessToken.toString());
+      
+      // Mark user as onboarded in global store
       storage.set('onboarded', 'true');
-    } catch (e) {
-      console.warn('Failed to set onboarded flag:', e);
+      
+      // Update auth state
+      useAuthStore.getState().setUser(user);
+      useAuthStore.getState().setIsAuthenticated(true);
+      useAuthStore.getState().setIsSkippedLogin(false);
+      useAuthStore.getState().setError(null);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ FB AUTH ERROR:', error.response?.data || error.message || error);
+      throw error;
     }
     
-    // Update auth state
-    useAuthStore.getState().setUser(user);
-    useAuthStore.getState().setIsAuthenticated(true);
-    useAuthStore.getState().setIsSkippedLogin(false);
-    useAuthStore.getState().setError(null);
-    
-    return true;
   } catch (error: any) {
     // Update error state
     const errorMessage = error.message || 'Facebook login failed';

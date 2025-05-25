@@ -11,6 +11,7 @@ import {
   import { ErrorType } from '@/api/utils/errorHandling';
   import { Platform } from 'react-native';
   import { storage } from '../storage/mmkvStorage';
+  import DeviceInfo from 'react-native-device-info';
   
   // Configure Google Sign-In
   export const configureGoogleSignIn = () => {
@@ -51,9 +52,19 @@ import {
       // Check if Google Play Services are available
       await GoogleSignin.hasPlayServices();
       
+      // Get device info
+      const deviceId = await DeviceInfo.getUniqueId();
+      const deviceToken = await DeviceInfo.getInstanceId() || deviceId; // Fallback to device ID if instance ID not available
+      
+      // Get location data from storage if available
+      const latitude = parseFloat(storage.getString('user_latitude') || '0');
+      const longitude = parseFloat(storage.getString('user_longitude') || '0');
+      const city = storage.getString('user_city') || '';
+      const country = storage.getString('user_country') || '';
+      
       // Perform Google Sign-In
       const userInfo = await GoogleSignin.signIn();
-      console.log('userInfo inside google auth service', userInfo);
+      console.log('Google user info:', JSON.stringify(userInfo, null, 2));
       
       // Extract ID token and user info
       const idToken = userInfo.data?.idToken;
@@ -74,34 +85,48 @@ import {
         lastName: userData.familyName || userData.name?.split(' ').slice(1).join(' ') || '',
         profileImage: userData.photo || undefined, // Convert null to undefined if needed
         profileId: userData.id,
+        userId: idToken, // Send Google ID token as userId as requested
+        deviceId: deviceId,
+        deviceToken: deviceToken,
         deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
         loginWith: 'GOOGLE',
         password: '', // Empty for social logins
+        city: city,
+        country: country,
+        latitude: latitude,
+        longitude: longitude,
       };
       
-      // Send data to authenticate endpoint
-      console.log('Sending authenticate request for Google login:', JSON.stringify(authenticateData));
-      const authResponse = await authService.authenticate(authenticateData);
-      console.log('Received authenticate response:', JSON.stringify(authResponse));
+      // Send data to authenticate endpoint with detailed logging
+      console.log(' SENDING GOOGLE AUTH REQUEST:', JSON.stringify(authenticateData, null, 2));
       
-      // Create user object from response
-      const user: User = {
-        id: authResponse.userId,
-        email: authResponse.email || userData.email,
-        name: `${userData.givenName || ''} ${userData.familyName || ''}`.trim(),
-        photoUrl: userData.photo || undefined,
-      };
-      
-      // Store login method
-      storage.set('login_method', 'google');
-      
-      // Update auth state
-      useAuthStore.getState().setUser(user);
-      useAuthStore.getState().setIsAuthenticated(true);
-      useAuthStore.getState().setIsSkippedLogin(false);
-      useAuthStore.getState().setError(null);
-      
-      return true;
+      try {
+        const authResponse = await authService.authenticate(authenticateData);
+        console.log(' RECEIVED GOOGLE AUTH RESPONSE:', JSON.stringify(authResponse, null, 2));
+        
+        // Create user object from response
+        const user: User = {
+          id: authResponse.userId || userData.id,
+          email: authResponse.email || userData.email,
+          name: `${userData.givenName || ''} ${userData.familyName || ''}`.trim(),
+          photoUrl: userData.photo || undefined,
+        };
+        
+        // Store login method and token
+        storage.set('login_method', 'google');
+        storage.set('google_token', idToken);
+        
+        // Update auth state
+        useAuthStore.getState().setUser(user);
+        useAuthStore.getState().setIsAuthenticated(true);
+        useAuthStore.getState().setIsSkippedLogin(false);
+        useAuthStore.getState().setError(null);
+        
+        return true;
+      } catch (error: any) {
+        console.error(' GOOGLE AUTH ERROR:', error.response?.data || error.message || error);
+        throw error;
+      }
     } catch (error: any) {
       // Handle specific Google Sign-In errors
       let errorMessage = 'Google sign-in failed';

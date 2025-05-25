@@ -42,6 +42,7 @@ export interface AuthenticateRequest {
   lastName?: string;
   profileImage?: string;
   profileId?: string;
+  deviceId?: string;       // Added for device identification
   deviceToken?: string;
   deviceType: 'ANDROID' | 'IOS';
   loginWith: 'GOOGLE' | 'FACEBOOK';
@@ -51,7 +52,7 @@ export interface AuthenticateRequest {
   country?: string;
   voipToken?: string;
   password?: string; // Will be empty for social logins
-  userId?: string;
+  userId?: string;   // Used to send the social token
   dob?: string;
   phone?: number;
 }
@@ -73,19 +74,46 @@ const authService = {
   // Authenticate with social login data
   authenticate: async (data: AuthenticateRequest): Promise<AuthenticateResponse> => {
     try {
-      console.log('Authenticating with data:', JSON.stringify(data));
-      const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.AUTHENTICATE, data);
-      console.log('Authentication response:', JSON.stringify(response.data));
+      console.log('🔑 AUTHENTICATE REQUEST:', JSON.stringify(data, null, 2));
       
-      // Store access token
-      if (response.data.accessToken) {
-        await tokenService.storeTokens({
-          accessToken: response.data.accessToken,
-          refreshToken: response.data.accessToken, // Using access token as refresh token since API doesn't provide one
-        });
+      // Make sure required fields are present
+      if (!data.loginWith) {
+        console.error('Missing required field: loginWith');
+        throw new Error('Missing required field: loginWith');
       }
       
-      return response.data;
+      if (!data.deviceType) {
+        console.error('Missing required field: deviceType');
+        throw new Error('Missing required field: deviceType');
+      }
+      
+      // Attempt to make the API call
+      try {
+        const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.AUTHENTICATE, data);
+        console.log('✅ AUTHENTICATION SUCCESS:', JSON.stringify(response.data, null, 2));
+        
+        // Store access token
+        if (response.data.accessToken) {
+          await tokenService.storeTokens({
+            accessToken: response.data.accessToken,
+            refreshToken: response.data.accessToken, // Using access token as refresh token since API doesn't provide one
+          });
+        }
+        
+        return response.data;
+      } catch (apiError: any) {
+        // Log detailed error information
+        console.error('❌ AUTHENTICATION API ERROR:');
+        console.error('Status:', apiError.response?.status);
+        console.error('Status Text:', apiError.response?.statusText);
+        console.error('Response Data:', JSON.stringify(apiError.response?.data, null, 2));
+        console.error('Request URL:', apiError.config?.url);
+        console.error('Request Method:', apiError.config?.method);
+        console.error('Request Headers:', JSON.stringify(apiError.config?.headers, null, 2));
+        console.error('Request Data:', JSON.stringify(apiError.config?.data, null, 2));
+        
+        throw apiError;
+      }
     } catch (error) {
       console.error('Authentication failed:', error);
       throw error;
