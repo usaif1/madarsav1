@@ -176,6 +176,7 @@ const TasbihScreen: React.FC = () => {
   const [customBeadValue, setCustomBeadValue] = useState('');
   const [inputTouched, setInputTouched] = useState(false);
   const { colors } = useThemeStore();
+  const [isWhite, setIsWhite] = useState(false);
   
   // Current dua and verse calculations
   const currentDua = duaList[selectedDuaIndex] || duaList[0];
@@ -307,11 +308,13 @@ const TasbihScreen: React.FC = () => {
         currentVerseIndex={currentVerseIndex}
         onAdvance={handleAdvanceVerse}
         totalCount={totalPrayerCount}
+        isWhite={isWhite}
       />
       
       {/* Counter controls */}
       <View style={styles.counterControlsWrapper}>
         <CounterControls
+        onSelectBead={() => setIsWhite(!isWhite)}
           selectedCount={totalVerses} // Show verses count instead of bead count
           onSelectCounter={() => setSelectCounterModalVisible(true)}
           onReset={handleReset}
