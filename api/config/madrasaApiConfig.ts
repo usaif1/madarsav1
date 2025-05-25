@@ -12,6 +12,7 @@ export const MADRASA_API_ENDPOINTS = {
   // OAuth endpoints
   GOOGLE_AUTH: '/api/v1/users/oauth/google',
   FACEBOOK_AUTH: '/api/v1/users/oauth/facebook',
+  AUTHENTICATE: '/api/v1/authenticate',
   
   // Skip login
   SKIPPED_LOGIN: '/api/v1/skipped-login',

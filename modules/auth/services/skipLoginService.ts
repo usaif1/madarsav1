@@ -2,10 +2,11 @@
 import DeviceInfo from 'react-native-device-info';
 import { Platform } from 'react-native';
 import { useAuthStore } from '../store/authStore';
-import authService, { SkippedLoginRequest } from './authService';
+import authService, { SkippedLoginRequest, SkippedLoginResponse } from './authService';
 import { storage } from '../storage/mmkvStorage';
 import { useErrorStore } from '@/modules/error/store/errorStore';
 import { ErrorType } from '@/api/utils/errorHandling';
+import tokenService from './tokenService';
 
 // Skip login and register device
 export const skipLogin = async (deviceToken: string = ''): Promise<boolean> => {
@@ -25,10 +26,21 @@ export const skipLogin = async (deviceToken: string = ''): Promise<boolean> => {
     };
     
     // Send skip login request to backend
-    // const response = await authService.skipLogin(skipLoginData);
+    console.log('Sending skip login request:', JSON.stringify(skipLoginData));
+    const response = await authService.skipLogin(skipLoginData);
+    console.log('Skip login response:', JSON.stringify(response));
+    
+    // Store access token if available
+    if (response && response.accessToken) {
+      await tokenService.storeTokens({
+        accessToken: response.accessToken,
+        refreshToken: response.accessToken, // Using access token as refresh token
+      });
+    }
     
     // Store device ID in MMKV storage
     storage.set('device_id', deviceId);
+    storage.set('login_method', 'skipped');
     
     // Update auth state
     useAuthStore.getState().setIsSkippedLogin(true);

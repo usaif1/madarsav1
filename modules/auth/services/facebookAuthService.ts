@@ -1,12 +1,13 @@
 // modules/auth/services/facebookAuthService.ts
 import { LoginManager, AccessToken, Profile } from 'react-native-fbsdk-next';
 import { useAuthStore, User } from '../store/authStore';
-import authService from './authService';
+import authService, { AuthenticateRequest } from './authService';
 import tokenService from './tokenService';
 import { useErrorStore } from '@/modules/error/store/errorStore';
 import { ErrorType } from '@/api/utils/errorHandling';
 import { Settings } from 'react-native-fbsdk-next';
-import { mmkvStorage } from '../storage/mmkvStorage';
+import { mmkvStorage, storage } from '../storage/mmkvStorage';
+import { Platform } from 'react-native';
 
 // Configure Facebook SDK
 export const configureFacebookSDK = () => {
@@ -101,53 +102,62 @@ export const loginWithFacebook = async (): Promise<boolean> => {
     const userProfile = await Profile.getCurrentProfile();
     console.log('User profile received:', userProfile ? JSON.stringify(userProfile) : 'No profile');
     
-    // Create a user object from the profile
+    // Prepare user data for authentication
+    let userData;
     if (userProfile) {
-      // Create a valid User object that matches your User interface
-      const user: User = {
-        id: userProfile.userID || 'fb_user', // Ensure id is never undefined
+      userData = {
+        id: userProfile.userID || 'fb_user',
         name: userProfile.name || 'Facebook User',
-        email: userProfile.email || '', // Email is not available directly from Profile
+        email: userProfile.email || '', 
         photoUrl: userProfile.imageURL || '',
       };
-      
-      console.log('Created user object:', JSON.stringify(user));
-      
-      // Update auth state with the user profile
-      useAuthStore.getState().setUser(user);
     } else {
-      // If no profile is available, create a minimal user object
-      console.warn('No profile information available, creating minimal user');
-      const minimalUser: User = {
+      // If no profile is available, create minimal user data
+      console.warn('No profile information available, creating minimal user data');
+      userData = {
         id: 'fb_' + Date.now().toString(),
         name: 'Facebook User',
         photoUrl: '',
       };
-      useAuthStore.getState().setUser(minimalUser);
     }
     
-    // Mark user as onboarded in global store to enable navigation to home
-    // This is critical for routing to home screen
+    // Prepare data for authenticate endpoint
+    const authenticateData: AuthenticateRequest = {
+      email: userData.email,
+      firstName: userData.name?.split(' ')[0] || '',
+      lastName: userData.name?.split(' ').slice(1).join(' ') || '',
+      profileImage: userData.photoUrl,
+      profileId: userData.id,
+      deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
+      loginWith: 'FACEBOOK',
+      password: '', // Empty for social logins
+    };
+    
+    // Send data to authenticate endpoint
+    console.log('Sending authenticate request for Facebook login:', JSON.stringify(authenticateData));
+    const authResponse = await authService.authenticate(authenticateData);
+    console.log('Received authenticate response:', JSON.stringify(authResponse));
+    
+    // Create user object from response
+    const user: User = {
+      id: authResponse.userId,
+      email: authResponse.email || userData.email,
+      name: userData.name,
+      photoUrl: userData.photoUrl,
+    };
+    
+    // Store login method
+    storage.set('login_method', 'facebook');
+    
+    // Mark user as onboarded in global store
     try {
-      // Set onboarded flag in storage
-      mmkvStorage.setItem('onboarded', 'true');
+      storage.set('onboarded', 'true');
     } catch (e) {
       console.warn('Failed to set onboarded flag:', e);
     }
     
-    // Send access token to backend for verification (commented out for now)
-    // console.log('Sending token to backend...');
-    // const authResponse = await authService.loginWithFacebook(data.accessToken);
-    // console.log('Backend auth response received');
-    
-    // Store tokens securely (commented out for now)
-    // await tokenService.storeTokens({
-    //   accessToken: authResponse.accessToken,
-    //   refreshToken: authResponse.refreshToken,
-    // });
-    // console.log('Tokens stored securely');
-    
     // Update auth state
+    useAuthStore.getState().setUser(user);
     useAuthStore.getState().setIsAuthenticated(true);
     useAuthStore.getState().setIsSkippedLogin(false);
     useAuthStore.getState().setError(null);

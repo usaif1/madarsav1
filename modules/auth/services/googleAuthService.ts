@@ -4,11 +4,13 @@ import {
     statusCodes,
     User as GoogleUser,
   } from '@react-native-google-signin/google-signin';
-  import { useAuthStore } from '../store/authStore';
-  import authService from './authService';
+  import { useAuthStore, User } from '../store/authStore';
+  import authService, { AuthenticateRequest } from './authService';
   import tokenService from './tokenService';
   import { useErrorStore } from '@/modules/error/store/errorStore';
   import { ErrorType } from '@/api/utils/errorHandling';
+  import { Platform } from 'react-native';
+  import { storage } from '../storage/mmkvStorage';
   
   // Configure Google Sign-In
   export const configureGoogleSignIn = () => {
@@ -52,24 +54,49 @@ import {
       // Perform Google Sign-In
       const userInfo = await GoogleSignin.signIn();
       console.log('userInfo inside google auth service', userInfo);
-      // Extract ID token
+      
+      // Extract ID token and user info
       const idToken = userInfo.data?.idToken;
       if (!idToken) {
         throw new Error('No ID token received from Google');
       }
       
-      // // Send ID token to backend for verification
-      // const authResponse = await authService.loginWithGoogle(idToken);
+      // Get user data from Google response
+      const userData = userInfo.data?.user;
+      if (!userData) {
+        throw new Error('No user data received from Google');
+      }
       
-      // // Store tokens securely
-      // await tokenService.storeTokens({
-      //   accessToken: authResponse.accessToken,
-      //   refreshToken: authResponse.refreshToken,
-      // });
+      // Prepare data for authenticate endpoint
+      const authenticateData: AuthenticateRequest = {
+        email: userData.email,
+        firstName: userData.givenName || userData.name?.split(' ')[0] || '',
+        lastName: userData.familyName || userData.name?.split(' ').slice(1).join(' ') || '',
+        profileImage: userData.photo || undefined, // Convert null to undefined if needed
+        profileId: userData.id,
+        deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
+        loginWith: 'GOOGLE',
+        password: '', // Empty for social logins
+      };
+      
+      // Send data to authenticate endpoint
+      console.log('Sending authenticate request for Google login:', JSON.stringify(authenticateData));
+      const authResponse = await authService.authenticate(authenticateData);
+      console.log('Received authenticate response:', JSON.stringify(authResponse));
+      
+      // Create user object from response
+      const user: User = {
+        id: authResponse.userId,
+        email: authResponse.email || userData.email,
+        name: `${userData.givenName || ''} ${userData.familyName || ''}`.trim(),
+        photoUrl: userData.photo || undefined,
+      };
+      
+      // Store login method
+      storage.set('login_method', 'google');
       
       // Update auth state
-      // useAuthStore.getState().setUser(authResponse.user);
-      useAuthStore.getState().setUser(userInfo.data?.user || null);
+      useAuthStore.getState().setUser(user);
       useAuthStore.getState().setIsAuthenticated(true);
       useAuthStore.getState().setIsSkippedLogin(false);
       useAuthStore.getState().setError(null);

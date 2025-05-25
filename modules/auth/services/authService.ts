@@ -4,7 +4,8 @@ import { MADRASA_API_ENDPOINTS } from '@/api/config/madrasaApiConfig';
 import { User } from '../store/authStore';
 import tokenService, { Tokens } from './tokenService';
 import { useAuthStore } from '../store/authStore';
-import { mmkvStorage } from '../storage/mmkvStorage';
+import { mmkvStorage, storage } from '../storage/mmkvStorage';
+import { Platform } from 'react-native';
 
 // Types
 export interface LoginCredentials {
@@ -27,9 +28,69 @@ export interface SkippedLoginRequest {
   voipToken?: string;
 }
 
+export interface SkippedLoginResponse {
+  deviceId: string;
+  deviceToken?: string;
+  deviceType?: string;
+  accessToken: string;
+  userId?: string;
+}
+
+export interface AuthenticateRequest {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  profileImage?: string;
+  profileId?: string;
+  deviceToken?: string;
+  deviceType: 'ANDROID' | 'IOS';
+  loginWith: 'GOOGLE' | 'FACEBOOK';
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  country?: string;
+  voipToken?: string;
+  password?: string; // Will be empty for social logins
+  userId?: string;
+  dob?: string;
+  phone?: number;
+}
+
+export interface AuthenticateResponse {
+  userId: string;
+  email?: string;
+  accessToken: string;
+  deviceToken?: string;
+  deviceType?: string;
+  latitude?: number;
+  longitude?: number;
+  userRoles?: string;
+  voipToken?: string;
+}
 
 // Auth service methods
 const authService = {
+  // Authenticate with social login data
+  authenticate: async (data: AuthenticateRequest): Promise<AuthenticateResponse> => {
+    try {
+      console.log('Authenticating with data:', JSON.stringify(data));
+      const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.AUTHENTICATE, data);
+      console.log('Authentication response:', JSON.stringify(response.data));
+      
+      // Store access token
+      if (response.data.accessToken) {
+        await tokenService.storeTokens({
+          accessToken: response.data.accessToken,
+          refreshToken: response.data.accessToken, // Using access token as refresh token since API doesn't provide one
+        });
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      throw error;
+    }
+  },
   // Regular login with email/password
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
@@ -64,7 +125,7 @@ const authService = {
   },
   
   // Skip login (anonymous user)
-  skipLogin: async (data: SkippedLoginRequest): Promise<SkippedLoginRequest> => {
+  skipLogin: async (data: SkippedLoginRequest): Promise<SkippedLoginResponse> => {
     try {
       const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.SKIPPED_LOGIN, data);
       return response.data;
@@ -82,6 +143,8 @@ const authService = {
         throw new Error('No refresh token available');
       }
       
+      // Original refresh token logic (commented out as requested)
+      /*
       const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.REFRESH_TOKEN, { refreshToken });
       
       // Store new tokens
@@ -93,6 +156,42 @@ const authService = {
       return {
         accessToken: response.data.accessToken,
         refreshToken: response.data.refreshToken,
+      };
+      */
+      
+      // Get stored user info from auth store
+      const user = useAuthStore.getState().user;
+      const loginMethod = storage.getString('login_method');
+      
+      if (!user || !loginMethod) {
+        throw new Error('User info or login method not available');
+      }
+      
+      // Create authenticate request based on stored user info
+      const authRequest: AuthenticateRequest = {
+        email: user.email,
+        firstName: user.name?.split(' ')[0],
+        lastName: user.name?.split(' ').slice(1).join(' '),
+        profileImage: user.photoUrl,
+        profileId: user.id,
+        deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
+        loginWith: loginMethod === 'google' ? 'GOOGLE' : 'FACEBOOK',
+        // Add other fields if available
+        password: '', // Empty for social logins
+      };
+      
+      // Call authenticate to get a new token
+      const authResponse = await authService.authenticate(authRequest);
+      
+      // Store the new token
+      await tokenService.storeTokens({
+        accessToken: authResponse.accessToken,
+        refreshToken: authResponse.accessToken, // Using access token as refresh token
+      });
+      
+      return {
+        accessToken: authResponse.accessToken,
+        refreshToken: authResponse.accessToken,
       };
     } catch (error) {
       console.error('Token refresh failed:', error);
