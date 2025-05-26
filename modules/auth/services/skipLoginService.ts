@@ -47,7 +47,7 @@ export const skipLogin = async (): Promise<boolean> => {
     if (response && response.accessToken) {
       await tokenService.storeTokens({
         accessToken: response.accessToken,
-        refreshToken: response.accessToken, // Using access token as refresh token
+        refreshToken: response.refreshToken, // Using access token as refresh token
       });
     }
     

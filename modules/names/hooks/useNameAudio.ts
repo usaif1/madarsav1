@@ -20,6 +20,7 @@ interface UseNameAudioReturn {
   position: number;
   volume: number;
   playAudio: (nameNumber: number) => Promise<void>;
+  playAudioFromUrl: (audioUrl: string) => Promise<void>;
   pauseAudio: () => void;
   stopAudio: () => void;
   setVolume: (volume: number) => void;
@@ -379,6 +380,91 @@ export const useNameAudio = (): UseNameAudioReturn => {
     setError(null);
   };
 
+  /**
+   * Play audio from a direct URL
+   * @param audioUrl - The URL of the audio file to play
+   */
+  const playAudioFromUrl = async (audioUrl: string): Promise<void> => {
+    if (!audioContextRef.current || !gainNodeRef.current) {
+      setError('Audio system not initialized');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Stop current playback if any
+      stopAudio();
+      
+      console.log(`🎵 Loading audio from URL: ${audioUrl}`);
+      
+      // Fetch audio file
+      const response = await fetch(audioUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Get array buffer
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Decode audio data
+      const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+      
+      // Create buffer source node
+      const sourceNode = audioContextRef.current.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      
+      // Connect audio graph: source -> gain -> destination
+      sourceNode.connect(gainNodeRef.current);
+      
+      // Set up playback completion handler
+      sourceNode.onended = () => {
+        if (isMountedRef.current) {
+          setIsPlaying(false);
+          setPosition(duration);
+          console.log('🎵 Playback completed');
+        }
+      };
+      
+      // Store references
+      sourceNodeRef.current = sourceNode;
+      
+      // Set duration and reset position
+      setDuration(audioBuffer.duration);
+      setPosition(0);
+      pauseTimeRef.current = 0;
+      
+      // Start playback
+      const currentTime = audioContextRef.current.currentTime;
+      sourceNode.start(0);
+      startTimeRef.current = currentTime;
+      
+      setIsPlaying(true);
+      setIsLoading(false);
+      
+      // Start position tracking
+      startPositionTracking();
+      
+      console.log('✅ Audio playback started');
+      
+    } catch (audioError) {
+      console.error('❌ Error playing audio from URL:', audioError);
+      
+      if (!isMountedRef.current) return;
+      
+      setIsLoading(false);
+      setIsPlaying(false);
+      
+      if (audioError instanceof Error) {
+        setError(audioError.message);
+      } else {
+        setError('Unknown error occurred while playing audio');
+      }
+    }
+  };
+
   return {
     isPlaying,
     isLoading,
@@ -387,6 +473,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
     position,
     volume,
     playAudio,
+    playAudioFromUrl,
     pauseAudio,
     stopAudio,
     setVolume,

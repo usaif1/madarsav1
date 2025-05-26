@@ -31,6 +31,7 @@ export interface SkippedLoginRequest {
   city?: string;
   country?: string;
   voipToken?: string;
+  refreshToken?: string;
 }
 
 export interface SkippedLoginResponse {
@@ -112,7 +113,7 @@ const authService = {
         
         // Store tokens
         if (response.data.accessToken) {
-          const refreshToken = response.data.refreshToken || response.data.accessToken;
+          const refreshToken = response.data.refreshToken;
           await tokenService.storeTokens({
             accessToken: response.data.accessToken,
             refreshToken: refreshToken,
@@ -150,7 +151,7 @@ const authService = {
       
       // Store tokens from login response
       if (response.data.accessToken) {
-        const refreshToken = response.data.refreshToken || response.data.accessToken;
+        const refreshToken = response.data.refreshToken;
         await tokenService.storeTokens({
           accessToken: response.data.accessToken,
           refreshToken: refreshToken,
@@ -173,7 +174,7 @@ const authService = {
       
       // Store tokens from Google login response
       if (response.data.accessToken) {
-        const refreshToken = response.data.refreshToken || response.data.accessToken;
+        const refreshToken = response.data.refreshToken;
         await tokenService.storeTokens({
           accessToken: response.data.accessToken,
           refreshToken: refreshToken,
@@ -196,7 +197,7 @@ const authService = {
       
       // Store tokens from Facebook login response
       if (response.data.accessToken) {
-        const refreshToken = response.data.refreshToken || response.data.accessToken;
+        const refreshToken = response.data.refreshToken;
         await tokenService.storeTokens({
           accessToken: response.data.accessToken,
           refreshToken: refreshToken,
@@ -221,7 +222,7 @@ const authService = {
       if (response.data.accessToken) {
         await tokenService.storeTokens({
           accessToken: response.data.accessToken,
-          refreshToken: response.data.accessToken, // Use access token as refresh token for skipped login
+          refreshToken: response.data.refreshToken, // Use access token as refresh token for skipped login
         });
         console.log('✅ Skip login successful, token stored');
       }
@@ -246,9 +247,13 @@ const authService = {
 
       console.log('🔄 Calling refresh token API');
       try {
-        // Try the new refresh token API first
-        const response = await madrasaClient.post(MADRASA_API_ENDPOINTS.REFRESH_TOKEN, { refreshToken });
-        
+        // Try the new refresh token API first - send token as query parameter per Swagger docs
+        const response = await madrasaClient.post(
+          MADRASA_API_ENDPOINTS.REFRESH_TOKEN, 
+          {}, // Empty body
+          { params: { token: refreshToken } } // Send as query parameter
+        );
+        console.log('✅ Token refresh successful via refresh API', response.data)
         if (response.data.accessToken) {
           const newRefreshToken = response.data.refreshToken || refreshToken;
           

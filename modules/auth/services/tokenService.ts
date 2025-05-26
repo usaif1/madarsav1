@@ -39,8 +39,8 @@ const tokenService = {
         console.log(' Retrieved tokens:', {
           hasAccessToken: !!tokens.accessToken,
           hasRefreshToken: !!tokens.refreshToken,
-          accessTokenPreview: tokens.accessToken ? `${tokens.accessToken.substring(0, 10)}...` : 'null',
-          refreshTokenPreview: tokens.refreshToken ? `${tokens.refreshToken.substring(0, 10)}...` : 'null'
+          accessTokenPreview: tokens.accessToken ? `${tokens.accessToken}` : 'null',
+          refreshTokenPreview: tokens.refreshToken ? `${tokens.refreshToken}` : 'null'
         });
         return tokens;
       }
