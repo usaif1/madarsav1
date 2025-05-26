@@ -1,6 +1,8 @@
 // dependencies
-import {StatusBar, StyleSheet, View} from 'react-native';
-import React from 'react';
+import {StatusBar, StyleSheet, View, TouchableOpacity} from 'react-native';
+import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // components
 import {DuaSearchbar} from './components/Duas';
@@ -9,10 +11,18 @@ import {Body1Title2Bold, Divider} from '@/components';
 
 // assets
 import MandalaDua from '@/assets/duas/mandala_dua.svg';
+import BookmarkWhite from '@/assets/duas/bookmark-white.svg';
 import { scale, verticalScale } from '@/theme/responsive';
 import FastImage from 'react-native-fast-image';
 
 const Duas = () => {
+  const [isSaved, setIsSaved] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+
+  const handleSavedPress = () => {
+    navigation.navigate('SavedDuas');
+  };
+
   return (
     <View
       style={{
@@ -89,12 +99,23 @@ const Duas = () => {
           }}
         />
       </View>
+
+      {/* Floating Saved Button */}
+      <TouchableOpacity 
+        style={styles.savedButton} 
+        onPress={handleSavedPress}
+        activeOpacity={0.8}
+        accessibilityLabel="View saved duas"
+        accessibilityRole="button"
+      >
+        <BookmarkWhite width={16} height={16} />
+        <Body1Title2Bold color="white" style={{marginLeft: 8}}>Saved</Body1Title2Bold>
+      </TouchableOpacity>
     </View>
   );
 };
 
 export default Duas;
-
 
 const styles = StyleSheet.create({
     footerContainer: {
@@ -104,7 +125,26 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     footerImage: {
-      width: '100%',
-      height: '100%',
-  },
+        width: '100%',
+        height: '100%',
+    },
+    savedButton: {
+        position: 'absolute',
+        bottom: 40,
+        right: 16,
+        width: scale(89),
+        height: verticalScale(40),
+        borderRadius: 60,
+        backgroundColor: '#000000',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        shadowColor: '#171717',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 2,
+    },
 });

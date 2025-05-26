@@ -1,5 +1,7 @@
 import {FlatList, StyleSheet, View, TouchableOpacity} from 'react-native';
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // assets
 import DailyZikr from '@/assets/duas/daily_zikr.svg';
@@ -8,6 +10,7 @@ import GoodEtiquette from '@/assets/duas/good_etiquette.svg';
 import PraisingAllah from '@/assets/duas/praising_allah.svg';
 import Washroom from '@/assets/duas/washroom.svg';
 import House from '@/assets/duas/house.svg';
+import BookmarkPrimary from '@/assets/duas/bookmark-primary.svg';
 import {Body1Title2Bold, Body2Medium, Divider} from '@/components';
 
 const dailyDuasData = [
@@ -61,7 +64,7 @@ const DuaList = () => {
     <FlatList
       data={dailyDuasData}
       keyExtractor={item => item.id}
-      renderItem={DuaCard}
+      renderItem={({item}) => <DuaCard item={item} />}
       contentContainerStyle={{paddingBottom: 24, paddingHorizontal: 18}}
       ItemSeparatorComponent={Separator}
     />
@@ -70,19 +73,39 @@ const DuaList = () => {
 
 export default DuaList;
 
-const DuaCard = ({item}: {item: any}) => {
+interface DuaItemProps {
+  id: string;
+  title: string;
+  description: string;
+  count: number;
+  icon: React.ComponentType<any>;
+  bookmarked?: boolean;
+}
+
+const DuaCard = ({item}: {item: DuaItemProps}) => {
   const IconComponent = item.icon;
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+
+  const handlePress = () => {
+    navigation.navigate('DuaDetail', {
+      title: item.title,
+      count: item.count
+    });
+  };
 
   return (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handlePress}>
       <IconComponent width={38} height={38} />
       <View style={styles.textWrapper}>
         <Body1Title2Bold>{item.title}</Body1Title2Bold>
         <Divider height={4} />
         <Body2Medium color="sub-heading">{item.description}</Body2Medium>
       </View>
-
-      <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
+      
+      <View style={styles.rightContainer}>
+        {item.bookmarked && <BookmarkPrimary width={16} height={16} style={styles.bookmark} />}
+        <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -108,6 +131,14 @@ const styles = StyleSheet.create({
   },
   textWrapper: {
     flex: 1,
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  bookmark: {
+    marginRight: 4,
   },
   title: {
     fontWeight: '700',
