@@ -43,10 +43,11 @@ madrasaClient.interceptors.request.use(
       
       if (cachedResponse) {
         // Return a promise that resolves with the cached response
+        // We need to cast this to InternalAxiosRequestConfig to satisfy TypeScript
         return Promise.resolve({
           ...config,
           adapter: () => Promise.resolve(cachedResponse)
-        });
+        } as InternalAxiosRequestConfig);
       }
     }
     
@@ -69,7 +70,8 @@ madrasaClient.interceptors.request.use(
           config.data = prepareDataForCompression(config.data);
         }
         
-        return compressedConfig;
+        // Cast to InternalAxiosRequestConfig to satisfy TypeScript
+        return compressedConfig as InternalAxiosRequestConfig;
       }
     }
     
@@ -107,45 +109,63 @@ madrasaClient.interceptors.response.use(
         const cachedResponse = getFromCache(cacheKey);
         
         if (cachedResponse) {
+          console.log('🔄 Using cached response for offline request');
           return Promise.resolve(cachedResponse);
         }
       }
+      
+      console.error('❌ Network error and no cached response available');
     }
     
     // Check if error is due to expired token (401) and not already retrying
     if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && !originalRequest._retry) {
+      console.log('🔑 Token expired (401), attempting refresh');
       originalRequest._retry = true;
       
       try {
-        // Get auth store actions
-        const refreshTokens = useAuthStore.getState().refreshTokens;
+        // Import authService directly to avoid circular dependencies
+        const authService = require('@/modules/auth/services/authService').default;
         
-        // Attempt to refresh token
-        const refreshed = await refreshTokens();
+        // Attempt to refresh token using the new authService method
+        console.log('🔄 Calling authService.refreshToken()');
+        const tokens = await authService.refreshToken();
         
-        if (refreshed && originalRequest) {
-          // Get new access token
-          const newToken = await tokenService.getAccessToken();
+        if (tokens && tokens.accessToken) {
+          console.log('✅ Token refresh successful, retrying original request');
           
           // Update Authorization header with new token
           if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            // Use proper Axios headers methods
+            originalRequest.headers.set('Authorization', `Bearer ${tokens.accessToken}`);
           } else {
-            originalRequest.headers = { Authorization: `Bearer ${newToken}` };
+            // Create a new AxiosHeaders instance
+            const headers = new axios.AxiosHeaders();
+            headers.set('Authorization', `Bearer ${tokens.accessToken}`);
+            originalRequest.headers = headers;
           }
           
           // Retry the original request
           return madrasaClient(originalRequest);
+        } else {
+          console.error('❌ Token refresh returned no tokens');
+          throw new Error('Token refresh failed');
         }
       } catch (refreshError) {
+        console.error('❌ Token refresh failed:', refreshError);
+        
         // If refresh fails, log out the user
-        const logout = useAuthStore.getState().logout;
-        await logout();
+        try {
+          console.log('🚪 Logging out user due to token refresh failure');
+          await useAuthStore.getState().logout();
+        } catch (logoutError) {
+          console.error('❌ Logout failed after token refresh error:', logoutError);
+        }
         
         return Promise.reject(refreshError);
       }
     }
     
+    // For other error statuses, just reject with the original error
     return Promise.reject(error);
   }
 );

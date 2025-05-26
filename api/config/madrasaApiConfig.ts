@@ -6,7 +6,7 @@ export const MADRASA_API_ENDPOINTS = {
   LOGIN: '/api/v1/users/login',
   REGISTER: '/api/v1/users/register',
   LOGOUT: '/api/v1/users/logout',
-  REFRESH_TOKEN: '/api/v1/users/refresh-token',
+  REFRESH_TOKEN: '/api/v1/refreshToken',
   USER_PROFILE: '/api/v1/users/me',
   
   // OAuth endpoints

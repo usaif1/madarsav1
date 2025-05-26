@@ -239,24 +239,51 @@ loginWithGoogle: async () => {
       
       refreshTokens: async () => {
         try {
-          set({ isLoading: true });
+          console.log('🔄 Auth store: Refreshing tokens');
+          set({ isLoading: true, error: null });
           
           // Call the auth service to refresh tokens
           const tokens = await authService.refreshToken();
           
-          // If successful, update the authenticated state
-          set({ isLoading: false });
-          
-          return true;
-        } catch (error) {
+          if (tokens && tokens.accessToken) {
+            console.log('✅ Auth store: Token refresh successful');
+            
+            // Update the authenticated state
+            set({ 
+              isAuthenticated: true,
+              isLoading: false,
+              error: null
+            });
+            
+            return true;
+          } else {
+            console.error('❌ Auth store: Token refresh returned invalid tokens');
+            throw new Error('Invalid tokens received during refresh');
+          }
+        } catch (error: any) {
           // If refresh fails, clear auth state
-          console.error('Token refresh failed:', error);
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: 'Session expired. Please log in again.',
-          });
+          console.error('❌ Auth store: Token refresh failed:', error);
+          
+          // Only log out if this is a token-related error
+          if (error.isTokenError) {
+            console.log('🚪 Auth store: Logging out due to token error');
+            // Clear tokens and reset auth state
+            await tokenService.clearTokens();
+            
+            set({
+              user: null,
+              isAuthenticated: false,
+              isSkippedLogin: false,
+              isLoading: false,
+              error: 'Session expired. Please log in again.',
+            });
+          } else {
+            // For other errors, just update the error state but don't log out
+            set({
+              isLoading: false,
+              error: error.message || 'Failed to refresh authentication',
+            });
+          }
           
           return false;
         }

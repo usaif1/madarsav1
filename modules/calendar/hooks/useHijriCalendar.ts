@@ -12,6 +12,7 @@ import {
   getSpecialDays,
   getIslamicMonths,
   getHijriHolidaysByYear,
+  getRamadanCalendar,
   DateConversionResponse,
   CalendarResponse,
   HijriHolidayResponse,
@@ -183,5 +184,23 @@ export const useHijriHolidaysByYear = (year: number, month?: number, method: str
     queryFn: () => getHijriHolidaysByYear(year, method),
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
     gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+  });
+};
+
+/**
+ * Hook to fetch Ramadan calendar data for a specific year
+ * @param year Gregorian year
+ * @param latitude User's latitude
+ * @param longitude User's longitude
+ * @param method Calendar calculation method (default: HJCoSA)
+ * @returns Query result with Ramadan calendar data including prayer times
+ */
+export const useRamadanCalendar = (year: number, latitude: number, longitude: number, method: string = 'HJCoSA') => {
+  return useQuery<CalendarResponse, Error>({
+    queryKey: ['ramadanCalendar', year, latitude, longitude, method],
+    queryFn: () => getRamadanCalendar(year, latitude, longitude, method),
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+    enabled: !!latitude && !!longitude, // Only fetch if latitude and longitude are provided
   });
 };

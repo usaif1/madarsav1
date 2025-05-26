@@ -1,4 +1,4 @@
-// src/modules/dua/services/duaService.ts
+// src/modules/duas/services/duaService.ts
 import madrasaClient from '../../../api/clients/madrasaClient';
 import { MADRASA_API_ENDPOINTS } from '../../../api/config/madrasaApiConfig';
 import tokenService from '@/modules/auth/services/tokenService';
@@ -8,28 +8,36 @@ export interface DuaData {
   id: number;
   title: string;
   arabic: string;
-  transliteration: string;
   translation: string;
+  transliteration: string;
   reference: string;
   category: string;
+  audioUrl?: string;
+  imageUrl?: string;
 }
 
 export interface DuasResponse {
-  duas: DuaData[];
+  data: DuaData[];
+  message: string;
+  status: number;
 }
 
+// Define interfaces for the tasbih data
 export interface TasbihData {
   id: number;
   title: string;
   arabic: string;
-  transliteration: string;
   translation: string;
+  transliteration: string;
   count: number;
-  benefits: string;
+  category: string;
+  audioUrl?: string;
 }
 
 export interface TasbihResponse {
-  tasbihs: TasbihData[];
+  data: TasbihData[];
+  message: string;
+  status: number;
 }
 
 /**
@@ -46,13 +54,15 @@ export const fetchAllDuas = async (): Promise<DuasResponse> => {
       Authorization: `Bearer ${accessToken}`
     } : undefined;
     
-    console.log('🤲 Fetching all duas');
-    console.log('🤲 Request headers:', headers ? 'Bearer token included' : 'No token available');
+    console.log('📝 Fetching all duas');
+    console.log('📝 Request headers:', headers ? 'Bearer token included' : 'No token available');
     
     const response = await madrasaClient.get(MADRASA_API_ENDPOINTS.DUAS, { headers });
     
-    console.log('🤲 Successfully fetched all duas');
-    console.log('🤲 Response status:', response.status);
+    console.log('📝 Successfully fetched duas');
+    console.log('📝 Response status:', response.status);
+    console.log('📝 Response data preview:', JSON.stringify(response.data));
+    
     return response.data;
   } catch (error) {
     console.error('Error fetching duas:', error);
@@ -75,13 +85,15 @@ export const fetchDuaById = async (id: number): Promise<DuaData> => {
       Authorization: `Bearer ${accessToken}`
     } : undefined;
     
-    console.log(`🤲 Fetching dua #${id}`);
-    console.log('🤲 Request headers:', headers ? 'Bearer token included' : 'No token available');
+    console.log(`📝 Fetching dua #${id}`);
+    console.log('📝 Request headers:', headers ? 'Bearer token included' : 'No token available');
     
     const response = await madrasaClient.get(`${MADRASA_API_ENDPOINTS.DUAS}/${id}`, { headers });
     
-    console.log(`🤲 Successfully fetched dua #${id}`);
-    console.log('🤲 Response status:', response.status);
+    console.log(`📝 Successfully fetched dua #${id}`);
+    console.log('📝 Response status:', response.status);
+    console.log('📝 Response data:', JSON.stringify(response.data, null, 2));
+    
     return response.data;
   } catch (error) {
     console.error(`Error fetching dua #${id}:`, error);
@@ -90,39 +102,7 @@ export const fetchDuaById = async (id: number): Promise<DuaData> => {
 };
 
 /**
- * Fetches duas by category
- * @param category The category to filter duas by
- * @returns Promise with the filtered duas data
- */
-export const fetchDuasByCategory = async (category: string): Promise<DuasResponse> => {
-  try {
-    // Get the access token from secure storage
-    const accessToken = await tokenService.getAccessToken();
-    
-    // Prepare headers with authorization if token exists
-    const headers = accessToken ? {
-      Authorization: `Bearer ${accessToken}`
-    } : undefined;
-    
-    console.log(`🤲 Fetching duas for category: ${category}`);
-    console.log('🤲 Request headers:', headers ? 'Bearer token included' : 'No token available');
-    
-    const response = await madrasaClient.get(MADRASA_API_ENDPOINTS.DUAS, {
-      params: { category },
-      headers
-    });
-    
-    console.log(`🤲 Successfully fetched duas for category: ${category}`);
-    console.log('🤲 Response status:', response.status);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching duas for category ${category}:`, error);
-    throw error;
-  }
-};
-
-/**
- * Fetches all tasbih duas from the API
+ * Fetches all tasbihs from the API
  * @returns Promise with the tasbih data
  */
 export const fetchAllTasbihs = async (): Promise<TasbihResponse> => {
@@ -135,22 +115,24 @@ export const fetchAllTasbihs = async (): Promise<TasbihResponse> => {
       Authorization: `Bearer ${accessToken}`
     } : undefined;
     
-    console.log('📿 Fetching all tasbih duas');
-    console.log('📿 Request headers:', headers ? 'Bearer token included' : 'No token available');
+    console.log('📝 Fetching all tasbihs');
+    console.log('📝 Request headers:', headers ? 'Bearer token included' : 'No token available');
     
-    const response = await madrasaClient.get(MADRASA_API_ENDPOINTS.TASBIHS, { headers });
+    const response = await madrasaClient.get(MADRASA_API_ENDPOINTS.DUAS_TASBIH, { headers });
     
-    console.log('📿 Successfully fetched all tasbih duas');
-    console.log('📿 Response status:', response.status);
+    console.log('📝 Successfully fetched tasbihs');
+    console.log('📝 Response status:', response.status);
+    console.log('📝 Response data preview:', JSON.stringify(response.data));
+    
     return response.data;
   } catch (error) {
-    console.error('Error fetching tasbih duas:', error);
+    console.error('Error fetching tasbihs:', error);
     throw error;
   }
 };
 
 /**
- * Fetches a specific tasbih dua by ID
+ * Fetches a specific tasbih by ID
  * @param id The ID of the tasbih to fetch
  * @returns Promise with the specific tasbih data
  */
@@ -164,16 +146,28 @@ export const fetchTasbihById = async (id: number): Promise<TasbihData> => {
       Authorization: `Bearer ${accessToken}`
     } : undefined;
     
-    console.log(`📿 Fetching tasbih #${id}`);
-    console.log('📿 Request headers:', headers ? 'Bearer token included' : 'No token available');
+    console.log(`📝 Fetching tasbih #${id}`);
+    console.log('📝 Request headers:', headers ? 'Bearer token included' : 'No token available');
     
-    const response = await madrasaClient.get(`${MADRASA_API_ENDPOINTS.TASBIHS}/${id}`, { headers });
+    const response = await madrasaClient.get(`${MADRASA_API_ENDPOINTS.DUAS_TASBIH}/${id}`, { headers });
     
-    console.log(`📿 Successfully fetched tasbih #${id}`);
-    console.log('📿 Response status:', response.status);
+    console.log(`📝 Successfully fetched tasbih #${id}`);
+    console.log('📝 Response status:', response.status);
+    console.log('📝 Response data:', JSON.stringify(response.data, null, 2));
+    
     return response.data;
   } catch (error) {
     console.error(`Error fetching tasbih #${id}:`, error);
     throw error;
   }
 };
+
+// Export all functions
+const duaService = {
+  fetchAllDuas,
+  fetchDuaById,
+  fetchAllTasbihs,
+  fetchTasbihById,
+};
+
+export default duaService;
