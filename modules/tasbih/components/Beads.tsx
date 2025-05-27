@@ -70,6 +70,16 @@ const Beads: React.FC<BeadsProps> = ({
   // Animation state
   const [isAnimating, setIsAnimating] = useState(false);
   
+  // Set up animation event listener
+  useEffect(() => {
+    // We'll rely on the timeout approach instead of trying to access private properties
+    // This is more reliable across different versions of lottie-react-native
+    return () => {
+      // Cleanup any pending timeouts when component unmounts
+      setIsAnimating(false);
+    };
+  }, []);
+  
   // Calculate current round
   const currentRound = Math.floor(sanitizedTotalCount / sanitizedTotalVerses) + 1;
   
@@ -91,9 +101,12 @@ const Beads: React.FC<BeadsProps> = ({
     try {
       setIsAnimating(true);
       
-      // Play the Lottie animation
+      // Play the Lottie animation - ensure it plays from beginning to end
       if (lottieRef.current) {
-        lottieRef.current.play(0, 1);
+        // Reset to beginning first
+        lottieRef.current.reset();
+        // Play the full animation
+        lottieRef.current.play();
       }
       
       // Announce the current verse for accessibility
@@ -107,10 +120,10 @@ const Beads: React.FC<BeadsProps> = ({
       // Call parent callback
       onAdvance();
       
-      // Reset animation state after animation completes
+      // Reset animation state after animation completes - use longer duration
       setTimeout(() => {
         setIsAnimating(false);
-      }, 1000); // Animation duration
+      }, 2000); // Increased animation duration to ensure it completes
     } catch (error) {
       console.error('Error handling bead advance:', error);
       setIsAnimating(false);
@@ -155,6 +168,8 @@ const Beads: React.FC<BeadsProps> = ({
           style={styles.lottieAnimation}
           loop={false}
           autoPlay={false}
+          speed={0.7} // Slow down the animation slightly
+          resizeMode="cover"
         />
       </Pressable>
       

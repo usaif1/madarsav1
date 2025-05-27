@@ -1,14 +1,15 @@
 // TasbihScreen.tsx
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, DeviceEventEmitter, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, DeviceEventEmitter, ActivityIndicator, AccessibilityInfo } from 'react-native';
 import { DuaCard, Beads, CounterControls } from '../components';
 import ChangeDuaModal from '../components/ChangeDuaModal';
 import CustomBeadModal from '../components/CustomBeadModal';
 import SelectCounterModal from '../components/SelectCounterModal';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
-import { useAllTasbihsList } from '@/modules/dua/hooks/useDuas';
-import { TasbihData } from '@/modules/dua/services/duaService';
+import { useAllTasbihs, useTasbihById } from '@/modules/tasbih/hooks/useTasbihs';
+import { TasbihData } from '@/modules/tasbih/services/tasbihService';
+import { useRoute } from '@react-navigation/native';
 
 const CIRCLE_SIZE = 40;
 // Preset bead counts for the counter
@@ -169,28 +170,51 @@ const fallbackDuaList = [
  * TasbihScreen component displaying Islamic prayer beads with duas
  * Integrates the shifting bead animation logic with verse-based counting
  */
-const TasbihScreen: React.FC = () => {
+const TasbihScreen = () => {
+  const { colors } = useThemeStore();
+  const route = useRoute<any>();
+  const lottieRef = useRef(null);
+  
+  // State for the tasbih data
   const [selectedDuaIndex, setSelectedDuaIndex] = useState(0);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [totalPrayerCount, setTotalPrayerCount] = useState(0);
   const [completedCycles, setCompletedCycles] = useState(0);
+  const [isWhite, setIsWhite] = useState(false);
+  
+  // Modal visibility states
   const [duaModalVisible, setDuaModalVisible] = useState(false);
   const [selectCounterModalVisible, setSelectCounterModalVisible] = useState(false);
   const [customBeadModalVisible, setCustomBeadModalVisible] = useState(false);
-  const [customBeadValue, setCustomBeadValue] = useState('');
+  const [customBeadValue, setCustomBeadValue] = useState('33');
   const [inputTouched, setInputTouched] = useState(false);
-  const { colors } = useThemeStore();
-  const [isWhite, setIsWhite] = useState(false);
   
-  // Get tasbihs from API
-  const tasbihs = useAllTasbihsList();
-  
-  // Current dua and verse calculations
-  const duaList = tasbihs && tasbihs.length > 0 ? tasbihs : fallbackDuaList;
+  // Fetch tasbih data from API using React Query hooks from tasbih service
+  const { data: apiTasbihs, isLoading: isLoadingAllTasbihs, error: allTasbihsError } = useAllTasbihs();
+  const { data: specificTasbih, isLoading: isLoadingSpecificTasbih, error: specificTasbihError } = useTasbihById(
+    route.params?.id ? Number(route.params.id) : 0
+  );
+
+  // Log errors in development mode
+  useEffect(() => {
+    if (__DEV__) {
+      if (allTasbihsError) {
+        console.error('Error fetching all tasbihs:', allTasbihsError);
+      }
+      if (specificTasbihError) {
+        console.error('Error fetching specific tasbih:', specificTasbihError);
+      }
+    }
+  }, [allTasbihsError, specificTasbihError]);
+
+  // Current dua and verse calculations - use fallback if API fails
+  const duaList = apiTasbihs?.data && apiTasbihs.data.length > 0 
+    ? apiTasbihs.data 
+    : fallbackDuaList as unknown as TasbihData[];
   const currentDua = duaList[selectedDuaIndex] || duaList[0];
   const totalVerses = currentDua?.verses?.length || 1;
   const currentVerse = currentDua?.verses?.[currentVerseIndex] || (currentDua?.verses?.[0] || { arabic: '', transliteration: '', translation: '' });
-  
+
   // Reset verse index when dua changes
   useEffect(() => {
     setCurrentVerseIndex(0);
@@ -300,9 +324,10 @@ const TasbihScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}> 
-      {tasbihs === undefined ? (
+      {isLoadingAllTasbihs || isLoadingSpecificTasbih ? (
         <ActivityIndicator size="large" color={colors.primary.primary500} style={styles.loader} />
       ) : (
+        // Show the UI with data (fallback data will be used if API had errors)
         <>
           {/* Dua card showing current verse */}
           <DuaCard
@@ -321,7 +346,7 @@ const TasbihScreen: React.FC = () => {
             onAdvance={handleAdvanceVerse}
             totalCount={totalPrayerCount}
             isWhite={isWhite}
-            tasbihData={tasbihs[selectedDuaIndex]}
+            tasbihData={currentDua}
           />
         </>
       )}
@@ -340,7 +365,7 @@ const TasbihScreen: React.FC = () => {
       {/* Dua selection modal */}
       <ChangeDuaModal
         visible={duaModalVisible}
-        duaList={duaList}
+        duaList={duaList as any}
         selectedIndex={selectedDuaIndex}
         onSelect={handleSelectDua}
         onClose={() => {
