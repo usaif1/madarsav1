@@ -15,6 +15,7 @@ import CalendarNavigator from '@/modules/calendar/navigation/calendar.navigator'
 import TasbihNavigator from '@/modules/tasbih/navigation/tasbih.navigator';
 import HadithNavigator from '@/modules/hadith/navigation/hadith.navigator';
 import MaktabNavigator from '@/modules/maktab/navigation/maktab.navigator';
+import QuranNavigator from '@/modules/quran/navigation/quran.navigator';
 
 // auth guards
 import { createProtectedScreen, createFullyProtectedScreen } from '@/modules/auth/utils/routeGuards';
@@ -33,6 +34,7 @@ export type ParentStackParamList = {
   calendar: undefined;
   tasbih: undefined;
   hadith: undefined;
+  quran: undefined;
 };
 
 // Create the navigator
@@ -43,6 +45,7 @@ const DuaNavigatorComponent = createComponentForStaticNavigation(DuaNavigator,"D
 const CalendarNavigatorComponent = createComponentForStaticNavigation(CalendarNavigator,"CalendarNavigator");
 const TasbihNavigatorComponent = createComponentForStaticNavigation(TasbihNavigator,"TasbihNavigator");
 const HadithNavigatorComponent = createComponentForStaticNavigation(HadithNavigator,"HadithNavigator");
+// QuranNavigator is a function component, so we don't need to use createComponentForStaticNavigation
 
 
 // Define the navigator component
@@ -93,6 +96,10 @@ const ParentNavigator = () => {
       <Stack.Screen 
         name="hadith" 
         component={HadithNavigatorComponent} 
+      />
+      <Stack.Screen 
+        name="quran" 
+        component={QuranNavigator} 
       />
     </Stack.Navigator>
   );

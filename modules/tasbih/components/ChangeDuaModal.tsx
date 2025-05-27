@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 import Bubble from '@/assets/tasbih/bubble.svg';
-import Close from '@/assets/tasbih/close.svg';
+import Close from '@/assets/close.svg';
 import LeftFlowerChangeDua from '@/assets/tasbih/leftFlowerChangeDua.svg';
 import RightFlowerChangeDua from '@/assets/tasbih/rightFlowerChangeDua.svg';
 import { scale, verticalScale } from '@/theme/responsive';

@@ -5,12 +5,18 @@ import React, {useCallback} from 'react';
 import ArrowLeft from '@/assets/arrow-left.svg';
 import {useNavigation} from '@react-navigation/native';
 
-const BackButton = () => {
+type BackButtonProps = {
+  onPress?: () => void;
+};
+
+const BackButton = ({ onPress: customOnPress }: BackButtonProps) => {
   const navigation = useNavigation();
 
-  const onPress = useCallback(() => {
+  const defaultOnPress = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+  
+  const onPress = customOnPress || defaultOnPress;
 
   return (
     <Pressable onPress={onPress}>

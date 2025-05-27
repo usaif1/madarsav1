@@ -54,8 +54,8 @@ const HomeNavigator = () => {
           tabPress: (e) => {
             // Prevent default action
             e.preventDefault();
-            // Navigate to the 99 names module for now
-            navigation.navigate('names');
+            // Navigate to the quran module
+            navigation.navigate('quran');
           },
         })}
       />

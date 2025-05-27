@@ -5,7 +5,7 @@ import React from 'react';
 // assets
 import AthanIcon from '@/assets/profile/athan_icon.svg';
 import Notification from '@/assets/profile/notification.svg';
-import Share from '@/assets/profile/share.svg';
+import Share from '@/assets/hadith/Share.svg';
 import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
