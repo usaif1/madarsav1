@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -7,10 +7,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Body1Title2Bold, Body2Medium, Divider } from '@/components';
 import BookmarkPrimary from '@/assets/duas/bookmark-primary.svg';
 import { scale, verticalScale } from '@/theme/responsive';
-import {Header} from '@/components';
+import { Header } from '@/components';
+import { useDuaSubCategories, useAllDuas } from '@/modules/dua/hooks/useDuas';
+import { useThemeStore } from '@/globalStore';
+import { useDuaStore } from '../store/duaStore';
 
-// Mock data for duas within a category
-const mockDuasInCategory = [
+// Fallback data for duas within a category
+const fallbackDuasInCategory = [
   {
     id: '1',
     title: 'Everyday Duas',
@@ -59,13 +62,39 @@ interface DuaItemProps {
 const DuaDetail = () => {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { title, count } = route.params as { title: string; count: number };
+  const { title, count, category } = route.params as { title: string; count: number; category: string };
+  const { colors } = useThemeStore();
+  const { isDuaSaved } = useDuaStore();
+  
+  // Fetch all duas to ensure the store is populated
+  const { isLoading: isLoadingAllDuas } = useAllDuas();
+  
+  // Get subcategories for the selected category
+  const subCategories = useDuaSubCategories(category || title);
+  
+  // Use API data if available, otherwise fallback to hardcoded data
+  const duasInCategory = subCategories.length > 0 
+    ? subCategories.map(subCat => ({
+        id: subCat.id,
+        title: subCat.title,
+        count: subCat.count,
+        bookmarked: false, // Will be updated below
+      }))
+    : fallbackDuasInCategory;
+  
+  // Update bookmarked status based on store data
+  const duasWithBookmarks = duasInCategory.map(dua => ({
+    ...dua,
+    bookmarked: typeof dua.id === 'string' ? false : isDuaSaved(Number(dua.id))
+  }));
 
   const handleDuaPress = (item: DuaItemProps) => {
     navigation.navigate('DuaContent', {
       title: item.title,
       count: item.count,
-      id: item.id
+      id: item.id,
+      category: category || title,
+      subCategory: item.title
     });
   };
 
@@ -89,13 +118,24 @@ const DuaDetail = () => {
 
   const renderSeparator = () => <View style={styles.separator} />;
 
+  if (isLoadingAllDuas) {
+    return (
+      <View style={styles.container}>
+        <Header title={title} />
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={colors.primary.primary500} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Header title={title}  />
+      <Header title={title} />
       <FlatList
-        data={mockDuasInCategory}
+        data={duasWithBookmarks}
         renderItem={renderDuaItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         ItemSeparatorComponent={renderSeparator}
       />
@@ -127,7 +167,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   duaItem: {
-    width: scale(375),
+    width: '100%',
     height: verticalScale(52),
     flexDirection: 'row',
     alignItems: 'center',
@@ -135,7 +175,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   textContainer: {
-    flex: 1,
     height: verticalScale(20),
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,6 +192,11 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: '#F3F4F6',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

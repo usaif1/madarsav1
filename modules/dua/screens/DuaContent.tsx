@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator, Share } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -12,9 +12,12 @@ import BookmarkFilled from '@/assets/duas/bookmark-primary.svg';
 import ShareAlt from '@/assets/hadith/share_alt.svg';
 import Bubble from '@/assets/tasbih/bubble.svg';
 import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
+import { useDuasBySubCategory, useAllDuas } from '@/modules/dua/hooks/useDuas';
+import { useDuaStore } from '../store/duaStore';
+import { useThemeStore } from '@/globalStore';
 
-// Mock data for duas
-const mockDuas = [
+// Fallback data for duas
+const fallbackDuas = [
   {
     id: '1',
     arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلاً مُتَقَبَّلاً",
@@ -50,7 +53,7 @@ const mockDuas = [
 ];
 
 interface DuaProps {
-  id: string;
+  id: string | number;
   arabic: string;
   transliteration: string;
   translation: string;
@@ -61,16 +64,37 @@ interface DuaProps {
 const DuaContent = () => {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { title } = route.params as { title: string; id: string };
+  const { title, category, subCategory } = route.params as { title: string; id: string; category: string; subCategory: string };
+  const { colors } = useThemeStore();
   
-  const [duas, setDuas] = useState<DuaProps[]>(mockDuas);
+  // Access the dua store for bookmarking functionality
+  const { toggleSavedDua, isDuaSaved } = useDuaStore();
+  
+  // Fetch all duas to ensure the store is populated
+  const { isLoading: isLoadingAllDuas } = useAllDuas();
+  
+  // Get duas for the specific subcategory
+  const duasFromAPI = useDuasBySubCategory(category, subCategory);
+  
+  // Use API data if available, otherwise fallback to hardcoded data
+  const duas = duasFromAPI.length > 0 ? duasFromAPI : fallbackDuas;
 
-  const toggleBookmark = (id: string) => {
-    setDuas(prevDuas => 
-      prevDuas.map(dua => 
-        dua.id === id ? { ...dua, bookmarked: !dua.bookmarked } : dua
-      )
-    );
+  const toggleBookmark = (id: string | number) => {
+    if (typeof id === 'number') {
+      toggleSavedDua(id);
+    }
+  };
+  
+  // Share functionality
+  const handleShare = async (dua: DuaProps) => {
+    try {
+      await Share.share({
+        message: `${dua.arabic}\n\n${dua.transliteration}\n\n${dua.translation}\n\nReference: ${dua.reference}`,
+        title: 'Share Dua',
+      });
+    } catch (error) {
+      console.error('Error sharing dua:', error);
+    }
   };
 
   const renderDuaItem = ({ item, index }: { item: DuaProps; index: number }) => (
@@ -114,7 +138,10 @@ const DuaContent = () => {
           >
             {item.bookmarked ? <BookmarkFilled /> : <Bookmark />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => handleShare(item)}
+          >
             <ShareAlt />
           </TouchableOpacity>
         </View>
@@ -124,13 +151,24 @@ const DuaContent = () => {
 
   const renderSeparator = () => <Divider height={16} />;
 
+  if (isLoadingAllDuas) {
+    return (
+      <View style={styles.container}>
+        <Header title={title} />
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={colors.primary.primary500} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Header title={title} />
       <FlatList
         data={duas}
         renderItem={renderDuaItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         ItemSeparatorComponent={renderSeparator}
       />
@@ -235,6 +273,11 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 8,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

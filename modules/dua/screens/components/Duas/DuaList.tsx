@@ -1,7 +1,9 @@
-import {FlatList, StyleSheet, View, TouchableOpacity} from 'react-native';
+import {FlatList, StyleSheet, View, TouchableOpacity, ActivityIndicator} from 'react-native';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SvgProps } from 'react-native-svg';
+import { FC } from 'react';
 
 // assets
 import DailyZikr from '@/assets/duas/daily_zikr.svg';
@@ -11,58 +13,99 @@ import PraisingAllah from '@/assets/duas/praising_allah.svg';
 import Washroom from '@/assets/duas/washroom.svg';
 import House from '@/assets/duas/house.svg';
 import BookmarkPrimary from '@/assets/duas/bookmark-primary.svg';
+import DuaIcon from '@/assets/duas/daily_zikr.svg';
+import MorningIcon from '@/assets/home/fajr.svg';
+import NightIcon from '@/assets/calendar/isha.svg';
+import BookmarkIcon from '@/assets/duas/bookmark-white.svg';
+import ArrowRight from '@/assets/duas/arrow-right.svg';
 import {Body1Title2Bold, Body2Medium, Divider} from '@/components';
+import { useDuaCategories, useAllDuas } from '@/modules/dua/hooks/useDuas';
+import { useThemeStore } from '@/globalStore';
 
-const dailyDuasData = [
+// Fallback data for duas
+const fallbackDuasData: DuaItemProps[] = [
   {
     id: '1',
-    title: 'Daily Zikr',
-    description: 'Duas to read in morning',
-    count: 2,
-    icon: DailyZikr, // use your icon system name or asset ref
+    title: 'Morning & Evening',
+    description: 'Duas for morning and evening',
+    count: 12,
+    icon: MorningIcon,
   },
   {
     id: '2',
-    title: 'Praising Allah',
-    description: 'Duas to read in evening',
-    count: 6,
-    icon: PraisingAllah,
+    title: 'Daily Duas',
+    description: 'Duas for daily activities',
+    count: 24,
+    icon: DuaIcon,
   },
   {
     id: '3',
-    title: 'Food and Drinks',
-    description: 'Duas to read daily',
-    count: 54,
-    icon: FoodAndDrink,
+    title: 'Night Duas',
+    description: 'Duas for the night',
+    count: 8,
+    icon: NightIcon,
+    bookmarked: true,
   },
   {
     id: '4',
-    title: 'House',
-    description: 'Duas to read for home',
+    title: 'Saved Duas',
+    description: 'Your saved duas',
     count: 5,
-    icon: House,
-  },
-  {
-    id: '5',
-    title: 'Washroom',
-    description: 'Duas to read for mosque',
-    count: 2,
-    icon: Washroom,
-    bookmarked: true, // optional if you use this
-  },
-  {
-    id: '6',
-    title: 'Good Etiquettes',
-    description: 'Duas to read in ramadan',
-    count: 23,
-    icon: GoodEtiquette,
+    icon: BookmarkIcon,
   },
 ];
 
+// Icon mapping for categories
+const categoryIconMap: Record<string, any> = {
+  'Daily Zikr': DailyZikr,
+  'Praising Allah': PraisingAllah,
+  'Food and Drinks': FoodAndDrink,
+  'House': House,
+  'Washroom': Washroom,
+  'Good Etiquettes': GoodEtiquette,
+  // Default fallback icon
+  'default': DailyZikr,
+};
+
 const DuaList = () => {
+  // Fetch dua categories from API
+  const { isLoading, error } = useAllDuas();
+  const categories = useDuaCategories();
+  const { colors } = useThemeStore();
+  
+  // Create a mapping of category titles to icon components
+  const categoryIconMap: Record<string, FC<SvgProps>> = {
+    'Morning & Evening': MorningIcon,
+    'Daily Duas': DuaIcon,
+    'Night Duas': NightIcon,
+    'Saved Duas': BookmarkIcon,
+    'default': DuaIcon,
+  };
+
+  // Use API data if available, otherwise fallback to hardcoded data
+  const duasData: DuaItemProps[] = categories.length > 0 
+    ? categories.map(cat => ({
+        ...cat,
+        bookmarked: false, // Add missing properties to match DuaItemProps
+        icon: categoryIconMap[cat.title] || categoryIconMap.default, // Map string icon to component
+      })) 
+    : fallbackDuasData;
+  
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={colors.primary.primary500} />
+      </View>
+    );
+  }
+  
+  if (error) {
+    console.error('Error loading duas:', error);
+  }
+  
   return (
     <FlatList
-      data={dailyDuasData}
+      data={duasData}
       keyExtractor={item => item.id}
       renderItem={({item}) => <DuaCard item={item} />}
       contentContainerStyle={{paddingBottom: 24, paddingHorizontal: 18}}
@@ -78,18 +121,21 @@ interface DuaItemProps {
   title: string;
   description: string;
   count: number;
-  icon: React.ComponentType<any>;
+  icon?: FC<SvgProps>;
   bookmarked?: boolean;
+  category?: string;
 }
 
 const DuaCard = ({item}: {item: DuaItemProps}) => {
-  const IconComponent = item.icon;
+  // Determine which icon to use - either from the item or from our mapping
+  const IconComponent = item.icon || categoryIconMap[item.title] || categoryIconMap.default;
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   const handlePress = () => {
     navigation.navigate('DuaDetail', {
       title: item.title,
-      count: item.count
+      count: item.count,
+      category: item.category || item.title // Pass category for API filtering
     });
   };
 
@@ -159,5 +205,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F3F4F6',
     marginLeft: 68, // aligns with text start
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 200,
   },
 });
