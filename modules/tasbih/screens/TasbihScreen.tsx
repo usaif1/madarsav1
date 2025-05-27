@@ -1,16 +1,21 @@
 // TasbihScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, DeviceEventEmitter } from 'react-native';
+import { View, StyleSheet, DeviceEventEmitter, ActivityIndicator } from 'react-native';
 import { DuaCard, Beads, CounterControls } from '../components';
 import ChangeDuaModal from '../components/ChangeDuaModal';
 import CustomBeadModal from '../components/CustomBeadModal';
 import SelectCounterModal from '../components/SelectCounterModal';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
+import { useAllTasbihsList } from '@/modules/dua/hooks/useDuas';
+import { TasbihData } from '@/modules/dua/services/duaService';
 
 const CIRCLE_SIZE = 40;
-// --- Famous multi-verse duas ---
-const duaList = [
+// Preset bead counts for the counter
+const PRESET_BEADS = [11, 33, 99];
+
+// Fallback duas in case API fails
+const fallbackDuaList = [
   {
     id: '1',
     verses: [
@@ -158,8 +163,7 @@ const duaList = [
   },
 ];
 
-// Preset bead counts for the counter (kept for compatibility with existing UI)
-const PRESET_BEADS = [11, 33, 99];
+// Preset bead counts for the counter
 
 /**
  * TasbihScreen component displaying Islamic prayer beads with duas
@@ -178,10 +182,14 @@ const TasbihScreen: React.FC = () => {
   const { colors } = useThemeStore();
   const [isWhite, setIsWhite] = useState(false);
   
+  // Get tasbihs from API
+  const tasbihs = useAllTasbihsList();
+  
   // Current dua and verse calculations
+  const duaList = tasbihs && tasbihs.length > 0 ? tasbihs : fallbackDuaList;
   const currentDua = duaList[selectedDuaIndex] || duaList[0];
-  const totalVerses = currentDua.verses.length;
-  const currentVerse = currentDua.verses[currentVerseIndex] || currentDua.verses[0];
+  const totalVerses = currentDua?.verses?.length || 1;
+  const currentVerse = currentDua?.verses?.[currentVerseIndex] || (currentDua?.verses?.[0] || { arabic: '', transliteration: '', translation: '' });
   
   // Reset verse index when dua changes
   useEffect(() => {
@@ -292,24 +300,31 @@ const TasbihScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}> 
-      {/* Dua card showing current verse */}
-      <DuaCard
-        arabic={currentVerse.arabic}
-        transliteration={currentVerse.transliteration}
-        translation={currentVerse.translation}
-        onPrev={handlePrevVerse}
-        onNext={handleNextVerse}
-        onChangeDua={() => setDuaModalVisible(true)}
-      />
-      
-      {/* Beads component with shifting animation logic */}
-      <Beads
-        totalVerses={totalVerses}
-        currentVerseIndex={currentVerseIndex}
-        onAdvance={handleAdvanceVerse}
-        totalCount={totalPrayerCount}
-        isWhite={isWhite}
-      />
+      {tasbihs === undefined ? (
+        <ActivityIndicator size="large" color={colors.primary.primary500} style={styles.loader} />
+      ) : (
+        <>
+          {/* Dua card showing current verse */}
+          <DuaCard
+            arabic={currentVerse.arabic}
+            transliteration={currentVerse.transliteration}
+            translation={currentVerse.translation}
+            onPrev={handlePrevVerse}
+            onNext={handleNextVerse}
+            onChangeDua={() => setDuaModalVisible(true)}
+          />
+          
+          {/* Beads component with shifting animation logic */}
+          <Beads
+            totalVerses={totalVerses}
+            currentVerseIndex={currentVerseIndex}
+            onAdvance={handleAdvanceVerse}
+            totalCount={totalPrayerCount}
+            isWhite={isWhite}
+            tasbihData={tasbihs[selectedDuaIndex]}
+          />
+        </>
+      )}
       
       {/* Counter controls */}
       <View style={styles.counterControlsWrapper}>
@@ -367,6 +382,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     rowGap: verticalScale(52),
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   counterControlsWrapper: {
     position: 'absolute',

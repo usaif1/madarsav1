@@ -18,21 +18,28 @@ import { useThemeStore } from '@/globalStore';
 import { Body1Title2Bold, Body1Title2Medium, Body2Medium, H5Medium, Title3Bold } from '@/components/Typography/Typography';
 import { ShadowColors } from '@/theme/shadows';
 import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
+import { TasbihData } from '@/modules/dua/services/duaService';
 
 // Get screen dimensions for calculations
 const { height: screenHeight } = Dimensions.get('window');
 
+// We're using the TasbihData interface from duaService.ts
+// But we'll keep this for backward compatibility
 export interface Dua {
+  id: string | number;
+  title?: string;
   verses: {
     arabic: string;
     transliteration: string;
     translation: string;
   }[];
+  category?: string;
+  reference?: string;
 }
 
 interface ChangeDuaModalProps {
   visible: boolean;
-  duaList: Dua[];
+  duaList: (Dua | TasbihData)[];
   selectedIndex: number;
   onSelect: (index: number) => void;
   onClose: () => void;
@@ -48,7 +55,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   // Render individual dua item
   const { colors } = useThemeStore();
 
-  const renderDuaItem = ({ item, index }: { item: Dua; index: number }) => (
+  const renderDuaItem = ({ item, index }: { item: Dua | TasbihData; index: number }) => (
     <TouchableOpacity
       style={[styles.duaRow, { borderBottomColor: ShadowColors['border-light'] }]}
       onPress={() => onSelect(index)}
@@ -56,7 +63,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
     >
       <View style={styles.duaTextWrap}>
         <View style={{flexDirection: 'row'}}><H5Medium color='heading' style={[styles.arabic]}>
-          {item.verses[0].arabic}
+          {item.verses && item.verses[0] ? item.verses[0].arabic : ''}
         </H5Medium>
       <View style={styles.bubbleWrap}>
         <Bubble width={scale(26)} height={scale(26)} />
@@ -65,7 +72,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
         </Body1Title2Bold>
       </View></View>
         <Body2Medium style={[styles.transliteration]}>
-          {item.verses[0].transliteration}
+          {item.verses && item.verses[0] ? item.verses[0].transliteration : ''}
         </Body2Medium>
         {/* <Body1Title2Medium style={[styles.translation, { color: ColorSecondary.neutral500 }]}>
           {item.verses[0].translation}
@@ -75,7 +82,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   );
   
   // Extract a unique key for each item in the FlatList
-  const keyExtractor = (_: Dua, index: number) => `dua-${index}`;
+  const keyExtractor = (item: Dua | TasbihData, index: number) => `dua-${item.id || index}`;
   
   return (
     <Modal 
