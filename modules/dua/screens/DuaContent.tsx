@@ -60,39 +60,49 @@ interface DuaProps {
   reference: string;
   bookmarked: boolean;
   category?: string;
+  title?: string;
+  subCategory?: string;
+  subCategoryDesc?: string;
+  iconLink?: string;
 }
 
 const DuaContent = () => {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { title, category, subCategory } = route.params as { title: string; id: string; category: string; subCategory: string };
+  const { title, id, category, subCategory, fromSaved } = route.params as { 
+    title: string; 
+    id: string; 
+    category: string; 
+    subCategory: string; 
+    fromSaved?: boolean 
+  };
   const { colors } = useThemeStore();
   
   // Access the dua store for bookmarking functionality
-  const { toggleSavedDua, isDuaSaved } = useDuaStore();
-  
+  const { isDuaSaved, toggleSavedDua } = useDuaStore();
   // Fetch all duas to ensure the store is populated
   const { isLoading: isLoadingAllDuas } = useAllDuas();
   
-  // Get duas for the specific subcategory
-  const duasFromAPI = useDuasBySubCategory(category, subCategory);
+  // Get duas for this subcategory
+  const duasInSubCategory = useDuasBySubCategory(category, subCategory);
   
-  // Use API data if available, otherwise fallback to hardcoded data
-  const duas = duasFromAPI.length > 0 
-    ? duasFromAPI.map(dua => ({
-        ...dua,
-        bookmarked: isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : dua.id)
-      })) 
-    : fallbackDuas.map(dua => ({
-        ...dua,
-        bookmarked: isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : Number(dua.id))
-      }));
+  // If no duas found, use fallback data
+  let duasData = duasInSubCategory.length > 0 ? duasInSubCategory : fallbackDuas;
+  
+  // If coming from SavedDuas flow, filter to only show bookmarked duas
+  if (fromSaved) {
+    duasData = duasData.filter(dua => isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : dua.id));
+  }
+  
+  // Add bookmarked status to each dua
+  const duas = duasData.map(dua => ({
+    ...dua,
+    bookmarked: isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : Number(dua.id))
+  })) as DuaProps[];
 
   const toggleBookmark = (id: string | number, duaCategory: string) => {
     const numericId = typeof id === 'string' ? parseInt(id) : id;
-    if (!isNaN(numericId)) {
-      toggleSavedDua(numericId, duaCategory || category);
-    }
+    toggleSavedDua(numericId, duaCategory, subCategory);
   };
   
   // Share functionality
