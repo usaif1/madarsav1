@@ -8,7 +8,14 @@ import {
   UIManager,
   AccessibilityInfo,
 } from 'react-native';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import LottieView from 'lottie-react-native';
+
+// Haptic feedback options
+const hapticOptions = {
+  enableVibrateFallback: true,
+  ignoreAndroidSystemSettings: false,
+};
 import { Body1Title2Bold, Body1Title2Regular, Body1Title2Medium, H3Bold } from '@/components/Typography/Typography';
 import { TasbihData } from '@/modules/dua/services/duaService';
 import { scale } from '@/theme/responsive';
@@ -104,6 +111,12 @@ const Beads: React.FC<BeadsProps> = ({
     
     try {
       setIsAnimating(true);
+      
+      // Trigger haptic feedback when bead is tapped
+      ReactNativeHapticFeedback.trigger(
+        'impactMedium', // Use medium impact for a satisfying tap feeling
+        hapticOptions
+      );
       
       // Play the Lottie animation - ensure it plays from beginning to end
       if (lottieRef.current) {
