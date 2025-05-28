@@ -230,11 +230,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   transliteration: {
-    fontSize: 13,
+    fontSize: 12,
     marginLeft: 12,
     alignSelf: 'flex-start',
     marginBottom: 1,
     marginTop: 8,
+    color: '#525252',
   },
   translation: {
     fontSize: 13,
