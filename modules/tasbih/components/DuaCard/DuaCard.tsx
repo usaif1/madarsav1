@@ -113,7 +113,7 @@ const getStyles = (colors:any) => StyleSheet.create({
     alignSelf: 'center',
   },
   card: {
-    height: scale(280),
+    height: scale(320),
     borderRadius: scale(16),
     paddingTop: scale(20),
     paddingRight: scale(24),
@@ -129,6 +129,7 @@ const getStyles = (colors:any) => StyleSheet.create({
   arabicWrap: {
     alignItems: 'center',
     marginBottom: scale(8),
+    height: scale(70),
   },
   arabic: {
     fontSize: scale(20),
@@ -159,7 +160,7 @@ const getStyles = (colors:any) => StyleSheet.create({
     paddingVertical: scale(2),
     alignSelf: 'stretch',
     minWidth: '60%',
-    height: scale(50),
+    height: scale(60),
   },
   scrollContainer: {
     height: '100%',
@@ -175,7 +176,7 @@ const getStyles = (colors:any) => StyleSheet.create({
     alignSelf: 'stretch',
     marginTop: scale(8),
     marginBottom: scale(8),
-    height: scale(60),
+    height: scale(70),
   },
   translation: {
     fontSize: scale(14),
