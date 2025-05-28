@@ -109,9 +109,25 @@ const DuaContent = () => {
   // Share functionality
   const handleShare = async (dua: DuaProps) => {
     try {
+      // App store links
+      const appStoreLink = 'https://apps.apple.com/app/madarsaapp';
+      const playStoreLink = 'https://play.google.com/store/apps/details?id=com.madarsaapp';
+      
+      // Format the message with app links first, then dua content
+      const shareMessage = 
+        `Download Madarsa App for more duas and Islamic content:\n` +
+        `App Store: ${appStoreLink}\n` +
+        `Play Store: ${playStoreLink}\n\n` +
+        `--- DUA ---\n\n` +
+        `${dua.arabic}\n\n` +
+        `${dua.transliteration}\n\n` +
+        `${dua.translation}\n\n` +
+        `Reference: ${dua.reference}\n\n` +
+        `Read more duas on the Madarsa App`;
+      
       await Share.share({
-        message: `${dua.arabic}\n\n${dua.transliteration}\n\n${dua.translation}\n\nReference: ${dua.reference}`,
-        title: 'Share Dua',
+        message: shareMessage,
+        title: 'Share Dua from Madarsa App',
       });
     } catch (error) {
       console.error('Error sharing dua:', error);

@@ -140,13 +140,13 @@ const DuaDetail = () => {
       activeOpacity={0.7}
     >
       <View style={styles.textContainer}>
-        <Body1Title2Bold>{item.title}</Body1Title2Bold>
+        <Body1Title2Bold style={styles.title}>{item.title}</Body1Title2Bold>
       </View>
       <View style={styles.rightContainer}>
         {item.bookmarked && (
           <BookmarkPrimary width={16} height={16} style={styles.bookmarkIcon} />
         )}
-        <Body2Medium color="sub-heading">{item.count} {fromSaved ? 'Saved' : ''} Duas</Body2Medium>
+        <Body2Medium style={styles.countText} color="sub-heading">{item.count} {fromSaved ? 'Saved' : ''} Duas</Body2Medium>
       </View>
     </TouchableOpacity>
   );
@@ -228,6 +228,16 @@ const styles = StyleSheet.create({
   },
   bookmarkIcon: {
     marginRight: 8,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  countText: {
+    fontSize: 12,
+    color: '#4B5563',
+    fontWeight: '500',
   },
   separator: {
     height: 1,

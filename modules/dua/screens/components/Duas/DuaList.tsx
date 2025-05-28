@@ -143,11 +143,13 @@ const DuaCard = ({item}: {item: DuaItemProps}) => {
 
   return (
     <TouchableOpacity style={styles.card} onPress={handlePress}>
-      <IconComponent width={38} height={38} />
+      <View style={styles.iconContainer}>
+        <IconComponent width={38} height={38} />
+      </View>
       <View style={styles.textWrapper}>
-        <Body1Title2Bold style={styles.title}>{item.title}</Body1Title2Bold>
+        <Body1Title2Bold numberOfLines={1} ellipsizeMode="tail" style={styles.title}>{item.title}</Body1Title2Bold>
         <Divider height={4} />
-        <Body2Medium style={styles.description} color="sub-heading">{item.description}</Body2Medium>
+        <Body2Medium numberOfLines={2} ellipsizeMode="tail" style={styles.description} color="sub-heading">{item.description}</Body2Medium>
       </View>
       
       <View style={styles.rightContainer}>
@@ -164,9 +166,14 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    columnGap: 8,
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
+    width: '100%',
+  },
+  iconContainer: {
+    width: 40,
+    marginRight: 12,
+    alignItems: 'center',
   },
   iconWrapper: {
     width: 40,
@@ -175,16 +182,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#EDE9FE', // light purple background
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   textWrapper: {
     flex: 1,
+    marginRight: 8,
   },
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 8, // Primitives/space-2
+    minWidth: 70, // Ensure minimum width for the right container
   },
   bookmark: {
     marginRight: 0, // Gap is handled by container
@@ -198,6 +206,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6B7280',
     marginTop: 2,
+    flexWrap: 'wrap',
   },
   count: {
     fontSize: 12,
