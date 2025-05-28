@@ -68,7 +68,7 @@ export const fetchAllTasbihs = async (): Promise<TasbihResponse> => {
     
     console.log('📿 Successfully fetched tasbihs');
     console.log('📿 Response status:', response.status);
-    console.log('📿 Response data preview:', JSON.stringify(response.data).substring(0, 200) + '...');
+    console.log('📿 Response data preview:', JSON.stringify(response.data));
     
     // Transform the API response to the expected format
     const transformedData = transformApiResponseToTasbihData(response.data);
