@@ -376,6 +376,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingVertical: verticalScale(16),
+    paddingBottom: verticalScale(40),
     paddingHorizontal: scale(16),
     backgroundColor: 'white',
   },

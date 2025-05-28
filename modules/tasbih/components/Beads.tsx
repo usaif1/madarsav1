@@ -9,8 +9,9 @@ import {
   AccessibilityInfo,
 } from 'react-native';
 import LottieView from 'lottie-react-native';
-import { Body1Title2Bold, Body1Title2Regular, H3Bold } from '@/components';
+import { Body1Title2Bold, Body1Title2Regular, Body1Title2Medium, H3Bold } from '@/components/Typography/Typography';
 import { TasbihData } from '@/modules/dua/services/duaService';
+import { scale } from '@/theme/responsive';
 
 // Enable LayoutAnimation for Android with proper error handling
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -137,11 +138,11 @@ const Beads: React.FC<BeadsProps> = ({
     <View style={styles.container}>
       {/* Counter header - styled like the image */}
       <View style={styles.counterHeader}>
-        <Text style={styles.counterText}>
-          <Text style={styles.currentIndex}>{sanitizedCurrentIndex}</Text>
+        <View style={styles.counterTextContainer}>
+          <H3Bold style={styles.currentIndex}>{sanitizedCurrentIndex}</H3Bold>
           <Text style={styles.counterSeparator}>/</Text>
-          <Text style={styles.totalVerses}>{sanitizedTotalVerses}</Text>
-        </Text>
+          <Body1Title2Medium color="sub-heading" style={styles.totalVerses}>{sanitizedTotalVerses}</Body1Title2Medium>
+        </View>
         <Text style={styles.roundText}>Round {displayRound}</Text>
       </View>
       
@@ -168,7 +169,7 @@ const Beads: React.FC<BeadsProps> = ({
           ref={lottieRef}
           // Use JSON format instead of .lottie
           source={isWhite ? require('@/assets/tasbih/animations/tasbih-white.json') : require('@/assets/tasbih/animations/tasbih-black.json')}
-          style={styles.lottieAnimation}
+          style={[styles.lottieAnimation, { transform: [{ rotate: '-20deg' }] }]}
           loop={false}
           autoPlay={false}
           speed={0.7} // Slow down the animation slightly
@@ -190,34 +191,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    marginTop: scale(-32),
     padding: 16,
     marginVertical: 16,
   },
   counterHeader: {
     width: '100%',
     alignItems: 'flex-start',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
-  counterText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  counterTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
   },
   currentIndex: {
     color: '#8A57DC', // Purple color
-    fontSize: 24,
+    fontSize: 29,
+    lineHeight: 40,
   },
   counterSeparator: {
     color: '#6B7280',
-    fontSize: 24,
+    fontSize: 20,
+    marginHorizontal: 4,
   },
   totalVerses: {
-    color: '#6B7280',
-    fontSize: 24,
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: '500',
   },
   roundText: {
     fontSize: 16,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     height: 150,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 16,
+    marginBottom: 16,
   },
   lottieAnimation: {
     width: '100%',

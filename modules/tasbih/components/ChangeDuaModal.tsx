@@ -62,7 +62,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
       activeOpacity={0.7}
     >
       <View style={styles.duaTextWrap}>
-        <View style={{flexDirection: 'row'}}><H5Medium color='heading' style={[styles.arabic]}>
+        <View style={{flexDirection: 'row', paddingHorizontal: 16}}><H5Medium color='heading' style={[styles.arabic]} numberOfLines={1} ellipsizeMode="tail">
           {item.verses && item.verses[0] ? item.verses[0].arabic : ''}
         </H5Medium>
       <View style={styles.bubbleWrap}>
@@ -228,6 +228,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'right',
     marginBottom: 2,
+    paddingHorizontal: 24,
   },
   transliteration: {
     fontSize: 12,
@@ -235,6 +236,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 1,
     marginTop: 8,
+    paddingHorizontal: 24,
     color: '#525252',
   },
   translation: {
