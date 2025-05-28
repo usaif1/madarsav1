@@ -113,6 +113,11 @@ export const parseDuaResponse = (response: DuasResponse) => {
     Object.keys(category).forEach(subCategoryKey => {
       const subCategory = category[subCategoryKey];
       
+      // Initialize the array for this subcategory if it doesn't exist
+      if (!categories[categoryKey][subCategoryKey]) {
+        categories[categoryKey][subCategoryKey] = [];
+      }
+      
       // Iterate through collections
       Object.keys(subCategory).forEach(collectionKey => {
         const duaCollection = subCategory[collectionKey];
@@ -131,8 +136,8 @@ export const parseDuaResponse = (response: DuasResponse) => {
           iconLink: dua.duaIconLink,
         }));
         
-        // Add to categories
-        categories[categoryKey][subCategoryKey] = transformedDuas;
+        // Append to categories instead of overwriting
+        categories[categoryKey][subCategoryKey].push(...transformedDuas);
         
         // Add to sub-categories
         if (!subCategories[subCategoryKey]) {
@@ -145,6 +150,8 @@ export const parseDuaResponse = (response: DuasResponse) => {
       });
     });
   });
+  
+  console.log(`🤲 Parsed ${allDuas.length} total duas across ${Object.keys(categories).length} categories`);
   
   return { categories, subCategories, allDuas };
 };
@@ -328,7 +335,7 @@ export const fetchAllTasbihs = async (): Promise<{
     console.log('📿 Fetching all tasbih duas');
     console.log('📿 Request headers:', headers ? 'Bearer token included' : 'No token available');
     
-    const response = await madrasaClient.get(MADRASA_API_ENDPOINTS.TASBIHS, { headers });
+    const response = await madrasaClient.get(MADRASA_API_ENDPOINTS.DUAS_TASBIH, { headers });
     
     console.log('📿 Successfully fetched all tasbih duas');
     console.log('📿 Response status:', response.status);
@@ -359,7 +366,7 @@ export const fetchTasbihById = async (id: number): Promise<TasbihData> => {
     console.log(`📿 Fetching tasbih #${id}`);
     console.log('📿 Request headers:', headers ? 'Bearer token included' : 'No token available');
     
-    const response = await madrasaClient.get(`${MADRASA_API_ENDPOINTS.TASBIHS}/${id}`, { headers });
+    const response = await madrasaClient.get(`${MADRASA_API_ENDPOINTS.DUAS_TASBIH}/${id}`, { headers });
     
     console.log(`📿 Successfully fetched tasbih #${id}`);
     console.log('📿 Response status:', response.status);

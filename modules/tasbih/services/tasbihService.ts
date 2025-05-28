@@ -72,7 +72,7 @@ export const fetchAllTasbihs = async (): Promise<TasbihResponse> => {
     
     // Transform the API response to the expected format
     const transformedData = transformApiResponseToTasbihData(response.data);
-    
+    console.log("Transformed data", transformedData)
     return {
       data: transformedData,
       message: 'Success',
@@ -158,6 +158,8 @@ export const transformApiResponseToTasbihData = (apiResponse: TasbihApiResponse)
       result.push(tasbihData);
     });
   });
+  
+  console.log(`📿 Transformed ${result.length} total tasbihs from ${Object.keys(apiResponse).length} categories`);
   
   return result;
 };

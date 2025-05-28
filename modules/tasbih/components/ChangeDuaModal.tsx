@@ -84,6 +84,9 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   // Extract a unique key for each item in the FlatList
   const keyExtractor = (item: Dua | TasbihData, index: number) => `dua-${item.id || index}`;
   
+  // Log the number of duas for debugging
+  console.log(`ChangeDuaModal: Rendering ${duaList.length} duas`);
+  
   return (
     <Modal 
       isVisible={visible} 
