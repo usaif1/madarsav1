@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     marginLeft: scale(4), // Align with the prayer name (24px icon + 8px gap + 12px margin)
   },
   dayPill: {
-    width: scale(75),
+    maxWidth: scale(90),
     paddingVertical: scale(2),
     paddingHorizontal: scale(10),
     borderRadius: scale(60),

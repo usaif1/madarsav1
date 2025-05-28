@@ -15,6 +15,7 @@ import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
 import { useDuasBySubCategory, useAllDuas } from '@/modules/dua/hooks/useDuas';
 import { useDuaStore } from '../store/duaStore';
 import { useThemeStore } from '@/globalStore';
+import FastImage from 'react-native-fast-image';
 
 // Fallback data for duas
 const fallbackDuas = [
@@ -59,30 +60,50 @@ interface DuaProps {
   translation: string;
   reference: string;
   bookmarked: boolean;
+  category?: string;
+  title?: string;
+  subCategory?: string;
+  subCategoryDesc?: string;
+  iconLink?: string;
 }
 
 const DuaContent = () => {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { title, category, subCategory } = route.params as { title: string; id: string; category: string; subCategory: string };
+  const { title, id, category, subCategory, fromSaved } = route.params as { 
+    title: string; 
+    id: string; 
+    category: string; 
+    subCategory: string; 
+    fromSaved?: boolean 
+  };
   const { colors } = useThemeStore();
   
   // Access the dua store for bookmarking functionality
-  const { toggleSavedDua, isDuaSaved } = useDuaStore();
-  
+  const { isDuaSaved, toggleSavedDua } = useDuaStore();
   // Fetch all duas to ensure the store is populated
   const { isLoading: isLoadingAllDuas } = useAllDuas();
   
-  // Get duas for the specific subcategory
-  const duasFromAPI = useDuasBySubCategory(category, subCategory);
+  // Get duas for this subcategory
+  const duasInSubCategory = useDuasBySubCategory(category, subCategory);
   
-  // Use API data if available, otherwise fallback to hardcoded data
-  const duas = duasFromAPI.length > 0 ? duasFromAPI : fallbackDuas;
+  // If no duas found, use fallback data
+  let duasData = duasInSubCategory.length > 0 ? duasInSubCategory : fallbackDuas;
+  
+  // If coming from SavedDuas flow, filter to only show bookmarked duas
+  if (fromSaved) {
+    duasData = duasData.filter(dua => isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : dua.id));
+  }
+  
+  // Add bookmarked status to each dua
+  const duas = duasData.map(dua => ({
+    ...dua,
+    bookmarked: isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : Number(dua.id))
+  })) as DuaProps[];
 
-  const toggleBookmark = (id: string | number) => {
-    if (typeof id === 'number') {
-      toggleSavedDua(id);
-    }
+  const toggleBookmark = (id: string | number, duaCategory: string) => {
+    const numericId = typeof id === 'string' ? parseInt(id) : id;
+    toggleSavedDua(numericId, duaCategory, subCategory);
   };
   
   // Share functionality
@@ -134,7 +155,7 @@ const DuaContent = () => {
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => toggleBookmark(item.id)}
+            onPress={() => toggleBookmark(item.id, item.category || category)}
           >
             {item.bookmarked ? <BookmarkFilled /> : <Bookmark />}
           </TouchableOpacity>
@@ -165,6 +186,13 @@ const DuaContent = () => {
   return (
     <View style={styles.container}>
       <Header title={title} />
+      <View style={styles.headerContainer}>
+            <FastImage 
+                source={require('@/assets/duas/dua-ayah.png')} 
+                style={styles.headerImage}
+                resizeMode={FastImage.resizeMode.contain}
+            />
+        </View>
       <FlatList
         data={duas}
         renderItem={renderDuaItem}
@@ -196,6 +224,16 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  headerContainer: {
+    width: scale(375),
+    height: verticalScale(121),
+    alignItems: 'center',
+    justifyContent: 'center',
+},
+headerImage: {
+    width: '100%',
+    height: '100%',
+},
   arabicRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

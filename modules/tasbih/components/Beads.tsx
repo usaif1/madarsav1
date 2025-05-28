@@ -38,6 +38,8 @@ interface BeadsProps {
   isWhite?: boolean;
   /** Tasbih data from API */
   tasbihData?: TasbihData;
+  /** Current round number */
+  currentRound?: number;
 }
 
 /**
@@ -58,6 +60,7 @@ const Beads: React.FC<BeadsProps> = ({
   disabled = false,
   isWhite = false,
   tasbihData,
+  currentRound = 1,
 }) => {
   // Input validation
   const sanitizedTotalVerses = Math.max(1, totalVerses);
@@ -80,8 +83,8 @@ const Beads: React.FC<BeadsProps> = ({
     };
   }, []);
   
-  // Calculate current round
-  const currentRound = Math.floor(sanitizedTotalCount / sanitizedTotalVerses) + 1;
+  // Use provided current round or calculate it
+  const displayRound = currentRound || Math.floor(sanitizedTotalCount / sanitizedTotalVerses) + 1;
   
   // Announce current tasbih name for accessibility when it changes
   useEffect(() => {
@@ -139,7 +142,7 @@ const Beads: React.FC<BeadsProps> = ({
           <Text style={styles.counterSeparator}>/</Text>
           <Text style={styles.totalVerses}>{sanitizedTotalVerses}</Text>
         </Text>
-        <Text style={styles.roundText}>Round {currentRound}</Text>
+        <Text style={styles.roundText}>Round {displayRound}</Text>
       </View>
       
       {/* Lottie animation container */}

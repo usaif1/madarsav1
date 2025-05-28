@@ -8,6 +8,7 @@ import {
   Easing,
   Text,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import CompassHeading from 'react-native-compass-heading';
 import geomagnetism from 'geomagnetism';
@@ -71,16 +72,40 @@ const Compass: React.FC = () => {
 
   /* ---- start compass sensor ---- */
   useEffect(() => {
-    const DELTA_DEG = 3;
+    // Use a smaller delta for smoother updates
+    const DELTA_DEG = 0.5;
+    
+    // Create a smoother animation with a low-pass filter
+    let lastHeading = 0;
+    const filterCoefficient = 0.2; // Lower value = smoother but slower response
+    
     CompassHeading.start(DELTA_DEG, ({heading}) => {
-      setMagHeading(heading);
-      const trueH = (heading + decl + 360) % 360;
+      // Apply low-pass filter for smoother heading
+      let filteredHeading = heading;
+      if (lastHeading !== 0) {
+        // Handle the 0/360 boundary case
+        if (Math.abs(heading - lastHeading) > 180) {
+          if (heading > lastHeading) {
+            lastHeading += 360;
+          } else {
+            filteredHeading += 360;
+          }
+        }
+        filteredHeading = lastHeading + filterCoefficient * (filteredHeading - lastHeading);
+        filteredHeading = filteredHeading % 360;
+      }
+      lastHeading = filteredHeading;
+      
+      setMagHeading(filteredHeading);
+      // Calculate true heading by adding magnetic declination
+      const trueH = (filteredHeading + decl + 360) % 360;
       setTrueHeading(trueH);
 
-      Animated.timing(rotateAnim, {
+      // Use spring animation for smoother movement
+      Animated.spring(rotateAnim, {
         toValue: trueH,
-        duration: 100,
-        easing: Easing.linear,
+        friction: 7, // Higher friction = more damping
+        tension: 20, // Lower tension = slower but smoother
         useNativeDriver: true,
       }).start();
     });
@@ -88,10 +113,14 @@ const Compass: React.FC = () => {
   }, [decl, rotateAnim]);
 
   /* rotations */
+  // Fix the compass rotation to be correct (we need to invert it since we want the compass to rotate opposite to our movement)
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 360],
-    outputRange: ['0deg', '360deg'],
+    outputRange: ['360deg', '0deg'], // Inverted to make compass rotate correctly
   });
+  
+  // Calculate the qibla angle correctly
+  // The qibla bearing is fixed relative to true north, while our heading changes as we rotate
   const qiblaAngle = qiblaBearing != null ? (qiblaBearing - trueHeading + 360) % 360 : 0;
 
   // ───── loading / error UI ─────
@@ -128,6 +157,16 @@ const Compass: React.FC = () => {
           {qiblaBearing !== null && (
             <QiblaIndicator angle={qiblaAngle} compassRadius={150} />
           )}
+          
+          {/* Debug info - comment out in production */}
+          {__DEV__ && (
+            <View style={styles.debugInfo}>
+              <Text style={styles.debugText}>Mag: {magHeading.toFixed(1)}°</Text>
+              <Text style={styles.debugText}>True: {trueHeading.toFixed(1)}°</Text>
+              <Text style={styles.debugText}>Qibla: {qiblaBearing?.toFixed(1)}°</Text>
+              <Text style={styles.debugText}>Angle: {qiblaAngle.toFixed(1)}°</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -159,6 +198,7 @@ const styles = StyleSheet.create({
     height: 300,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
   compass: {width: 300, height: 300},
   loadingContainer: {justifyContent: 'center', alignItems: 'center'},
@@ -170,6 +210,18 @@ const styles = StyleSheet.create({
   },
   errorContainer: {justifyContent: 'center', alignItems: 'center', padding: 20},
   errorText: {color: '#EF4444', fontSize: 16, textAlign: 'center'},
+  debugInfo: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 5,
+    borderRadius: 5,
+  },
+  debugText: {
+    color: 'white',
+    fontSize: 10,
+  },
 });
 
 export default Compass;

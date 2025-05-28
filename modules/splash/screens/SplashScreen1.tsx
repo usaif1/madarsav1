@@ -189,11 +189,11 @@ const SplashScreen1: React.FC = () => {
       <StatusBar barStyle="dark-content" />
       <SplashGraphic />
 
-      <Pressable
+      {/* <Pressable
         style={styles.nextButton}
         onPress={() => navigation.navigate('SplashScreen2')}>
         <Text>Next</Text>
-      </Pressable>
+      </Pressable> */}
 
       <Animated.View
         style={[

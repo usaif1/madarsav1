@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -19,36 +19,42 @@ const fallbackDuasInCategory = [
     title: 'Everyday Duas',
     bookmarked: false,
     count: 2,
+    subCategory: 'Everyday Duas',
   },
   {
     id: '2',
     title: 'Strengthen your Imaan',
     bookmarked: false,
     count: 4,
+    subCategory: 'Strengthen your Imaan',
   },
   {
     id: '3',
     title: 'To be a pious Muslim',
     bookmarked: true,
     count: 5,
+    subCategory: 'To be a pious Muslim',
   },
   {
     id: '4',
     title: 'To make us practising Muslims',
     bookmarked: false,
     count: 2,
+    subCategory: 'To make us practising Muslims',
   },
   {
     id: '5',
     title: 'After Waking Up',
     bookmarked: false,
     count: 3,
+    subCategory: 'After Waking Up',
   },
   {
     id: '6',
     title: 'Before Eating',
     bookmarked: false,
     count: 8,
+    subCategory: 'Before Eating',
   },
 ];
 
@@ -57,14 +63,15 @@ interface DuaItemProps {
   title: string;
   bookmarked?: boolean;
   count: number;
+  subCategory?: string;
 }
 
 const DuaDetail = () => {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { title, count, category } = route.params as { title: string; count: number; category: string };
+  const { title, count, category, fromSaved } = route.params as { title: string; count: number; category: string; fromSaved?: boolean };
   const { colors } = useThemeStore();
-  const { isDuaSaved } = useDuaStore();
+  const { isDuaSaved, isSubCategoryBookmarked, getBookmarkedSubCategoriesByCategory, getBookmarkedDuasByCategory } = useDuaStore();
   
   // Fetch all duas to ensure the store is populated
   const { isLoading: isLoadingAllDuas } = useAllDuas();
@@ -79,14 +86,41 @@ const DuaDetail = () => {
         title: subCat.title,
         count: subCat.count,
         bookmarked: false, // Will be updated below
+        subCategory: subCat.title // Add subCategory for reference
       }))
     : fallbackDuasInCategory;
   
   // Update bookmarked status based on store data
-  const duasWithBookmarks = duasInCategory.map(dua => ({
-    ...dua,
-    bookmarked: typeof dua.id === 'string' ? false : isDuaSaved(Number(dua.id))
-  }));
+  const duasWithBookmarks = duasInCategory.map(dua => {
+    const duaId = typeof dua.id === 'string' ? parseInt(dua.id) : dua.id;
+    const isBookmarked = !isNaN(duaId) ? isDuaSaved(duaId) : false;
+    const isSubCatBookmarked = dua.subCategory ? isSubCategoryBookmarked(dua.subCategory) : false;
+    
+    // If coming from SavedDuas, calculate the count of saved duas in this subcategory
+    let displayCount = dua.count;
+    if (fromSaved && dua.subCategory) {
+      const bookmarkedDuas = getBookmarkedDuasByCategory(category).filter(
+        (savedDua: any) => savedDua.subCategory === dua.subCategory
+      );
+      displayCount = bookmarkedDuas.length;
+    }
+    
+    return {
+      ...dua,
+      bookmarked: isBookmarked || isSubCatBookmarked,
+      count: displayCount
+    };
+  });
+  
+  // If coming from SavedDuas page, filter to show only subcategories with bookmarked duas
+  const displayedDuas = fromSaved
+    ? duasWithBookmarks.filter(dua => {
+        if (dua.subCategory) {
+          return isSubCategoryBookmarked(dua.subCategory);
+        }
+        return dua.bookmarked;
+      })
+    : duasWithBookmarks;
 
   const handleDuaPress = (item: DuaItemProps) => {
     navigation.navigate('DuaContent', {
@@ -94,7 +128,8 @@ const DuaDetail = () => {
       count: item.count,
       id: item.id,
       category: category || title,
-      subCategory: item.title
+      subCategory: item.title,
+      fromSaved: fromSaved // Pass the fromSaved flag to DuaContent
     });
   };
 
@@ -111,7 +146,7 @@ const DuaDetail = () => {
         {item.bookmarked && (
           <BookmarkPrimary width={16} height={16} style={styles.bookmarkIcon} />
         )}
-        <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
+        <Body2Medium color="sub-heading">{item.count} {fromSaved ? 'Saved' : ''} Duas</Body2Medium>
       </View>
     </TouchableOpacity>
   );
@@ -133,11 +168,16 @@ const DuaDetail = () => {
     <View style={styles.container}>
       <Header title={title} />
       <FlatList
-        data={duasWithBookmarks}
+        data={displayedDuas}
         renderItem={renderDuaItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         ItemSeparatorComponent={renderSeparator}
+        ListEmptyComponent={fromSaved ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No bookmarked duas in this category</Text>
+          </View>
+        ) : null}
       />
     </View>
   );
@@ -197,6 +237,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111827',
+    textAlign: 'center',
   },
 });
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -16,52 +16,21 @@ import EveningAzkar from '@/assets/duas/food_&_drink.svg';
 import MosqueDuas from '@/assets/duas/washroom.svg';
 import HomeDuas from '@/assets/duas/house.svg';
 import RamadanDuas from '@/assets/duas/good_etiquette.svg';
+import { useDuaStore } from '../store/duaStore';
+import { useAllDuas, useDuaCategories } from '../hooks/useDuas';
+import { useThemeStore } from '@/globalStore';
 
-// Mock data for saved duas
-const savedDuasData = [
-  {
-    id: '1',
-    title: 'Morning Azkar',
-    description: 'Duas to read in morning',
-    count: 2,
-    icon: MorningAzkar,
-  },
-  {
-    id: '2',
-    title: 'Evening Azkar',
-    description: 'Duas to read in evening',
-    count: 6,
-    icon: EveningAzkar,
-  },
-  {
-    id: '3',
-    title: 'Daily Zikr',
-    description: 'Duas to read daily',
-    count: 54,
-    icon: DailyZikr,
-  },
-  {
-    id: '4',
-    title: 'Mosque Duas',
-    description: 'Duas to read for mosque',
-    count: 2,
-    icon: MosqueDuas,
-  },
-  {
-    id: '5',
-    title: 'Home',
-    description: 'Duas to read for home',
-    count: 5,
-    icon: HomeDuas,
-  },
-  {
-    id: '6',
-    title: 'Ramadan',
-    description: 'Duas to read in ramadan',
-    count: 23,
-    icon: RamadanDuas,
-  },
-];
+// Icon mapping for categories
+const categoryIconMap: Record<string, any> = {
+  'Morning Azkar': MorningAzkar,
+  'Evening Azkar': EveningAzkar,
+  'Daily Zikr': DailyZikr,
+  'Mosque Duas': MosqueDuas,
+  'Home': HomeDuas,
+  'Ramadan': RamadanDuas,
+  // Default fallback icon
+  'default': DailyZikr,
+};
 
 interface SavedDuaItemProps {
   id: string;
@@ -73,11 +42,37 @@ interface SavedDuaItemProps {
 
 const SavedDuas = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  const { colors } = useThemeStore();
+  const { getSavedCategories, getBookmarkedDuasByCategory } = useDuaStore();
+  const { isLoading, error } = useAllDuas();
+  const allCategories = useDuaCategories();
+  
+  // Get all categories that have bookmarked duas
+  const savedCategories = getSavedCategories();
+  
+  // Create data for the saved categories
+  const savedDuasData = savedCategories.map(categoryName => {
+    // Find the category in all categories
+    const matchingCategory = allCategories.find(cat => cat.title === categoryName);
+    // Get all bookmarked duas for this category
+    const bookmarkedDuas = getBookmarkedDuasByCategory(categoryName);
+    
+    return {
+      id: matchingCategory?.id || categoryName,
+      title: categoryName,
+      description: `Bookmarked duas from ${categoryName}`,
+      count: bookmarkedDuas.length,
+      icon: categoryIconMap[categoryName] || categoryIconMap.default,
+      bookmarked: true
+    };
+  });
 
   const handleDuaPress = (item: SavedDuaItemProps) => {
     navigation.navigate('DuaDetail', {
       title: item.title,
-      count: item.count
+      count: item.count,
+      category: item.title,
+      fromSaved: true // Flag to indicate we're coming from saved screen
     });
   };
 
@@ -104,6 +99,17 @@ const SavedDuas = () => {
 
   const renderSeparator = () => <View style={styles.separator} />;
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Header title="Saved Duas" />
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={colors.primary.primary500} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Header title="Saved Duas" />
@@ -117,13 +123,20 @@ const SavedDuas = () => {
         />
       </View>
       
-      <FlatList
-        data={savedDuasData}
-        renderItem={renderDuaItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
-        ItemSeparatorComponent={renderSeparator}
-      />
+      {savedDuasData.length > 0 ? (
+        <FlatList
+          data={savedDuasData}
+          renderItem={renderDuaItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          ItemSeparatorComponent={renderSeparator}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No saved duas yet</Text>
+          <Text style={styles.emptySubtext}>Bookmark duas to see them here</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -162,6 +175,28 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F3F4F6',
     marginLeft: 68, // aligns with text start
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
   },
 });
 
