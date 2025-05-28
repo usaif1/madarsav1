@@ -68,7 +68,11 @@ const categoryIconMap: Record<string, any> = {
   'default': DailyZikr,
 };
 
-const DuaList = () => {
+interface DuaListProps {
+  searchQuery?: string;
+}
+
+const DuaList: React.FC<DuaListProps> = ({ searchQuery = '' }) => {
   // Fetch dua categories from API
   const { isLoading, error } = useAllDuas();
   const categories = useDuaCategories();
@@ -85,13 +89,22 @@ const DuaList = () => {
   };
 
   // Use API data if available, otherwise fallback to hardcoded data
-  const duasData: DuaItemProps[] = categories.length > 0 
+  let duasData: DuaItemProps[] = categories.length > 0 
     ? categories.map(cat => ({
         ...cat,
         bookmarked: isCategoryBookmarked(cat.title), // Check if category has bookmarked duas
         icon: categoryIconMap[cat.title] || categoryIconMap.default, // Map string icon to component
       })) 
     : fallbackDuasData;
+    
+  // Filter duas based on search query if provided
+  if (searchQuery.trim() !== '') {
+    const query = searchQuery.toLowerCase().trim();
+    duasData = duasData.filter(dua => 
+      dua.title.toLowerCase().includes(query) || 
+      dua.description.toLowerCase().includes(query)
+    );
+  }
   
   if (isLoading) {
     return (

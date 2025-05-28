@@ -1,6 +1,6 @@
 // DuaCard.tsx
 import React from 'react';
-import { View, StyleSheet, Text, Pressable, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, Text, Pressable, useWindowDimensions, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Body1Title2Bold, Body1Title2Medium } from '@/components';
 import { useThemeStore } from '@/globalStore';
@@ -43,28 +43,36 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         {/* Transliteration with Navigation Controls */}
         <View style={styles.transRowWrap}>
           <View style={[styles.transBg]}> 
-            <Body1Title2Medium
-              color="yellow-800"
-              style={[styles.transliteration]}
-              numberOfLines={3}
-              ellipsizeMode="tail"
+            <ScrollView 
+              style={styles.scrollContainer}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
             >
-              {transliteration}
-            </Body1Title2Medium>
+              <Body1Title2Medium
+                color="yellow-800"
+                style={[styles.transliteration]}
+              >
+                {transliteration}
+              </Body1Title2Medium>
+            </ScrollView>
           </View>
         </View>
         {/* Second Divider */}
         <View style={styles.dashedLine} />
-        {/* Translation inside card, with truncation and background */}
+        {/* Translation inside card, with scrollable content */}
         <View style={[styles.translationBg]}> 
-          <Body1Title2Medium
-            color="yellow-800"
-            style={[styles.translation]}
-            numberOfLines={3}
-            ellipsizeMode="tail"
+          <ScrollView 
+            style={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
           >
-            {translation}
-          </Body1Title2Medium>
+            <Body1Title2Medium
+              color="yellow-800"
+              style={[styles.translation]}
+            >
+              {translation}
+            </Body1Title2Medium>
+          </ScrollView>
         </View>
       </LinearGradient>
       {/* Navigation buttons positioned at the middle of the card's sides */}
@@ -151,6 +159,10 @@ const getStyles = (colors:any) => StyleSheet.create({
     paddingVertical: scale(2),
     alignSelf: 'stretch',
     minWidth: '60%',
+    height: scale(50),
+  },
+  scrollContainer: {
+    height: '100%',
   },
   transliteration: {
     fontSize: scale(14),
@@ -163,9 +175,7 @@ const getStyles = (colors:any) => StyleSheet.create({
     alignSelf: 'stretch',
     marginTop: scale(8),
     marginBottom: scale(8),
-    minHeight: scale(44),
-    maxHeight: scale(48),
-    justifyContent: 'center',
+    height: scale(60),
   },
   translation: {
     fontSize: scale(14),

@@ -17,10 +17,15 @@ import FastImage from 'react-native-fast-image';
 
 const Duas = () => {
   const [isSaved, setIsSaved] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   const handleSavedPress = () => {
     navigation.navigate('SavedDuas');
+  };
+  
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
   };
 
   return (
@@ -32,7 +37,7 @@ const Duas = () => {
       }}>
       <StatusBar barStyle={'light-content'} />
       <View style={{paddingHorizontal: 18}}>
-        <DuaSearchbar />
+        <DuaSearchbar onSearchChange={handleSearchChange} />
       </View>
       <Divider height={10} />
       <View
@@ -63,14 +68,14 @@ const Duas = () => {
           }}
         />
       </View>
-      <DuaList />
+      <DuaList searchQuery={searchQuery} />
       <View style={styles.footerContainer}>
-            <FastImage 
-                source={require('@/assets/duas/dua-ayah.png')} 
-                style={styles.footerImage}
-                resizeMode={FastImage.resizeMode.contain}
-            />
-        </View>
+        <FastImage 
+          source={require('@/assets/duas/dua-ayah.png')} 
+          style={styles.footerImage}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+      </View>
       <View
         style={{
           backgroundColor: '#F9F6FF',

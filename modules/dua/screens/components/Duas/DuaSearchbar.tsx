@@ -1,8 +1,30 @@
-import {StyleSheet, TextInput, View} from 'react-native';
+import {StyleSheet, TextInput, View, TouchableOpacity} from 'react-native';
 import React from 'react';
-import Search from '@/assets/search.svg'; // assuming it's an SVG icon via react-native-svg
+import Search from '@/assets/search.svg';
+import Close from '@/assets/close.svg'; // assuming you have this icon
+import { useDuaStore } from '@/modules/dua/store/duaStore';
 
-const DuaSearchbar = () => {
+interface DuaSearchbarProps {
+  onSearchChange?: (text: string) => void;
+}
+
+const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
+  const [searchText, setSearchText] = React.useState('');
+  
+  const handleSearchChange = (text: string) => {
+    setSearchText(text);
+    if (onSearchChange) {
+      onSearchChange(text);
+    }
+  };
+  
+  const clearSearch = () => {
+    setSearchText('');
+    if (onSearchChange) {
+      onSearchChange('');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Search width={20} height={20} />
@@ -10,7 +32,14 @@ const DuaSearchbar = () => {
         placeholder="Salam, dua khojein"
         placeholderTextColor="#737373"
         style={styles.input}
+        value={searchText}
+        onChangeText={handleSearchChange}
       />
+      {searchText.length > 0 && (
+        <TouchableOpacity onPress={clearSearch}>
+          <Close width={16} height={16} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
