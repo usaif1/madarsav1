@@ -71,7 +71,7 @@ const DuaDetail = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const { title, count, category, fromSaved } = route.params as { title: string; count: number; category: string; fromSaved?: boolean };
   const { colors } = useThemeStore();
-  const { isDuaSaved, isSubCategoryBookmarked, getBookmarkedSubCategoriesByCategory } = useDuaStore();
+  const { isDuaSaved, isSubCategoryBookmarked, getBookmarkedSubCategoriesByCategory, getBookmarkedDuasByCategory } = useDuaStore();
   
   // Fetch all duas to ensure the store is populated
   const { isLoading: isLoadingAllDuas } = useAllDuas();
@@ -96,9 +96,19 @@ const DuaDetail = () => {
     const isBookmarked = !isNaN(duaId) ? isDuaSaved(duaId) : false;
     const isSubCatBookmarked = dua.subCategory ? isSubCategoryBookmarked(dua.subCategory) : false;
     
+    // If coming from SavedDuas, calculate the count of saved duas in this subcategory
+    let displayCount = dua.count;
+    if (fromSaved && dua.subCategory) {
+      const bookmarkedDuas = getBookmarkedDuasByCategory(category).filter(
+        (savedDua: any) => savedDua.subCategory === dua.subCategory
+      );
+      displayCount = bookmarkedDuas.length;
+    }
+    
     return {
       ...dua,
-      bookmarked: isBookmarked || isSubCatBookmarked
+      bookmarked: isBookmarked || isSubCatBookmarked,
+      count: displayCount
     };
   });
   
@@ -136,7 +146,7 @@ const DuaDetail = () => {
         {item.bookmarked && (
           <BookmarkPrimary width={16} height={16} style={styles.bookmarkIcon} />
         )}
-        <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
+        <Body2Medium color="sub-heading">{item.count} {fromSaved ? 'Saved' : ''} Duas</Body2Medium>
       </View>
     </TouchableOpacity>
   );

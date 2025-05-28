@@ -138,6 +138,7 @@ const TasbihScreen = () => {
   const [selectedDuaIndex, setSelectedDuaIndex] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [targetCount, setTargetCount] = useState(33); // Default target count
+  const [currentRound, setCurrentRound] = useState(1); // Track the current round
   const [isWhite, setIsWhite] = useState(false);
   
   // Modal visibility states
@@ -177,9 +178,20 @@ const TasbihScreen = () => {
   // Reset count and set target count when dua changes
   useEffect(() => {
     setTotalCount(0);
+    setCurrentRound(1);
     // Set target count from the dua or use default
     setTargetCount(currentDua?.count || 33);
   }, [selectedDuaIndex, currentDua]);
+  
+  // Update round when count changes
+  useEffect(() => {
+    if (totalCount > 0 && targetCount > 0) {
+      const newRound = Math.floor(totalCount / targetCount) + 1;
+      if (newRound !== currentRound) {
+        setCurrentRound(newRound);
+      }
+    }
+  }, [totalCount, targetCount]);
 
   // Debug logging for modal visibility
   useEffect(() => {
@@ -209,6 +221,9 @@ const TasbihScreen = () => {
    */
   const handleSelectCounter = (count: number) => {
     setTargetCount(count);
+    // Reset count and round when counter changes
+    setTotalCount(0);
+    setCurrentRound(1);
     setSelectCounterModalVisible(false);
   };
 
@@ -225,6 +240,9 @@ const TasbihScreen = () => {
   const handleCustomBeadSave = () => {
     if (customBeadValue && parseInt(customBeadValue) > 0) {
       setTargetCount(parseInt(customBeadValue));
+      // Reset count and round when counter changes
+      setTotalCount(0);
+      setCurrentRound(1);
       setCustomBeadModalVisible(false);
     }
   };
@@ -263,19 +281,28 @@ const TasbihScreen = () => {
             arabic={currentVerse.arabic}
             transliteration={currentVerse.transliteration}
             translation={currentVerse.translation}
-            onPrev={() => {}} // No prev/next functionality as we're using a single verse
-            onNext={() => {}}
+            onPrev={() => {
+              // Navigate to previous dua without changing counter
+              const newIndex = selectedDuaIndex > 0 ? selectedDuaIndex - 1 : duaList.length - 1;
+              setSelectedDuaIndex(newIndex);
+            }}
+            onNext={() => {
+              // Navigate to next dua without changing counter
+              const newIndex = (selectedDuaIndex + 1) % duaList.length;
+              setSelectedDuaIndex(newIndex);
+            }}
             onChangeDua={() => setDuaModalVisible(true)}
           />
           
           {/* Beads component with counter logic */}
           <Beads
-            totalVerses={1} // Only one verse per dua now
-            currentVerseIndex={0} // Always on the first verse
+            totalVerses={targetCount} // Use target count as total verses
+            currentVerseIndex={totalCount % targetCount} // Calculate current position in the round
             onAdvance={handleAdvanceCounter}
             totalCount={totalCount}
             isWhite={isWhite}
             tasbihData={currentDua}
+            currentRound={currentRound}
           />
         </>
       )}
