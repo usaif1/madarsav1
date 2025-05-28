@@ -145,14 +145,14 @@ const DuaCard = ({item}: {item: DuaItemProps}) => {
     <TouchableOpacity style={styles.card} onPress={handlePress}>
       <IconComponent width={38} height={38} />
       <View style={styles.textWrapper}>
-        <Body1Title2Bold>{item.title}</Body1Title2Bold>
+        <Body1Title2Bold style={styles.title}>{item.title}</Body1Title2Bold>
         <Divider height={4} />
-        <Body2Medium color="sub-heading">{item.description}</Body2Medium>
+        <Body2Medium style={styles.description} color="sub-heading">{item.description}</Body2Medium>
       </View>
       
       <View style={styles.rightContainer}>
-        {item.bookmarked && <BookmarkPrimary width={16} height={16} style={styles.bookmark} />}
-        <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
+        {item.bookmarked && <BookmarkPrimary width={18} height={18} style={styles.bookmark} />}
+        <Body2Medium style={styles.count} color="sub-heading">{item.count} Duas</Body2Medium>
       </View>
     </TouchableOpacity>
   );
@@ -184,22 +184,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    gap: 8, // Primitives/space-2
   },
   bookmark: {
-    marginRight: 4,
+    marginRight: 0, // Gap is handled by container
   },
   title: {
-    fontWeight: '700',
     fontSize: 14,
+    fontWeight: '700',
     color: '#111827',
   },
   description: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6B7280',
     marginTop: 2,
   },
   count: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#4B5563',
     fontWeight: '500',
   },
