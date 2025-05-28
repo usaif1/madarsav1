@@ -21,6 +21,7 @@ export const MADRASA_API_ENDPOINTS = {
   NAMES_99: '/api/v1/99names',
   DUAS: '/api/v1/duas',
   DUAS_TASBIH: '/api/v1/duas/tasbih',
+  TASBIH_USER_COUNTER: '/api/v1/tasbih-user-counter',
   
   // Other endpoints will be added as needed
 };

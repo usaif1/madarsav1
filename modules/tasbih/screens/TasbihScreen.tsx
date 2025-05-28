@@ -1,5 +1,5 @@
 // TasbihScreen.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, DeviceEventEmitter, ActivityIndicator, AccessibilityInfo } from 'react-native';
 import { DuaCard, Beads, CounterControls } from '../components';
 import ChangeDuaModal from '../components/ChangeDuaModal';
@@ -8,8 +8,10 @@ import SelectCounterModal from '../components/SelectCounterModal';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useAllTasbihs, useTasbihById, useDefaultTasbihCount } from '@/modules/tasbih/hooks/useTasbihs';
+import { saveTasbihUserCounter } from '@/modules/tasbih/services/tasbihUserCounterService';
+import { useAuthStore } from '@/modules/auth/store/authStore';
 import { TasbihData } from '@/modules/tasbih/services/tasbihService';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
 
 const CIRCLE_SIZE = 40;
 // Preset bead counts for the counter
@@ -140,6 +142,7 @@ const TasbihScreen = () => {
   const [targetCount, setTargetCount] = useState(33); // Default target count
   const [currentRound, setCurrentRound] = useState(1); // Track the current round
   const [isWhite, setIsWhite] = useState(false);
+  const [startTime, setStartTime] = useState<Date>(new Date()); // Track when the user started using the tasbih
   
   // Modal visibility states
   const [duaModalVisible, setDuaModalVisible] = useState(false);
@@ -192,6 +195,57 @@ const TasbihScreen = () => {
       }
     }
   }, [totalCount, targetCount]);
+
+  // Save tasbih counter data when user leaves the screen
+  useFocusEffect(
+    useCallback(() => {
+      // Set start time when screen comes into focus
+      setStartTime(new Date());
+      
+      // Return cleanup function to save data when screen loses focus
+      return () => {
+        if (totalCount > 0) {
+          saveTasbihCounterData();
+        }
+      };
+    }, [totalCount])
+  );
+  
+  /**
+   * Save the user's tasbih counter data to the API
+   */
+  const saveTasbihCounterData = async () => {
+    try {
+      const user = useAuthStore.getState().user;
+      const userId = user?.userId || 'anonymous';
+      const duaId = currentDua?.id || 0;
+      
+      // Calculate time spent in minutes
+      const endTime = new Date();
+      const timeSpentMs = endTime.getTime() - startTime.getTime();
+      const timeInMinutes = Math.max(1, Math.round(timeSpentMs / (1000 * 60))); // At least 1 minute
+      
+      console.log('📿 Saving tasbih counter data:', {
+        userId,
+        duaId,
+        beadsCounter: totalCount,
+        completedRound: currentRound - 1, // Current round is 1-indexed, API expects 0-indexed
+        timeInMinutes
+      });
+      
+      const response = await saveTasbihUserCounter({
+        userId,
+        duaId,
+        beadsCounter: totalCount,
+        completedRound: currentRound - 1,
+        timeInMinutes
+      });
+      
+      console.log('📿 Successfully saved tasbih counter data:', response);
+    } catch (error) {
+      console.error('Error saving tasbih counter data:', error);
+    }
+  };
 
   // Debug logging for modal visibility
   useEffect(() => {

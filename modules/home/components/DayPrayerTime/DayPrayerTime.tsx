@@ -162,13 +162,19 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
   const nextPrayerTime = prayerTimes[nextPrayer]?.time || '';
   
   // Create array of all prayer times for display
-  const allPrayerTimes = Object.keys(prayerTimes).map(key => ({
-    key,
-    name: prayerTimes[key]?.name || '',
-    time: prayerTimes[key]?.time || '',
-    icon: prayerIcons[key],
-    isCurrent: key === currentPrayer,
-  }));
+  const allPrayerTimes = Object.keys(prayerTimes).map(key => {
+    // Remove AM/PM from time display
+    let timeDisplay = prayerTimes[key]?.time || '';
+    timeDisplay = timeDisplay.replace(/\s(AM|PM)$/i, '');
+    
+    return {
+      key,
+      name: prayerTimes[key]?.name || '',
+      time: timeDisplay,
+      icon: prayerIcons[key],
+      isCurrent: key === currentPrayer,
+    };
+  });
 
   return (
     <View style={styles.container}>

@@ -10,11 +10,25 @@ import {scale, verticalScale} from '@/theme/responsive';
 import {useThemeStore} from '@/globalStore';
 
 // hooks
-import {useCalendarWithLocation, formatPrayerTime} from '../../hooks/useCalendar';
+import {useLocation} from '@/api/hooks/useLocation';
+import {usePrayerTimes} from '@/api/hooks/usePrayerTimes';
 
 interface FastingViewProps {
   selectedDate: Date;
 }
+
+/**
+ * Helper function to format date for API in DD-MM-YYYY format
+ * @param date Date to format
+ * @returns Formatted date string
+ */
+const formatDateForAPI = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+};
 
 const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProps) => {
   const {colors} = useThemeStore();
@@ -22,28 +36,60 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
   
   console.log('FastingView: Rendering with selectedDate:', selectedDate);
   
-  const {data, isLoading, error} = useCalendarWithLocation(selectedDate);
+  // Get location data
+  const { latitude, longitude, loading: locationLoading, error: locationError } = useLocation();
+  
+  // Format date for prayer times API (DD-MM-YYYY)
+  const formattedDate = formatDateForAPI(selectedDate);
+  
+  // Fetch prayer times using the prayer times API
+  const { data: prayerData, isLoading: prayerLoading, error: prayerError } = usePrayerTimes(
+    latitude || undefined,
+    longitude || undefined,
+    formattedDate
+  );
+  
+  // Combine loading and error states
+  const isLoading = locationLoading || prayerLoading;
+  const error = locationError || prayerError;
   
   console.log('FastingView: API response status:', {
-    hasData: !!data,
+    hasData: !!prayerData,
     isLoading,
     hasError: !!error,
     errorDetails: error instanceof Error ? error.message : String(error)
   });
   
-  if (data) {
+  if (prayerData) {
     console.log('FastingView: Prayer time data available:', {
-      hasPrayerTime: !!data.prayerTime,
-      fajrTime: data.prayerTime?.fajr,
-      maghribTime: data.prayerTime?.maghrib
+      hasTimings: !!prayerData.data.timings,
+      imsakTime: prayerData.data.timings.Imsak,
+      maghribTime: prayerData.data.timings.Maghrib
     });
   }
   
   // Get fasting times from API data
-  const sehriTime = data ? formatPrayerTime(data.prayerTime.fajr) : ''; // Sehri time is Fajr time
-  const iftarTime = data ? formatPrayerTime(data.prayerTime.maghrib) : ''; // Iftar time is Maghrib time
+  const sehriTime = prayerData ? formatTimeString(prayerData.data.timings.Imsak) : ''; // Sehri time is Imsak time
+  const iftarTime = prayerData ? formatTimeString(prayerData.data.timings.Maghrib) : ''; // Iftar time is Maghrib time
   
   console.log('FastingView: Formatted times:', { sehriTime, iftarTime });
+  
+  // Helper function to format time string from API (HH:MM format) to readable format (H:MM AM/PM)
+  function formatTimeString(timeStr: string): string {
+    if (!timeStr) return '';
+    
+    // Parse the time (format from API is typically HH:MM)
+    const [hoursStr, minutesStr] = timeStr.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+    
+    // Convert to 12-hour format
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+    
+    // Format with leading zeros for minutes
+    return `${hours12}:${minutes < 10 ? '0' + minutes : minutes} ${period}`;
+  }
 
   const styles = getStyles(colors);
   
