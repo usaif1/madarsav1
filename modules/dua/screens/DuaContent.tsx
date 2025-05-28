@@ -59,6 +59,7 @@ interface DuaProps {
   translation: string;
   reference: string;
   bookmarked: boolean;
+  category?: string;
 }
 
 const DuaContent = () => {
@@ -77,11 +78,20 @@ const DuaContent = () => {
   const duasFromAPI = useDuasBySubCategory(category, subCategory);
   
   // Use API data if available, otherwise fallback to hardcoded data
-  const duas = duasFromAPI.length > 0 ? duasFromAPI : fallbackDuas;
+  const duas = duasFromAPI.length > 0 
+    ? duasFromAPI.map(dua => ({
+        ...dua,
+        bookmarked: isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : dua.id)
+      })) 
+    : fallbackDuas.map(dua => ({
+        ...dua,
+        bookmarked: isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : Number(dua.id))
+      }));
 
-  const toggleBookmark = (id: string | number) => {
-    if (typeof id === 'number') {
-      toggleSavedDua(id);
+  const toggleBookmark = (id: string | number, duaCategory: string) => {
+    const numericId = typeof id === 'string' ? parseInt(id) : id;
+    if (!isNaN(numericId)) {
+      toggleSavedDua(numericId, duaCategory || category);
     }
   };
   
@@ -134,7 +144,7 @@ const DuaContent = () => {
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => toggleBookmark(item.id)}
+            onPress={() => toggleBookmark(item.id, item.category || category)}
           >
             {item.bookmarked ? <BookmarkFilled /> : <Bookmark />}
           </TouchableOpacity>

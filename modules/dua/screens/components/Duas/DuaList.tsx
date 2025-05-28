@@ -21,6 +21,7 @@ import ArrowRight from '@/assets/duas/arrow-right.svg';
 import {Body1Title2Bold, Body2Medium, Divider} from '@/components';
 import { useDuaCategories, useAllDuas } from '@/modules/dua/hooks/useDuas';
 import { useThemeStore } from '@/globalStore';
+import { useDuaStore } from '@/modules/dua/store/duaStore';
 
 // Fallback data for duas
 const fallbackDuasData: DuaItemProps[] = [
@@ -72,6 +73,7 @@ const DuaList = () => {
   const { isLoading, error } = useAllDuas();
   const categories = useDuaCategories();
   const { colors } = useThemeStore();
+  const { isCategoryBookmarked } = useDuaStore();
   
   // Create a mapping of category titles to icon components
   const categoryIconMap: Record<string, FC<SvgProps>> = {
@@ -86,7 +88,7 @@ const DuaList = () => {
   const duasData: DuaItemProps[] = categories.length > 0 
     ? categories.map(cat => ({
         ...cat,
-        bookmarked: false, // Add missing properties to match DuaItemProps
+        bookmarked: isCategoryBookmarked(cat.title), // Check if category has bookmarked duas
         icon: categoryIconMap[cat.title] || categoryIconMap.default, // Map string icon to component
       })) 
     : fallbackDuasData;

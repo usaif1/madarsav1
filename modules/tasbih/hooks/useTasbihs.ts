@@ -26,6 +26,8 @@ export const useAllTasbihs = () => {
     queryKey: ['tasbihs', 'raw'],
     queryFn: tasbihService.fetchAllTasbihs,
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    retry: 3,
+    retryDelay: 1000,
   });
 };
 
@@ -40,6 +42,8 @@ export const useTasbihById = (id: number) => {
     queryFn: () => tasbihService.fetchTasbihById(id),
     enabled: !!id, // Only run if id is provided
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    retry: 3,
+    retryDelay: 1000,
   });
 };
 
@@ -57,5 +61,17 @@ export const useTasbihByIdForUI = (id: number) => {
     },
     enabled: !!id, // Only run if id is provided
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    retry: 3,
+    retryDelay: 1000,
   });
+};
+
+/**
+ * Hook to get the default count for a tasbih
+ * @param id The ID of the tasbih
+ * @returns Default count for the tasbih (33 if not specified)
+ */
+export const useDefaultTasbihCount = (id: number) => {
+  const { data: tasbih } = useTasbihById(id);
+  return tasbih?.count || 33; // Default to 33 if not specified
 };

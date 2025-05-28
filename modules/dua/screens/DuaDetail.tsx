@@ -83,10 +83,13 @@ const DuaDetail = () => {
     : fallbackDuasInCategory;
   
   // Update bookmarked status based on store data
-  const duasWithBookmarks = duasInCategory.map(dua => ({
-    ...dua,
-    bookmarked: typeof dua.id === 'string' ? false : isDuaSaved(Number(dua.id))
-  }));
+  const duasWithBookmarks = duasInCategory.map(dua => {
+    const duaId = typeof dua.id === 'string' ? parseInt(dua.id) : dua.id;
+    return {
+      ...dua,
+      bookmarked: !isNaN(duaId) ? isDuaSaved(duaId) : false
+    };
+  });
 
   const handleDuaPress = (item: DuaItemProps) => {
     navigation.navigate('DuaContent', {

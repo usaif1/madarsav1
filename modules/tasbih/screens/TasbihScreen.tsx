@@ -7,7 +7,7 @@ import CustomBeadModal from '../components/CustomBeadModal';
 import SelectCounterModal from '../components/SelectCounterModal';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
-import { useAllTasbihs, useTasbihById } from '@/modules/tasbih/hooks/useTasbihs';
+import { useAllTasbihs, useTasbihById, useDefaultTasbihCount } from '@/modules/tasbih/hooks/useTasbihs';
 import { TasbihData } from '@/modules/tasbih/services/tasbihService';
 import { useRoute } from '@react-navigation/native';
 
@@ -18,149 +18,108 @@ const PRESET_BEADS = [11, 33, 99];
 // Fallback duas in case API fails
 const fallbackDuaList = [
   {
-    id: '1',
-    verses: [
-      {
-        arabic: 'اللّهُـمَّ أَنْتَ السَّلاَمُ وَمِنْكَ السَّلاَمُ',
-        transliteration: 'Allahumma antas-salaamu wa minkas-salaam',
-        translation: 'O Allah, You are Peace and from You is peace.',
-      },
-      {
-        arabic: 'تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ',
-        transliteration: 'Tabaarakta yaa Dhal-Jalaali wal-Ikraam',
-        translation: 'Blessed are You, O Possessor of majesty and honor.',
-      },
-    ],
-  },
-  {
-    id: '2',
-    verses: [
-      {
-        arabic: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ',
-        transliteration: 'Rabbi ighfir li wa tub alayya',
-        translation: 'My Lord, forgive me and turn to me in mercy.',
-      },
-      {
-        arabic: 'إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ',
-        transliteration: 'Innaka anta at-Tawwaabur-Raheem',
-        translation: 'Indeed, You are the Accepting of repentance, the Merciful.',
-      },
-      {
-        arabic: 'اللّهُمَّ اغْفِرْ لِي وَارْحَمْنِي',
-        transliteration: 'Allahumma ighfir li warhamni',
-        translation: 'O Allah, forgive me and have mercy on me.',
-      },
-    ],
-  },
-  {
-    id: '3',
+    id: 1,
+    title: 'Tasbih after Prayer',
     verses: [
       {
         arabic: 'سُبْحَانَ اللّٰهِ',
         transliteration: 'Subhanallah',
         translation: 'Glory is to Allah.',
-      },
+      }
+    ],
+    count: 33,
+    category: 'Daily Dhikr',
+  },
+  {
+    id: 2,
+    title: 'Alhamdulillah',
+    verses: [
       {
         arabic: 'الْحَمْدُ لِلّٰهِ',
         transliteration: 'Alhamdulillah',
         translation: 'All praise is for Allah.',
-      },
+      }
+    ],
+    count: 33,
+    category: 'Daily Dhikr',
+  },
+  {
+    id: 3,
+    title: 'Allahu Akbar',
+    verses: [
       {
         arabic: 'اللّٰهُ أَكْبَرُ',
         transliteration: 'Allahu Akbar',
         translation: 'Allah is the Greatest.',
-      },
+      }
     ],
+    count: 33,
+    category: 'Daily Dhikr',
   },
   {
-    id: '4',
+    id: 4,
+    title: 'La ilaha illallah',
     verses: [
       {
-        arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
-        transliteration: 'Allahumma salli ala Muhammad',
-        translation: 'O Allah, send prayers upon Muhammad.',
-      },
-      {
-        arabic: 'وَعَلَى آلِ مُحَمَّدٍ',
-        transliteration: 'wa ala aali Muhammad',
-        translation: 'and upon the family of Muhammad.',
-      },
+        arabic: 'لَا إِلَٰهَ إِلَّا ٱللَّٰهُ',
+        transliteration: 'La ilaha illallah',
+        translation: 'There is no deity except Allah.',
+      }
     ],
+    count: 100,
+    category: 'Daily Dhikr',
   },
   {
-    id: '5',
+    id: 5,
+    title: 'Istighfar',
     verses: [
       {
-        arabic: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً',
-        transliteration: 'Rabbana atina fid-dunya hasanah',
-        translation: 'Our Lord, give us in this world [that which is] good',
-      },
-      {
-        arabic: 'وَفِي الْآخِرَةِ حَسَنَةً',
-        transliteration: 'wa fil-akhirati hasanah',
-        translation: 'and in the Hereafter [that which is] good',
-      },
-      {
-        arabic: 'وَقِنَا عَذَابَ النَّارِ',
-        transliteration: 'wa qina adhaban-nar',
-        translation: 'and protect us from the punishment of the Fire.',
-      },
+        arabic: 'أَسْتَغْفِرُ اللّٰهَ',
+        transliteration: 'Astaghfirullah',
+        translation: 'I seek forgiveness from Allah.',
+      }
     ],
+    count: 100,
+    category: 'Daily Dhikr',
   },
   {
-    id: '6',
+    id: 6,
+    title: 'Salawat',
     verses: [
       {
-        arabic: 'اللّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ',
-        transliteration: `Allahumma inni as'aluka al-'afwa wal-'afiyah`,
-        translation: 'O Allah, I ask You for pardon and well-being.',
-      },
-      {
-        arabic: 'فِي الدُّنْيَا وَالآخِرَةِ',
-        transliteration: 'fid-dunya wal-akhirah',
-        translation: 'in this world and the Hereafter.',
-      },
+        arabic: 'اللّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
+        transliteration: 'Allahumma salli ala Muhammad wa ala aali Muhammad',
+        translation: 'O Allah, send prayers upon Muhammad and upon the family of Muhammad.',
+      }
     ],
+    count: 100,
+    category: 'Daily Dhikr',
   },
   {
-    id: '7',
+    id: 7,
+    title: 'Hasbunallah',
     verses: [
       {
-        arabic: 'اللّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ',
-        transliteration: 'Allahumma ihdini fiman hadayt',
-        translation: 'O Allah, guide me among those You have guided.',
-      },
-      {
-        arabic: 'وَعَافِنِي فِيمَنْ عَافَيْتَ',
-        transliteration: 'wa aafini fiman aafayt',
-        translation: 'and grant me well-being among those You have granted well-being.',
-      },
+        arabic: 'حَسْبُنَا اللّٰهُ وَنِعْمَ الْوَكِيلُ',
+        transliteration: 'Hasbunallahu wa ni\'mal wakeel',
+        translation: 'Allah is sufficient for us, and He is the best Disposer of affairs.',
+      }
     ],
+    count: 100,
+    category: 'Daily Dhikr',
   },
   {
-    id: '8',
+    id: 8,
+    title: 'La hawla',
     verses: [
       {
-        arabic: 'اللّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ زَوَالِ نِعْمَتِكَ',
-        transliteration: `Allahumma inni a'udhu bika min zawali ni'matik`,
-        translation: 'O Allah, I seek refuge in You from the decline of Your favor.',
-      },
-      {
-        arabic: 'وَتَحَوُّلِ عَافِيَتِكَ',
-        transliteration: `wa tahawwuli 'afiyatika`,
-        translation: 'and the loss of Your well-being.',
-      },
-      {
-        arabic: 'وَفُجَاءَةِ نِقْمَتِكَ',
-        transliteration: `wa fuja'ati niqmatik`,
-        translation: 'and the suddenness of Your punishment.',
-      },
-      {
-        arabic: 'وَجَمِيعِ سَخَطِكَ',
-        transliteration: `wa jami'i sakhatik`,
-        translation: 'and all forms of Your displeasure.',
-      },
+        arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ',
+        transliteration: 'La hawla wa la quwwata illa billah',
+        translation: 'There is no might nor power except with Allah.',
+      }
     ],
+    count: 100,
+    category: 'Daily Dhikr',
   },
 ];
 
@@ -168,7 +127,7 @@ const fallbackDuaList = [
 
 /**
  * TasbihScreen component displaying Islamic prayer beads with duas
- * Integrates the shifting bead animation logic with verse-based counting
+ * Uses a single dua for the entire counting process
  */
 const TasbihScreen = () => {
   const { colors } = useThemeStore();
@@ -177,9 +136,8 @@ const TasbihScreen = () => {
   
   // State for the tasbih data
   const [selectedDuaIndex, setSelectedDuaIndex] = useState(0);
-  const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
-  const [totalPrayerCount, setTotalPrayerCount] = useState(0);
-  const [completedCycles, setCompletedCycles] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [targetCount, setTargetCount] = useState(33); // Default target count
   const [isWhite, setIsWhite] = useState(false);
   
   // Modal visibility states
@@ -207,21 +165,23 @@ const TasbihScreen = () => {
     }
   }, [allTasbihsError, specificTasbihError]);
 
-  // Current dua and verse calculations - use fallback if API fails
+  // Current dua calculations - use fallback if API fails
   const duaList = apiTasbihs?.data && apiTasbihs.data.length > 0 
     ? apiTasbihs.data 
     : fallbackDuaList as unknown as TasbihData[];
   const currentDua = duaList[selectedDuaIndex] || duaList[0];
-  const totalVerses = currentDua?.verses?.length || 1;
-  const currentVerse = currentDua?.verses?.[currentVerseIndex] || (currentDua?.verses?.[0] || { arabic: '', transliteration: '', translation: '' });
+  
+  // Get the single verse from the current dua
+  const currentVerse = currentDua?.verses?.[0] || { arabic: '', transliteration: '', translation: '' };
 
-  // Reset verse index when dua changes
+  // Reset count and set target count when dua changes
   useEffect(() => {
-    setCurrentVerseIndex(0);
-    setTotalPrayerCount(0);
-    setCompletedCycles(0);
-  }, [selectedDuaIndex]);
+    setTotalCount(0);
+    // Set target count from the dua or use default
+    setTargetCount(currentDua?.count || 33);
+  }, [selectedDuaIndex, currentDua]);
 
+  // Debug logging for modal visibility
   useEffect(() => {
     if (__DEV__) {
       console.log("Modal visibility state in TasbihScreen:", duaModalVisible);
@@ -229,39 +189,10 @@ const TasbihScreen = () => {
   }, [duaModalVisible]);
 
   /**
-   * Handle advancing to next verse with counter logic
+   * Handle advancing the counter
    */
-  const handleAdvanceVerse = () => {
-    setCurrentVerseIndex(prevIndex => {
-      const nextIndex = (prevIndex + 1) % totalVerses;
-      
-      // If we completed a full cycle (back to verse 0), increment cycle counter
-      if (nextIndex === 0) {
-        setCompletedCycles(prev => prev + 1);
-      }
-      
-      // Always increment total prayer count
-      setTotalPrayerCount(prev => prev + 1);
-      
-      return nextIndex;
-    });
-  };
-
-  /**
-   * Handle manual verse navigation (prev/next buttons on DuaCard)
-   */
-  const handlePrevVerse = () => {
-    setCurrentVerseIndex(prevIndex => {
-      const newIndex = prevIndex > 0 ? prevIndex - 1 : totalVerses - 1;
-      return newIndex;
-    });
-  };
-  
-  const handleNextVerse = () => {
-    setCurrentVerseIndex(prevIndex => {
-      const newIndex = (prevIndex + 1) % totalVerses;
-      return newIndex;
-    });
+  const handleAdvanceCounter = () => {
+    setTotalCount(prev => prev + 1);
   };
 
   /**
@@ -274,10 +205,10 @@ const TasbihScreen = () => {
   };
 
   /**
-   * Handle counter selection (kept for UI compatibility)
+   * Handle counter selection
    */
   const handleSelectCounter = (count: number) => {
-    // This could be used for setting prayer goals or cycles
+    setTargetCount(count);
     setSelectCounterModalVisible(false);
   };
 
@@ -293,18 +224,16 @@ const TasbihScreen = () => {
 
   const handleCustomBeadSave = () => {
     if (customBeadValue && parseInt(customBeadValue) > 0) {
-      // Custom logic for prayer goals could be implemented here
+      setTargetCount(parseInt(customBeadValue));
       setCustomBeadModalVisible(false);
     }
   };
 
   /**
-   * Handle reset - resets to beginning of current dua
+   * Handle reset - resets the counter to zero
    */
   const handleReset = () => {
-    setCurrentVerseIndex(0);
-    setTotalPrayerCount(0);
-    setCompletedCycles(0);
+    setTotalCount(0);
   };
 
   /**
@@ -329,22 +258,22 @@ const TasbihScreen = () => {
       ) : (
         // Show the UI with data (fallback data will be used if API had errors)
         <>
-          {/* Dua card showing current verse */}
+          {/* Dua card showing the single verse */}
           <DuaCard
             arabic={currentVerse.arabic}
             transliteration={currentVerse.transliteration}
             translation={currentVerse.translation}
-            onPrev={handlePrevVerse}
-            onNext={handleNextVerse}
+            onPrev={() => {}} // No prev/next functionality as we're using a single verse
+            onNext={() => {}}
             onChangeDua={() => setDuaModalVisible(true)}
           />
           
-          {/* Beads component with shifting animation logic */}
+          {/* Beads component with counter logic */}
           <Beads
-            totalVerses={totalVerses}
-            currentVerseIndex={currentVerseIndex}
-            onAdvance={handleAdvanceVerse}
-            totalCount={totalPrayerCount}
+            totalVerses={1} // Only one verse per dua now
+            currentVerseIndex={0} // Always on the first verse
+            onAdvance={handleAdvanceCounter}
+            totalCount={totalCount}
             isWhite={isWhite}
             tasbihData={currentDua}
           />
@@ -354,11 +283,11 @@ const TasbihScreen = () => {
       {/* Counter controls */}
       <View style={styles.counterControlsWrapper}>
         <CounterControls
-        onSelectBead={() => setIsWhite(!isWhite)}
-          selectedCount={totalVerses} // Show verses count instead of bead count
+          onSelectBead={() => setIsWhite(!isWhite)}
+          selectedCount={targetCount} // Show target count instead of verses count
           onSelectCounter={() => setSelectCounterModalVisible(true)}
           onReset={handleReset}
-          currentCount={totalPrayerCount} // Show total prayers completed
+          currentCount={totalCount} // Show current count
         />
       </View>
       
@@ -376,15 +305,16 @@ const TasbihScreen = () => {
         }}
       />
 
-      {/* Counter selection modal (kept for compatibility) */}
+      {/* Counter selection modal */}
       <SelectCounterModal
         visible={selectCounterModalVisible}
         onClose={() => setSelectCounterModalVisible(false)}
         onSelectPreset={handleSelectCounter}
         onCustomBeads={handleCustomBeadOpen}
         presetBeads={PRESET_BEADS}
-        selectedCount={totalVerses}
-        isCustomSelected={false}
+        selectedCount={targetCount}
+        isCustomSelected={!PRESET_BEADS.includes(targetCount)}
+        customValue={!PRESET_BEADS.includes(targetCount) ? targetCount : undefined}
       />
       
       {/* Custom bead count modal */}
