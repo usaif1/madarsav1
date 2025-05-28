@@ -15,6 +15,7 @@ import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
 import { useDuasBySubCategory, useAllDuas } from '@/modules/dua/hooks/useDuas';
 import { useDuaStore } from '../store/duaStore';
 import { useThemeStore } from '@/globalStore';
+import FastImage from 'react-native-fast-image';
 
 // Fallback data for duas
 const fallbackDuas = [
@@ -185,6 +186,13 @@ const DuaContent = () => {
   return (
     <View style={styles.container}>
       <Header title={title} />
+      <View style={styles.headerContainer}>
+            <FastImage 
+                source={require('@/assets/duas/dua-ayah.png')} 
+                style={styles.headerImage}
+                resizeMode={FastImage.resizeMode.contain}
+            />
+        </View>
       <FlatList
         data={duas}
         renderItem={renderDuaItem}
@@ -216,6 +224,16 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  headerContainer: {
+    width: scale(375),
+    height: verticalScale(121),
+    alignItems: 'center',
+    justifyContent: 'center',
+},
+headerImage: {
+    width: '100%',
+    height: '100%',
+},
   arabicRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
