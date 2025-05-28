@@ -2,6 +2,7 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Platform} from 'react-native';
+import { useAuthStore } from '@/modules/auth/store/authStore';
 
 // screens
 import {Profile, ProfileDetails, ProfileNotLoggedIn} from '../screens';
@@ -21,6 +22,8 @@ const Stack = createNativeStackNavigator<UserStackParamList>();
 
 // Define the navigator component
 const UserNavigator = () => {
+  const {user} = useAuthStore();
+  
   return (
     <Stack.Navigator
       initialRouteName="profileNotLoggedIn"
@@ -38,7 +41,12 @@ const UserNavigator = () => {
           headerShown: true,
           headerTitleAlign: 'center',
           header: () => (
-            <Header title="Profile" RightButton={() => <LogoutButton />} />
+              
+            <Header title="Profile" RightButton={() => {
+              if(user){
+                return <LogoutButton />
+              }
+              return null}} />
           ),
         }}
       />

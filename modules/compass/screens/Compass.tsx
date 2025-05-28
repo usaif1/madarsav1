@@ -159,14 +159,14 @@ const Compass: React.FC = () => {
           )}
           
           {/* Debug info - comment out in production */}
-          {__DEV__ && (
+          {/* {__DEV__ && (
             <View style={styles.debugInfo}>
               <Text style={styles.debugText}>Mag: {magHeading.toFixed(1)}°</Text>
               <Text style={styles.debugText}>True: {trueHeading.toFixed(1)}°</Text>
               <Text style={styles.debugText}>Qibla: {qiblaBearing?.toFixed(1)}°</Text>
               <Text style={styles.debugText}>Angle: {qiblaAngle.toFixed(1)}°</Text>
             </View>
-          )}
+          )} */}
         </View>
       </View>
 

@@ -255,7 +255,7 @@ headerImage: {
   bubbleNum: {
     position: 'absolute',
     top: '50%',
-    left: '50%',
+    left: '55%',
     transform: [{ translateX: -6 }, { translateY: -9 }],
     color: ColorPrimary.primary600,
     fontSize: 12,
@@ -268,7 +268,7 @@ headerImage: {
   purpleLine: {
     width: 3,
     height: '100%',
-    backgroundColor: ColorPrimary.primary500,
+    backgroundColor: '#8A57DC',
     marginRight: 8,
     borderRadius: 2,
   },
@@ -288,9 +288,9 @@ headerImage: {
     color: '#111827',
   },
   translationText: {
-    fontSize: 14,
+    fontSize: 12,
     lineHeight: 20,
-    color: '#4B5563',
+    color: '#404040',
   },
   footerContainer: {
     flexDirection: 'row',
