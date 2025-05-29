@@ -30,7 +30,63 @@ interface LocationState {
   loading: boolean;
   usingFallback: boolean;
   fallbackSource: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
 }
+
+// Function to fetch address from coordinates using reverse geocoding
+const fetchAddressFromCoordinates = async (latitude: number, longitude: number): Promise<{address: string, city: string | null, country: string | null}> => {
+  try {
+    // Check internet connection
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      return { address: 'Location found', city: null, country: null };
+    }
+    
+    // Use OpenStreetMap Nominatim API for reverse geocoding (free, no API key required)
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+      {
+        headers: {
+          'Accept-Language': 'en', // Request English results
+          'User-Agent': 'MadrasaApp/1.0', // Required by Nominatim ToS
+        },
+      }
+    );
+    
+    const data = await response.json();
+    
+    if (data && data.display_name) {
+      // Extract city and country from address components
+      const city = data.address?.city || 
+                  data.address?.town || 
+                  data.address?.village || 
+                  data.address?.hamlet || 
+                  null;
+                  
+      const country = data.address?.country || null;
+      
+      // Create a simplified address string
+      let simplifiedAddress = '';
+      if (city) simplifiedAddress += city;
+      if (country) {
+        if (simplifiedAddress) simplifiedAddress += ', ';
+        simplifiedAddress += country;
+      }
+      
+      // If we couldn't create a simplified address, use the full display name
+      const address = simplifiedAddress || data.display_name;
+      
+      return { address, city, country };
+    }
+    
+    return { address: 'Location found', city: null, country: null };
+  } catch (error) {
+    console.warn('Error in reverse geocoding:', error);
+    return { address: 'Location found', city: null, country: null };
+  }
+};
 
 export const useLocation = () => {
   const [state, setState] = useState<LocationState>({
@@ -40,6 +96,9 @@ export const useLocation = () => {
     loading: true,
     usingFallback: false,
     fallbackSource: null,
+    address: null,
+    city: null,
+    country: null,
   });
   
   // Timeout reference for location request
@@ -65,6 +124,24 @@ export const useLocation = () => {
       
       if (data && data.latitude && data.longitude) {
         console.log('Successfully got location from IP:', data);
+        
+        // Format address from IP data
+        const cityStr = data.city || '';
+        const regionStr = data.region || '';
+        const countryStr = data.country_name || '';
+        
+        // Create a formatted address string
+        let formattedAddress = '';
+        if (cityStr) formattedAddress += cityStr;
+        if (regionStr && regionStr !== cityStr) {
+          if (formattedAddress) formattedAddress += ', ';
+          formattedAddress += regionStr;
+        }
+        if (countryStr) {
+          if (formattedAddress) formattedAddress += ', ';
+          formattedAddress += countryStr;
+        }
+        
         setState({
           latitude: data.latitude,
           longitude: data.longitude,
@@ -72,6 +149,9 @@ export const useLocation = () => {
           loading: false,
           usingFallback: true,
           fallbackSource: 'ip_address',
+          address: formattedAddress || 'Location found',
+          city: data.city || null,
+          country: data.country_name || null,
         });
         return true;
       }
@@ -98,6 +178,9 @@ export const useLocation = () => {
       loading: false,
       usingFallback: true,
       fallbackSource: source,
+      address: 'Mecca, Saudi Arabia',
+      city: 'Mecca',
+      country: 'Saudi Arabia',
     });
   };
 
@@ -184,14 +267,35 @@ export const useLocation = () => {
           timeoutRef[0] = null;
         }
         
-        setState({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          error: null,
-          loading: false,
-          usingFallback: false,
-          fallbackSource: null,
-        });
+        // Get address from coordinates using reverse geocoding
+        fetchAddressFromCoordinates(position.coords.latitude, position.coords.longitude)
+          .then(addressData => {
+            setState({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              error: null,
+              loading: false,
+              usingFallback: false,
+              fallbackSource: null,
+              address: addressData.address,
+              city: addressData.city,
+              country: addressData.country,
+            });
+          })
+          .catch(error => {
+            console.warn('Error getting address from coordinates:', error);
+            setState({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              error: null,
+              loading: false,
+              usingFallback: false,
+              fallbackSource: null,
+              address: 'Location found',
+              city: null,
+              country: null,
+            });
+          });
       },
       error => {
         // Clear the backup timeout since we got a response
@@ -238,6 +342,26 @@ export const useLocation = () => {
   
   const setCustomLocation = (city: keyof typeof MAJOR_CITIES) => {
     if (MAJOR_CITIES[city]) {
+      // Format city name for display (capitalize first letter of each word)
+      const formattedCityName = city
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      // Map city names to countries
+      const cityToCountry: Record<string, string> = {
+        mecca: 'Saudi Arabia',
+        medina: 'Saudi Arabia',
+        riyadh: 'Saudi Arabia',
+        jeddah: 'Saudi Arabia',
+        dubai: 'UAE',
+        karachi: 'Pakistan',
+        istanbul: 'Turkey',
+        cairo: 'Egypt',
+        kualaLumpur: 'Malaysia',
+        jakarta: 'Indonesia',
+      };
+      
       setState({
         latitude: MAJOR_CITIES[city].latitude,
         longitude: MAJOR_CITIES[city].longitude,
@@ -245,18 +369,33 @@ export const useLocation = () => {
         loading: false,
         usingFallback: true,
         fallbackSource: `custom_${city}`,
+        address: `${formattedCityName}, ${cityToCountry[city] || ''}`.trim(),
+        city: formattedCityName,
+        country: cityToCountry[city] || null,
       });
       return true;
     }
     return false;
   };
 
+  // Function to request location permission directly
+  const requestLocationPermissionDirectly = async () => {
+    setState(prev => ({ ...prev, loading: true }));
+    const hasPermission = await requestLocationPermission();
+    if (hasPermission) {
+      getLocation();
+    }
+    return hasPermission;
+  };
+  
   return { 
     ...state, 
     refreshLocation,
     setCustomLocation,
+    requestLocationPermissionDirectly,
     isUsingFallback: state.usingFallback,
     fallbackSource: state.fallbackSource,
     majorCities: Object.keys(MAJOR_CITIES),
+    hasAddress: !!state.address,
   };
 };

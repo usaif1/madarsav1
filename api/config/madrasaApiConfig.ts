@@ -17,6 +17,11 @@ export const MADRASA_API_ENDPOINTS = {
   // Skip login
   SKIPPED_LOGIN: '/api/v1/skipped-login',
   
+  // User profile endpoints
+  GET_USER_DETAILS: '/api/v1/user/{userId}',
+  UPDATE_USER_DETAILS: '/api/v1/update',
+  UPDATE_USER_NOTIFICATIONS: '/api/v1/update/notification',
+  
   // Islamic tools endpoints
   NAMES_99: '/api/v1/99names',
   DUAS: '/api/v1/duas',

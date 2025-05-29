@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator, PanResponder, Animated } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
 
@@ -38,6 +38,10 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   // Modal state
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
+  
+  // Animation values for swipe
+  const pan = useRef(new Animated.ValueXY()).current;
+  const opacity = useRef(new Animated.Value(1)).current;
   
   // Audio hook
   const { 
@@ -117,7 +121,106 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
     if (isPlaying) {
       pauseAudio();
     }
+    // Reset animation values
+    pan.setValue({ x: 0, y: 0 });
+    opacity.setValue(1);
   };
+  
+  /**
+   * Navigate to next or previous name
+   */
+  const navigateName = (direction: 'next' | 'prev') => {
+    // Stop audio when changing names
+    if (isPlaying) {
+      pauseAudio();
+    }
+    
+    if (direction === 'next' && currentItemIndex < filteredNames.length - 1) {
+      setCurrentItemIndex(prevIndex => prevIndex + 1);
+    } else if (direction === 'prev' && currentItemIndex > 0) {
+      setCurrentItemIndex(prevIndex => prevIndex - 1);
+    }
+    
+    // Reset animation values
+    pan.setValue({ x: 0, y: 0 });
+    opacity.setValue(1);
+  };
+  
+  /**
+   * Pan responder for swipe gestures
+   */
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow horizontal movement
+        pan.x.setValue(gestureState.dx);
+        
+        // Fade out as we swipe
+        const absX = Math.abs(gestureState.dx);
+        const maxDistance = 200; // Max swipe distance
+        const newOpacity = Math.max(0.4, 1 - (absX / maxDistance) * 0.6);
+        opacity.setValue(newOpacity);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const { dx, vx } = gestureState;
+        const isSwipeRight = dx > 100 || vx > 0.3;
+        const isSwipeLeft = dx < -100 || vx < -0.3;
+        
+        // Check if we can navigate based on current index
+        const canGoNext = currentItemIndex < filteredNames.length - 1;
+        const canGoPrev = currentItemIndex > 0;
+        
+        if (isSwipeLeft && canGoNext) {
+          // Animate card off screen to the left
+          Animated.parallel([
+            Animated.timing(pan.x, {
+              toValue: -CARD_SIZE,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            navigateName('next');
+          });
+        } else if (isSwipeRight && canGoPrev) {
+          // Animate card off screen to the right
+          Animated.parallel([
+            Animated.timing(pan.x, {
+              toValue: CARD_SIZE,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            navigateName('prev');
+          });
+        } else {
+          // Return to center if not enough to trigger navigation
+          Animated.parallel([
+            Animated.spring(pan.x, {
+              toValue: 0,
+              useNativeDriver: true,
+              friction: 5,
+            }),
+            Animated.spring(opacity, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 5,
+            }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
 
   /**
    * Show error alert for audio issues
@@ -193,97 +296,115 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
         animationIn="fadeIn"
         animationOut="fadeOut"
       >
-        {/* {filteredNames.length > 0 && currentItemIndex < filteredNames.length && ( */}
-          <View style={stylesModal.card}>
-            {/* Close button */}
+        <Animated.View 
+          style={[
+            stylesModal.card,
+            {
+              transform: [{ translateX: pan.x }],
+              opacity: opacity,
+            }
+          ]}
+          {...panResponder.panHandlers}>
+          {/* Close button */}
+          <Pressable
+            style={stylesModal.closeButton}
+            onPress={handleCloseModal}
+            accessibilityLabel="Close modal"
+            accessibilityRole="button"
+          >
+            <Close />
+          </Pressable>
+
+          {/* Counter badge */}
+          <View style={[stylesModal.counterBadge, { backgroundColor: colors.secondary.neutral600 }]}>
+            <Body1Title2Bold color="white">
+              {currentItemIndex + 1}/99
+            </Body1Title2Bold>
+          </View>
+          
+          {/* Swipe indicators */}
+          {currentItemIndex > 0 && (
+            <View style={[stylesModal.swipeIndicator, stylesModal.swipeLeft]}>
+              <Body2Medium color="white">← Swipe for previous</Body2Medium>
+            </View>
+          )}
+          {currentItemIndex < filteredNames.length - 1 && (
+            <View style={[stylesModal.swipeIndicator, stylesModal.swipeRight]}>
+              <Body2Medium color="white">Swipe for next →</Body2Medium>
+            </View>
+          )}
+
+          {/* Main image with text overlay */}
+          <View style={stylesModal.imageContainer}>
+            {/* Use the image from API instead of local asset */}
+            <FastImage
+              source={{ uri: filteredNames[currentItemIndex].imageLink }}
+              style={stylesModal.image}
+              resizeMode={FastImage.resizeMode.cover}
+            />
+            
+            {/* Dynamic Text Overlay */}
+            {/* <View style={stylesModal.textOverlay}>
+              <Text style={stylesModal.arabicText}>
+                {filteredNames[currentItemIndex].arabicName}
+              </Text>
+              <Text style={stylesModal.nameText}>
+                {filteredNames[currentItemIndex].englishName}
+              </Text>
+              <Text style={stylesModal.meaningText}>
+                {filteredNames[currentItemIndex].englishTranslation}
+              </Text>
+            </View> */}
+          </View>
+          
+          {/* Description */}
+          {/* <View style={stylesModal.descriptionContainer}>
+            <Text style={stylesModal.descriptionText}>
+              {filteredNames[currentItemIndex].description}
+            </Text>
+          </View> */}
+
+          {/* Action Buttons */}
+          <View style={stylesModal.actions}>
             <Pressable
-              style={stylesModal.closeButton}
               onPress={handleCloseModal}
-              accessibilityLabel="Close modal"
+              style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
+              accessibilityLabel="Close"
               accessibilityRole="button"
             >
               <Close />
+              <Body1Title2Bold color="white">Close</Body1Title2Bold>
             </Pressable>
 
-            {/* Counter badge */}
-            <View style={[stylesModal.counterBadge, { backgroundColor: colors.secondary.neutral600 }]}>
+            <Pressable 
+              style={[
+                stylesModal.btn, 
+                { 
+                  backgroundColor: isAudioLoading ? '#666' : '#8A57DC',
+                  opacity: isAudioLoading ? 0.7 : 1
+                }
+              ]}
+              onPress={handleAudioPlayback}
+              disabled={isAudioLoading}
+              accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
+              accessibilityRole="button"
+            >
+              {isPlaying ? <Pause /> : <RightTriangle />}
               <Body1Title2Bold color="white">
-                {currentItemIndex + 1}/99
+                {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
               </Body1Title2Bold>
-            </View>
+            </Pressable>
 
-            {/* Main image with text overlay */}
-            <View style={stylesModal.imageContainer}>
-              {/* Use the image from API instead of local asset */}
-              <FastImage
-                source={{ uri: filteredNames[currentItemIndex].imageLink }}
-                style={stylesModal.image}
-                resizeMode={FastImage.resizeMode.cover}
-              />
-              
-              {/* Dynamic Text Overlay */}
-              {/* <View style={stylesModal.textOverlay}>
-                <Text style={stylesModal.arabicText}>
-                  {filteredNames[currentItemIndex].arabicName}
-                </Text>
-                <Text style={stylesModal.nameText}>
-                  {filteredNames[currentItemIndex].englishName}
-                </Text>
-                <Text style={stylesModal.meaningText}>
-                  {filteredNames[currentItemIndex].englishTranslation}
-                </Text>
-              </View> */}
-            </View>
-            
-            {/* Description */}
-            {/* <View style={stylesModal.descriptionContainer}>
-              <Text style={stylesModal.descriptionText}>
-                {filteredNames[currentItemIndex].description}
-              </Text>
-            </View> */}
-
-            {/* Action Buttons */}
-            <View style={stylesModal.actions}>
-              <Pressable
-                onPress={handleCloseModal}
-                style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
-                accessibilityLabel="Close"
-                accessibilityRole="button"
-              >
-                <Close />
-                <Body1Title2Bold color="white">Close</Body1Title2Bold>
-              </Pressable>
-
-              <Pressable 
-                style={[
-                  stylesModal.btn, 
-                  { 
-                    backgroundColor: isAudioLoading ? '#666' : '#8A57DC',
-                    opacity: isAudioLoading ? 0.7 : 1
-                  }
-                ]}
-                onPress={handleAudioPlayback}
-                disabled={isAudioLoading}
-                accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
-                accessibilityRole="button"
-              >
-                {isPlaying ? <Pause /> : <RightTriangle />}
-                <Body1Title2Bold color="white">
-                  {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
-                </Body1Title2Bold>
-              </Pressable>
-
-              <Pressable
-                style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
-                accessibilityLabel="Share"
-                accessibilityRole="button"
-              >
-                <Share />
-                <Body1Title2Bold color="white">Share</Body1Title2Bold>
-              </Pressable>
-            </View>
+            <Pressable
+              style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
+              accessibilityLabel="Share"
+              accessibilityRole="button"
+            >
+              <Share />
+              <Body1Title2Bold color="white">Share</Body1Title2Bold>
+            </Pressable>
           </View>
-        {/* )} */}
+        </Animated.View>
       </Modal>
     </>
   );
@@ -561,6 +682,21 @@ const stylesModal = StyleSheet.create({
     alignItems: 'center',
     marginTop: 24,
     gap: 12,
+    zIndex: 10,
+  },
+  swipeIndicator: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    top: 140,
+  },
+  swipeLeft: {
+    left: 10,
+  },
+  swipeRight: {
+    right: 10,
   },
   btn: {
     flexDirection: 'row',

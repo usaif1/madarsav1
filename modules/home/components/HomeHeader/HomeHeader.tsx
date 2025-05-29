@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, StyleSheet, Image, Text, TouchableOpacity, Alert} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {View, StyleSheet, Image, Text, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
 import {useNavigation, CompositeNavigationProp, CommonActions} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
@@ -15,11 +15,13 @@ import { useAuthStore } from '@/modules/auth/store/authStore';
 import tokenService from '@/modules/auth/services/tokenService';
 import { mmkvStorage } from '@/modules/auth/storage/mmkvStorage';
 import { User } from '@/modules/auth/store/authStore';
+import { useLocation } from '@/api/hooks/useLocation';
 
 interface HomeHeaderProps {
-  userName: string;
-  locationText: string;
+  userName?: string;
+  locationText?: string;
   notificationCount?: number;
+  onLocationPress?: () => void;
 }
 
 // Define local navigation param list for the home tab navigator
@@ -36,9 +38,10 @@ type NavigationProp = CompositeNavigationProp<
 >;
 
 const HomeHeader: React.FC<HomeHeaderProps> = ({
-  userName = 'Mohammad Arbaaz',
-  locationText = 'Get accurate namaz time',
+  userName,
+  locationText: propLocationText,
   notificationCount = 1,
+  onLocationPress,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
@@ -47,6 +50,53 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
   const setIsSkippedLogin = useAuthStore((state) => state.setIsSkippedLogin);
   const user = useAuthStore((state) => state.user);
+  
+  // Get location data
+  const { 
+    address, 
+    loading: locationLoading, 
+    usingFallback,
+    requestLocationPermissionDirectly,
+  } = useLocation();
+  
+  // Determine location text to display
+  const [locationText, setLocationText] = useState<string>(propLocationText || 'Get accurate namaz time');
+  
+  // Update location text when address changes
+  useEffect(() => {
+    if (address) {
+      setLocationText(address);
+    } else if (propLocationText) {
+      setLocationText(propLocationText);
+    } else {
+      setLocationText('Get accurate namaz time');
+    }
+  }, [address, propLocationText]);
+  
+  // Handle location press
+  const handleLocationPress = async () => {
+    if (onLocationPress) {
+      onLocationPress();
+      return;
+    }
+    
+    // If we're using fallback location or don't have a location yet,
+    // request precise location permission
+    if (usingFallback || !address) {
+      try {
+        const granted = await requestLocationPermissionDirectly();
+        if (!granted) {
+          Alert.alert(
+            'Location Permission',
+            'Please enable location services to get accurate prayer times for your area.',
+            [{ text: 'OK' }]
+          );
+        }
+      } catch (error) {
+        console.error('Error requesting location permission:', error);
+      }
+    }
+  };
   // Handle user profile press - navigate to profile then logout
   const handleUserProfilePress = async () => {
     console.log('User profile pressed - navigating to profile');
@@ -97,10 +147,23 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           
           <View style={styles.userTextContainer}>
             <Title3Bold color="white">{user?.name || 'User'}</Title3Bold>
-            <View style={styles.locationContainer}>
+            <TouchableOpacity 
+              style={styles.locationContainer}
+              onPress={handleLocationPress}
+              activeOpacity={0.7}
+            >
               <MapPinFill width={14} height={14} />
-              <Body2Medium style={styles.locationText}>{locationText}</Body2Medium>
-            </View>
+              {locationLoading ? (
+                <ActivityIndicator size="small" color="#F9F6FF" style={styles.locationLoader} />
+              ) : (
+                <Body2Medium 
+                  style={[styles.locationText, usingFallback && styles.locationTextEstimated]}
+                  numberOfLines={1}
+                >
+                  {locationText}
+                </Body2Medium>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
         
@@ -178,6 +241,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: ColorPrimary.primary200,
     textAlign: 'center',
+    maxWidth: scale(220), // Limit width to prevent overflow
+  },
+  locationTextEstimated: {
+    // Slightly different style for estimated locations
+    fontStyle: 'italic',
+    color: '#F9F6FF',
+  },
+  locationLoader: {
+    marginLeft: scale(4),
   },
   bellContainer: {
     position: 'relative',

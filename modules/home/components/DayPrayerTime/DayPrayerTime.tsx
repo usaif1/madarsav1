@@ -179,13 +179,20 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
   return (
     <View style={styles.container}>
       {usingFallback && (
-        <View style={styles.fallbackBanner}>
+        <TouchableOpacity 
+          style={styles.fallbackBanner}
+          onPress={refreshLocation}
+          activeOpacity={0.7}
+        >
           <Text style={styles.fallbackText}>
             {fallbackSource?.includes('custom_') 
               ? `Using ${fallbackSource.replace('custom_', '')} as location reference` 
-              : 'Using estimated location'}
+              : fallbackSource === 'ip_address'
+                ? 'Using estimated location from IP address'
+                : 'Using estimated location'}
           </Text>
-        </View>
+          <Text style={styles.fallbackSubtext}>Tap to use precise location</Text>
+        </TouchableOpacity>
       )}
       <LinearGradient
         colors={gradientColors}
@@ -331,7 +338,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'rgba(251, 191, 36, 0.9)',
-    paddingVertical: scale(4),
+    paddingVertical: scale(6),
     zIndex: 10,
   },
   fallbackText: {
@@ -339,6 +346,13 @@ const styles = StyleSheet.create({
     color: '#78350F',
     textAlign: 'center',
     fontWeight: '500',
+  },
+  fallbackSubtext: {
+    fontSize: scale(10),
+    color: '#78350F',
+    textAlign: 'center',
+    fontWeight: '400',
+    marginTop: scale(2),
   },
   gradientContainer: {
     flex: 1,
