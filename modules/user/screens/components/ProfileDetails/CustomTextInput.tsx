@@ -1,5 +1,5 @@
 import React from 'react';
-import {TextInput, StyleSheet} from 'react-native';
+import {TextInput, StyleSheet, View, Text} from 'react-native';
 
 // component
 import {Body1Title2Medium} from '@/components';
@@ -8,11 +8,13 @@ interface Props {
   label: string;
   value: string;
   disabled?: boolean;
+  onChange?: (text: string) => void;
+  error?: string;
 }
 
-const CustomTextInput: React.FC<Props> = ({label, value, disabled = false}) => {
+const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onChange, error}) => {
   return (
-    <>
+    <View style={styles.container}>
       <Body1Title2Medium color="sub-heading">{label}</Body1Title2Medium>
       <TextInput
         value={value}
@@ -20,16 +22,23 @@ const CustomTextInput: React.FC<Props> = ({label, value, disabled = false}) => {
           styles.input,
           {
             backgroundColor: disabled ? '#F5F5F5' : 'transparent',
+            borderColor: error ? '#FF6B6B' : '#D4D4D4',
           },
         ]}
+        editable={!disabled}
+        onChangeText={onChange}
       />
-    </>
+      {error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : null}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    marginBottom: 4,
   },
   input: {
     width: '100%',
@@ -45,6 +54,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     fontFamily: 'Geist-Medium',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 2,
+    fontFamily: 'Geist-Regular',
   },
 });
 

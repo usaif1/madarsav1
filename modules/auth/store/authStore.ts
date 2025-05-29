@@ -16,7 +16,13 @@ export interface User {
   name?: string;
   email?: string;
   photoUrl?: string;
-  // Add other user properties as needed
+  // Additional user properties
+  phone?: string;
+  gender?: string;
+  dob?: string;
+  city?: string;
+  country?: string;
+  userId?: string;
 }
 
 // Auth state

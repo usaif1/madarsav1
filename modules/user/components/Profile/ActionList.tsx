@@ -1,6 +1,6 @@
 // dependencies
-import {Text, View} from 'react-native';
-import React from 'react';
+import {Text, View, TouchableOpacity} from 'react-native';
+import React, {useState, useEffect} from 'react';
 
 // assets
 import AthanIcon from '@/assets/profile/athan_icon.svg';
@@ -10,6 +10,8 @@ import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
 import {useThemeStore} from '@/globalStore';
+import {useAuthStore} from '@/modules/auth/store/authStore';
+import {useUserDetails, useUpdateUserNotifications} from '@/modules/user/hooks/useUserProfile';
 
 const actionList = [
   {
@@ -45,6 +47,44 @@ const actionList = [
 // Accepts prop to hide notification items when not logged in
 const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boolean }) => {
   const {shadows} = useThemeStore();
+  const {user} = useAuthStore();
+  const [athanNotification, setAthanNotification] = useState(false);
+  const [pushNotification, setPushNotification] = useState(false);
+  
+  // Get user details to initialize notification settings
+  const {data: userDetails, isLoading} = useUserDetails(user?.id);
+  
+  // Mutation for updating notification settings
+  const updateNotificationsMutation = useUpdateUserNotifications();
+  
+  // Initialize notification states from user details
+  useEffect(() => {
+    if (userDetails) {
+      setAthanNotification(userDetails.athanNotification);
+      setPushNotification(userDetails.pushNotification);
+    }
+  }, [userDetails]);
+  
+  // Handle toggle for notification settings
+  const handleToggleNotification = (type: 'athan' | 'push', value: boolean) => {
+    if (!user?.id) return;
+    
+    if (type === 'athan') {
+      setAthanNotification(value);
+      updateNotificationsMutation.mutate({
+        userId: user.id,
+        athanNotification: value,
+        pushNotification: pushNotification,
+      });
+    } else {
+      setPushNotification(value);
+      updateNotificationsMutation.mutate({
+        userId: user.id,
+        athanNotification: athanNotification,
+        pushNotification: value,
+      });
+    }
+  };
 
   // Filter out notification items if not logged in
   const filteredList = profileNotLoggedIn
@@ -73,7 +113,27 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
                   {actionItem.label}
                 </Text>
               </View>
-              {actionItem?.iconRight ? <actionItem.iconRight /> : <Switch />}
+              {actionItem?.iconRight ? (
+                <TouchableOpacity>
+                  <actionItem.iconRight />
+                </TouchableOpacity>
+              ) : (
+                actionItem.id === 'athan-notification' ? (
+                  <Switch 
+                    value={athanNotification} 
+                    onValueChange={(value: boolean) => handleToggleNotification('athan', value)}
+                    disabled={updateNotificationsMutation.isPending || isLoading}
+                  />
+                ) : actionItem.id === 'push-notification' ? (
+                  <Switch 
+                    value={pushNotification} 
+                    onValueChange={(value: boolean) => handleToggleNotification('push', value)}
+                    disabled={updateNotificationsMutation.isPending || isLoading}
+                  />
+                ) : (
+                  <Switch />
+                )
+              )}
             </View>
           );
         })}
