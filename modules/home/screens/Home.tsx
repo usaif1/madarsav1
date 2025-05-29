@@ -1,6 +1,6 @@
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,8 @@ import FeelingToday from '../components/FeelingToday';
 import DayPrayerTime from '../components/DayPrayerTime';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 import { scale } from '@/theme/responsive';
+import { useAll99Names } from '@/modules/names/hooks/use99Names';
+import { useGlobalStore } from '@/globalStore';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 4; // 4 items per row
@@ -43,6 +45,20 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const IslamicTools: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   
+  // Fetch 99 names data
+  const { data: namesData, isLoading: namesLoading } = useAll99Names();
+  
+  // Get global state for audio
+  const { setHomeAudioNameId } = useGlobalStore();
+  
+  // Initialize with the first name when data is loaded
+  useEffect(() => {
+    if (namesData && namesData.length > 0) {
+      // Set the first name as the current audio
+      setHomeAudioNameId(namesData[0].number);
+    }
+  }, [namesData]);
+  
   const handleViewAllGallery = () => {
     console.log('View all gallery pressed');
     // Navigate to gallery view if needed
@@ -50,7 +66,7 @@ const IslamicTools: React.FC = () => {
   
   const handlePlayPause = () => {
     console.log('Play/pause audio pressed');
-    // Handle audio playback
+    // Audio playback is now handled by the AudioPlayer component
   };
   
   const handleExploreDuas = () => {
@@ -104,9 +120,6 @@ const IslamicTools: React.FC = () => {
         {/* Audio Player Section */}
         <AudioPlayer 
           trackName="Asma-ul-husna"
-          currentTime="0:20"
-          totalTime="3:12"
-          progress={0.1}
           onPlayPause={handlePlayPause}
         />
         

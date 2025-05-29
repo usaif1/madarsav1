@@ -146,7 +146,18 @@ export const usePrayerTimes = () => {
       const currentSecond = now.getSeconds();
       const currentTimeInMinutes = currentHour * 60 + currentMinute + currentSecond / 60;
       
-      const timeLeftInMinutes = nextPrayerTime - currentTimeInMinutes;
+      let timeLeftInMinutes = nextPrayerTime - currentTimeInMinutes;
+      
+      // Handle edge case: if time left is negative, it means we're crossing midnight
+      // This can happen when the next prayer is Fajr of the next day
+      if (timeLeftInMinutes < 0 && nextPrayer === 'fajr') {
+        // Add 24 hours (1440 minutes) to get correct time until tomorrow's Fajr
+        timeLeftInMinutes += 24 * 60;
+      }
+      
+      // Ensure we never show negative time
+      timeLeftInMinutes = Math.max(0, timeLeftInMinutes);
+      
       const hours = Math.floor(timeLeftInMinutes / 60);
       const minutes = Math.floor(timeLeftInMinutes % 60);
       const seconds = Math.floor((timeLeftInMinutes * 60) % 60);

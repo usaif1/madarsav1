@@ -18,6 +18,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
   descriptors,
   navigation,
 }) => {
+  // Function to show a coming soon message for unavailable features
+  const handleComingSoonFeature = (routeName: string) => {
+    console.log(`${routeName} feature is coming soon!`);
+    // You could add a toast message here in the future
+  };
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
@@ -32,6 +37,24 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
         const isFocused = state.index === index;
 
         const onPress = () => {
+          console.log(route.name);
+          // For Quran tab, prevent navigation and show coming soon message
+          if (route.name === 'al-quran') {
+            // Emit the event but prevent default navigation
+            // const event = navigation.emit({
+            //   type: 'tabPress',
+            //   target: route.key,
+            //   canPreventDefault: true,
+            // });
+            
+            // Show coming soon message
+            handleComingSoonFeature('Quran');
+            
+            // Don't navigate
+            return;
+          }
+          
+          // For other tabs, proceed with normal navigation
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,
