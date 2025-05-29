@@ -5,11 +5,7 @@ import { PermissionsAndroid } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { useLocationStore } from '../store/locationStore';
 
-// Default location coordinates (Mecca as fallback)
-const DEFAULT_COORDINATES = {
-  latitude: 21.4225,
-  longitude: 39.8262,
-};
+// We'll only use IP-based location as fallback, no hardcoded coordinates
 
 /**
  * Service for handling location-related functionality
@@ -222,28 +218,23 @@ const locationService = {
           country,
         });
       } else {
-        // Use default location as last resort
-        locationStore.setLocation(DEFAULT_COORDINATES.latitude, DEFAULT_COORDINATES.longitude);
+        // No fallback available - set error state
+        locationStore.setError('Could not determine location. Please enable location services.');
         locationStore.setLocationData({
           usingFallback: true,
-          fallbackSource: 'default',
-          city: 'Mecca',
-          country: 'Saudi Arabia',
+          fallbackSource: 'no_location',
         });
         
-        console.log('Using default location (Mecca)');
+        console.log('No location data available');
       }
     } catch (error: any) {
       console.error('Error initializing location:', error);
       locationStore.setError(error.message || 'Failed to initialize location');
       
-      // Use default location as fallback
-      locationStore.setLocation(DEFAULT_COORDINATES.latitude, DEFAULT_COORDINATES.longitude);
+      // Set error state without fallback location
       locationStore.setLocationData({
         usingFallback: true,
         fallbackSource: 'error',
-        city: 'Mecca',
-        country: 'Saudi Arabia',
       });
     } finally {
       locationStore.setLoading(false);

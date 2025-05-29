@@ -34,8 +34,7 @@ export const usePrayerTimes = () => {
     data, 
     isLoading: prayerTimesLoading, 
     error: prayerTimesError,
-    refetch,
-    setCustomLocation
+    refetch
   } = useCalendarPrayerTimes(today);
   
   const [currentPrayer, setCurrentPrayer] = useState<PrayerType>('fajr');
@@ -48,7 +47,20 @@ export const usePrayerTimes = () => {
   const isLoading = locationLoading || prayerTimesLoading;
   const error = locationError || prayerTimesError;
   
-  // Update time left every second
+  // Update prayer times when location or data changes
+  useEffect(() => {
+    console.log('🌍 Location changed in usePrayerTimes:', { latitude, longitude, usingFallback, fallbackSource });
+    
+    // If we have coordinates (either from GPS or IP), refetch prayer times
+    if (latitude && longitude) {
+      console.log('🔄 Refetching prayer times with coordinates:', { latitude, longitude });
+      refetch();
+    } else {
+      console.log('⚠️ No coordinates available for prayer times');
+    }
+  }, [latitude, longitude, usingFallback, fallbackSource, refetch]);
+
+  // Process prayer times data and update time left
   useEffect(() => {
     if (!data || !data.data || !data.data.timings) return;
     
@@ -185,8 +197,7 @@ export const usePrayerTimes = () => {
     error,
     usingFallback,
     fallbackSource,
-    refreshLocation,
-    setCustomLocation
+    refreshLocation
   };
 };
 

@@ -56,6 +56,9 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
     address, 
     loading: locationLoading, 
     usingFallback,
+    fallbackSource,
+    latitude,
+    longitude,
     requestLocationPermissionDirectly,
   } = useLocation();
   
@@ -64,14 +67,31 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   
   // Update location text when address changes
   useEffect(() => {
+    console.log('📍 HomeHeader location data:', { 
+      address, 
+      loading: locationLoading, 
+      usingFallback, 
+      fallbackSource, 
+      latitude, 
+      longitude 
+    });
+    
     if (address) {
+      console.log('📍 Setting location text to address:', address);
       setLocationText(address);
     } else if (propLocationText) {
+      console.log('📍 Setting location text to prop:', propLocationText);
       setLocationText(propLocationText);
+    } else if (latitude && longitude) {
+      // If we have coordinates but no address yet, show coordinates
+      const coordText = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+      console.log('📍 Setting location text to coordinates:', coordText);
+      setLocationText(coordText);
     } else {
+      console.log('📍 Setting default location text');
       setLocationText('Get accurate namaz time');
     }
-  }, [address, propLocationText]);
+  }, [address, propLocationText, latitude, longitude, usingFallback, fallbackSource]);
   
   // Handle location press
   const handleLocationPress = async () => {

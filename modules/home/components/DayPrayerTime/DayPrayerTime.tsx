@@ -135,13 +135,17 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
 
   // If error, show error message
   if (error) {
+    console.log('❌ DayPrayerTime error:', error);
     return (
       <View style={[styles.container, styles.errorContainer]}>
         <Text style={styles.errorText}>Error loading prayer times</Text>
         <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : String(error)}</Text>
         <TouchableOpacity 
           style={styles.retryButton}
-          onPress={() => refreshLocation()}
+          onPress={() => {
+            console.log('🔄 Retry button pressed, refreshing location...');
+            refreshLocation();
+          }}
         >
           <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
