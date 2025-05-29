@@ -133,9 +133,9 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       };
       
       if (isSelectedDateToday) {
-        todayEvents.push(eventItem);
+        // todayEvents.push(eventItem);
       } else {
-        selectedDateEvents.push(eventItem);
+        // selectedDateEvents.push(eventItem);
       }
     }
     
@@ -156,9 +156,9 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
           };
           
           if (isSelectedDateToday) {
-            todayEvents.push(eventItem);
+            // todayEvents.push(eventItem);
           } else {
-            selectedDateEvents.push(eventItem);
+            // selectedDateEvents.push(eventItem);
           }
         }
       });
