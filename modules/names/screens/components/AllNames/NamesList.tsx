@@ -323,7 +323,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
           </View>
           
           {/* Swipe indicators */}
-          {currentItemIndex > 0 && (
+          {/* {currentItemIndex > 0 && (
             <View style={[stylesModal.swipeIndicator, stylesModal.swipeLeft]}>
               <Body2Medium color="white">← Swipe for previous</Body2Medium>
             </View>
@@ -332,7 +332,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             <View style={[stylesModal.swipeIndicator, stylesModal.swipeRight]}>
               <Body2Medium color="white">Swipe for next →</Body2Medium>
             </View>
-          )}
+          )} */}
 
           {/* Main image with text overlay */}
           <View style={stylesModal.imageContainer}>
