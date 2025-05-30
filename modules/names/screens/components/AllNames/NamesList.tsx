@@ -37,7 +37,16 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   
   // Modal state
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  // Use ref for immediate updates during swipe navigation
+  const currentItemIndexRef = useRef<number>(0);
+  // Keep state for UI rendering, but use ref for logic
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
+  
+  // Sync the state and ref
+  const updateCurrentIndex = (newIndex: number) => {
+    currentItemIndexRef.current = newIndex;
+    setCurrentItemIndex(newIndex);
+  };
   
   // Animation values for swipe
   const pan = useRef(new Animated.ValueXY()).current;
@@ -83,6 +92,16 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
       console.log('🔍 Current item data:', JSON.stringify(filteredNames[currentItemIndex], null, 2));
     }
   }, [isVisible, currentItemIndex, filteredNames]);
+  
+  // Cleanup when component unmounts - pause any playing audio
+  useEffect(() => {
+    return () => {
+      if (isPlaying) {
+        console.log('🔍 Component unmounting - pausing audio');
+        pauseAudio();
+      }
+    };
+  }, [isPlaying, pauseAudio]);
 
   /**
    * Handle audio playback with error handling
@@ -135,11 +154,29 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
       pauseAudio();
     }
     
-    if (direction === 'next' && currentItemIndex < filteredNames.length - 1) {
-      setCurrentItemIndex(prevIndex => prevIndex + 1);
-    } else if (direction === 'prev' && currentItemIndex > 0) {
-      setCurrentItemIndex(prevIndex => prevIndex - 1);
+    // Get current index from ref for immediate access
+    const currentIdx = currentItemIndexRef.current;
+    console.log('🔍 Current index from ref:', currentIdx);
+
+    // Calculate the new index based on direction
+    let newIndex = currentIdx;
+    if (direction === 'next' && currentIdx < filteredNames.length - 1) {
+      newIndex = currentIdx + 1;
+      console.log('🔍 Moving to next name, from', currentIdx, 'to', newIndex);
+    } else if (direction === 'prev' && currentIdx > 0) {
+      newIndex = currentIdx - 1;
+      console.log('🔍 Moving to previous name, from', currentIdx, 'to', newIndex);
+    } else {
+      console.log('🔍 Cannot navigate further in this direction');
+      // If we can't navigate, still reset animation
+      pan.setValue({ x: 0, y: 0 });
+      opacity.setValue(1);
+      return; // Exit early if we can't navigate
     }
+    
+    // Update both ref and state
+    currentItemIndexRef.current = newIndex;
+    setCurrentItemIndex(newIndex);
     
     // Reset animation values
     pan.setValue({ x: 0, y: 0 });
@@ -167,11 +204,23 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
         const isSwipeRight = dx > 100 || vx > 0.3;
         const isSwipeLeft = dx < -100 || vx < -0.3;
         
-        // Check if we can navigate based on current index
-        const canGoNext = currentItemIndex < filteredNames.length - 1;
-        const canGoPrev = currentItemIndex > 0;
+        // Use ref for immediate access to current index
+        const currentIdx = currentItemIndexRef.current;
         
+        // Check if we can navigate based on current index
+        const canGoNext = currentIdx < filteredNames.length - 1;
+        const canGoPrev = currentIdx > 0;
+
+        console.log('🔍 Swipe detected:', { 
+          isSwipeLeft, 
+          isSwipeRight, 
+          canGoNext, 
+          canGoPrev, 
+          currentIndex: currentIdx 
+        });
+
         if (isSwipeLeft && canGoNext) {
+          console.log('🔍 Swiping left to go to next name');
           // Animate card off screen to the left
           Animated.parallel([
             Animated.timing(pan.x, {
@@ -188,6 +237,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             navigateName('next');
           });
         } else if (isSwipeRight && canGoPrev) {
+          console.log('🔍 Swiping right to go to previous name');
           // Animate card off screen to the right
           Animated.parallel([
             Animated.timing(pan.x, {
@@ -204,6 +254,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             navigateName('prev');
           });
         } else {
+          console.log('🔍 Not enough swipe to navigate, returning to center');
           // Return to center if not enough to trigger navigation
           Animated.parallel([
             Animated.spring(pan.x, {
@@ -268,6 +319,8 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             item={item}
             onPress={() => {
               console.log('🔍 Opening modal for item:', index, item.englishName);
+              // Update both ref and state
+              currentItemIndexRef.current = index;
               setCurrentItemIndex(index);
               setIsVisible(true);
               console.log('🔍 Modal should now be visible');
