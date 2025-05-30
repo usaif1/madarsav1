@@ -8,7 +8,7 @@ import SelectCounterModal from '../components/SelectCounterModal';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useAllTasbihs, useTasbihById, useDefaultTasbihCount } from '@/modules/tasbih/hooks/useTasbihs';
-import { saveTasbihUserCounter } from '@/modules/tasbih/services/tasbihUserCounterService';
+import tasbihStorageService from '@/modules/tasbih/services/tasbihStorageService';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 import { TasbihData } from '@/modules/tasbih/services/tasbihService';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
@@ -178,12 +178,25 @@ const TasbihScreen = () => {
   // Get the single verse from the current dua
   const currentVerse = currentDua?.verses?.[0] || { arabic: '', transliteration: '', translation: '' };
 
-  // Reset count and set target count when dua changes
+  // Reset count and set target count when dua changes, or load from storage
   useEffect(() => {
-    setTotalCount(0);
-    setCurrentRound(1);
-    // Set target count from the dua or use default
-    setTargetCount(currentDua?.count || 33);
+    if (currentDua?.id) {
+      // Try to load saved data from storage
+      const savedData = tasbihStorageService.getTasbihUserCounter(currentDua.id);
+      
+      if (savedData) {
+        console.log('📿 Found saved tasbih data:', savedData);
+        setTotalCount(savedData.beadsCounter);
+        setCurrentRound(savedData.completedRound + 1); // Storage is 0-indexed, UI is 1-indexed
+      } else {
+        // No saved data, reset counter
+        setTotalCount(0);
+        setCurrentRound(1);
+      }
+      
+      // Set target count from the dua or use default
+      setTargetCount(currentDua?.count || 33);
+    }
   }, [selectedDuaIndex, currentDua]);
   
   // Update round when count changes
@@ -212,12 +225,10 @@ const TasbihScreen = () => {
   );
   
   /**
-   * Save the user's tasbih counter data to the API
+   * Save the user's tasbih counter data to local storage
    */
-  const saveTasbihCounterData = async () => {
+  const saveTasbihCounterData = () => {
     try {
-      const user = useAuthStore.getState().user;
-      const userId = user?.userId || 'anonymous';
       const duaId = currentDua?.id || 0;
       
       // Calculate time spent in minutes
@@ -225,25 +236,23 @@ const TasbihScreen = () => {
       const timeSpentMs = endTime.getTime() - startTime.getTime();
       const timeInMinutes = Math.max(1, Math.round(timeSpentMs / (1000 * 60))); // At least 1 minute
       
-      console.log('📿 Saving tasbih counter data:', {
-        userId,
+      console.log('📿 Saving tasbih counter data to local storage:', {
         duaId,
         beadsCounter: totalCount,
-        completedRound: currentRound - 1, // Current round is 1-indexed, API expects 0-indexed
+        completedRound: currentRound - 1, // Current round is 1-indexed, storage expects 0-indexed
         timeInMinutes
       });
       
-      const response = await saveTasbihUserCounter({
-        userId,
+      tasbihStorageService.saveTasbihUserCounter({
         duaId,
         beadsCounter: totalCount,
         completedRound: currentRound - 1,
         timeInMinutes
       });
       
-      console.log('📿 Successfully saved tasbih counter data:', response);
+      console.log('📿 Successfully saved tasbih counter data to local storage');
     } catch (error) {
-      console.error('Error saving tasbih counter data:', error);
+      console.error('Error saving tasbih counter data to local storage:', error);
     }
   };
 
