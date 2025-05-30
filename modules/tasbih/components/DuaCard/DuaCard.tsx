@@ -34,10 +34,18 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
       >
         {/* Arabic Text */}
         <View style={styles.arabicWrap}>
+          <View style={[styles.transBg]}> 
+            <ScrollView 
+              style={styles.scrollContainer}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+            >
           <Body1Title2Medium
             color="accent-yellow-900"
             style={[styles.arabic]}>{arabic}</Body1Title2Medium>
-        </View>
+            </ScrollView>
+        </View></View>
+
         {/* First Divider */}
         <View style={styles.dashedLine} />
         {/* Transliteration with Navigation Controls */}

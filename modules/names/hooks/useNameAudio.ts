@@ -289,7 +289,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
       }
     }
   };
-
+  
   /**
    * Pause currently playing audio
    * Note: Web Audio API doesn't have native pause, so we implement it by stopping and tracking position
@@ -317,7 +317,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
         animationFrameRef.current = null;
       }
       
-      console.log('⏸️ Audio paused');
+      console.log('⏸️ Audio paused at position:', pauseTimeRef.current);
       
     } catch (pauseError) {
       console.error('❌ Error pausing audio:', pauseError);
