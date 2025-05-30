@@ -22,7 +22,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const { colors } = useThemeStore();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container,{borderColor: value ? '#8A57DC' : '#E5E5E5'}]}>
       <View style={styles.iconContainer}>
         <SearchIcon width={scale(16)} height={scale(16)} fill="#6B7280" />
       </View>

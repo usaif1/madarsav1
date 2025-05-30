@@ -186,7 +186,7 @@ const DuaDetail = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
   header: {
     flexDirection: 'row',
@@ -204,17 +204,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   listContainer: {
-    paddingHorizontal: 16,
   },
   duaItem: {
-    width: '100%',
     height: verticalScale(52),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: '#F5F5F5',
     shadowColor: '#E5E5E5',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 1,

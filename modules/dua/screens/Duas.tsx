@@ -32,7 +32,7 @@ const Duas = () => {
     <View
       style={{
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FAFAFA',
         paddingTop: 10,
       }}>
       <StatusBar barStyle={'light-content'} />

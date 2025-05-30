@@ -10,6 +10,7 @@ interface DuaSearchbarProps {
 
 const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
   const [searchText, setSearchText] = React.useState('');
+  const [isFocused, setIsFocused] = React.useState(false);
   
   const handleSearchChange = (text: string) => {
     setSearchText(text);
@@ -26,7 +27,10 @@ const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      {borderColor: isFocused ? '#8A57DC' : '#D1D5DB'}, // 👈 dynamic border
+    ]}>
       <Search width={20} height={20} />
       <TextInput
         placeholder="Salam, dua khojein"
@@ -34,6 +38,8 @@ const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
         style={styles.input}
         value={searchText}
         onChangeText={handleSearchChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
       {searchText.length > 0 && (
         <TouchableOpacity onPress={clearSearch}>
@@ -54,7 +60,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 999, // radius-xxxl for pill shape
-    borderWidth: 0.8,
+    borderWidth: 1,
     borderColor: '#D1D5DB', // assuming Primitives/Regular = gray-300
     paddingHorizontal: 16,
     paddingVertical: 8,

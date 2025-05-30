@@ -391,7 +391,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
           <View style={stylesModal.imageContainer}>
             {/* Use the image from API instead of local asset */}
             <FastImage
-              source={{ uri: filteredNames[currentItemIndex].imageLink }}
+              source={{ uri: filteredNames[currentItemIndex]?.imageLink }}
               style={stylesModal.image}
               resizeMode={FastImage.resizeMode.cover}
             />
@@ -483,7 +483,7 @@ const NameCard: React.FC<NameCardProps> = ({ item, index, onPress }) => {
       {/* Background image with text overlay */}
       <View style={styles.avatarContainer}>
         <FastImage
-          source={{ uri: item.imageLink }}
+          source={{ uri: item?.imageLink }}
           style={styles.avatar}
           resizeMode={FastImage.resizeMode.cover}
         />

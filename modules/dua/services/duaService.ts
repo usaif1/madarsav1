@@ -76,6 +76,7 @@ export interface TasbihData {
   }[];
   category: string;
   reference?: string;
+  referenceVerse?: string;
   count?: number;
 }
 
@@ -129,7 +130,8 @@ export const parseDuaResponse = (response: DuasResponse) => {
           arabic: dua.duaArabic,
           transliteration: dua.duaEnglish,
           translation: dua.englishTranslation,
-          reference: `${dua.reference} ${dua.referenceVerse}`.trim(),
+          reference: `${dua.reference}`.trim(),
+          referenceVerse: `${dua.referenceVerse}`.trim(),
           category: dua.duaCategory,
           subCategory: dua.duaSubCategory,
           subCategoryDesc: dua.duaSubCategoryDesc,

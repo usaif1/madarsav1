@@ -59,6 +59,7 @@ interface DuaProps {
   transliteration: string;
   translation: string;
   reference: string;
+  referenceVerse: string;
   bookmarked: boolean;
   category?: string;
   title?: string;
@@ -159,15 +160,19 @@ const DuaContent = () => {
       
       {/* Translation section */}
       <View style={styles.translationContainer}>
-        <Body1Title2Medium style={styles.translationTitle}>Translation</Body1Title2Medium>
-        <Body1Title2Regular style={styles.translationText}>
+        <Body1Title2Bold style={styles.translationTitle}>Translation</Body1Title2Bold>
+        <Body1Title2Medium style={styles.translationText}>
           {item.translation}
-        </Body1Title2Regular>
+        </Body1Title2Medium>
       </View>
       
       {/* Footer with reference and actions */}
       <View style={styles.footerContainer}>
-        <Body1Title2Regular style={styles.referenceText}>{item.reference}</Body1Title2Regular>
+        <View style={styles.referenceContainer}>
+          <Body1Title2Regular style={styles.referenceText}>{item.reference}</Body1Title2Regular>
+          <View style={styles.dot}></View>
+          <Body1Title2Regular style={styles.referenceText}>{item.referenceVerse}</Body1Title2Regular>
+        </View>
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
             style={styles.actionButton}
@@ -223,17 +228,28 @@ const DuaContent = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
   listContainer: {
-    padding: 16,
+  },
+  referenceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    gap: scale(6),
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    backgroundColor: '#D4D4D4',
+    borderRadius: 5,
   },
   duaContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
     borderColor: '#F3F4F6',
     padding: 16,
+    paddingHorizontal: 24,
+    rowGap: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -254,13 +270,13 @@ headerImage: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
   },
   arabicText: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 20,
     lineHeight: 28,
     textAlign: 'right',
+    color: '#171717',
   },
   bubbleWrap: {
     position: 'relative',
@@ -278,7 +294,6 @@ headerImage: {
   },
   transliterationContainer: {
     flexDirection: 'row',
-    marginBottom: 12,
     alignItems: 'center',
   },
   purpleLine: {
@@ -290,18 +305,17 @@ headerImage: {
   },
   transliterationText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 12,
     lineHeight: 20,
-    color: '#4B5563',
+    color: '#525252',
   },
   translationContainer: {
-    marginBottom: 16,
   },
   translationTitle: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
-    color: '#111827',
+    color: '#0A0A0A',
   },
   translationText: {
     fontSize: 12,
@@ -312,9 +326,6 @@ headerImage: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    paddingTop: 12,
   },
   referenceText: {
     fontSize: 12,
