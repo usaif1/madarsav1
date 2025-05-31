@@ -10,9 +10,11 @@ interface Props {
   disabled?: boolean;
   onChange?: (text: string) => void;
   error?: string;
+  helperText?: string;
+  placeholder?: string;
 }
 
-const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onChange, error}) => {
+const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onChange, error, helperText, placeholder}) => {
   return (
     <View style={styles.container}>
       <Body1Title2Medium color="sub-heading">{label}</Body1Title2Medium>
@@ -27,9 +29,13 @@ const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onCha
         ]}
         editable={!disabled}
         onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor="#A3A3A3"
       />
       {error ? (
         <Text style={styles.errorText}>{error}</Text>
+      ) : helperText ? (
+        <Text style={styles.helperText}>{helperText}</Text>
       ) : null}
     </View>
   );
@@ -57,6 +63,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 2,
+    fontFamily: 'Geist-Regular',
+  },
+  helperText: {
+    color: '#737373',
     fontSize: 12,
     marginTop: 2,
     fontFamily: 'Geist-Regular',
