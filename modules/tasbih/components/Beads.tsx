@@ -114,16 +114,23 @@ const Beads: React.FC<BeadsProps> = ({
       
       // Trigger haptic feedback when bead is tapped
       ReactNativeHapticFeedback.trigger(
-        'impactMedium', // Use medium impact for a satisfying tap feeling
+        'impactMedium',
         hapticOptions
       );
       
-      // Play the Lottie animation - ensure it plays from beginning to end
+      // Play the Lottie animation
       if (lottieRef.current) {
-        // Reset to beginning first
+        // Reset and play the animation
         lottieRef.current.reset();
-        // Play the full animation
         lottieRef.current.play();
+        
+        // Reset animation state after a short delay
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 500); // Shorter timeout to ensure responsiveness
+      } else {
+        // If no animation ref, still allow counter to work
+        setIsAnimating(false);
       }
       
       // Announce the current verse for accessibility
@@ -136,11 +143,6 @@ const Beads: React.FC<BeadsProps> = ({
       
       // Call parent callback
       onAdvance();
-      
-      // Reset animation state after animation completes - use longer duration
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 2000); // Increased animation duration to ensure it completes
     } catch (error) {
       console.error('Error handling bead advance:', error);
       setIsAnimating(false);
@@ -148,7 +150,24 @@ const Beads: React.FC<BeadsProps> = ({
   };
   
   return (
-    <View style={styles.container}>
+    <Pressable 
+      style={[styles.container, disabled && styles.disabledContainer]}
+      onPress={handleBeadAdvance}
+      disabled={disabled || isAnimating}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={
+        accessibilityLabel || 
+        (tasbihData
+          ? `Tasbih counter for ${tasbihData.title}. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. Tap to advance to next verse.`
+          : `Tasbih counter. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. Tap to advance to next verse.`)
+      }
+      accessibilityHint="Double tap to advance to the next verse"
+      accessibilityState={{
+        disabled: disabled || isAnimating,
+        busy: isAnimating,
+      }}
+    >
       {/* Counter header - styled like the image */}
       <View style={styles.counterHeader}>
         <View style={styles.counterTextContainer}>
@@ -160,24 +179,7 @@ const Beads: React.FC<BeadsProps> = ({
       </View>
       
       {/* Lottie animation container */}
-      <Pressable 
-        style={[styles.lottieContainer, disabled && styles.disabledContainer]}
-        onPress={handleBeadAdvance}
-        disabled={disabled || isAnimating}
-        accessible={true}
-        accessibilityRole="button"
-        accessibilityLabel={
-          accessibilityLabel || 
-          (tasbihData
-            ? `Tasbih counter for ${tasbihData.title}. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. Tap to advance to next verse.`
-            : `Tasbih counter. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. Tap to advance to next verse.`)
-        }
-        accessibilityHint="Double tap to advance to the next verse"
-        accessibilityState={{
-          disabled: disabled || isAnimating,
-          busy: isAnimating,
-        }}
-      >
+      <View style={styles.lottieContainer}>
         <LottieView
           ref={lottieRef}
           // Use JSON format instead of .lottie
@@ -185,16 +187,16 @@ const Beads: React.FC<BeadsProps> = ({
           style={[styles.lottieAnimation, { transform: [{ rotate: '-20deg' }] }]}
           loop={false}
           autoPlay={false}
-          speed={0.7} // Slow down the animation slightly
+          speed={1} // Speed up the animation by 50%
           resizeMode="cover"
         />
-      </Pressable>
+      </View>
       
       {/* Bottom instruction text - like in the image */}
       <Text style={styles.instructionText}>
         {disabled ? 'Tasbih is disabled' : 'Click or swipe to count'}
       </Text>
-    </View>
+    </Pressable>
   );
 };
 
