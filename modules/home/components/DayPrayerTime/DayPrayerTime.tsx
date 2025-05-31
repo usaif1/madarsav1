@@ -37,8 +37,8 @@ const prayerIcons: Record<string, React.FC<any>> = {
 const getGradientColors = (prayer: PrayerType): string[] => {
   switch (prayer) {
     case 'fajr':
-    case 'dhuhr':
       return ['#E0F2FE', '#36BFFA']; // Day time gradient
+    case 'dhuhr':
     case 'asr':
       return ['#DC6803', '#FFFAEB']; // Afternoon gradient
     case 'maghrib':

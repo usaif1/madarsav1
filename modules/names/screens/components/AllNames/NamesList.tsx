@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator, PanResponder, Animated } from 'react-native';
+import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator, PanResponder, Animated, Share as ReactNativeShare } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
 
@@ -46,6 +46,10 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const updateCurrentIndex = (newIndex: number) => {
     currentItemIndexRef.current = newIndex;
     setCurrentItemIndex(newIndex);
+    // Pause audio if playing when index changes due to swipe
+    if (isPlaying) {
+      pauseAudio();
+    }
   };
   
   // Animation values for swipe
@@ -145,43 +149,6 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
     opacity.setValue(1);
   };
   
-  /**
-   * Navigate to next or previous name
-   */
-  const navigateName = (direction: 'next' | 'prev') => {
-    // Stop audio when changing names
-    if (isPlaying) {
-      pauseAudio();
-    }
-    
-    // Get current index from ref for immediate access
-    const currentIdx = currentItemIndexRef.current;
-    console.log('🔍 Current index from ref:', currentIdx);
-
-    // Calculate the new index based on direction
-    let newIndex = currentIdx;
-    if (direction === 'next' && currentIdx < filteredNames.length - 1) {
-      newIndex = currentIdx + 1;
-      console.log('🔍 Moving to next name, from', currentIdx, 'to', newIndex);
-    } else if (direction === 'prev' && currentIdx > 0) {
-      newIndex = currentIdx - 1;
-      console.log('🔍 Moving to previous name, from', currentIdx, 'to', newIndex);
-    } else {
-      console.log('🔍 Cannot navigate further in this direction');
-      // If we can't navigate, still reset animation
-      pan.setValue({ x: 0, y: 0 });
-      opacity.setValue(1);
-      return; // Exit early if we can't navigate
-    }
-    
-    // Update both ref and state
-    currentItemIndexRef.current = newIndex;
-    setCurrentItemIndex(newIndex);
-    
-    // Reset animation values
-    pan.setValue({ x: 0, y: 0 });
-    opacity.setValue(1);
-  };
   
   /**
    * Pan responder for swipe gestures
@@ -203,70 +170,52 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
         const { dx, vx } = gestureState;
         const isSwipeRight = dx > 100 || vx > 0.3;
         const isSwipeLeft = dx < -100 || vx < -0.3;
-        
-        // Use ref for immediate access to current index
+
         const currentIdx = currentItemIndexRef.current;
-        
-        // Check if we can navigate based on current index
         const canGoNext = currentIdx < filteredNames.length - 1;
         const canGoPrev = currentIdx > 0;
 
-        console.log('🔍 Swipe detected:', { 
-          isSwipeLeft, 
-          isSwipeRight, 
-          canGoNext, 
-          canGoPrev, 
-          currentIndex: currentIdx 
-        });
-
         if (isSwipeLeft && canGoNext) {
-          console.log('🔍 Swiping left to go to next name');
-          // Animate card off screen to the left
           Animated.parallel([
-            Animated.timing(pan.x, {
-              toValue: -CARD_SIZE,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: true,
-            }),
+            Animated.timing(pan.x, { toValue: -CARD_SIZE, duration: 200, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
           ]).start(() => {
-            navigateName('next');
+            const newIndex = currentItemIndexRef.current + 1;
+            // Prepare the animated view for the *new* item *before* state update
+            pan.x.setValue(CARD_SIZE); // Position new card off-screen to the right
+            opacity.setValue(0);       // Make it invisible
+            
+            updateCurrentIndex(newIndex); // Now update state, new data renders into hidden/off-screen view
+            
+            // Animate new card in
+            Animated.parallel([
+              Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+              Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+            ]).start();
           });
         } else if (isSwipeRight && canGoPrev) {
-          console.log('🔍 Swiping right to go to previous name');
-          // Animate card off screen to the right
           Animated.parallel([
-            Animated.timing(pan.x, {
-              toValue: CARD_SIZE,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: true,
-            }),
+            Animated.timing(pan.x, { toValue: CARD_SIZE, duration: 200, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
           ]).start(() => {
-            navigateName('prev');
+            const newIndex = currentItemIndexRef.current - 1;
+            // Prepare the animated view for the *new* item *before* state update
+            pan.x.setValue(-CARD_SIZE); // Position new card off-screen to the left
+            opacity.setValue(0);        // Make it invisible
+
+            updateCurrentIndex(newIndex); // Now update state
+
+            // Animate new card in
+            Animated.parallel([
+              Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+              Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+            ]).start();
           });
         } else {
-          console.log('🔍 Not enough swipe to navigate, returning to center');
-          // Return to center if not enough to trigger navigation
+          // Not enough swipe, return to center
           Animated.parallel([
-            Animated.spring(pan.x, {
-              toValue: 0,
-              useNativeDriver: true,
-              friction: 5,
-            }),
-            Animated.spring(opacity, {
-              toValue: 1,
-              useNativeDriver: true,
-              friction: 5,
-            }),
+            Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 5 }),
+            Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 5 }),
           ]).start();
         }
       },
@@ -297,6 +246,33 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
       </View>
     );
   }
+
+  const handleShare = async () => {
+    const currentName = filteredNames[currentItemIndexRef.current];
+    if (!currentName) return;
+    // App store links
+    const appStoreLink = 'https://apps.apple.com/app/madarsaapp';
+    const playStoreLink = 'https://play.google.com/store/apps/details?id=com.madarsaapp';
+
+    try {
+      const message =
+      `Download Madarsa App to discover one of the 99 Names of Allah:\n` +
+      `App Store: ${appStoreLink}\n` +
+      `Play Store: ${playStoreLink}\n\n` +
+      `Arabic: ${currentName.arabicName}\n` +
+      `English: ${currentName.englishName}\n` +
+      `Meaning: ${currentName.englishTranslation}\n\n` +
+      `Learn more in the app!`;
+
+      await ReactNativeShare.share({
+        message: message,
+        title: `Share ${currentName.englishName}`, // Optional: Title for the share dialog
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Could not share at this time.');
+      console.error('Share error:', error);
+    }
+  };
 
   // Show error state
   if (namesError) {
@@ -452,6 +428,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
               accessibilityLabel="Share"
               accessibilityRole="button"
+              onPress={handleShare} 
             >
               <Share />
               <Body1Title2Bold color="white">Share</Body1Title2Bold>
