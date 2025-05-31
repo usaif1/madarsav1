@@ -36,15 +36,15 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         <View style={styles.arabicWrap}>
           <View style={[styles.transBg]}> 
             <ScrollView 
-              style={styles.scrollContainer}
+              contentContainerStyle={styles.scrollContentContainer}
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled={true}
             >
-          <Body1Title2Medium
-            color="accent-yellow-900"
-            style={[styles.arabic]}>{arabic}</Body1Title2Medium>
+              <Body1Title2Medium
+                color="accent-yellow-900"
+                style={[styles.arabic]}>{arabic}</Body1Title2Medium>
             </ScrollView>
-        </View></View>
+          </View></View>
 
         {/* First Divider */}
         <View style={styles.dashedLine} />
@@ -52,7 +52,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         <View style={styles.transRowWrap}>
           <View style={[styles.transBg]}> 
             <ScrollView 
-              style={styles.scrollContainer}
+              contentContainerStyle={styles.scrollContentContainer}
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled={true}
             >
@@ -70,7 +70,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         {/* Translation inside card, with scrollable content */}
         <View style={[styles.translationBg]}> 
           <ScrollView 
-            style={styles.scrollContainer}
+            contentContainerStyle={styles.scrollContentContainer}
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled={true}
           >
@@ -136,6 +136,7 @@ const getStyles = (colors:any) => StyleSheet.create({
   },
   arabicWrap: {
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: scale(8),
     height: scale(70),
   },
@@ -143,6 +144,8 @@ const getStyles = (colors:any) => StyleSheet.create({
     fontSize: scale(20),
     fontWeight: '700',
     textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     lineHeight: scale(28),
   },
   dashedLine: {
@@ -170,12 +173,17 @@ const getStyles = (colors:any) => StyleSheet.create({
     minWidth: '60%',
     height: scale(60),
   },
-  scrollContainer: {
-    height: '100%',
+  scrollContentContainer: {
+    minHeight: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: scale(4),
   },
   transliteration: {
     fontSize: scale(14),
     textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   translationBg: {
     borderRadius: scale(8),
@@ -189,6 +197,8 @@ const getStyles = (colors:any) => StyleSheet.create({
   translation: {
     fontSize: scale(14),
     textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     lineHeight: scale(22),
   },
   arrowBtn: {
