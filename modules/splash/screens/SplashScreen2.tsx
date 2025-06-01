@@ -29,10 +29,15 @@ const SplashPrimary: React.FC = () => {
 
   // Get social auth methods and loading state
   const { isLoading, signInWithGoogle, loginWithFacebook, skipLogin } = useSocialAuth();
+  
+  // Track which button is loading
+  const [loadingButton, setLoadingButton] = useState<'google' | 'facebook' | 'skip' | null>(null);
 
   // Handle Google Sign-In
   const handleGoogleSignIn = async () => {
+    setLoadingButton('google');
     const success = await signInWithGoogle();
+    setLoadingButton(null);
     if (success) {
       setOnboarded(true);
     }
@@ -40,7 +45,9 @@ const SplashPrimary: React.FC = () => {
 
   // Handle Facebook Login
   const handleFacebookLogin = async () => {
+    setLoadingButton('facebook');
     const success = await loginWithFacebook();
+    setLoadingButton(null);
     if (success) {
       setOnboarded(true);
     }
@@ -48,20 +55,12 @@ const SplashPrimary: React.FC = () => {
 
   // Handle Skip Login
   const handleSkipLogin = async () => {
-    // Comment out the actual login flow for now
-    // const success = await skipLogin();
-    // if (success) {
-    //   setOnboarded(true);
-    // } else {
-    //   // If skip login fails, still allow user to proceed
-    //   setOnboarded(true);
-    // }
-    
+    setLoadingButton('skip');
     // Set the skipped login flag in the auth store
     await skipLogin();
-    
     // Also set the onboarded flag to true to prevent returning to splash
     setOnboarded(true);
+    setLoadingButton(null);
   };
 
   return (
@@ -78,12 +77,13 @@ const SplashPrimary: React.FC = () => {
         <View style={{width: '100%', paddingBottom: 56, rowGap: 2}}>
           <Pressable
             onPress={handleGoogleSignIn}
-            disabled={isLoading}
+            disabled={loadingButton !== null}
             style={[
               styles.btn,
               { backgroundColor: colors.secondary.neutral950 },
+              loadingButton !== null && { opacity: 0.7 }
             ]}>
-            {isLoading ? (
+            {loadingButton === 'google' ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
               <>
@@ -97,9 +97,13 @@ const SplashPrimary: React.FC = () => {
           <Divider height={8} />
           <Pressable 
             onPress={handleFacebookLogin}
-            disabled={isLoading}
-            style={[styles.btn, { backgroundColor: '#F5F5F5' }]}>
-            {isLoading ? (
+            disabled={loadingButton !== null}
+            style={[
+              styles.btn, 
+              { backgroundColor: '#F5F5F5' },
+              loadingButton !== null && { opacity: 0.7 }
+            ]}>
+            {loadingButton === 'facebook' ? (
               <ActivityIndicator color="#000000" size="small" />
             ) : (
               <>
@@ -113,12 +117,17 @@ const SplashPrimary: React.FC = () => {
           <Divider height={16} />
           <Pressable
             onPress={handleSkipLogin}
-            disabled={isLoading}
+            disabled={loadingButton !== null}
             style={{
               alignItems: 'center',
               justifyContent: 'center',
+              opacity: loadingButton !== null ? 0.7 : 1
             }}>
-            <Body1Title2Medium>Skip this Step</Body1Title2Medium>
+            {loadingButton === 'skip' ? (
+              <ActivityIndicator color="#000000" size="small" />
+            ) : (
+              <Body1Title2Medium>Skip this Step</Body1Title2Medium>
+            )}
           </Pressable>
         </View>
       </View>
