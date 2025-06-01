@@ -40,7 +40,7 @@ const getGradientColors = (prayer: PrayerType): string[] => {
       return ['#E0F2FE', '#36BFFA']; // Day time gradient
     case 'dhuhr':
     case 'asr':
-      return ['#DC6803', '#FFFAEB']; // Afternoon gradient
+      return ['#FFFAEB', '#DC6803']; // Afternoon gradient
     case 'maghrib':
     case 'isha':
       return ['#411B7F', '#0B0515']; // Night time gradient

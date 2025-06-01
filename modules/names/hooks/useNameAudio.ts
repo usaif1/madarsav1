@@ -187,17 +187,24 @@ export const useNameAudio = (): UseNameAudioReturn => {
     const currentTime = audioContextRef.current.currentTime;
     const elapsed = currentTime - startTimeRef.current + pauseTimeRef.current;
     
-    setPosition(Math.min(elapsed, duration));
+    const newPosition = Math.min(elapsed, duration);
+    setPosition(newPosition);
+    
+    console.log('🎵 Position update:', { 
+      currentTime,
+      startTime: startTimeRef.current,
+      pauseTime: pauseTimeRef.current,
+      calculatedPosition: newPosition
+    });
 
-    // Continue updating if still playing and within duration
     if (elapsed < duration) {
       animationFrameRef.current = requestAnimationFrame(updatePosition);
     } else {
-      // Playback finished
       setIsPlaying(false);
       setPosition(duration);
+      console.log('🎵 Playback completed naturally');
     }
-  }, [isPlaying, duration]);
+  }, [isPlaying, duration, setPosition, setIsPlaying]);
 
   /**
    * Start position tracking
@@ -271,6 +278,14 @@ export const useNameAudio = (): UseNameAudioReturn => {
       
       // Start position tracking
       startPositionTracking();
+      
+      console.log(`🎵 Playback started - Duration: ${audioBuffer.duration}s`);
+      console.log('🎵 Current audio state:', { 
+        isPlaying, 
+        position, 
+        duration,
+        volume
+      });
       
       console.log('✅ Audio playback started');
       

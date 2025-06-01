@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, ImageBackground, ActivityIndicator} from 'react-native';
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Medium, CaptionMedium} from '@/components/Typography/Typography';
@@ -48,7 +48,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
   
   // Calculate progress
-  const progress = duration > 0 ? position / duration : 0;
+  const progress = useMemo(() => {
+    return duration > 0 ? position / duration : 0;
+  }, [position, duration]);
 
   // Get current name data to access the audio URL
   const { data: namesData, isLoading: namesLoading } = useAll99Names();
@@ -66,6 +68,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     setHomeAudioPlaying(isPlaying);
     setHomeAudioProgress(progress);
     setHomeAudioTime(position, duration);
+  }, [isPlaying, progress, position, duration]);
+  
+  useEffect(() => {
+    console.log('UI Update:', {
+      isPlaying,
+      progress,
+      position,
+      duration,
+      formattedTime: `${formatTime(position)} / ${formatTime(duration)}`
+    });
   }, [isPlaying, progress, position, duration]);
   
   // Cleanup when component unmounts
