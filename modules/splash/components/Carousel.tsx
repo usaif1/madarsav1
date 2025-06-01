@@ -7,6 +7,7 @@ import {
   Dimensions,
   StyleProp,
   ViewStyle,
+  Image,
 } from 'react-native';
 import Carousel from 'react-native-snap-carousel';
 
@@ -19,6 +20,7 @@ import PrayerTimesGraphic from './PrayerTimesGraphic';
 import {useThemeStore} from '@/globalStore';
 import DecliningDayGraphic from './DecliningDayGraphic';
 import PrayerBeads from './PrayerBeads';
+import { scale } from '@/theme/responsive';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -124,6 +126,61 @@ export default function App() {
   const handleSnapToItem = (index: number) => setActiveIndex(index);
 
   const renderItem = ({item}: {item: Slide}) => {
+    // Render different graphics based on slide ID
+    const renderSlideGraphics = () => {
+      switch (item.id) {
+        case 1:
+          // First slide - Prayer Times, Declining Day, and Prayer Beads
+          return (
+            <View>
+              <PrayerTimesGraphic />
+              <Divider height={10} />
+              <View
+                style={{flexDirection: 'row', alignItems: 'flex-start', columnGap: 10}}>
+                <DecliningDayGraphic />
+                <PrayerBeads />
+              </View>
+            </View>
+          );
+        case 2:
+          // Second slide - Feelings and Dua Card Graphics
+          return (
+            <View style={styles.graphicsContainer}>
+              <Image 
+                source={require('@/assets/splash/FeelingsGraphic.png')} 
+                style={styles.feelingsImage} 
+                resizeMode="cover"
+              />
+              <Divider height={9} />
+              <Image 
+                source={require('@/assets/splash/DuaCardGraphic.png')} 
+                style={styles.duaCardImage} 
+                resizeMode="cover"
+              />
+            </View>
+          );
+        case 3:
+          // Third slide - Deen and Duniya Graphics
+          return (
+            <View style={styles.graphicsContainer}>
+              <Image 
+                source={require('@/assets/splash/DeenGraphic.png')} 
+                style={styles.slideImage} 
+                resizeMode="contain"
+              />
+              <Divider height={10} />
+              <Image 
+                source={require('@/assets/splash/DuniyaGraphic.png')} 
+                style={styles.slideImage} 
+                resizeMode="contain"
+              />
+            </View>
+          );
+        default:
+          return null;
+      }
+    };
+
     return (
       <View style={styles.slide}>
         <H4Bold>{item.content.title}</H4Bold>
@@ -132,15 +189,7 @@ export default function App() {
           {item.content.description}
         </Body1Title2Regular>
         <Divider height={33} />
-        <View>
-          <PrayerTimesGraphic />
-          <Divider height={10} />
-          <View
-            style={{flexDirection: 'row', alignItems: 'flex-start', columnGap: 10}}>
-            <DecliningDayGraphic />
-            <PrayerBeads />
-          </View>
-        </View>
+        {renderSlideGraphics()}
       </View>
     );
   };
@@ -178,6 +227,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   progressContainer: {
+    width: 375,
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 20,
@@ -200,7 +250,25 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     alignItems: 'center',
   },
-
+  graphicsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  slideImage: {
+    width: SCREEN_WIDTH - 54, // Account for horizontal padding
+    height: 150,
+  },
+  feelingsImage: {
+    width: scale(321),
+    height: scale(145),
+    borderRadius: 16,
+  },
+  duaCardImage: {
+    width: scale(321),
+    height: scale(186.97),
+    borderRadius: 13.7,
+  },
   daysContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
