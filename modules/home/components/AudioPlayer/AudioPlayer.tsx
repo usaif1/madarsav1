@@ -28,7 +28,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     playAudio, 
     playAudioFromUrl,
     pauseAudio, 
-    stopAudio 
+    resumeAudio,
+    stopAudio,
+    seekTo
   } = useNameAudio();
   
   // Get and set global state
@@ -42,6 +44,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   
   // Format time helper function
   const formatTime = (seconds: number): string => {
+    // Time is already in seconds from our updated hook
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -95,8 +98,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       if (namesData && homeAudio.currentNameId) {
         const currentName = namesData.find(name => name.number === homeAudio.currentNameId);
         if (currentName && currentName.audioLink) {
-          // Use playAudioFromUrl instead of playAudio to directly use the URL
-          await playAudioFromUrl(currentName.audioLink);
+          // If we were previously playing this track, resume from where we left off
+          if (position > 0) {
+            await resumeAudio();
+          } else {
+            // Otherwise start from the beginning
+            await playAudioFromUrl(currentName.audioLink);
+          }
         } else {
           console.error('Audio URL not found for name ID:', homeAudio.currentNameId);
         }

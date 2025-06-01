@@ -1,17 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AudioPro, AudioProContentType } from 'react-native-audio-pro';
 
 interface UseNameAudioReturn {
   isPlaying: boolean;
   isLoading: boolean;
   error: string | null;
-  duration: number;
-  position: number;
+  duration: number; // in seconds
+  position: number; // in seconds
   volume: number;
   playAudio: (nameNumber: number) => Promise<void>;
-  playAudioFromUrl: (audioUrl: string) => Promise<void>;
+  playAudioFromUrl: (audioUrl: string, startPosition?: number) => Promise<void>;
   pauseAudio: () => void;
+  resumeAudio: () => Promise<void>;
   stopAudio: () => void;
+  seekTo: (position: number) => void;
   setVolume: (volume: number) => void;
   clearError: () => void;
 }
@@ -23,6 +25,13 @@ export const useNameAudio = (): UseNameAudioReturn => {
   const [duration, setDuration] = useState<number>(0);
   const [position, setPosition] = useState<number>(0);
   const [volume, setVolumeState] = useState<number>(1.0);
+  
+  // Reference to store the current audio URL for resuming playback
+  const currentAudioRef = useRef<{
+    url: string;
+    id: string;
+    lastPosition: number;
+  } | null>(null);
 
   // Initialize audio pro
   useEffect(() => {
@@ -36,10 +45,15 @@ export const useNameAudio = (): UseNameAudioReturn => {
         case 'STATE_CHANGED':
           setIsPlaying(event.payload?.state === 'PLAYING');
           setIsLoading(event.payload?.state === 'LOADING');
+          // Store the current position when paused
+          if (event.payload?.state === 'PAUSED' && currentAudioRef.current) {
+            currentAudioRef.current.lastPosition = position;
+          }
           break;
         case 'PROGRESS':
-          setPosition(event.payload?.position || 0);
-          setDuration(event.payload?.duration || 0);
+          // Convert milliseconds to seconds for better time display
+          setPosition((event.payload?.position || 0) / 1000);
+          setDuration((event.payload?.duration || 0) / 1000);
           break;
         case 'PLAYBACK_ERROR':
           setError(event.payload?.error || 'Playback error');
@@ -57,20 +71,35 @@ export const useNameAudio = (): UseNameAudioReturn => {
     return `https://99names.app/audio/${nameNumber.toString().padStart(2, '0')}.mp3`;
   }, []);
 
-  const playAudioFromUrl = useCallback(async (audioUrl: string) => {
+  const playAudioFromUrl = useCallback(async (audioUrl: string, startPosition: number = 0) => {
     try {
       setIsLoading(true);
       setError(null);
 
+      const trackId = `name-${Date.now()}`;
       const track = {
-        id: `name-${Date.now()}`,
+        id: trackId,
         url: audioUrl,
         title: '99 Names of Allah',
         artist: '',
         artwork: 'test',
       };
 
+      // Store the current audio information for potential resume later
+      currentAudioRef.current = {
+        url: audioUrl,
+        id: trackId,
+        lastPosition: startPosition,
+      };
+
       await AudioPro.play(track);
+      
+      // If we have a start position, seek to it (convert seconds to milliseconds)
+      if (startPosition > 0) {
+        setTimeout(() => {
+          AudioPro.seekTo(startPosition * 1000);
+        }, 200); // Small delay to ensure track is loaded
+      }
     } catch (err) {
       setError('Failed to play audio');
       setIsLoading(false);
@@ -86,11 +115,36 @@ export const useNameAudio = (): UseNameAudioReturn => {
   }, [getAudioUrl, playAudioFromUrl]);
 
   const pauseAudio = useCallback(() => {
-    AudioPro.pause();
-  }, []);
+    if (isPlaying) {
+      // Save current position before pausing
+      if (currentAudioRef.current) {
+        currentAudioRef.current.lastPosition = position;
+      }
+      AudioPro.pause();
+    }
+  }, [isPlaying, position]);
+
+  const resumeAudio = useCallback(async () => {
+    if (!isPlaying && currentAudioRef.current) {
+      // Resume from last position
+      await playAudioFromUrl(currentAudioRef.current.url, currentAudioRef.current.lastPosition);
+    }
+  }, [isPlaying, playAudioFromUrl]);
 
   const stopAudio = useCallback(() => {
     AudioPro.stop();
+    // Reset current audio reference
+    if (currentAudioRef.current) {
+      currentAudioRef.current.lastPosition = 0;
+    }
+  }, []);
+
+  const seekTo = useCallback((newPosition: number) => {
+    // Convert seconds to milliseconds for the AudioPro API
+    AudioPro.seekTo(newPosition * 1000);
+    if (currentAudioRef.current) {
+      currentAudioRef.current.lastPosition = newPosition;
+    }
   }, []);
 
   const setVolume = useCallback((newVolume: number) => {
@@ -113,7 +167,9 @@ export const useNameAudio = (): UseNameAudioReturn => {
     playAudio,
     playAudioFromUrl,
     pauseAudio,
+    resumeAudio,
     stopAudio,
+    seekTo,
     setVolume,
     clearError,
   };
