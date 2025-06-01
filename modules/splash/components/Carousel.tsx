@@ -105,7 +105,7 @@ export default function App() {
 
     const animation = Animated.timing(currentAnim, {
       toValue: 1,
-      duration: 10000,
+      duration: 3000,
       useNativeDriver: false,
     });
 
