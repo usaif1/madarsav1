@@ -187,11 +187,13 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             
             updateCurrentIndex(newIndex); // Now update state, new data renders into hidden/off-screen view
             
-            // Animate new card in
-            Animated.parallel([
-              Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
-              Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
-            ]).start();
+            // Wrap the "animate in" with requestAnimationFrame
+            requestAnimationFrame(() => {
+              Animated.parallel([
+                Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+                Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+              ]).start();
+            });
           });
         } else if (isSwipeRight && canGoPrev) {
           Animated.parallel([
@@ -205,11 +207,13 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
 
             updateCurrentIndex(newIndex); // Now update state
 
-            // Animate new card in
-            Animated.parallel([
-              Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
-              Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
-            ]).start();
+            // Wrap the "animate in" with requestAnimationFrame
+            requestAnimationFrame(() => {
+              Animated.parallel([
+                Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+                Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+              ]).start();
+            });
           });
         } else {
           // Not enough swipe, return to center
