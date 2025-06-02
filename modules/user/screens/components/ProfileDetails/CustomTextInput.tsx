@@ -29,6 +29,7 @@ const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onCha
               backgroundColor: disabled ? '#F5F5F5' : 'transparent',
               borderColor: error ? '#FF6B6B' : '#D4D4D4',
               paddingRight: rightIcon ? 40 : 12, // Add padding if there's an icon
+              color: disabled ? styles.input.color : '#000000', // Black for editable, default for disabled
             },
             customStyle, // Apply custom styles if provided
           ]}
