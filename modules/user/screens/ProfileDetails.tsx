@@ -10,7 +10,7 @@ import CustomTextInput from './components/ProfileDetails/CustomTextInput';
 import {Divider} from '@/components';
 import {Body1Title2Bold, Body1Title2Medium} from '@/components';
 import {useAuthStore} from '@/modules/auth/store/authStore';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import CalendarIcon from '@/assets/profile/calendar_icon.svg';
 
 // hooks
 import {useUserDetails, useUpdateUserDetails} from '../hooks/useUserProfile';
@@ -322,7 +322,7 @@ const ProfileDetails: React.FC = () => {
               placeholder="dd-mm-yyyy"
               rightIcon={
                 <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                  <Icon name="calendar-month" size={24} color="#8A57DC" />
+                  <CalendarIcon/>
                 </TouchableOpacity>
               }
               customStyle={{ borderColor: '#8A57DC', borderWidth: 1 }}
