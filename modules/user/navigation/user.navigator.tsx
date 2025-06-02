@@ -5,7 +5,7 @@ import {Platform} from 'react-native';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 
 // screens
-import {Profile, ProfileDetails, ProfileNotLoggedIn} from '../screens';
+import {Profile, ProfileDetails, ProfileNotLoggedIn, PrivacyPolicy, TermsAndConditions} from '../screens';
 
 // components
 import {BackButton, Header, LogoutButton} from '@/components';
@@ -15,6 +15,8 @@ export type UserStackParamList = {
   profileNotLoggedIn: undefined;
   profile: undefined;
   profileDetails: undefined;
+  privacyPolicy: undefined;
+  termsAndConditions: undefined;
 };
 
 // Create the navigator
@@ -65,6 +67,24 @@ const UserNavigator = () => {
         options={{
           title: 'Profile details',
           header: () => <Header title="Profile details" />,
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen 
+        name="privacyPolicy" 
+        component={PrivacyPolicy}
+        options={{
+          title: 'Privacy Policy',
+          header: () => <Header title="Privacy Policy" />,
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen 
+        name="termsAndConditions" 
+        component={TermsAndConditions}
+        options={{
+          title: 'Terms and Conditions',
+          header: () => <Header title="Terms and Conditions" />,
           headerTitleAlign: 'center',
         }}
       />

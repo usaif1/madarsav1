@@ -1,6 +1,9 @@
 // dependencies
-import {Text, View} from 'react-native';
+import {Text, View, TouchableOpacity} from 'react-native';
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { UserStackParamList } from '../../navigation/user.navigator';
 
 // assets
 import LogoUrduSm from '@/assets/logo_urdu_small.svg';
@@ -23,6 +26,15 @@ const AppVersion = () => {
   const {shadows} = useThemeStore();
   const {width} = useWindowDimensions();
   const isWide = width >= 700; // iPad and larger screens
+  const navigation = useNavigation<NativeStackNavigationProp<UserStackParamList>>();
+  
+  const navigateToTerms = () => {
+    navigation.navigate('termsAndConditions');
+  };
+  
+  const navigateToPrivacy = () => {
+    navigation.navigate('privacyPolicy');
+  };
 
   return (
     <View style={[{padding: 20, backgroundColor: '#FFFFFF'}, shadows.sm1]}>
@@ -90,8 +102,12 @@ const AppVersion = () => {
             width: '100%',
             justifyContent: 'center',
           }}>
-          <TnCGraphicWide />
-          <PrivacyPolicyGraphicWide />
+          <TouchableOpacity onPress={navigateToTerms} activeOpacity={0.7}>
+            <TnCGraphicWide />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToPrivacy} activeOpacity={0.7}>
+            <PrivacyPolicyGraphicWide />
+          </TouchableOpacity>
         </View>
       ) : (
         <View
@@ -100,8 +116,12 @@ const AppVersion = () => {
             columnGap: 12,
             justifyContent: 'space-between',
           }}>
-          <TnCGraphic />
-          <PrivacyPolicyGraphic />
+          <TouchableOpacity onPress={navigateToTerms} activeOpacity={0.7}>
+            <TnCGraphic />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToPrivacy} activeOpacity={0.7}>
+            <PrivacyPolicyGraphic />
+          </TouchableOpacity>
         </View>
       )}
       <Divider height={24} />
