@@ -1,7 +1,8 @@
 // dependencies
-import {Pressable, StyleSheet, View, ActivityIndicator, Alert, Platform} from 'react-native';
+import {Pressable, StyleSheet, View, ActivityIndicator, Alert, Platform, TouchableOpacity, Modal} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import React, {useState, useEffect} from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // assets
 import {Avatar} from './components/ProfileDetails';
@@ -9,6 +10,7 @@ import CustomTextInput from './components/ProfileDetails/CustomTextInput';
 import {Divider} from '@/components';
 import {Body1Title2Bold, Body1Title2Medium} from '@/components';
 import {useAuthStore} from '@/modules/auth/store/authStore';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // hooks
 import {useUserDetails, useUpdateUserDetails} from '../hooks/useUserProfile';
@@ -30,6 +32,8 @@ const ProfileDetails: React.FC = () => {
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerDate, setDatePickerDate] = useState(new Date());
   const [formErrors, setFormErrors] = useState<{
     firstName?: string;
     lastName?: string;
@@ -46,6 +50,15 @@ const ProfileDetails: React.FC = () => {
       setPhone(userDetails.phone?.toString() || '');
       setDob(userDetails.dob || '');
       setGender(userDetails.gender || '');
+      
+      // Initialize date picker with existing date if available
+      if (userDetails.dob) {
+        const [day, month, year] = userDetails.dob.split('-').map(Number);
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+          setDatePickerDate(new Date(year, month - 1, day));
+        }
+      }
+      
       setHasChanges(false); // Reset changes flag when new data is loaded
     } else if (user) {
       // Fallback to auth store data if API data not available yet
@@ -55,6 +68,14 @@ const ProfileDetails: React.FC = () => {
       setPhone(user.phone || '');
       setDob(user.dob || '');
       setGender(user.gender || '');
+      
+      // Initialize date picker with existing date if available
+      if (user.dob) {
+        const [day, month, year] = user.dob.split('-').map(Number);
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+          setDatePickerDate(new Date(year, month - 1, day));
+        }
+      }
     }
   }, [userDetails, user]);
   
@@ -103,11 +124,11 @@ const ProfileDetails: React.FC = () => {
 
     // Validate DOB if provided
     if (dob) {
-      const dobRegex = /^(0[1-9]|[12][0-9]|3[01])[/](0[1-9]|1[0-2])[/]\d{4}$/;
+      const dobRegex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
       if (!dobRegex.test(dob)) {
-        errors.dob = 'Please enter date in DD/MM/YYYY format';
+        errors.dob = 'Please enter date in dd-mm-yyyy format';
       } else {
-        const [dayStr, monthStr, yearStr] = dob.split('/');
+        const [dayStr, monthStr, yearStr] = dob.split('-');
         const day = parseInt(dayStr, 10);
         const month = parseInt(monthStr, 10);
         const year = parseInt(yearStr, 10);
@@ -269,7 +290,7 @@ const ProfileDetails: React.FC = () => {
                 <Picker.Item 
                   label="Select Gender"
                   value="placeholder"
-                  enabled={false}
+                  enabled={!gender} // Only disable if no gender is selected
                   color="#A3A3A3"
                 />
                 <Picker.Item label="Male" value="MALE" />
@@ -284,21 +305,49 @@ const ProfileDetails: React.FC = () => {
           </View>
         </View>
         <View>
-          <CustomTextInput 
-            label="Date of Birth" 
-            value={dob}
-            onChange={(text: string) => {
-              // Only allow digits and /
-              const cleaned = text.replace(/[^0-9/]/g, '');
-              // Prevent multiple slashes
-              const formatted = cleaned.split('/').slice(0, 3).join('/');
-              if (formatted.length <= 10) {
-                setDob(formatted);
+          <View style={styles.datePickerContainer}>
+            <CustomTextInput 
+              label="Date of Birth" 
+              value={dob}
+              onChange={(text: string) => {
+                // Only allow digits and -
+                const cleaned = text.replace(/[^0-9-]/g, '');
+                // Prevent multiple dashes
+                const formatted = cleaned.split('-').slice(0, 3).join('-');
+                if (formatted.length <= 10) {
+                  setDob(formatted);
+                }
+              }}
+              error={formErrors.dob}
+              placeholder="dd-mm-yyyy"
+              rightIcon={
+                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                  <Icon name="calendar-month" size={24} color="#8A57DC" />
+                </TouchableOpacity>
               }
-            }}
-            error={formErrors.dob}
-            placeholder="DD/MM/YYYY"
-          />
+              customStyle={{ borderColor: '#8A57DC', borderWidth: 1 }}
+            />
+          </View>
+          
+          {/* Date Picker Modal */}
+          {showDatePicker && (
+            <DateTimePicker
+              value={datePickerDate}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
+                if (selectedDate) {
+                  setDatePickerDate(selectedDate);
+                  // Format date as dd-mm-yyyy
+                  const day = selectedDate.getDate().toString().padStart(2, '0');
+                  const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+                  const year = selectedDate.getFullYear();
+                  setDob(`${day}-${month}-${year}`);
+                }
+              }}
+            />
+          )}
         </View>
 
         <Pressable 
@@ -321,6 +370,9 @@ const ProfileDetails: React.FC = () => {
 export default ProfileDetails;
 
 const styles = StyleSheet.create({
+  datePickerContainer: {
+    position: 'relative',
+  },
   pickerContainer: {
     marginBottom: 16,
   },

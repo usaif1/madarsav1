@@ -1,5 +1,5 @@
 import {Pressable} from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 
 // assets
 import LogoutMadarsa from '@/assets/logout.svg';
@@ -14,9 +14,13 @@ import { signOutFromGoogle, isGoogleSignedIn } from '@/modules/auth/services/goo
 import { logoutFromFacebook, isFacebookLoggedIn } from '@/modules/auth/services/facebookAuthService';
 import authService from '@/modules/auth/services/authService';
 
+// Components
+import LogoutModal from '@/components/LogoutModal';
+
 const LogoutButton = () => {
   const user = useAuthStore((state) => state.user);
   const navigation = useNavigation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const logOut = async () => {
     try {
@@ -27,7 +31,6 @@ const LogoutButton = () => {
       const isFacebookAuth = await isFacebookLoggedIn();
       
       console.log('Auth status - Google:', isGoogleAuth, 'Facebook:', isFacebookAuth);
-      
       // Logout from specific providers if logged in
       if (isGoogleAuth) {
         console.log('Logging out from Google...');
@@ -41,11 +44,8 @@ const LogoutButton = () => {
 
       authService.logOutByDeletingTokens();
 
-      // Uncomment this if you want to navigate back to auth screen after logout
-      // navigation.reset({
-      //   index: 0,
-      //   routes: [{ name: 'auth' }],
-      // });
+      // Navigate directly to SplashScreen2 using our navigation utility
+      // navigationUtils.navigateToSplashScreen2();
     } catch (error) {
       console.error('Logout failed:', error);
       Alert.alert('Logout Failed', 'Could not log out properly. Please try again.');
@@ -54,9 +54,20 @@ const LogoutButton = () => {
 
 
   return (
-    <Pressable onPress={logOut}>
-      <LogoutMadarsa />
-    </Pressable>
+    <>
+      <Pressable onPress={() => setShowLogoutModal(true)}>
+        <LogoutMadarsa />
+      </Pressable>
+      
+      <LogoutModal 
+        isVisible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onLogout={() => {
+          setShowLogoutModal(false);
+          logOut();
+        }}
+      />
+    </>  
   );
 };
 

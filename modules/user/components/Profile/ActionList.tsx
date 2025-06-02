@@ -2,10 +2,13 @@
 import {Text, View, TouchableOpacity} from 'react-native';
 import React, {useState, useEffect} from 'react';
 
+// components
+import ShareModal from './ShareModal';
+
 // assets
 import AthanIcon from '@/assets/profile/athan_icon.svg';
 import Notification from '@/assets/profile/notification.svg';
-import Share from '@/assets/hadith/Share.svg';
+import Share from '@/assets/hadith/share_alt.svg';
 import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
@@ -50,6 +53,7 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
   const {user} = useAuthStore();
   const [athanNotification, setAthanNotification] = useState(false);
   const [pushNotification, setPushNotification] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   // Get user details to initialize notification settings
   const {data: userDetails, isLoading} = useUserDetails(user?.id);
@@ -92,6 +96,14 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
         item => item.id !== 'athan-notification' && item.id !== 'push-notification'
       )
     : actionList;
+    
+  // Handle action item press
+  const handleActionItemPress = (id: string) => {
+    if (id === 'invite-friends') {
+      setShowShareModal(true);
+    }
+    // Add other action handlers here as needed
+  };
 
   return (
     <View style={[{padding: 20, backgroundColor: '#FFFFFF'}, shadows.sm1]}>
@@ -114,7 +126,7 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
                 </Text>
               </View>
               {actionItem?.iconRight ? (
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => handleActionItemPress(actionItem.id)}>
                   <actionItem.iconRight />
                 </TouchableOpacity>
               ) : (
@@ -138,6 +150,12 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
           );
         })}
       </View>
+      
+      {/* Share Modal */}
+      <ShareModal 
+        isVisible={showShareModal} 
+        onClose={() => setShowShareModal(false)} 
+      />
     </View>
   );
 };
