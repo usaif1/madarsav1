@@ -50,8 +50,13 @@ const styles = StyleSheet.create({
   },
   form: {
     paddingHorizontal: 18,
-    gap: 12,
+    // gap: 12, // Moved to formInputsContainer
     flex: 1,
+    width: '100%',
+  },
+  formInputsContainer: {
+    flex: 1, // This will push the button down
+    gap: 12, // Spacing between input groups
   },
   loadingContainer: {
     flex: 1,
@@ -74,8 +79,8 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   submitBtn: {
-    position: 'absolute',
-    bottom: 31,
+    // position: 'absolute', // Removed
+    // bottom: 31, // Removed
     height: 40,
     backgroundColor: '#F5F5F5',
     width: '100%',
@@ -83,6 +88,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 100,
+    marginTop: 24, // Added space above the button
+    marginBottom: 31, // Added space below the button (for when keyboard is closed)
   },
   submitBtnActive: {
     backgroundColor: '#F9F6FF',
@@ -298,7 +305,7 @@ const ProfileDetails: React.FC = () => {
       style={styles.container}>
       <KeyboardAwareScrollView
         style={styles.container}
-        contentContainerStyle={{ alignItems: 'center', paddingTop: 32 }}
+        contentContainerStyle={{ flexGrow: 1, alignItems: 'center', paddingTop: 32 }}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         enableAutomaticScroll={true}
@@ -307,7 +314,8 @@ const ProfileDetails: React.FC = () => {
         <Divider height={24} />
 
         <View style={styles.form}>
-          <View
+          <View style={styles.formInputsContainer}>
+            <View
             style={{
               width: '100%',
               flexDirection: 'row',
@@ -426,6 +434,7 @@ const ProfileDetails: React.FC = () => {
               />
             )}
           </View>
+          </View> {/* Closing formInputsContainer */} 
 
           <Pressable 
             style={[styles.submitBtn, hasChanges ? styles.submitBtnActive : {}]}

@@ -20,6 +20,7 @@ import { useGlobalStore } from '@/globalStore';
 
 // auth
 import { useSocialAuth } from '@/modules/auth/hooks/useSocialAuth';
+import { scale } from '@/theme/responsive';
 
 const SplashPrimary: React.FC = () => {
   const { colors } = useThemeStore();
@@ -74,7 +75,7 @@ const SplashPrimary: React.FC = () => {
         <View style={{ height: 33 }} />
         <Carousel />
 
-        <View style={{width: '100%', paddingBottom: 56, rowGap: 2}}>
+        <View style={{width: '100%', paddingBottom: scale(40), rowGap: scale(2)}}>
           <Pressable
             onPress={handleGoogleSignIn}
             disabled={loadingButton !== null}

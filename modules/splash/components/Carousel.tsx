@@ -174,12 +174,12 @@ export default function App() {
               />
               <Image 
                 source={require('@/assets/splash/DeenGraphic2.png')} 
-                style={styles.slideImage} 
+                style={[styles.slideImage, {marginTop: scale(-10)}]} 
                 resizeMode="contain"
               />
               <Image 
                 source={require('@/assets/splash/DuniyaGraphic2.png')} 
-                style={styles.slideImage} 
+                style={[styles.slideImage, {marginTop: scale(-10)}]} 
                 resizeMode="contain"
               />
             </View>

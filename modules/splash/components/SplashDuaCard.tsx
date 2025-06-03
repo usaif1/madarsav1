@@ -70,7 +70,7 @@ const SplashDuaCard = () => {
 const styles = StyleSheet.create({
   container: {
     width: scale(321),
-    height: verticalScale(186.968),
+    // height: verticalScale(186.968), // Removed for dynamic height
     paddingTop: scale(22),
     paddingBottom: scale(18),
     gap: scale(14),
@@ -79,8 +79,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5E5',
   },
   innerContainer: {
-    width: scale(322),
-    height: verticalScale(162),
+    width: '100%', // Changed from scale(322) to fit parent
+    // height: verticalScale(162), // Removed for dynamic height
     paddingRight: scale(18),
     paddingLeft: scale(18),
     gap: scale(8),
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: scale(16),
+    // marginBottom: scale(16), // Removed, parent paddingBottom handles this
   },
   referenceContainer: {
     flexDirection: 'row',

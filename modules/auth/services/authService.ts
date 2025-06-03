@@ -425,6 +425,9 @@ const authService = {
       useAuthStore.getState().setIsAuthenticated(false);
       useAuthStore.getState().setIsSkippedLogin(false);
       
+      // Store a flag to indicate this is a logout (not an app launch)
+      mmkvStorage.setItem('is_logout', 'true');
+      
       console.log('✅ Logout successful');
     } catch (error) {
       console.error('❌ Logout failed:', error);

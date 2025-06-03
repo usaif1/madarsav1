@@ -10,6 +10,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  ImageSourcePropType,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
@@ -17,21 +18,22 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // App icon-contacts
 import AppIcon from '@/assets/app_icon.svg';
+import { scale } from '@/theme/responsive';
 
 interface Contact {
   id: string;
   name: string;
-  imageUrl?: string;
+  imageUrl?: ImageSourcePropType;
   phoneNumber?: string;
   email?: string;
 }
 
 // Mock contacts for UI demonstration
 const MOCK_CONTACTS: Contact[] = [
-  { id: '1', name: 'Phillip Philips', imageUrl: 'https://randomuser.me/api/portraits/men/32.jpg' },
-  { id: '2', name: 'Tatiana Bergson', imageUrl: 'https://randomuser.me/api/portraits/women/44.jpg' },
-  { id: '3', name: 'Gustavo Torff', imageUrl: 'https://randomuser.me/api/portraits/men/62.jpg' },
-  { id: '4', name: 'Hanna Botosh', imageUrl: 'https://randomuser.me/api/portraits/women/65.jpg' },
+  { id: '1', name: 'Phillip Philips', imageUrl: require('@/assets/profile/phillip.png') },
+  { id: '2', name: 'Tatiana Bergson', imageUrl: require('@/assets/profile/tatiana.png') },
+  { id: '3', name: 'Gustavo Torff', imageUrl: require('@/assets/profile/gustavo.png') },
+  { id: '4', name: 'Hanna Botosh', imageUrl: require('@/assets/profile/hanna.png') },
 ];
 
 interface ShareModalProps {
@@ -97,12 +99,22 @@ const ShareModal: React.FC<ShareModalProps> = ({ isVisible, onClose }) => {
       onPress={() => shareWithContact(item)}
     >
       {item.imageUrl ? (
-        <Image source={{ uri: item.imageUrl }} style={styles.contactImage} />
+        <View>
+          <Image source={item.imageUrl} style={styles.contactImage} />
+          <View style={styles.messageIconContainer}>
+            <Icon name="chat-bubble" size={12} color="#FFFFFF" />
+          </View>
+        </View>
       ) : (
-        <View style={styles.contactImagePlaceholder}>
-          <Text style={styles.contactInitial}>
-            {item.name.charAt(0).toUpperCase()}
-          </Text>
+        <View> {/* Parent View to fix lint error */}
+          <View style={styles.contactImagePlaceholder}>
+            <Text style={styles.contactInitial}>
+              {item.name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.messageIconContainer}>
+            <Icon name="chat-bubble" size={12} color="#FFFFFF" />
+          </View>
         </View>
       )}
       <Text style={styles.contactName} numberOfLines={1}>
@@ -133,14 +145,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ isVisible, onClose }) => {
             </View>
           </View>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Icon name="close" size={24} color="#000" />
+            <Icon name="close" size={24} color="#818186" />
           </TouchableOpacity>
         </View>
         
         <View style={styles.contactsContainer}>
           {contacts.length > 0 ? (
             <>
-              <Text style={styles.sectionTitle}>Share with</Text>
               <FlatList
                 data={contacts}
                 renderItem={renderContactItem}
@@ -233,20 +244,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#8A57DC',
   },
   appName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#000000',
   },
   appSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#8E8E93',
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#E7E7E7',
   },
   contactsContainer: {
     paddingVertical: 16,
@@ -265,18 +277,19 @@ const styles = StyleSheet.create({
   contactItem: {
     alignItems: 'center',
     marginHorizontal: 4,
-    width: 70,
+    width: 72,
+    height: 93,
   },
   contactImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 4,
+    width: scale(62),
+    height: scale(62),
+    borderRadius: scale(31),
+    marginBottom: scale(4),
   },
   contactImagePlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: scale(62),
+    height: scale(62),
+    borderRadius: scale(31),
     backgroundColor: '#E0E0E0',
     justifyContent: 'center',
     alignItems: 'center',
@@ -288,7 +301,7 @@ const styles = StyleSheet.create({
     color: '#8A57DC',
   },
   contactName: {
-    fontSize: 12,
+    fontSize: 11,
     textAlign: 'center',
     color: '#000000',
   },
@@ -315,7 +328,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   shareOptionText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#000000',
     marginTop: 4,
   },
@@ -349,6 +362,19 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 16,
     color: '#8E8E93',
+  },
+  messageIconContainer: {
+    position: 'absolute',
+    bottom: 5,
+    right: 0,
+    backgroundColor: '#4CAF50', // Green color like in the image
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
 });
 
