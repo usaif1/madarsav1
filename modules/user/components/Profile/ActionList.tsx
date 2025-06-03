@@ -1,14 +1,14 @@
 // dependencies
-import {Text, View, TouchableOpacity} from 'react-native';
+import {Text, View, TouchableOpacity, Share} from 'react-native';
 import React, {useState, useEffect} from 'react';
 
 // components
-import ShareModal from './ShareModal';
+// import ShareModal from './ShareModal'; // Commented out as per request
 
 // assets
 import AthanIcon from '@/assets/profile/athan_icon.svg';
 import Notification from '@/assets/profile/notification.svg';
-import Share from '@/assets/hadith/share_alt.svg';
+import ShareIcon from '@/assets/hadith/share_alt.svg'; // Renamed from Share to ShareIcon
 import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
@@ -35,7 +35,7 @@ const actionList = [
     id: 'invite-friends',
     label: 'Invite friends',
     toggle: false,
-    iconLeft: Share,
+    iconLeft: ShareIcon, // Updated to use ShareIcon
     iconRight: ChevronRight,
   },
   {
@@ -53,7 +53,7 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
   const {user} = useAuthStore();
   const [athanNotification, setAthanNotification] = useState(false);
   const [pushNotification, setPushNotification] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  // const [showShareModal, setShowShareModal] = useState(false); // Commented out as per request
   
   // Get user details to initialize notification settings
   const {data: userDetails, isLoading} = useUserDetails(user?.id);
@@ -96,11 +96,24 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
         item => item.id !== 'athan-notification' && item.id !== 'push-notification'
       )
     : actionList;
+
+  // Function to handle direct OS share
+  const handleDirectShare = async () => {
+    try {
+      await Share.share({
+        message: 'Check out this amazing Islamic app called Madrasa! Download here: https://madrasa-app.com/download',
+        title: 'Madrasa App',
+      });
+    } catch (error) {
+      // console.error('Error sharing app:', error);
+    }
+  };
     
   // Handle action item press
   const handleActionItemPress = (id: string) => {
     if (id === 'invite-friends') {
-      setShowShareModal(true);
+      // setShowShareModal(true); // Commented out as per request
+      handleDirectShare();
     }
     // Add other action handlers here as needed
   };
@@ -151,11 +164,11 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
         })}
       </View>
       
-      {/* Share Modal */}
-      <ShareModal 
+      {/* Share Modal - Commented out as per request */}
+      {/* <ShareModal 
         isVisible={showShareModal} 
         onClose={() => setShowShareModal(false)} 
-      />
+      /> */}
     </View>
   );
 };
