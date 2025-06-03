@@ -73,15 +73,18 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
   onEmojiPress = (day) => console.log(`Emoji for ${day} pressed`),
   disabled = false,
 }) => {
+
+  const styles = getStyles(disabled);
+
   return (
-    <View style={[styles.container({ disabled })]}>
+    <View style={[styles.container]}>
 
       {/* Header */}
       <LinearGradient
         colors={['#8A57DC', '#411B7F']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header({ disabled })}>
+        style={styles.header}>
         <Body1Title2Bold style={styles.headerText} color="white">How are you feeling today?</Body1Title2Bold>
       </LinearGradient>
 
@@ -122,7 +125,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
 
       {/* Footer - Explore Duas */}
       <TouchableOpacity
-        style={[styles.exploreDuasContainer({ disabled })]}
+        style={[styles.exploreDuasContainer]}
         onPress={onExploreDuasPress}
         activeOpacity={1.0}>
         <Body1Title2Bold color="primary">Explore Dua's</Body1Title2Bold>
@@ -134,9 +137,9 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
   );
 };
 
-const styles = StyleSheet.create<any>({
+const getStyles = (disabled: boolean) => StyleSheet.create<any>({
   container: {
-    width: ({ disabled }: { disabled: boolean }) => disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
+    width: disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(170),
     alignSelf: 'center',
     marginBottom: verticalScale(16),
@@ -151,7 +154,7 @@ const styles = StyleSheet.create<any>({
     textAlign: 'left',
   },
   header: {
-    width: ({ disabled }: { disabled: boolean }) => disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
+    width: disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(44),
     paddingTop: scale(8),
     paddingHorizontal: scale(16),
@@ -162,7 +165,7 @@ const styles = StyleSheet.create<any>({
   emojiContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: scale(16),
+    paddingHorizontal: disabled ? scale(0) : scale(16),
     paddingVertical: scale(16),
     backgroundColor: '#FFFFFF',
   },
@@ -225,7 +228,7 @@ const styles = StyleSheet.create<any>({
     color: '#A3A3A3', // Primitives-Neutral-400
   },
   exploreDuasContainer: {
-    width: ({ disabled }: { disabled: boolean }) => disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
+    width: disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(38),
     flexDirection: 'row',
     justifyContent: 'center',

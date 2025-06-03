@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Bold, Body1Title2Medium, H5Medium } from '@/components';
+import { Body1Title2Bold, Body1Title2Medium, H5Bold } from '@/components';
 import LinearGradient from 'react-native-linear-gradient';
 import Bookmark from '@/assets/hadith/bookmark.svg';
 import ShareAlt from '@/assets/hadith/share_alt.svg';
-import Bubble from '@/assets/tasbih/bubble.svg';
 
 const SplashDuaCard = () => {
   // Using the first dua from the fallback data
@@ -25,11 +24,10 @@ const SplashDuaCard = () => {
       <View style={styles.innerContainer}>
         {/* Arabic text with bubble number */}
         <View style={styles.arabicRow}>
-          <H5Medium color='heading' style={styles.arabicText}>
+          <H5Bold color='heading' style={styles.arabicText}>
             {dua.arabic}
-          </H5Medium>
+          </H5Bold>
           <View style={styles.bubbleWrap}>
-            <Bubble width={scale(26)} height={scale(26)} />
             <Body1Title2Bold style={styles.bubbleNum}>
               1
             </Body1Title2Bold>
@@ -51,6 +49,18 @@ const SplashDuaCard = () => {
             <View style={styles.dot} />
             <Body1Title2Medium style={styles.referenceText}>{dua.referenceVerse}</Body1Title2Medium>
           </View>
+          <View style={styles.actionsContainer}>
+                    <View 
+                      style={styles.actionButton}
+                    >
+                       <Bookmark />
+                    </View>
+                    <View 
+                      style={styles.actionButton}
+                    >
+                      <ShareAlt />
+                    </View>
+                  </View>
         </View>
       </View>
     </LinearGradient>
@@ -86,19 +96,24 @@ const styles = StyleSheet.create({
     lineHeight: scale(28),
     textAlign: 'right',
     color: '#171717',
+    letterSpacing: scale(0.5),
   },
   bubbleWrap: {
     position: 'relative',
     width: scale(26),
     height: scale(26),
     marginLeft: scale(12),
+    backgroundColor: '#fffaeb',
+    borderRadius: scale(20),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bubbleNum: {
     position: 'absolute',
     top: '50%',
     left: '55%',
     transform: [{ translateX: -6 }, { translateY: -9 }],
-    color: '#8A57DC',
+    color: '#877d58',
     fontSize: scale(12),
   },
   transliterationContainer: {
@@ -133,9 +148,9 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: scale(8),
+    marginBottom: scale(16),
   },
   referenceContainer: {
     flexDirection: 'row',
@@ -151,6 +166,19 @@ const styles = StyleSheet.create({
     height: scale(5),
     backgroundColor: '#D4D4D4',
     borderRadius: scale(5),
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
