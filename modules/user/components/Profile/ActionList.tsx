@@ -8,7 +8,7 @@ import React, {useState, useEffect} from 'react';
 // assets
 import AthanIcon from '@/assets/profile/athan_icon.svg';
 import Notification from '@/assets/profile/notification.svg';
-import ShareIcon from '@/assets/hadith/share_alt.svg'; // Renamed from Share to ShareIcon
+import ShareIcon from '@/assets/profile/invite_friends.svg'; // Renamed from Share to ShareIcon
 import Rate from '@/assets/profile/rate.svg';
 import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
