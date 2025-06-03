@@ -15,6 +15,8 @@ import Carousel from 'react-native-snap-carousel';
 import {Body1Title2Regular, H4Bold} from '@/components';
 import {Divider} from '@/components';
 import PrayerTimesGraphic from './PrayerTimesGraphic';
+import FeelingToday from '@/modules/home/components/FeelingToday/FeelingToday';
+import SplashDuaCard from './SplashDuaCard';
 
 // store
 import {useThemeStore} from '@/globalStore';
@@ -146,7 +148,7 @@ export default function App() {
           // Second slide - Feelings and Dua Card Graphics
           return (
             <View style={styles.graphicsContainer}>
-              <Image 
+              {/* <Image 
                 source={require('@/assets/splash/FeelingsGraphic.png')} 
                 style={styles.feelingsImage} 
                 resizeMode="cover"
@@ -156,7 +158,9 @@ export default function App() {
                 source={require('@/assets/splash/DuaCardGraphic.png')} 
                 style={styles.duaCardImage} 
                 resizeMode="cover"
-              />
+              /> */}
+              <FeelingToday disabled={true} />
+              <SplashDuaCard />
             </View>
           );
         case 3:
@@ -251,6 +255,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   graphicsContainer: {
+    maxWidth:scale(321),
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',

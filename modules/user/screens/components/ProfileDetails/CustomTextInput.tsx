@@ -9,6 +9,8 @@ interface Props {
   value: string;
   disabled?: boolean;
   onChange?: (text: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   error?: string;
   helperText?: string;
   placeholder?: string;
@@ -16,7 +18,7 @@ interface Props {
   customStyle?: StyleProp<ViewStyle>;
 }
 
-const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onChange, error, helperText, placeholder, rightIcon, customStyle}) => {
+const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onChange, onFocus, onBlur, error, helperText, placeholder, rightIcon, customStyle}) => {
   return (
     <View style={styles.container}>
       <Body1Title2Medium color="sub-heading">{label}</Body1Title2Medium>
@@ -37,6 +39,8 @@ const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onCha
           onChangeText={onChange}
           placeholder={placeholder}
           placeholderTextColor="#A3A3A3"
+          onFocus={onFocus}
+          onBlur={onBlur}
         />
         {rightIcon && (
           <View style={styles.iconContainer}>

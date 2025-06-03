@@ -169,7 +169,9 @@ const SplashScreen1: React.FC = () => {
         }
         
         // If no auth method worked, navigate to splash screen 2
+        console.log('navigating to SplashScreen2');
         navigation.navigate('SplashScreen2');
+        console.log('should have navigated to SplashScreen2');
       } catch (error) {
         console.error('Auth check failed:', error);
         navigation.navigate('SplashScreen2');

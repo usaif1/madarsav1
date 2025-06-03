@@ -13,7 +13,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import { ShadowColors } from '@/theme/shadows';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = scale(339);
+const DEFAULT_CARD_WIDTH = scale(339);
+const DISABLED_CARD_WIDTH = scale(321);
 
 // Emoji data with day mapping
 const emojiData = [
@@ -64,20 +65,23 @@ const emojiData = [
 interface FeelingTodayProps {
   onExploreDuasPress?: () => void;
   onEmojiPress?: (day: string) => void;
+  disabled?: boolean;
 }
 
 const FeelingToday: React.FC<FeelingTodayProps> = ({
   onExploreDuasPress = () => console.log('Explore Duas pressed'),
   onEmojiPress = (day) => console.log(`Emoji for ${day} pressed`),
+  disabled = false,
 }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container({ disabled })]}>
+
       {/* Header */}
       <LinearGradient
         colors={['#8A57DC', '#411B7F']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header}>
+        style={styles.header({ disabled })}>
         <Body1Title2Bold style={styles.headerText} color="white">How are you feeling today?</Body1Title2Bold>
       </LinearGradient>
 
@@ -88,6 +92,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             key={item.id}
             style={styles.emojiDayContainer}
             onPress={() => onEmojiPress(item.day)}
+            disabled={disabled}
             activeOpacity={1.0}>
             {/* Emoji or Icon */}
             <View style={styles.emojiCircle}>
@@ -117,7 +122,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
 
       {/* Footer - Explore Duas */}
       <TouchableOpacity
-        style={styles.exploreDuasContainer}
+        style={[styles.exploreDuasContainer({ disabled })]}
         onPress={onExploreDuasPress}
         activeOpacity={1.0}>
         <Body1Title2Bold color="primary">Explore Dua's</Body1Title2Bold>
@@ -129,9 +134,9 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<any>({
   container: {
-    width: CARD_WIDTH,
+    width: ({ disabled }: { disabled: boolean }) => disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(170),
     alignSelf: 'center',
     marginBottom: verticalScale(16),
@@ -146,7 +151,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   header: {
-    width: CARD_WIDTH,
+    width: ({ disabled }: { disabled: boolean }) => disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(44),
     paddingTop: scale(8),
     paddingHorizontal: scale(16),
@@ -220,7 +225,7 @@ const styles = StyleSheet.create({
     color: '#A3A3A3', // Primitives-Neutral-400
   },
   exploreDuasContainer: {
-    width: CARD_WIDTH,
+    width: ({ disabled }: { disabled: boolean }) => disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(38),
     flexDirection: 'row',
     justifyContent: 'center',
