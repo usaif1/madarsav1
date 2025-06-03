@@ -167,14 +167,18 @@ export default function App() {
           // Third slide - Deen and Duniya Graphics
           return (
             <View style={styles.graphicsContainer}>
-              <Image 
-                source={require('@/assets/splash/DeenGraphic.png')} 
+               <Image 
+                source={require('@/assets/splash/MaktabGraphic.png')} 
                 style={styles.slideImage} 
                 resizeMode="contain"
               />
-              <Divider height={10} />
               <Image 
-                source={require('@/assets/splash/DuniyaGraphic.png')} 
+                source={require('@/assets/splash/DeenGraphic2.png')} 
+                style={styles.slideImage} 
+                resizeMode="contain"
+              />
+              <Image 
+                source={require('@/assets/splash/DuniyaGraphic2.png')} 
                 style={styles.slideImage} 
                 resizeMode="contain"
               />
