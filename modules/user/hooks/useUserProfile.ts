@@ -1,12 +1,13 @@
 // src/modules/user/hooks/useUserProfile.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { getUserDetails, updateUserDetails, updateUserNotifications, UserDetails, UserUpdateDTO, UserNotificationUpdateDTO } from '../services/userService';
+import { getUserDetails, updateUserDetails, updateUserNotifications, uploadFile, UserDetails, UserUpdateDTO, UserNotificationUpdateDTO, FileUploadResponse } from '../services/userService';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 
 // Query keys
 export const USER_QUERY_KEYS = {
   USER_DETAILS: 'userDetails',
+  FILE_UPLOAD: 'fileUpload',
 };
 
 /**
@@ -113,6 +114,29 @@ export const useUpdateUserDetails = () => {
             country: data.country,
           });
         }
+      }
+    },
+  });
+};
+
+/**
+ * Hook to update user notification settings
+ * @returns Mutation for updating user notification settings
+ */
+/**
+ * Hook to upload file
+ * @returns Mutation for uploading file
+ */
+export const useUploadFile = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
+  return useMutation<FileUploadResponse, Error, { userId: string; file: FormData }>({
+    mutationFn: ({ userId, file }: { userId: string; file: FormData }) => uploadFile(userId, file),
+    onSuccess: () => {
+      // Invalidate and refetch user details query to get updated profile image
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: [USER_QUERY_KEYS.USER_DETAILS, user.id] });
       }
     },
   });

@@ -18,7 +18,6 @@ import { User } from '@/modules/auth/store/authStore';
 import { useLocation } from '@/api/hooks/useLocation';
 
 interface HomeHeaderProps {
-  userName?: string;
   locationText?: string;
   notificationCount?: number;
   onLocationPress?: () => void;
@@ -26,19 +25,20 @@ interface HomeHeaderProps {
 
 // Define local navigation param list for the home tab navigator
 type HomeTabParamList = {
+  profile: { screen: string };
+  profileNotLoggedIn: { screen: string };
+  auth: undefined;
+  user: { screen: string };
+  
   home: undefined;
   maktab: undefined;
   'al-quran': undefined;
 };
 
 // Create a composite navigation prop that can navigate in both navigators
-type NavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<HomeTabParamList>,
-  NativeStackNavigationProp<ParentStackParamList>
->;
+type NavigationProp = NativeStackNavigationProp<ParentStackParamList>;
 
 const HomeHeader: React.FC<HomeHeaderProps> = ({
-  userName,
   locationText: propLocationText,
   notificationCount = 1,
   onLocationPress,
@@ -126,9 +126,9 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
       // This needs to be done before logout since we're using a protected navigator
       // The 'user' screen is defined in ParentStackParamList
       if (user) {
-        navigation.navigate('user', { screen: 'profile' });
-      }else{
-        navigation.navigate('user', { screen: 'profileNotLoggedIn' });
+        navigation.navigate('user');
+      } else {
+        navigation.navigate('user');
       }
       
       // Navigate to the auth flow by resetting navigation stack
@@ -156,7 +156,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             activeOpacity={0.8}
           >
             <Image
-              source={user?.photoUrl || user?.photo ? {uri: user?.photoUrl || user?.photo} : require('@/assets/home/image_21.png')}
+              source={user?.photoUrl ? {uri: user?.photoUrl} : require('@/assets/home/image_21.png')}
               style={styles.userImage}
             />
             {/* Menu Icon positioned on the bottom right of the image */}

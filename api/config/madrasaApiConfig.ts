@@ -21,6 +21,7 @@ export const MADRASA_API_ENDPOINTS = {
   GET_USER_DETAILS: '/api/v1/user/{userId}',
   UPDATE_USER_DETAILS: '/api/v1/update',
   UPDATE_USER_NOTIFICATIONS: '/api/v1/update/notification',
+  UPLOAD_FILE: '/api/v1/upload-file-to-s3',
   
   // Islamic tools endpoints
   NAMES_99: '/api/v1/99names',

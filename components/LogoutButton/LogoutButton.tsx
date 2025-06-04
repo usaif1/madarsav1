@@ -1,4 +1,4 @@
-import {Pressable} from 'react-native';
+import {Pressable, Alert} from 'react-native';
 import React, {useState} from 'react';
 
 // assets
@@ -7,10 +7,16 @@ import LogoutMadarsa from '@/assets/logout.svg';
 // store
 import { useAuthStore } from '@/modules/auth/store/authStore';
 import { useNavigation } from '@react-navigation/native';
-import { Alert } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+// Navigation types
+type RootStackParamList = {
+  SplashScreen2: undefined;
+  [key: string]: undefined | object;
+};
 
 // Auth services
-import { signOutFromGoogle, isGoogleSignedIn } from '@/modules/auth/services/googleAuthService';
+import googleAuthService, { signOutFromGoogle, isGoogleSignedIn } from '@/modules/auth/services/googleAuthService';
 import { logoutFromFacebook, isFacebookLoggedIn } from '@/modules/auth/services/facebookAuthService';
 import authService from '@/modules/auth/services/authService';
 
@@ -19,19 +25,26 @@ import LogoutModal from '@/components/LogoutModal';
 
 const LogoutButton = () => {
   const user = useAuthStore((state) => state.user);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const logOut = async () => {
     try {
       console.log('Starting logout process...');
       
-      // Check which auth method was used and logout accordingly
+      // First, configure Google client to ensure it's ready
+      await googleAuthService.configureGoogleSignIn();
+      
+      // Then check auth methods
       const isGoogleAuth = await isGoogleSignedIn();
       const isFacebookAuth = await isFacebookLoggedIn();
       
       console.log('Auth status - Google:', isGoogleAuth, 'Facebook:', isFacebookAuth);
-      // Logout from specific providers if logged in
+      
+      // First clear tokens and auth state
+      await authService.logOutByDeletingTokens();
+      
+      // Then sign out from providers if needed
       if (isGoogleAuth) {
         console.log('Logging out from Google...');
         await signOutFromGoogle();
@@ -41,15 +54,17 @@ const LogoutButton = () => {
         console.log('Logging out from Facebook...');
         await logoutFromFacebook();
       }
-
-      authService.logOutByDeletingTokens();
-
-      // Navigate directly to SplashScreen2 using our navigation utility
-      // navigationUtils.navigateToSplashScreen2();
+      
+      // Navigate to SplashScreen2
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SplashScreen2' }],
+      });
     } catch (error) {
       console.error('Logout failed:', error);
       Alert.alert('Logout Failed', 'Could not log out properly. Please try again.');
     }
+
   }
 
 

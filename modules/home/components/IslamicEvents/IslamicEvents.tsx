@@ -8,6 +8,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium} from '@/components/Typography/Typography';
@@ -314,6 +315,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
         
         {/* Content */}
         <View style={styles.contentContainer}>
+        <ScrollView>
           {hasEvents ? (
             <FlatList
               data={events}
@@ -331,6 +333,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
               </Body1Title2Medium>
             </View>
           )}
+        </ScrollView>
         </View>
       </LinearGradient>
 
@@ -420,6 +423,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: scale(8),
     borderTopWidth: 0.5,
     borderTopColor: '#E5E5E5',
+    maxHeight: verticalScale(192),
   },
   eventsList: {
     paddingVertical: scale(8),

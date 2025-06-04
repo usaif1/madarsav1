@@ -19,6 +19,12 @@ export interface UserDetails {
   pushNotification: boolean;
 }
 
+export interface FileUploadResponse {
+  fileExtension: string;
+  fileLink: string;
+  fileType: string;
+}
+
 export interface UserUpdateDTO {
   userId: string;
   firstName: string;
@@ -102,8 +108,40 @@ export const updateUserNotifications = async (notificationData: UserNotification
   }
 };
 
+/**
+ * Upload file to server
+ * @param userId - The ID of the user
+ * @param file - The file to upload
+ * @returns Promise with file upload response
+ */
+export const uploadFile = async (userId: string, file: FormData): Promise<FileUploadResponse> => {
+  try {
+    console.log('📤 Uploading file for userId:', userId);
+    
+    // Use executeWithTokenRefresh to handle token expiration
+    const response = await authService.executeWithTokenRefresh(() => 
+      madrasaClient.post<FileUploadResponse>(
+        `${MADRASA_API_ENDPOINTS.UPLOAD_FILE}?userId=${userId}`,
+        file,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      )
+    );
+    
+    console.log('✅ File uploaded successfully');
+    return response.data;
+  } catch (error) {
+    console.error('❌ Failed to upload file:', error);
+    throw error;
+  }
+};
+
 export default {
   getUserDetails,
   updateUserDetails,
   updateUserNotifications,
+  uploadFile,
 };

@@ -15,7 +15,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 import tokenService from '@/modules/auth/services/tokenService';
 import authService from '@/modules/auth/services/authService';
-import { isGoogleSignedIn } from '@/modules/auth/services/googleAuthService';
+import googleAuthService, { isGoogleSignedIn } from '@/modules/auth/services/googleAuthService';
 import { isFacebookLoggedIn } from '@/modules/auth/services/facebookAuthService';
 import skipLoginService from '@/modules/auth/services/skipLoginService';
 import { useGlobalStore } from '@/globalStore';
@@ -126,21 +126,41 @@ const SplashScreen1: React.FC = () => {
         }
         
         // Check if user is signed in with Google
-        const isGoogleSignIn = await isGoogleSignedIn();
-        console.log('isGoogleSignIn', isGoogleSignIn);
-        if (isGoogleSignIn) {
-          try {
-            // Trigger Google sign in to get fresh tokens
-            // const success = await useAuthStore.getState().loginWithGoogle();
-            const success = true;
-            console.log('success', success);
-            if (success) {
-              setOnboarded(true);
-              return;
+        try {
+          // Configure Google client first
+          await googleAuthService.configureGoogleSignIn();
+          
+          const isGoogleSignIn = await isGoogleSignedIn();
+          console.log('isGoogleSignIn', isGoogleSignIn);
+          
+          if (isGoogleSignIn) {
+            try {
+              // Try to get current Google user to verify the session
+              const currentUser = await googleAuthService.getCurrentGoogleUser();
+              
+              if (currentUser) {
+                // If we have a Google user but no tokens, try to sign in again
+                const success = await googleAuthService.signInWithGoogle();
+                console.log('Google re-auth success:', success);
+                
+                if (success) {
+                  setOnboarded(true);
+                  return;
+                }
+              } else {
+                // No current user despite isGoogleSignedIn being true
+                // This is the edge case - clear Google sign-in state
+                await googleAuthService.signOutFromGoogle();
+                console.log('Cleared inconsistent Google sign-in state');
+              }
+            } catch (error) {
+              console.error('Google sign in verification failed:', error);
+              // On any error, try to clear the Google sign-in state
+              await googleAuthService.signOutFromGoogle();
             }
-          } catch (error) {
-            console.error('Google sign in failed:', error);
           }
+        } catch (error) {
+          console.error('Google sign in check failed:', error);
         }
         
         // Check if user is signed in with Facebook

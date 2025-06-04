@@ -318,7 +318,24 @@ const ProfileDetails: React.FC = () => {
         enableOnAndroid={true}
         enableAutomaticScroll={true}
         extraScrollHeight={20}>
-        <Avatar imageUrl={userDetails?.profileImage || user?.photoUrl || ''} />
+        <Avatar 
+          imageUrl={userDetails?.profileImage || user?.photoUrl || ''}
+          userId={userDetails?.userId || user?.id || ''}
+          onImageUploaded={(fileUrl) => {
+            // Update user details with new profile image
+            if (userDetails?.userId) {
+              updateUser({
+                userId: userDetails.userId,
+                firstName: userDetails.firstName,
+                lastName: userDetails.lastName,
+                phone: userDetails.phone || undefined,
+                dob: userDetails.dob,
+                gender: userDetails.gender as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
+                profileImage: fileUrl,
+              });
+            }
+          }}
+        />
         <Divider height={24} />
 
         <View style={styles.form}>
