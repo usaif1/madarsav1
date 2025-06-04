@@ -126,8 +126,16 @@ export const useNameAudio = (): UseNameAudioReturn => {
 
   const resumeAudio = useCallback(async () => {
     if (!isPlaying && currentAudioRef.current) {
-      // Resume from last position
-      await playAudioFromUrl(currentAudioRef.current.url, currentAudioRef.current.lastPosition);
+      try {
+        await AudioPro.resume();
+        // If resume fails (which can happen with URL audio), fallback to replay
+        if (!isPlaying) {
+          await playAudioFromUrl(currentAudioRef.current.url, currentAudioRef.current.lastPosition);
+        }
+      } catch (err) {
+        // Fallback to replay if resume fails
+        await playAudioFromUrl(currentAudioRef.current.url, currentAudioRef.current.lastPosition);
+      }
     }
   }, [isPlaying, playAudioFromUrl]);
 

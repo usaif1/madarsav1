@@ -157,10 +157,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </View>
 
           {/* Progress Bar */}
-          <View style={styles.progressBarContainer}>
+          <TouchableOpacity 
+            style={styles.progressBarContainer}
+            onPress={(event) => {
+              const { locationX } = event.nativeEvent;
+              const progressBarWidth = scale(299); // Width of progress bar
+              const percentage = locationX / progressBarWidth;
+              const newPosition = percentage * duration;
+              seekTo(newPosition);
+            }}>
             <View style={styles.progressBarBackground} />
             <View style={[styles.progressBar, {width: `${Math.min(100, Math.max(0, progress * 100))}%`}]} />
-          </View>
+          </TouchableOpacity>
         </View>
       </ImageBackground>
     </View>

@@ -47,7 +47,7 @@ export default function App() {
           <OfflineDetector>
             <StatusBar
               barStyle={'light-content'}
-              backgroundColor={'transparent'}
+              backgroundColor={'#603DA2'}
               translucent
             />
             <ErrorToast />

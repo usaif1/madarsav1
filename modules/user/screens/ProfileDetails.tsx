@@ -39,6 +39,14 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+    width: '100%',
+    color: '#000000',
+  },
+  pickerItem: {
+    color: '#000000',
+  },
+  placeholderText: {
+    color: '#999999',
   },
   inputLabel: {
     marginBottom: 4,
@@ -374,10 +382,11 @@ const ProfileDetails: React.FC = () => {
                   selectedValue={gender}
                   onValueChange={(itemValue: string) => setGender(itemValue)}
                   style={styles.picker}
-                  enabled={true}>
-                  <Picker.Item label="Select Gender" value="" enabled={false} />
-                  <Picker.Item label="Male" value="MALE" />
-                  <Picker.Item label="Female" value="FEMALE" />
+                  enabled={true}
+                  itemStyle={styles.pickerItem}>
+                  <Picker.Item label="Select Gender" value="" style={styles.placeholderText} />
+                  <Picker.Item label="Male" value="MALE" style={styles.pickerItem} />
+                  <Picker.Item label="Female" value="FEMALE" style={styles.pickerItem} />
                 </Picker>
               </View>
               {formErrors.gender && (
