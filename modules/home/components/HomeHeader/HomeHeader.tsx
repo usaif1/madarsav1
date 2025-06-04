@@ -126,9 +126,9 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
       // This needs to be done before logout since we're using a protected navigator
       // The 'user' screen is defined in ParentStackParamList
       if (user) {
-        navigation.navigate('user');
+        navigation.navigate('user', { screen: 'profile' });
       } else {
-        navigation.navigate('user');
+        navigation.navigate('user', { screen: 'profileNotLoggedIn' });
       }
       
       // Navigate to the auth flow by resetting navigation stack
