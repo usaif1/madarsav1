@@ -118,10 +118,14 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
   try {
     console.log('📤 Uploading file for userId:', userId);
     
+    // Add required form fields
+    file.append('userId', userId);
+    file.append('fileRequestType', 'PROFILE');
+    
     // Use executeWithTokenRefresh to handle token expiration
     const response = await authService.executeWithTokenRefresh(() => 
       madrasaClient.post<FileUploadResponse>(
-        `${MADRASA_API_ENDPOINTS.UPLOAD_FILE}?userId=${userId}`,
+        MADRASA_API_ENDPOINTS.UPLOAD_FILE,
         file,
         {
           headers: {

@@ -130,14 +130,14 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <TouchableOpacity onPress={() => handleActionItemPress(actionItem.id)} style={{flexDirection: 'row', alignItems: 'center'}}>
                 <actionItem.iconLeft />
 
                 {/* Title 1 */}
                 <Text style={{fontWeight: '400', fontSize: 17, marginLeft: 12}}>
                   {actionItem.label}
                 </Text>
-              </View>
+              </TouchableOpacity>
               {actionItem?.iconRight ? (
                 <TouchableOpacity onPress={() => handleActionItemPress(actionItem.id)}>
                   <actionItem.iconRight />

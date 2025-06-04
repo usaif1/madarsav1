@@ -131,8 +131,12 @@ export const useUploadFile = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
-  return useMutation<FileUploadResponse, Error, { userId: string; file: FormData }>({
-    mutationFn: ({ userId, file }: { userId: string; file: FormData }) => uploadFile(userId, file),
+  return useMutation<FileUploadResponse, Error, { userId: string; file: File | Blob }>({
+    mutationFn: ({ userId, file }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return uploadFile(userId, formData);
+    },
     onSuccess: () => {
       // Invalidate and refetch user details query to get updated profile image
       if (user?.id) {

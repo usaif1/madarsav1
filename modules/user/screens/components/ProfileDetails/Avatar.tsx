@@ -60,17 +60,16 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
 
     const selectedImage = response.assets[0];
     
-    // Create form data
-    const formData = new FormData();
-    formData.append('file', {
+    // Create file object for upload
+    const fileToUpload = {
       uri: Platform.OS === 'ios' ? selectedImage.uri?.replace('file://', '') : selectedImage.uri,
-      type: selectedImage.type,
+      type: selectedImage.type || 'image/jpeg',
       name: selectedImage.fileName || 'image.jpg',
-    } as any);
+    } as any;
 
     // Upload image
     uploadFile(
-      { userId, file: formData },
+      { userId, file: fileToUpload },
       {
         onSuccess: (data) => {
           onImageUploaded?.(data.fileLink);
