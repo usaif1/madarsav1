@@ -1,5 +1,5 @@
 // dependencies
-import {Pressable, StyleSheet, View, ActivityIndicator, Alert, Platform, TouchableOpacity, Modal, Keyboard} from 'react-native';
+import {Pressable, StyleSheet, View, ActivityIndicator, Alert, Platform, TouchableOpacity, Modal, Keyboard, ViewStyle} from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {Picker} from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -41,13 +41,26 @@ const styles = StyleSheet.create({
     height: 50,
     width: '100%',
     color: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   pickerItem: {
     color: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   placeholderText: {
     color: '#999999',
   },
+  pickerModal: Platform.select({
+    android: {
+      backgroundColor: '#FFFFFF',
+    } as ViewStyle,
+    ios: {
+      backgroundColor: '#FFFFFF',
+    } as ViewStyle,
+    default: {
+      backgroundColor: '#FFFFFF',
+    } as ViewStyle,
+  }) as ViewStyle,
   inputLabel: {
     marginBottom: 4,
   },
@@ -400,10 +413,18 @@ const ProfileDetails: React.FC = () => {
                   onValueChange={(itemValue: string) => setGender(itemValue)}
                   style={styles.picker}
                   enabled={true}
-                  itemStyle={styles.pickerItem}>
-                  <Picker.Item label="Select Gender" value="" style={styles.placeholderText} />
-                  <Picker.Item label="Male" value="MALE" style={styles.pickerItem} />
-                  <Picker.Item label="Female" value="FEMALE" style={styles.pickerItem} />
+                  itemStyle={styles.pickerItem}
+                  dropdownIconColor="#000000"
+                  mode="dropdown"
+                  prompt="Select Gender"
+                  {...Platform.select({
+                    android: {
+                      style: [styles.picker, styles.pickerModal],
+                    },
+                  })}>
+                  <Picker.Item label="Select Gender" value="" style={styles.placeholderText} color="#999999" />
+                  <Picker.Item label="Male" value="MALE" style={styles.pickerItem} color="#000000" />
+                  <Picker.Item label="Female" value="FEMALE" style={styles.pickerItem} color="#000000" />
                 </Picker>
               </View>
               {formErrors.gender && (

@@ -1,6 +1,7 @@
 // src/modules/user/hooks/useUserProfile.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { getUserDetails, updateUserDetails, updateUserNotifications, uploadFile, UserDetails, UserUpdateDTO, UserNotificationUpdateDTO, FileUploadResponse } from '../services/userService';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 
@@ -131,13 +132,79 @@ export const useUploadFile = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
-  return useMutation<FileUploadResponse, Error, { userId: string; file: File | Blob }>({
-    mutationFn: ({ userId, file }) => {
+  return useMutation<FileUploadResponse, Error, { userId: string; file: File | Blob }>({    
+    mutationFn: async ({ userId, file }) => {
+      // Log the incoming file details
+      console.log('📤 Upload file details:', {
+        fileType: file.type,
+        fileSize: file.size,
+        fileName: (file as File).name,
+        isBlob: file instanceof Blob,
+        isFile: file instanceof File
+      });
+
       const formData = new FormData();
-      formData.append('file', file);
-      return uploadFile(userId, formData);
+      
+      // Add required parameters according to API docs
+      formData.append('fileRequestType', 'PROFILE_IMAGE'); // Assuming this is for profile image
+      formData.append('userId', userId);
+      
+      // For React Native, we need to properly structure the file object
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        // Assuming file is from react-native-image-picker or similar
+        const fileDetails = file as any; // Type assertion for mobile file object
+        
+        // Log mobile file details
+        console.log('📱 Mobile file details:', {
+          uri: fileDetails.uri,
+          type: fileDetails.type,
+          fileName: fileDetails.fileName,
+          assets: fileDetails.assets
+        });
+        
+        // If we have assets array (from image picker), use the first asset
+        if (fileDetails.assets && fileDetails.assets[0]) {
+          const asset = fileDetails.assets[0];
+          formData.append('file', {
+            uri: asset.uri,
+            type: asset.type || 'image/jpeg',
+            name: asset.fileName || 'profile.jpg',
+          });
+        } else {
+          // Fallback to direct file details
+          formData.append('file', {
+            uri: fileDetails.uri,
+            type: fileDetails.type || 'image/jpeg',
+            name: fileDetails.fileName || 'profile.jpg',
+          });
+        }
+      } else {
+        // Web browser File/Blob handling
+        formData.append('file', file);
+      }
+
+      // Log the FormData contents (for debugging)
+      console.log('📦 FormData entries:');
+      for (const [key, value] of (formData as any).entries()) {
+        console.log(`${key}:`, value);
+      }
+
+      try {
+        const response = await uploadFile(userId, formData);
+        console.log('✅ Upload successful:', response);
+        return response;
+      } catch (error: any) {
+        console.error('❌ Upload failed:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('🔄 Upload success, invalidating queries');
       // Invalidate and refetch user details query to get updated profile image
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: [USER_QUERY_KEYS.USER_DETAILS, user.id] });

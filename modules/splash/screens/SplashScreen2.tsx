@@ -1,6 +1,6 @@
 // modules/splash/screens/SplashScreen2.tsx
 import React, { useState, useEffect } from 'react';
-import { Pressable, StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
+import { Pressable, StyleSheet, View, ActivityIndicator, Alert,StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -65,6 +65,9 @@ const SplashPrimary: React.FC = () => {
   };
 
   return (
+    <>
+    <StatusBar barStyle="dark-content" backgroundColor="black" />
+    
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View
         style={{
@@ -75,7 +78,7 @@ const SplashPrimary: React.FC = () => {
         <View style={{ height: 33 }} />
         <Carousel />
 
-        <View style={{width: '100%', paddingBottom: scale(36), rowGap: scale(2)}}>
+        <View style={{width: '100%', paddingBottom: scale(24), rowGap: scale(2)}}>
           <Pressable
             onPress={handleGoogleSignIn}
             disabled={loadingButton !== null}
@@ -133,6 +136,7 @@ const SplashPrimary: React.FC = () => {
         </View>
       </View>
     </SafeAreaView>
+    </>
   );
 };
 
