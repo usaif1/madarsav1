@@ -118,9 +118,13 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
   try {
     console.log('📤 Uploading file for userId:', userId);
     
-    // Add required form fields
-    file.append('userId', userId);
-    file.append('fileRequestType', 'PROFILE');
+    // Log FormData entries for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📦 FormData in service:', {
+        userId,
+        url: MADRASA_API_ENDPOINTS.UPLOAD_FILE
+      });
+    }
     
     // Use executeWithTokenRefresh to handle token expiration
     const response = await authService.executeWithTokenRefresh(() => 
@@ -128,17 +132,35 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
         MADRASA_API_ENDPOINTS.UPLOAD_FILE,
         file,
         {
+          // Let the client handle Content-Type header
           headers: {
-            'Content-Type': 'multipart/form-data',
+            Accept: 'application/json'
           },
+          // Increase timeout for file uploads
+          timeout: 60000,
+          // Disable request compression for file uploads
+          compress: false,
+          // Disable response caching
+          cache: undefined
         }
       )
     );
     
-    console.log('✅ File uploaded successfully');
+    console.log('✅ File uploaded successfully:', response.data);
     return response.data;
-  } catch (error) {
-    console.error('❌ Failed to upload file:', error);
+  } catch (error: any) {
+    // Log detailed error information
+    console.error('❌ Failed to upload file:', {
+      error: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
+      }
+    });
     throw error;
   }
 };

@@ -5,6 +5,25 @@ import { Platform } from 'react-native';
 import { getUserDetails, updateUserDetails, updateUserNotifications, uploadFile, UserDetails, UserUpdateDTO, UserNotificationUpdateDTO, FileUploadResponse } from '../services/userService';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 
+// Type for React Native image picker response
+type ImageFile = {
+  uri: string;
+  type?: string;
+  fileName?: string;
+};
+
+// Type for form data file value
+type FormDataFileValue = {
+  uri: string;
+  type: string;
+  name: string;
+};
+
+// Type guard to check if a value is an ImageFile
+const isImageFile = (value: any): value is ImageFile => {
+  return value && typeof value.uri === 'string';
+};
+
 // Query keys
 export const USER_QUERY_KEYS = {
   USER_DETAILS: 'userDetails',
@@ -128,68 +147,116 @@ export const useUpdateUserDetails = () => {
  * Hook to upload file
  * @returns Mutation for uploading file
  */
+// Type for React Native image picker response (already defined, ensure it's available or define if not)
+// type ImageFile = {
+//   uri: string;
+//   type?: string;
+//   fileName?: string;
+// };
+
 export const useUploadFile = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
-  return useMutation<FileUploadResponse, Error, { userId: string; file: File | Blob }>({    
+  return useMutation<FileUploadResponse, Error, { userId: string; file: File | Blob | ImageFile }>({    
     mutationFn: async ({ userId, file }) => {
-      // Log the incoming file details
-      console.log('📤 Upload file details:', {
-        fileType: file.type,
-        fileSize: file.size,
-        fileName: (file as File).name,
+      // Log the incoming file details safely
+      let fileDetailsForLog: any = {
         isBlob: file instanceof Blob,
-        isFile: file instanceof File
-      });
-
-      const formData = new FormData();
-      
-      // Add required parameters according to API docs
-      formData.append('fileRequestType', 'PROFILE_IMAGE'); // Assuming this is for profile image
-      formData.append('userId', userId);
-      
-      // For React Native, we need to properly structure the file object
-      if (Platform.OS === 'ios' || Platform.OS === 'android') {
-        // Assuming file is from react-native-image-picker or similar
-        const fileDetails = file as any; // Type assertion for mobile file object
-        
-        // Log mobile file details
-        console.log('📱 Mobile file details:', {
-          uri: fileDetails.uri,
-          type: fileDetails.type,
-          fileName: fileDetails.fileName,
-          assets: fileDetails.assets
-        });
-        
-        // If we have assets array (from image picker), use the first asset
-        if (fileDetails.assets && fileDetails.assets[0]) {
-          const asset = fileDetails.assets[0];
-          formData.append('file', {
-            uri: asset.uri,
-            type: asset.type || 'image/jpeg',
-            name: asset.fileName || 'profile.jpg',
-          });
-        } else {
-          // Fallback to direct file details
-          formData.append('file', {
-            uri: fileDetails.uri,
-            type: fileDetails.type || 'image/jpeg',
-            name: fileDetails.fileName || 'profile.jpg',
-          });
-        }
-      } else {
-        // Web browser File/Blob handling
-        formData.append('file', file);
+        isFile: file instanceof File,
+        isImageFile: isImageFile(file),
+      };
+      if (file instanceof File) {
+        fileDetailsForLog.fileType = file.type;
+        fileDetailsForLog.fileSize = file.size;
+        fileDetailsForLog.fileName = file.name;
+      } else if (file instanceof Blob) { // Blob but not File
+        fileDetailsForLog.fileType = file.type;
+        fileDetailsForLog.fileSize = file.size;
+      } else if (isImageFile(file)) { // ImageFile
+        fileDetailsForLog.fileType = file.type;
+        fileDetailsForLog.fileName = file.fileName;
+        fileDetailsForLog.uri = file.uri;
       }
-
-      // Log the FormData contents (for debugging)
-      console.log('📦 FormData entries:');
-      for (const [key, value] of (formData as any).entries()) {
-        console.log(`${key}:`, value);
-      }
+      console.log('📤 Upload file details:', fileDetailsForLog);
 
       try {
+        // Create FormData instance
+        const formData = new FormData();
+        
+        const fileRequestType = 'PROFILE_IMAGE';
+        const currentUserId = userId;
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📦 Logging FormData parts before appending (useUserProfile.ts):');
+          console.log(`  fileRequestType to append: ${fileRequestType}`);
+          console.log(`  userId to append: ${currentUserId}`);
+        }
+
+        // Add required fields first
+        formData.append('fileRequestType', fileRequestType);
+        formData.append('userId', currentUserId);
+        
+        // For React Native, we need to properly structure the file object
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          const imageFile = file as ImageFile; // 'file' is ImageFile on mobile
+
+          if (!isImageFile(imageFile)) {
+            throw new Error('Invalid file format for mobile upload. Expected ImageFile.');
+          }
+          
+          console.log('📱 Mobile file details:', {
+            uri: imageFile.uri,
+            type: imageFile.type,
+            fileName: imageFile.fileName
+          });
+          
+          const fileUri = Platform.OS === 'android' && !imageFile.uri.startsWith('file://') 
+            ? `file://${imageFile.uri}` 
+            : imageFile.uri;
+
+          // Fetch the file content and convert to blob
+          const fetchResponse = await fetch(fileUri);
+          const blob = await fetchResponse.blob();
+
+          const fileName = imageFile.fileName || imageFile.uri.split('/').pop() || 'profile.jpg';
+          const effectiveType = (blob.type && blob.type !== 'application/octet-stream') ? blob.type : (imageFile.type || 'image/jpeg');
+          
+          // Create a File object from the blob to ensure name and type are correctly set
+          const fileToAppend = new File([blob], fileName, { type: effectiveType });
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`  Mobile file to append: [File] name="${fileToAppend.name}" type="${fileToAppend.type}" size=${fileToAppend.size}`);
+          }
+          formData.append('file', fileToAppend);
+
+        } else {
+          // Web browser File/Blob handling
+          if (!(file instanceof File || file instanceof Blob)) {
+            throw new Error('Invalid file format for web upload. Expected File or Blob.');
+          }
+          const webFileToAppend = file as File | Blob;
+          if (process.env.NODE_ENV === 'development') {
+            if (webFileToAppend instanceof File) {
+              console.log(`  Web file to append: [File] name="${webFileToAppend.name}" type="${webFileToAppend.type}" size=${webFileToAppend.size}`);
+            } else {
+              console.log(`  Web file to append: [Blob] type="${webFileToAppend.type}" size=${webFileToAppend.size}`);
+            }
+          }
+          formData.append('file', webFileToAppend);
+        }
+
+        // Log FormData contents safely
+        console.log('📦 FormData contents:', {
+          fileRequestType: 'PROFILE_IMAGE',
+          userId,
+          file: Platform.OS === 'web' ? (file as File | Blob) : {
+            uri: isImageFile(file) ? file.uri : 'unknown',
+            type: isImageFile(file) ? file.type || 'image/jpeg' : 'unknown',
+            name: isImageFile(file) ? file.fileName || 'profile.jpg' : 'unknown'
+          }
+        });
+
         const response = await uploadFile(userId, formData);
         console.log('✅ Upload successful:', response);
         return response;

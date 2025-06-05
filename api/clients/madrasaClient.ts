@@ -17,14 +17,27 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
 // Create Madrasa API client
 const madrasaClient = axios.create({
   baseURL: MADRASA_API_URL,
-  timeout: 15000,
+  timeout: 30000, // Increased timeout for file uploads
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Accept-Encoding': 'gzip, deflate', // Enable compression
   },
-  // Default to JSON, but allow overrides
   responseType: 'json',
+  // Don't transform data by default
+  transformRequest: [(data, headers) => {
+    // For FormData, let Axios handle the Content-Type header which includes the boundary.
+    if (data instanceof FormData) {
+      // headers['Content-Type'] = 'multipart/form-data'; // REMOVED: Let Axios set this.
+      // Log FormData for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📦 FormData in client:', data);
+      }
+      return data;
+    }
+    // For JSON data
+    headers['Content-Type'] = 'application/json';
+    return JSON.stringify(data);
+  }],
 });
 
 // Request interceptor to add auth token and handle optimizations
