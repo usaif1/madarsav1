@@ -25,18 +25,32 @@ const madrasaClient = axios.create({
   responseType: 'json',
   // Don't transform data by default
   transformRequest: [(data, headers) => {
-    // For FormData, let Axios handle the Content-Type header which includes the boundary.
     if (data instanceof FormData) {
-      // headers['Content-Type'] = 'multipart/form-data'; // REMOVED: Let Axios set this.
-      // Log FormData for debugging
+      // If data is FormData, simply return it. Axios should handle setting the
+      // 'Content-Type' to 'multipart/form-data' with the correct boundary, primarily guided
+      // by the 'Content-Type': undefined setting in the specific request config (e.g., in userService).
       if (process.env.NODE_ENV === 'development') {
-        console.log('📦 FormData in client:', data);
+        console.log('📦 FormData in transformRequest (passing through). Current headers[Content-Type]:', headers ? headers['Content-Type'] : 'headers undefined');
       }
       return data;
     }
-    // For JSON data
-    headers['Content-Type'] = 'application/json';
-    return JSON.stringify(data);
+
+    // For other data types (e.g., plain objects for JSON payloads)
+    if (headers && data && typeof data === 'object') {
+      // Ensure Content-Type is not set if data is null or undefined, even if headers object exists
+      if (data === null || data === undefined) {
+        if (headers['Content-Type']) delete headers['Content-Type'];
+      } else {
+        headers['Content-Type'] = 'application/json';
+        try {
+          return JSON.stringify(data);
+        } catch (e) {
+          console.error('Error stringifying request data:', e);
+          return data; 
+        }
+      }
+    }
+    return data;
   }],
 });
 
@@ -71,26 +85,31 @@ madrasaClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     
-    // Apply compression for POST, PUT, PATCH requests with data
-    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '') && config.data) {
-      if (extendedConfig.compress !== false) {
-        // Add compression headers
-        const compressedConfig = addCompressionHeaders(config);
-        
-        // Optimize request data if it's large enough (>1KB)
-        const dataSize = JSON.stringify(config.data).length;
-        if (dataSize > 1024) {
-          config.data = prepareDataForCompression(config.data);
-        }
-        
-        // Cast to InternalAxiosRequestConfig to satisfy TypeScript
-        return compressedConfig as InternalAxiosRequestConfig;
+    // Apply compression for POST, PUT, PATCH requests with data, BUT NOT FOR FormData
+    if (
+      ['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '') &&
+      config.data &&
+      !(config.data instanceof FormData) && // Explicitly exclude FormData
+      extendedConfig.compress !== false
+    ) {
+      // The outer condition already ensures extendedConfig.compress is not explicitly false,
+      // and that data is not FormData. So, we can proceed with compression logic.
+      // Add compression headers
+      const compressedConfig = addCompressionHeaders(config);
+      
+      // Optimize request data if it's large enough (>1KB)
+      // Note: JSON.stringify might not be ideal for all data types if prepareDataForCompression handles them differently.
+      const dataSize = JSON.stringify(config.data).length;
+      if (dataSize > 1024) {
+        config.data = prepareDataForCompression(config.data);
       }
-    }
+      return compressedConfig as InternalAxiosRequestConfig;
+    } // End of compression logic block
+
     
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: AxiosError) => Promise.reject(error)
 );
 
 // Response interceptor for token refresh and caching

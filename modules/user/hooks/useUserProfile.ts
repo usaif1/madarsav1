@@ -267,6 +267,7 @@ export const useUploadFile = () => {
           data: error.response?.data,
           headers: error.response?.headers
         });
+        console.error('❌ Upload failed error:', error);
         throw error;
       }
     },

@@ -17,6 +17,7 @@ import Geolocation from '@react-native-community/geolocation';
 // components
 import {FindMosqueButton, NextSalah} from './components/compass';
 import CompassSvg from '@/assets/compass/compass.svg';
+import CompassCenterSvg from '@/assets/compass/compass_center.svg';
 import {Divider} from '@/components';
 import GeographicDetails from './components/compass/GeographicDetails';
 import QiblaIndicator from './components/compass/QiblaIndicator';
@@ -72,41 +73,49 @@ const Compass: React.FC = () => {
 
   /* ---- start compass sensor ---- */
   useEffect(() => {
-    // Use a smaller delta for smoother updates
-    const DELTA_DEG = 0.5;
+    // Use an even smaller delta for smoother updates
+    const DELTA_DEG = 0.1;
     
-    // Create a smoother animation with a low-pass filter
+    // Improved low-pass filter configuration
     let lastHeading = 0;
-    const filterCoefficient = 0.2; // Lower value = smoother but slower response
+    const filterCoefficient = 0.1; // Lower value for even smoother response
+    let lastFilteredHeading = 0;
     
     CompassHeading.start(DELTA_DEG, ({heading}) => {
-      // Apply low-pass filter for smoother heading
+      // Apply enhanced low-pass filter for smoother heading
       let filteredHeading = heading;
+      
       if (lastHeading !== 0) {
-        // Handle the 0/360 boundary case
-        if (Math.abs(heading - lastHeading) > 180) {
-          if (heading > lastHeading) {
-            lastHeading += 360;
+        // Enhanced 0/360 boundary handling
+        if (Math.abs(heading - lastFilteredHeading) > 180) {
+          if (heading > lastFilteredHeading) {
+            lastFilteredHeading += 360;
           } else {
             filteredHeading += 360;
           }
         }
-        filteredHeading = lastHeading + filterCoefficient * (filteredHeading - lastHeading);
+        
+        // Double filtering for extra smoothness
+        filteredHeading = lastFilteredHeading + filterCoefficient * (filteredHeading - lastFilteredHeading);
         filteredHeading = filteredHeading % 360;
       }
-      lastHeading = filteredHeading;
+      
+      lastHeading = heading;
+      lastFilteredHeading = filteredHeading;
       
       setMagHeading(filteredHeading);
       // Calculate true heading by adding magnetic declination
       const trueH = (filteredHeading + decl + 360) % 360;
       setTrueHeading(trueH);
 
-      // Use spring animation for smoother movement
+      // Enhanced spring animation for ultra-smooth movement
       Animated.spring(rotateAnim, {
         toValue: trueH,
-        friction: 7, // Higher friction = more damping
-        tension: 20, // Lower tension = slower but smoother
+        friction: 12, // Higher friction for more stability
+        tension: 8, // Lower tension for smoother movement
         useNativeDriver: true,
+        restSpeedThreshold: 0.01, // Lower threshold for smoother stops
+        restDisplacementThreshold: 0.01
       }).start();
     });
     return () => CompassHeading.stop();
@@ -153,6 +162,9 @@ const Compass: React.FC = () => {
           <Animated.View style={[styles.compass, {transform: [{rotate}]}]}>
             <CompassSvg width={300} height={300} />
           </Animated.View>
+          <View style={styles.compassCenter}>
+            <CompassCenterSvg width={100} height={100} />
+          </View>
 
           {qiblaBearing !== null && (
             <QiblaIndicator angle={qiblaAngle} compassRadius={150} />
@@ -187,6 +199,13 @@ const Compass: React.FC = () => {
 
 // ─────────── styles ───────────
 const styles = StyleSheet.create({
+  compassCenter: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -55}, {translateY: -45}],
+    zIndex: 2,
+  },
   topContainer: {flex: 1, backgroundColor: '#FFFFFF'},
   compassContainer: {
     paddingTop: 80,

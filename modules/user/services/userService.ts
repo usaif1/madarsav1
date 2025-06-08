@@ -132,13 +132,17 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
         MADRASA_API_ENDPOINTS.UPLOAD_FILE,
         file,
         {
-          // Let the client handle Content-Type header
           headers: {
-            Accept: 'application/json'
+            // Explicitly setting 'Content-Type' to 'multipart/form-data' as requested.
+            // Note: This typically omits the 'boundary' parameter, which Axios would add
+            // if 'Content-Type' were undefined with FormData.
+            'Content-Type': 'multipart/form-data',
+            // Explicitly state that we accept a JSON response.
+            'Accept': 'application/json',
           },
           // Increase timeout for file uploads
           timeout: 60000,
-          // Disable request compression for file uploads
+          // Disable request compression for file uploads (important for FormData)
           compress: false,
           // Disable response caching
           cache: undefined
