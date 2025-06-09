@@ -7,8 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ParentStackParamList } from '@/navigator/ParentNavigator';
 
 // assets
-import FacebookLogin from '@/assets/splash/facebook_login.svg';
-import GoogleLogin from '@/assets/splash/google_login.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 
 // components
 import Carousel from '../components/Carousel';
@@ -21,6 +20,22 @@ import { useGlobalStore } from '@/globalStore';
 // auth
 import { useSocialAuth } from '@/modules/auth/hooks/useSocialAuth';
 import { scale } from '@/theme/responsive';
+
+const FacebookLogin = () => (
+  <CdnSvg 
+    path="/assets/splash/facebook_login.svg" 
+    width={24} 
+    height={24} 
+  />
+);
+
+const GoogleLogin = () => (
+  <CdnSvg 
+    path="/assets/splash/google_login.svg" 
+    width={24} 
+    height={24} 
+  />
+);
 
 const SplashPrimary: React.FC = () => {
   const { colors } = useThemeStore();

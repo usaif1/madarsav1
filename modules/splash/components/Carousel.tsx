@@ -7,8 +7,8 @@ import {
   Dimensions,
   StyleProp,
   ViewStyle,
-  Image,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-snap-carousel';
 
 // components
@@ -148,17 +148,17 @@ export default function App() {
           // Second slide - Feelings and Dua Card Graphics
           return (
             <View style={styles.graphicsContainer}>
-              {/* <Image 
-                source={require('@/assets/splash/FeelingsGraphic.png')} 
+              <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/FeelingsGraphic.png' }} 
                 style={styles.feelingsImage} 
-                resizeMode="cover"
+                resizeMode={FastImage.resizeMode.cover}
               />
               <Divider height={9} />
-              <Image 
-                source={require('@/assets/splash/DuaCardGraphic.png')} 
+              <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DuaCardGraphic.png' }} 
                 style={styles.duaCardImage} 
-                resizeMode="cover"
-              /> */}
+                resizeMode={FastImage.resizeMode.cover}
+              />
               <FeelingToday disabled={true} />
               <SplashDuaCard />
             </View>
@@ -167,20 +167,20 @@ export default function App() {
           // Third slide - Deen and Duniya Graphics
           return (
             <View style={styles.graphicsContainer}>
-               <Image 
-                source={require('@/assets/splash/MaktabGraphic.png')} 
+               <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/MaktabGraphic.png' }} 
                 style={styles.slideImage} 
-                resizeMode="contain"
+                resizeMode={FastImage.resizeMode.contain}
               />
-              <Image 
-                source={require('@/assets/splash/DeenGraphic2.png')} 
+              <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DeenGraphic2.png' }} 
                 style={[styles.slideImage, {marginTop: scale(-10)}]} 
-                resizeMode="contain"
+                resizeMode={FastImage.resizeMode.contain}
               />
-              <Image 
-                source={require('@/assets/splash/DuniyaGraphic2.png')} 
+              <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DuniyaGraphic2.png' }} 
                 style={[styles.slideImage, {marginTop: scale(-10)}]} 
-                resizeMode="contain"
+                resizeMode={FastImage.resizeMode.contain}
               />
             </View>
           );

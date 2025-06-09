@@ -25,13 +25,28 @@ import locationService from '@/modules/location/services/locationService';
 import { useLocationStore } from '@/modules/location/store/locationStore';
 
 // assets
-import SplashGraphic from '@/assets/splash/splash_graphic.svg';
-import MandalaFull from '@/assets/splash/mandala_full.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 
 type RootStackParamList = {
   SplashScreen2: undefined;
   screen2: undefined;
 };
+
+const SplashGraphic = () => (
+  <CdnSvg 
+    path="/assets/splash/splash_graphic.svg" 
+    width={375} // Adjust based on your design
+    height={200} // Adjust based on your design
+  />
+);
+
+const MandalaFull = () => (
+  <CdnSvg 
+    path="/assets/splash/mandala_full.svg" 
+    width={375} // Adjust based on your design
+    height={375} // Adjust based on your design
+  />
+);
 
 const SplashScreen1: React.FC = () => {
   const navigation =
