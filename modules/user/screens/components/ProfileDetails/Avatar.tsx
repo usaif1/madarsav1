@@ -5,7 +5,7 @@ import React from 'react';
 import {useThemeStore} from '@/globalStore';
 
 // assets
-import Camera from '@/assets/profile/camera.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 import FastImage from 'react-native-fast-image';
 
 interface AvatarProps {
@@ -13,6 +13,10 @@ interface AvatarProps {
   userId: string;
   onImageUploaded?: (fileUrl: string) => void;
 }
+
+const Camera = () => (
+  <CdnSvg path="/assets/profile/camera.svg" width={24} height={24} />
+);
 
 const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
   const {shadows} = useThemeStore();
@@ -84,10 +88,17 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
   return (
     <View style={[styles.avatar, shadows.md1]}>
       <FastImage
-        source={imageUrl ? {uri: imageUrl} : require('@/assets/profile/face.png')}
-        resizeMode={FastImage.resizeMode.contain}
-        style={[styles.avatar,{width: 100, height: 100}]}
-      />
+  source={imageUrl 
+    ? { uri: imageUrl } 
+    : { 
+        uri: 'https://cdn.madrasaapp.com/assets/profile/face.png',
+        priority: FastImage.priority.normal,
+        cache: FastImage.cacheControl.immutable,
+      }
+  }
+  resizeMode={FastImage.resizeMode.contain}
+  style={[styles.avatar, {width: 100, height: 100}]}
+/>
       <Pressable 
         style={[styles.cameraBtn, isPending && styles.disabledBtn]}
         onPress={handleImageSelection}

@@ -2,7 +2,7 @@ import {Pressable, Alert} from 'react-native';
 import React, {useState} from 'react';
 
 // assets
-import LogoutMadarsa from '@/assets/logout.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 
 // store
 import { useAuthStore } from '@/modules/auth/store/authStore';
@@ -22,6 +22,14 @@ import authService from '@/modules/auth/services/authService';
 
 // Components
 import LogoutModal from '@/components/LogoutModal';
+
+const LogoutMadarsa = () => (
+  <CdnSvg 
+    path="/assets/logout.svg" 
+    width={24} 
+    height={24} 
+  />
+);
 
 const LogoutButton = () => {
   const user = useAuthStore((state) => state.user);

@@ -7,9 +7,9 @@ import {
   Dimensions,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import LogoutRedIcon from '@/assets/profile/logout-red.svg'; // Assuming this is the correct path
 import { Body1Title2Regular, H5Bold } from './Typography/Typography';
 import { scale } from '@/theme/responsive';
+import { CdnSvg } from '@/components/CdnSvg';
 
 interface LogoutModalProps {
   isVisible: boolean;
@@ -18,6 +18,14 @@ interface LogoutModalProps {
 }
 
 const { width: screenWidth } = Dimensions.get('window');
+
+const LogoutRedIcon = () => (
+  <CdnSvg 
+    path="/assets/profile/logout-red.svg" 
+    width={scale(21.88)} 
+    height={scale(21.88)} 
+  />
+);
 
 const LogoutModal: React.FC<LogoutModalProps> = ({ 
   isVisible, 
@@ -38,7 +46,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
       <View style={styles.container}>
         <View style={styles.topContainer}>
           <View style={styles.iconContainer}>
-            <LogoutRedIcon width={scale(21.88)} height={scale(21.88)} />
+            <LogoutRedIcon/>
           </View>
           
           <H5Bold style={styles.title}>Logout from Madrasa?</H5Bold>
