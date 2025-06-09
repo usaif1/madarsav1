@@ -58,6 +58,13 @@ export const DUA_ASSETS = {
   TASBIH_ANIMATION_BLACK: '/assets/tasbih/animations/tasbih-black.json',
   TASBIH_ANIMATION_WHITE: '/assets/tasbih/animations/tasbih-white.json',
   
+  // Names module assets
+  NAMES_SEARCH: '/assets/search.svg',
+  NAMES_SHARE: '/assets/share-light.svg',
+  NAMES_RIGHT_TRIANGLE: '/assets/right-triangle.svg',
+  NAMES_CLOSE: '/assets/close.svg',
+  NAMES_PAUSE: '/assets/home/pause.svg',
+  
   // Compass assets
   COMPASS_BACKGROUND: '/assets/compass/compass.svg',
   COMPASS_CENTER: '/assets/compass/compass_center.svg',

@@ -5,10 +5,8 @@ import Modal from 'react-native-modal';
 
 // Components & Data
 import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
-import Share from '@/assets/share-light.svg';
-import RightTriangle from '@/assets/right-triangle.svg';
-import Close from '@/assets/close.svg';
-import Pause from '@/assets/home/pause.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // Custom Hook
 import { useNameAudio } from '../../../hooks/useNameAudio'; // Adjust path as needed
@@ -23,6 +21,12 @@ const CARD_SIZE = Math.min(width, 375);
 
 interface NamesListProps {
   searchQuery?: string;
+}
+
+const Close = () => {
+  return (
+    <CdnSvg path={DUA_ASSETS.NAMES_CLOSE} width={24} height={24} />
+  )
 }
 
 /**
@@ -402,10 +406,9 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             <Pressable
               onPress={handleCloseModal}
               style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
-              accessibilityLabel="Close"
               accessibilityRole="button"
             >
-              <Close />
+              <CdnSvg path={DUA_ASSETS.NAMES_CLOSE} width={24} height={24} />
               <Body1Title2Bold color="white">Close</Body1Title2Bold>
             </Pressable>
 
@@ -422,7 +425,11 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
               accessibilityRole="button"
             >
-              {isPlaying ? <Pause /> : <RightTriangle />}
+              {isPlaying ? (
+                <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={24} height={24} />
+              ) : (
+                <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={24} height={24} />
+              )}
               <Body1Title2Bold color="white">
                 {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
               </Body1Title2Bold>
@@ -434,7 +441,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               accessibilityRole="button"
               onPress={handleShare} 
             >
-              <Share />
+              <CdnSvg path={DUA_ASSETS.NAMES_SHARE} width={24} height={24} />
               <Body1Title2Bold color="white">Share</Body1Title2Bold>
             </Pressable>
           </View>
