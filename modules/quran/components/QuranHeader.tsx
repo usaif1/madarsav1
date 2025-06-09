@@ -44,7 +44,6 @@ const QuranHeader: React.FC = () => {
               priority: FastImage.priority.normal,
             }}
             style={styles.userImage}
-            defaultSource={require('@/assets/home/blank-profile-picture.png')}
             resizeMode={FastImage.resizeMode.cover}
           />
           {/* Menu Icon positioned on the bottom right of the image */}

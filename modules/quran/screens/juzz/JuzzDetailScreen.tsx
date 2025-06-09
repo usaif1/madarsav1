@@ -7,8 +7,8 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
 import BackButton from '@/components/BackButton/BackButton';
-import SettingsIcon from '@/assets/quran/settings.svg';
-import PlayIcon from '@/assets/hadith/Play.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 // Define the type for a verse
@@ -186,7 +186,7 @@ const JuzzDetailScreen: React.FC = () => {
           <H5Bold>{juzzName}</H5Bold>
         </View>
         <TouchableOpacity>
-          <SettingsIcon width={24} height={24} />
+          <CdnSvg path={DUA_ASSETS.QURAN_SETTINGS_ICON} width={24} height={24} />
         </TouchableOpacity>
       </View>
       
@@ -224,7 +224,7 @@ const JuzzDetailScreen: React.FC = () => {
         onPress={togglePlayPause}
         activeOpacity={0.8}
       >
-        <PlayIcon width={24} height={24} fill="#FFFFFF" />
+        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_ICON} width={24} height={24} fill="#FFFFFF" />
       </TouchableOpacity>
       
       {/* Audio player (visible when playing) */}
