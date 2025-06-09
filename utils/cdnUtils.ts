@@ -28,6 +28,7 @@ export const DUA_ASSETS = {
   ARROW_LEFT: '/assets/arrow-left.svg',
   ARROW_RIGHT: '/assets/duas/arrow-right.svg',
   HAMBURGER_ICON: '/assets/duas/hamburger-icon.svg',
+  QURAN_CLOSE_ICON: '/assets/close.svg',
   
   // Tasbih assets
   TASBIH_PENCIL: '/assets/tasbih/pencil.svg',

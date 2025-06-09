@@ -5,8 +5,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body1Medium, Body2Medium, Body1Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
-import CloseIcon from '@/assets/close.svg';
+import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // Define the type for a Surah item
 type SurahItem = {
@@ -80,7 +81,7 @@ const ChangeSurahScreen: React.FC = () => {
         <View style={styles.headerContent}>
           <H5Bold>Change Surah</H5Bold>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <CloseIcon width={24} height={24} />
+            <CdnSvg path={DUA_ASSETS.CLOSE_ICON} width={24} height={24} />
           </TouchableOpacity>
         </View>
       </View>
@@ -101,7 +102,7 @@ const ChangeSurahScreen: React.FC = () => {
           onPress={handleConfirm}
           activeOpacity={0.8}
         >
-          <Body1Bold style={styles.confirmButtonText}>Confirm</Body1Bold>
+          <Body2Bold style={styles.confirmButtonText}>Confirm</Body2Bold>
         </TouchableOpacity>
       </View>
     </View>
