@@ -11,7 +11,7 @@ import {Title3Bold, Body2Medium} from '@/components';
 import MonthYearSelector from '../MonthYearSelection/MonthYearSelector';
 
 // icons
-import DownArrow from '@/assets/calendar/down-arrow.svg'; // You'll need to create/add this SVG
+import { CdnSvg } from '@/components/CdnSvg';
 
 // theme
 import {useThemeStore} from '@/globalStore';
@@ -124,7 +124,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
             <Title3Bold color={textColor}>
               {selectedMonth} {selectedYear}
             </Title3Bold>
-            <DownArrow width={scale(16)} height={scale(16)} fill={textColor} style={styles.arrow} />
+            <CdnSvg path="/assets/calendar/down-arrow.svg" width={scale(16)} height={scale(16)} fill={textColor} style={styles.arrow} />
           </View>
           <Body2Medium color={textColor} style={styles.subtitle}>
             {islamicDate}

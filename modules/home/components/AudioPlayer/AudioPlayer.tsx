@@ -2,9 +2,7 @@ import React, {useState, useEffect, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, ImageBackground, ActivityIndicator} from 'react-native';
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Medium, CaptionMedium} from '@/components/Typography/Typography';
-import PauseIcon from '@/assets/home/pause.svg';
-import PlayIcon from '@/assets/home/play.svg';
-import AlHusnaIcon from '@/assets/home/al-husna.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 import { useNameAudio } from '@/modules/names/hooks/useNameAudio';
 import { useGlobalStore } from '@/globalStore';
 import { useAll99Names } from '@/modules/names/hooks/use99Names';
@@ -128,7 +126,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           style={styles.trackImageContainer}
           imageStyle={styles.trackImageStyle}>
           <View style={styles.iconContainer}>
-            <AlHusnaIcon width={90} height={120} />
+          <CdnSvg path="/assets/home/al-husna.svg" width={80} height={100} />
           </View>
         </ImageBackground>
 
@@ -137,9 +135,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           {isLoading ? (
             <ActivityIndicator size="small" color="#000" />
           ) : isPlaying ? (
-            <PauseIcon width={14} height={14} />
+            <CdnSvg path="/assets/home/pause.svg" width={14} height={14} />
           ) : (
-            <PlayIcon width={14} height={14} />
+            <CdnSvg path="/assets/home/play.svg" width={14} height={14} />
           )}
         </TouchableOpacity>
 

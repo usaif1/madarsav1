@@ -13,8 +13,7 @@ import {
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium} from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
-import DownArrow from '@/assets/home/down-arrow.svg';
-import NoEvents from '@/assets/home/no-events.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 import { ShadowColors } from '@/theme/shadows';
 import { useThemeStore } from '@/globalStore';
 
@@ -235,7 +234,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
               onPress={() => setShowMonthPicker(true)}
             >
               <Body1Title2Medium color="white">{selectedMonth}</Body1Title2Medium>
-              <DownArrow width={scale(12)} height={scale(12)} fill="#FFFFFF" />
+              <CdnSvg path="/assets/home/down-arrow.svg" width={scale(12)} height={scale(12)} fill="#FFFFFF" />
             </TouchableOpacity>
           </View>
           
@@ -309,7 +308,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
             onPress={() => setShowMonthPicker(true)}
           >
             <Body1Title2Medium color="white">{selectedMonth}</Body1Title2Medium>
-            <DownArrow width={scale(12)} height={scale(12)} fill="#FFFFFF" />
+            <CdnSvg path="/assets/home/down-arrow.svg" width={scale(12)} height={scale(12)} fill="#FFFFFF" />
           </TouchableOpacity>
         </View>
         
@@ -327,7 +326,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
             />
           ) : (
             <View style={styles.noEventsContainer}>
-              <NoEvents width={scale(60)} height={scale(60)} />
+              <CdnSvg path="/assets/home/no-events.svg" width={scale(60)} height={scale(60)} />
               <Body1Title2Medium style={styles.noEventsText}>
                 Zero islamic events{'\n'}this month
               </Body1Title2Medium>
