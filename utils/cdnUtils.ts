@@ -102,5 +102,6 @@ export const DUA_ASSETS = {
   HADITH_PLAY: '/assets/hadith/play.svg',
   HADITH_TOP_ILLUSTRATION: '/assets/hadith/hadith-info-top-illustration.svg',
   HADITH_BOOK_IMAGE: '/assets/hadith/BookImageBig.png',
+  CALENDAR_ICON: '/assets/calendar/calendar-icon.svg',
   NAV_PROFILE_MENU: '/assets/home/nav-profile-menu.svg',
 };

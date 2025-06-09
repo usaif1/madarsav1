@@ -9,7 +9,8 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Body1Title2Medium, Body1Title2Bold, Divider} from '@/components';
 import CustomTextInput from './components/ProfileDetails/CustomTextInput';
 import Avatar from './components/ProfileDetails/Avatar';
-import CalendarIcon from '@/assets/profile/calendar_icon.svg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { CdnSvg } from '@/components/CdnSvg';
 
 // hooks
 import {useAuthStore} from '@/modules/auth/store/authStore';
@@ -455,7 +456,7 @@ const ProfileDetails: React.FC = () => {
                 placeholder="dd-mm-yyyy"
                 rightIcon={
                   <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                    <CalendarIcon/>
+                    <CdnSvg path={DUA_ASSETS.CALENDAR_ICON} width={24} height={24} />
                   </TouchableOpacity>
                 }
               />
