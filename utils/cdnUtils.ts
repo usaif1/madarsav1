@@ -104,4 +104,16 @@ export const DUA_ASSETS = {
   HADITH_BOOK_IMAGE: '/assets/hadith/BookImageBig.png',
   CALENDAR_ICON: '/assets/calendar/calendar-icon.svg',
   NAV_PROFILE_MENU: '/assets/home/nav-profile-menu.svg',
+  MARBLE_ICON: '/assets/splash/marble.png',
+  
+  // Tab Bar Icons
+  TAB_HOME: '/assets/home/home.svg',
+  TAB_HOME_SELECTED: '/assets/home/home-selected.svg',
+  TAB_MAKTAB: '/assets/home/maktab.svg',
+  TAB_MAKTAB_SELECTED: '/assets/home/maktab-selected.svg',
+  TAB_QURAN: '/assets/home/al-quran.svg',
+  TAB_QURAN_SELECTED: '/assets/home/al-quran-selected.svg',
+  
+  // Common Icons
+  SEARCH_ICON: '/assets/search.svg',
 };

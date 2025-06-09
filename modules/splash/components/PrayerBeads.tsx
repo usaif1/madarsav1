@@ -8,6 +8,7 @@ import FastImage from 'react-native-fast-image';
 import { CdnSvg } from '@/components/CdnSvg';
 import { scale } from '@/theme/responsive';
 import { Title1Regular } from '@/components';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 const {height} = Dimensions.get('window');
 
@@ -31,7 +32,7 @@ const PrayerBeads = () => {
         <View style={{alignItems: 'flex-end',left: scale(12)}}><CdnSvg path="/assets/splash/prayer_beads_text.svg" width={scale(200)} height={scale(40)} /></View>
 
         <FastImage
-          source={require('@/assets/splash/marble.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.MARBLE_ICON) }}
           resizeMode={FastImage.resizeMode.contain}
           style={[
             styles.marble,
@@ -45,7 +46,7 @@ const PrayerBeads = () => {
           ]}
         />
         <FastImage
-          source={require('@/assets/splash/marble.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.MARBLE_ICON) }}
           resizeMode={FastImage.resizeMode.contain}
           style={[
             styles.marble,
@@ -59,7 +60,7 @@ const PrayerBeads = () => {
           ]}
         />
         <FastImage
-          source={require('@/assets/splash/marble.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.MARBLE_ICON) }}
           resizeMode={FastImage.resizeMode.contain}
           style={[
             styles.marble,
@@ -73,7 +74,7 @@ const PrayerBeads = () => {
           ]}
         />
         <FastImage
-          source={require('@/assets/splash/marble.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.MARBLE_ICON) }}
           resizeMode={FastImage.resizeMode.contain}
           style={[
             styles.marble,
