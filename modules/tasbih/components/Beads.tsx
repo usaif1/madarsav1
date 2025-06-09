@@ -19,6 +19,7 @@ const hapticOptions = {
 import { Body1Title2Bold, Body1Title2Regular, Body1Title2Medium, H3Bold } from '@/components/Typography/Typography';
 import { TasbihData } from '@/modules/dua/services/duaService';
 import { scale } from '@/theme/responsive';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 // Enable LayoutAnimation for Android with proper error handling
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -182,13 +183,19 @@ const Beads: React.FC<BeadsProps> = ({
       <View style={styles.lottieContainer}>
         <LottieView
           ref={lottieRef}
-          // Use JSON format instead of .lottie
-          source={isWhite ? require('@/assets/tasbih/animations/tasbih-white.json') : require('@/assets/tasbih/animations/tasbih-black.json')}
+          source={{
+            uri: getCdnUrl(isWhite ? DUA_ASSETS.TASBIH_ANIMATION_WHITE : DUA_ASSETS.TASBIH_ANIMATION_BLACK)
+          }}
           style={[styles.lottieAnimation, { transform: [{ rotate: '-20deg' }] }]}
           loop={false}
           autoPlay={false}
-          speed={1} // Speed up the animation by 50%
+          speed={1}
           resizeMode="cover"
+          onAnimationFinish={() => setIsAnimating(false)}
+          onAnimationFailure={(error) => {
+            console.error('Animation failed to load:', error);
+            setIsAnimating(false);
+          }}
         />
       </View>
       

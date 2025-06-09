@@ -9,10 +9,8 @@ import {
   Dimensions,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import Bubble from '@/assets/tasbih/bubble.svg';
-import Close from '@/assets/close.svg';
-import LeftFlowerChangeDua from '@/assets/tasbih/leftFlowerChangeDua.svg';
-import RightFlowerChangeDua from '@/assets/tasbih/rightFlowerChangeDua.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useThemeStore } from '@/globalStore';
 import { Body1Title2Bold, Body1Title2Medium, Body2Medium, H5Medium, Title3Bold } from '@/components/Typography/Typography';
@@ -66,7 +64,7 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
           {item.verses && item.verses[0] ? item.verses[0].arabic : ''}
         </H5Medium>
       <View style={styles.bubbleWrap}>
-        <Bubble width={scale(26)} height={scale(26)} />
+        <CdnSvg path={DUA_ASSETS.TASBIH_BUBBLE} width={scale(26)} height={scale(26)} />
         <Body1Title2Bold style={[styles.bubbleNum, { color: ColorPrimary.primary600 }]}>
           {index + 1}
         </Body1Title2Bold>
@@ -101,17 +99,17 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
         <View style={[styles.header, { borderBottomColor: ShadowColors['border-light'] }]}>
           <Title3Bold style={styles.title}>Change dua</Title3Bold>
           <Pressable onPress={onClose} hitSlop={16}>
-            <Close width={scale(16)} height={scale(16)} />
+            <CdnSvg path={DUA_ASSETS.CLOSE_ICON} width={scale(16)} height={scale(16)} />
           </Pressable>
         </View>
         
         {/* Fixed tap row */}
         <View style={[styles.tapRow, { backgroundColor: ColorPrimary.primary50 }]}>
-          <LeftFlowerChangeDua width={scale(34)} height={scale(34)} />
+          <CdnSvg path={DUA_ASSETS.TASBIH_LEFT_FLOWER} width={scale(34)} height={scale(34)} />
           <Body1Title2Bold style={[styles.tapText, { color: ColorPrimary.primary500 }]}>
             Tap to change dua
           </Body1Title2Bold>
-          <RightFlowerChangeDua width={scale(34)} height={scale(34)} />
+          <CdnSvg path={DUA_ASSETS.TASBIH_RIGHT_FLOWER} width={scale(34)} height={scale(34)} />
         </View>
         
         {/* Scrollable content area */}

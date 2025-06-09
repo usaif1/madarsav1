@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import ResetIcon from '@/assets/tasbih/resetViolet.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale } from '@/theme/responsive';
 import { Title3Bold, Body1Title2Medium, Body1Title2Bold } from '@/components/Typography/Typography';
 
@@ -17,7 +18,7 @@ const ResetCounterModal: React.FC<ResetCounterModalProps> = ({ visible, onClose,
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.iconWrap}>
-            <ResetIcon width={38} height={38} />
+            <CdnSvg path={DUA_ASSETS.TASBIH_RESET_VIOLET} width={38} height={38} />
           </View>
           <Title3Bold style={styles.title}>Reset counter</Title3Bold>
           <Body1Title2Medium style={styles.subtitle}>Sure to reset the counter?</Body1Title2Medium>

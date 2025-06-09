@@ -25,9 +25,22 @@ export const DUA_ASSETS = {
   // Common UI icons
   SEARCH: '/assets/search.svg',
   CLOSE: '/assets/close.svg',
+  ARROW_LEFT: '/assets/duas/arrow-left.svg',
   ARROW_RIGHT: '/assets/duas/arrow-right.svg',
+  HAMBURGER_ICON: '/assets/duas/hamburger-icon.svg',
+  
+  // Tasbih assets
+  TASBIH_PENCIL: '/assets/tasbih/pencil.svg',
+  TASBIH_PENCIL_VIOLET: '/assets/tasbih/pencilViolet.svg',
+  TASBIH_RESET: '/assets/tasbih/reset.svg',
+  TASBIH_RESET_VIOLET: '/assets/tasbih/resetViolet.svg',
+  TASBIH_BEAD: '/assets/tasbih/rosaryBead.png',
+  TASBIH_BEAD_WHITE: '/assets/tasbih/rosaryBeadWhite.png',
+  TASBIH_BUBBLE: '/assets/tasbih/bubble.svg',
+  TASBIH_LEFT_FLOWER: '/assets/tasbih/leftFlowerChangeDua.svg',
+  TASBIH_RIGHT_FLOWER: '/assets/tasbih/rightFlowerChangeDua.svg',
+  CLOSE_ICON: '/assets/close.svg',
   SHARE_ALT: '/assets/hadith/share_alt.svg',
-  BUBBLE: '/assets/tasbih/bubble.svg',
   
   // Prayer time icons
   FAJR: '/assets/home/fajr.svg',
@@ -41,6 +54,10 @@ export const DUA_ASSETS = {
   MAKTAB_CALENDAR: '/assets/maktab/maktab-calendar.png',
   MAKTAB_SALAM: '/assets/maktab/maktab-salam.png',
 
+  // Lottie animations
+  TASBIH_ANIMATION_BLACK: '/assets/tasbih/animations/tasbih-black.json',
+  TASBIH_ANIMATION_WHITE: '/assets/tasbih/animations/tasbih-white.json',
+  
   // Compass assets
   COMPASS_BACKGROUND: '/assets/compass/compass.svg',
   COMPASS_CENTER: '/assets/compass/compass_center.svg',

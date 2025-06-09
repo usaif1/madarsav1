@@ -4,9 +4,8 @@ import { View, StyleSheet, Text, Pressable, useWindowDimensions, ScrollView } fr
 import LinearGradient from 'react-native-linear-gradient';
 import { Body1Title2Bold, Body1Title2Medium } from '@/components';
 import { useThemeStore } from '@/globalStore';
-import ArrowLeft from '@/assets/profile/arrowleft.svg';
-import ArrowRight from '@/assets/profile/arrowright.svg';
-import Hamburger from '@/assets/profile/hamburger.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale } from '@/theme/responsive';
 
 interface DuaCardProps {
@@ -90,7 +89,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         hitSlop={8} 
         accessibilityLabel="Previous dua"
       >
-        <ArrowLeft width={16} height={16} />
+        <CdnSvg path={DUA_ASSETS.ARROW_LEFT} width={16} height={16} />
       </Pressable>
       <Pressable 
         onPress={onNext} 
@@ -98,7 +97,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         hitSlop={8} 
         accessibilityLabel="Next dua"
       >
-        <ArrowRight width={16} height={16} />
+        <CdnSvg path={DUA_ASSETS.ARROW_RIGHT} width={16} height={16} />
       </Pressable>
       {/* Change Dua Button positioned at bottom center - Fixed onPress handler */}
       <Pressable 
@@ -106,7 +105,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         onPress={onChangeDua} 
         accessibilityLabel="Change dua"
       >
-        <Hamburger width={18} height={18} style={{ marginRight: 4 }} />
+        <CdnSvg path={DUA_ASSETS.HAMBURGER_ICON} width={18} height={18} style={{ marginRight: 4 }} />
         <Body1Title2Bold color="white">Change dua</Body1Title2Bold>
       </Pressable>
     </View>

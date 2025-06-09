@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Text, TouchableOpacity } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import rosaryBead from '@/assets/tasbih/rosaryBead.png';
-import rosaryBeadWhite from '@/assets/tasbih/rosaryBeadWhite.png';
-import ResetIconViolet from '@/assets/tasbih/resetViolet.svg';
-import ResetIcon from '@/assets/tasbih/reset.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { getCdnUrl } from '@/utils/cdnUtils';
 import { Body1Title2Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
 import ResetCounterModal from './ResetCounterModal';
@@ -17,7 +16,7 @@ const PRESET_BEADS = [11, 33, 99];
 interface CounterControlsProps {
   currentCount: number;
   selectedCount: number;
-  onSelectCounter: () => void; // Changed to not expect a count parameter
+  onSelectCounter: () => void; 
   onReset: () => void;
   onCustomBead?: (count: number) => void;
   onSelectBead?: () => void;
@@ -68,51 +67,60 @@ const CounterControls: React.FC<CounterControlsProps> = ({
     <>
       <View style={[styles.row, { borderTopColor: colors.primary.primary100 }]}>
         <Pressable onPress={() => changeBead()}>
-  <FastImage
-    source={isWhite ? rosaryBeadWhite : rosaryBead}
-    style={styles.beadImg}
-    resizeMode={FastImage.resizeMode.contain}
-  />
-  </Pressable>
-  <Pressable
-    style={[styles.selectBtn, { borderColor: ShadowColors['border-light'] }]}
-    onPress={onSelectCounter}
-  >
-    <Body1Title2Medium color='sub-heading' style={styles.selectCounterText}>
-      Select counter
-    </Body1Title2Medium>
-    <Body1Title2Medium style={[styles.counterNumber, { color: colors.primary.primary600 }]}>
-      ({selectedCount})
-    </Body1Title2Medium>
-  </Pressable>
-  <Pressable
-    style={[
-      styles.resetBtn, 
-      { 
-        borderColor: colors.primary.primary100,
-        backgroundColor: currentCount > 0 ? colors.primary.primary50 : 'transparent'
-      }
-    ]}
-    onPress={() => setResetModalVisible(true)}
-  >
-    {currentCount > 0 ? <ResetIconViolet width={scale(18)} height={scale(18)} style={{ marginRight: scale(4) }} /> : <ResetIcon width={scale(18)} height={scale(18)} style={{ marginRight: scale(4) }} />}
-    {currentCount > 0 ? <Body1Title2Bold 
-      style={[
-        styles.resetText, 
-        { color: colors.primary.primary600 }
-      ]}
-    >
-      Reset
-    </Body1Title2Bold> : <Body1Title2Medium 
-    color='sub-heading'
-      style={[
-        styles.resetText
-      ]}
-    >
-      Reset
-    </Body1Title2Medium>}
-  </Pressable>
-</View>
+          <FastImage
+            source={{ 
+              uri: getCdnUrl(isWhite ? DUA_ASSETS.TASBIH_BEAD_WHITE : DUA_ASSETS.TASBIH_BEAD),
+              priority: FastImage.priority.normal 
+            }}
+            style={styles.beadImg}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+        </Pressable>
+        <Pressable
+          style={[styles.selectBtn, { borderColor: ShadowColors['border-light'] }]}
+          onPress={onSelectCounter}
+        >
+          <Body1Title2Medium color='sub-heading' style={styles.selectCounterText}>
+            Select counter
+          </Body1Title2Medium>
+          <Body1Title2Medium style={[styles.counterNumber, { color: colors.primary.primary600 }]}>
+            ({selectedCount})
+          </Body1Title2Medium>
+        </Pressable>
+        <Pressable
+          style={[
+            styles.resetBtn, 
+            { 
+              borderColor: colors.primary.primary100,
+              backgroundColor: currentCount > 0 ? colors.primary.primary50 : 'transparent'
+            }
+          ]}
+          onPress={() => setResetModalVisible(true)}
+        >
+          <CdnSvg 
+            path={currentCount > 0 ? DUA_ASSETS.TASBIH_RESET_VIOLET : DUA_ASSETS.TASBIH_RESET} 
+            width={scale(18)} 
+            height={scale(18)} 
+            style={{ marginRight: scale(4) }} 
+          />
+          {currentCount > 0 ? <Body1Title2Bold 
+            style={[
+              styles.resetText, 
+              { color: colors.primary.primary600 }
+            ]}
+          >
+            Reset
+          </Body1Title2Bold> : <Body1Title2Medium 
+            color='sub-heading'
+            style={[
+              styles.resetText
+            ]}
+          >
+            Reset
+          </Body1Title2Medium>}
+        </Pressable>
+      </View>
+      
       
       <ResetCounterModal
         visible={resetModalVisible}
