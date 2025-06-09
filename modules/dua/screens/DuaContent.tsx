@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator, Share } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator, Share, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -16,6 +16,7 @@ import { useDuasBySubCategory, useAllDuas } from '@/modules/dua/hooks/useDuas';
 import { useDuaStore } from '../store/duaStore';
 import { useThemeStore } from '@/globalStore';
 import FastImage from 'react-native-fast-image';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 // Fallback data for duas
 const fallbackDuas = [
@@ -209,7 +210,7 @@ const DuaContent = () => {
       <Header title={title} />
       <View style={styles.headerContainer}>
             <FastImage 
-                source={require('@/assets/duas/dua-ayah.png')} 
+                source={{ uri: getCdnUrl(DUA_ASSETS.DUA_AYAH) }} 
                 style={styles.headerImage}
                 resizeMode={FastImage.resizeMode.contain}
             />

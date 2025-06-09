@@ -1,8 +1,8 @@
 import {StyleSheet, TextInput, View, TouchableOpacity} from 'react-native';
 import React from 'react';
-import Search from '@/assets/search.svg';
-import Close from '@/assets/close.svg'; // assuming you have this icon
 import { useDuaStore } from '@/modules/dua/store/duaStore';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 interface DuaSearchbarProps {
   onSearchChange?: (text: string) => void;
@@ -31,7 +31,7 @@ const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
       styles.container,
       {borderColor: isFocused ? '#8A57DC' : '#D1D5DB'}, // 👈 dynamic border
     ]}>
-      <Search width={20} height={20} />
+      <CdnSvg path={DUA_ASSETS.SEARCH} width={20} height={20} />
       <TextInput
         placeholder="Salam, dua khojein"
         placeholderTextColor="#737373"
@@ -43,7 +43,7 @@ const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
       />
       {searchText.length > 0 && (
         <TouchableOpacity onPress={clearSearch}>
-          <Close width={16} height={16} />
+          <CdnSvg path={DUA_ASSETS.CLOSE} width={16} height={16} />
         </TouchableOpacity>
       )}
     </View>

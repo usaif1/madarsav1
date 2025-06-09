@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-// Components
 import { Body1Title2Bold, Body2Medium, Divider } from '@/components';
 import { Header } from '@/components';
 import { scale, verticalScale } from '@/theme/responsive';
 import FastImage from 'react-native-fast-image';
+import { useDuaStore } from '../store/duaStore';
+import { useAllDuas, useDuaCategories } from '../hooks/useDuas';
+import { useThemeStore } from '@/globalStore';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 // Icons for categories
 import DailyZikr from '@/assets/duas/daily_zikr.svg';
@@ -16,9 +18,6 @@ import EveningAzkar from '@/assets/duas/food_&_drink.svg';
 import MosqueDuas from '@/assets/duas/washroom.svg';
 import HomeDuas from '@/assets/duas/house.svg';
 import RamadanDuas from '@/assets/duas/good_etiquette.svg';
-import { useDuaStore } from '../store/duaStore';
-import { useAllDuas, useDuaCategories } from '../hooks/useDuas';
-import { useThemeStore } from '@/globalStore';
 
 // Icon mapping for categories
 const categoryIconMap: Record<string, any> = {
@@ -117,7 +116,7 @@ const SavedDuas = () => {
       {/* Ayah graphic at top */}
       <View style={styles.ayahContainer}>
         <FastImage 
-          source={require('@/assets/duas/dua-ayah.png')} 
+          source={{ uri: getCdnUrl(DUA_ASSETS.DUA_AYAH) }}
           style={styles.ayahImage}
           resizeMode={FastImage.resizeMode.contain}
         />

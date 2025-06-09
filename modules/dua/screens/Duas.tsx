@@ -3,6 +3,9 @@ import {StatusBar, StyleSheet, View, TouchableOpacity} from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { scale, verticalScale } from '@/theme/responsive';
+import FastImage from 'react-native-fast-image';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 // components
 import {DuaSearchbar} from './components/Duas';
@@ -12,8 +15,6 @@ import {Body1Title2Bold, Divider} from '@/components';
 // assets
 import MandalaDua from '@/assets/duas/mandala_dua.svg';
 import BookmarkWhite from '@/assets/duas/bookmark-white.svg';
-import { scale, verticalScale } from '@/theme/responsive';
-import FastImage from 'react-native-fast-image';
 
 const Duas = () => {
   const [isSaved, setIsSaved] = useState(false);
@@ -71,7 +72,7 @@ const Duas = () => {
       <DuaList searchQuery={searchQuery} />
       <View style={styles.footerContainer}>
         <FastImage 
-          source={require('@/assets/duas/dua-ayah.png')} 
+          source={{ uri: getCdnUrl(DUA_ASSETS.DUA_AYAH) }}
           style={styles.footerImage}
           resizeMode={FastImage.resizeMode.contain}
         />
