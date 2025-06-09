@@ -40,4 +40,13 @@ export const DUA_ASSETS = {
   MAKTAB_TOP_DESIGN: '/assets/maktab/maktab-top-design.svg',
   MAKTAB_CALENDAR: '/assets/maktab/maktab-calendar.png',
   MAKTAB_SALAM: '/assets/maktab/maktab-salam.png',
+
+  // Compass assets
+  COMPASS_BACKGROUND: '/assets/compass/compass.svg',
+  COMPASS_CENTER: '/assets/compass/compass_center.svg',
+  COMPASS_KAABA: '/assets/compass/Kaaba.png',
+  COMPASS_3D: '/assets/compass/compass_3d.png',
+  COMPASS_MOSQUE: '/assets/compass/mosque.svg',
+  COMPASS_NEXT_SALAH: '/assets/compass/next_salah_icon.svg',
+  COMPASS_SHARE: '/assets/compass/share-light.svg',
 };

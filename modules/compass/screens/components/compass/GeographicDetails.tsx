@@ -1,4 +1,4 @@
-import {StyleSheet, View, ActivityIndicator, Text} from 'react-native';
+import {StyleSheet, View, Text, ActivityIndicator} from 'react-native';
 import React from 'react';
 
 // components
@@ -11,6 +11,7 @@ import FastImage from 'react-native-fast-image';
 // hooks
 import {useQiblaDirection} from '../../../hooks/useQibla';
 import {useLocation} from '@/api/hooks/useLocation';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 // Calculate distance between two coordinates in KM
 const calculateDistance = (
@@ -86,7 +87,7 @@ const GeographicDetails: React.FC = () => {
     <View style={styles.container}>
       <View style={[styles.metric, {backgroundColor: colors.accent.accent100}]}>
         <FastImage
-          source={require('@/assets/compass/Kaaba.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_KAABA) }}
           resizeMode={FastImage.resizeMode.cover}
           style={{width: 34, height: 28}}
         />
@@ -98,7 +99,7 @@ const GeographicDetails: React.FC = () => {
 
       <View style={[styles.metric, {backgroundColor: colors.accent.accent100}]}>
         <FastImage
-          source={require('@/assets/compass/compass_3d.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_3D) }}
           resizeMode={FastImage.resizeMode.cover}
           style={{width: 34, height: 28}}
         />

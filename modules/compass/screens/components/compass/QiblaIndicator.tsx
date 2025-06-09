@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import FastImage from 'react-native-fast-image';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 interface QiblaIndicatorProps {
   angle: number; // Angle in degrees where to position the indicator
@@ -45,7 +46,7 @@ const QiblaIndicator: React.FC<QiblaIndicatorProps> = ({ angle, compassRadius })
       ]}
     >
       <FastImage
-        source={require('@/assets/compass/Kaaba.png')}
+        source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_KAABA) }}
         resizeMode={FastImage.resizeMode.cover}
         style={styles.image}
       />

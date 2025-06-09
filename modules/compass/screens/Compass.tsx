@@ -16,9 +16,9 @@ import Geolocation from '@react-native-community/geolocation';
 
 // components
 import {FindMosqueButton, NextSalah} from './components/compass';
-import CompassSvg from '@/assets/compass/compass.svg';
-import CompassCenterSvg from '@/assets/compass/compass_center.svg';
 import {Divider} from '@/components';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import GeographicDetails from './components/compass/GeographicDetails';
 import QiblaIndicator from './components/compass/QiblaIndicator';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -160,11 +160,19 @@ const Compass: React.FC = () => {
       <View style={styles.compassContainer}>
         <View style={styles.compassWrapper}>
           <Animated.View style={[styles.compass, {transform: [{rotate}]}]}>
-            <CompassSvg width={300} height={300} />
+            <CdnSvg 
+              path={DUA_ASSETS.COMPASS_BACKGROUND} 
+              width={300} 
+              height={300} 
+              style={styles.compass} 
+            />
+            <CdnSvg 
+              path={DUA_ASSETS.COMPASS_CENTER} 
+              width={100} 
+              height={100} 
+              style={styles.compassCenter} 
+            />
           </Animated.View>
-          <View style={styles.compassCenter}>
-            <CompassCenterSvg width={100} height={100} />
-          </View>
 
           {qiblaBearing !== null && (
             <QiblaIndicator angle={qiblaAngle} compassRadius={150} />
