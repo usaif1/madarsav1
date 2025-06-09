@@ -8,9 +8,8 @@ import FastImage from 'react-native-fast-image';
 import { Body2Medium, CaptionMedium, CaptionBold, H5Bold, Body1Title2Bold, Body1Title2Regular } from '@/components/Typography/Typography';
 import HadithImageFooter from '../components/HadithImageFooter';
 import LinearGradient from 'react-native-linear-gradient';
-import PlayIcon from '@/assets/hadith/Play.svg';
-import ShareIcon from '@/assets/hadith/Share.svg';
-import HadithInfoTopIllustration from '@/assets/hadith/HadithInfoTopIllustration.svg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { CdnSvg } from '@/components/CdnSvg';
 import { useNavigation } from '@react-navigation/native';
 
 // Dummy data for demo
@@ -63,7 +62,11 @@ const HadithDetailScreen: React.FC = () => {
       <View style={styles.topSection}>
         
       <View style={styles.topIllustrationContainer}>
-            <HadithInfoTopIllustration />
+            <CdnSvg 
+              path={DUA_ASSETS.HADITH_TOP_ILLUSTRATION}
+              width={scale(375)}
+              height={verticalScale(200)}
+            />
           </View>
         <View style={styles.innerTopSection}>
           
@@ -103,11 +106,19 @@ const HadithDetailScreen: React.FC = () => {
               style={[styles.actionBtn, styles.startBtn]}
               onPress={handleStartLearning}
             >
-              <PlayIcon width={20} height={20} />
+              <CdnSvg 
+                path={DUA_ASSETS.HADITH_PLAY}
+                width={20}
+                height={20}
+              />
               <Body1Title2Bold style={styles.startBtnText}>Start learning</Body1Title2Bold>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.shareBtn]}>
-              <ShareIcon width={20} height={20} />
+              <CdnSvg 
+                path={DUA_ASSETS.HADITH_SHARE}
+                width={20}
+                height={20}
+              />
               <Body1Title2Bold style={styles.shareBtnText}>Share</Body1Title2Bold>
             </TouchableOpacity>
           </View>

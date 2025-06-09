@@ -85,4 +85,17 @@ export const DUA_ASSETS = {
   COMPASS_MOSQUE: '/assets/compass/mosque.svg',
   COMPASS_NEXT_SALAH: '/assets/compass/next_salah_icon.svg',
   COMPASS_SHARE: '/assets/compass/share-light.svg',
+  
+  // Hadith assets
+  HADITH_MORE_LEFT: '/assets/hadith/more-hadiths-left.svg',
+  HADITH_MORE_RIGHT: '/assets/hadith/more-hadiths-right.svg',
+  HADITH_CHAPTER_LEFT: '/assets/hadith/hadith-chapters-left-heading.svg',
+  HADITH_CHAPTER_RIGHT: '/assets/hadith/hadith-chapters-right-heading.svg',
+  HADITH_BISMILLAH: '/assets/hadith/bismillah-calligraphy.svg',
+  HADITH_BOOKMARK: '/assets/hadith/bookmark.svg',
+  HADITH_SHARE: '/assets/hadith/share_alt.svg',
+  HADITH_DASHED_LINE: '/assets/hadith/dashed-line.svg',
+  HADITH_PLAY: '/assets/hadith/play.svg',
+  HADITH_TOP_ILLUSTRATION: '/assets/hadith/hadith-info-top-illustration.svg',
+  HADITH_BOOK_IMAGE: '/assets/hadith/BookImageBig.png',
 };

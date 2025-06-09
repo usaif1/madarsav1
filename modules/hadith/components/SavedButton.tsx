@@ -1,8 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import Bookmark from '@/assets/hadith/bookmark.svg';
-import Bookmarked from '@/assets/hadith/bookmarked.svg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { CdnSvg } from '@/components/CdnSvg';
 
 interface SavedButtonProps {
   saved: boolean;
@@ -18,7 +18,11 @@ const SavedButton: React.FC<SavedButtonProps> = ({ saved, onPress }) => {
       ]} 
       onPress={onPress}
     >
-      {saved ? <Bookmarked /> : <Bookmark />}
+      <CdnSvg 
+        path={saved ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.BOOKMARK}
+        width={16}
+        height={16}
+      />
       <Text style={[
         styles.text,
         saved ? styles.savedText : styles.unsavedText
