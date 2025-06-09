@@ -7,11 +7,8 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
-
-// Import icons
-import SurahIcon from '@/assets/quran/surah-icon.svg';
-import JuzzIcon from '@/assets/quran/juzz-icon.svg';
-import AyahsIcon from '@/assets/quran/ayahs-icon.svg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { CdnSvg } from '@/components/CdnSvg';
 
 // Define the type for a saved category
 type SavedCategory = {
@@ -35,7 +32,7 @@ const SavedListScreen: React.FC = () => {
       title: 'Surah',
       description: 'Duas to read in morning',
       count: 3,
-      icon: <SurahIcon width={24} height={24} />,
+      icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
       color: '#F9E9FF',
     },
     {
@@ -43,7 +40,7 @@ const SavedListScreen: React.FC = () => {
       title: 'Juzz',
       description: 'Duas to read in evening',
       count: 1,
-      icon: <JuzzIcon width={24} height={24} />,
+      icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
       color: '#E9E5FF',
     },
     {
@@ -51,7 +48,7 @@ const SavedListScreen: React.FC = () => {
       title: 'Ayyahs',
       description: 'Duas to read daily',
       count: 43,
-      icon: <AyahsIcon width={24} height={24} />,
+      icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
       color: '#EBF5FF',
     },
   ];

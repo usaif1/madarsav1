@@ -28,7 +28,6 @@ export const DUA_ASSETS = {
   ARROW_LEFT: '/assets/arrow-left.svg',
   ARROW_RIGHT: '/assets/duas/arrow-right.svg',
   HAMBURGER_ICON: '/assets/duas/hamburger-icon.svg',
-  QURAN_CLOSE_ICON: '/assets/close.svg',
   
   // Tasbih assets
   TASBIH_PENCIL: '/assets/tasbih/pencil.svg',
@@ -128,4 +127,7 @@ export const DUA_ASSETS = {
   QURAN_BOOKMARK_ICON: '/assets/hadith/bookmark.svg',
   QURAN_BOOKMARK_FILL_ICON: '/assets/hadith/bookmarked.svg',
   QURAN_SHARE_ICON: '/assets/hadith/Share.svg',
+  QURAN_SURAH_ICON: '/assets/quran/surah-icon.svg',
+  QURAN_JUZZ_ICON: '/assets/quran/juzz-icon.svg',
+  QURAN_AYAHS_ICON: '/assets/quran/ayahs-icon.svg',
 };
