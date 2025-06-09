@@ -35,7 +35,7 @@ const QuranHeader: React.FC = () => {
           activeOpacity={0.8}
         >
           <Image
-            source={user?.photoUrl || user?.photo ? {uri: user?.photoUrl || user?.photo} : require('@/assets/home/image_21.png')}
+            source={user?.photoUrl || user?.photo ? {uri: user?.photoUrl || user?.photo} : require('@/assets/home/blank-profile-picture.png')}
             style={styles.userImage}
           />
           {/* Menu Icon positioned on the bottom right of the image */}

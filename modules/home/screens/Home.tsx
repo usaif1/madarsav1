@@ -3,11 +3,8 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
 import {
   View,
-  Text,
-  FlatList,
   StyleSheet,
   Dimensions,
-  Pressable,
   StatusBar,
   ScrollView,
 } from 'react-native';

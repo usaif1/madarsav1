@@ -5,8 +5,9 @@ import LinearGradient from 'react-native-linear-gradient';
 import FastImage from 'react-native-fast-image';
 
 // assets
-import PrayerBeadsText from '@/assets/splash/prayer_beads_text.svg';
-import MarblePath from '@/assets/splash/marble_path.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { scale } from '@/theme/responsive';
+import { Title1Regular } from '@/components';
 
 const {height} = Dimensions.get('window');
 
@@ -27,57 +28,67 @@ const PrayerBeads = () => {
           borderWidth: 1,
           borderColor: '#F5F5F5',
         }}>
-        <PrayerBeadsText />
+        <View style={{alignItems: 'flex-end',left: scale(12)}}><CdnSvg path="/assets/splash/prayer_beads_text.svg" width={scale(200)} height={scale(40)} /></View>
 
         <FastImage
           source={require('@/assets/splash/marble.png')}
-          resizeMode={FastImage.resizeMode.cover}
+          resizeMode={FastImage.resizeMode.contain}
+          style={[
+            styles.marble,
+            {
+              top: 140,
+              left: -20,
+              zIndex: 0,
+              height: scale(44),
+              width: scale(44),
+            },
+          ]}
+        />
+        <FastImage
+          source={require('@/assets/splash/marble.png')}
+          resizeMode={FastImage.resizeMode.contain}
           style={[
             styles.marble,
             {
               top: 120,
-              left: -13,
-              zIndex: 0,
+              left: 24,
+              zIndex: 1,
+              height: scale(44),
+              width: scale(44),
             },
           ]}
         />
         <FastImage
           source={require('@/assets/splash/marble.png')}
-          resizeMode={FastImage.resizeMode.cover}
+          resizeMode={FastImage.resizeMode.contain}
           style={[
             styles.marble,
             {
-              top: 103,
-              left: 19,
+              top: 90,
+              left: 110,
               zIndex: 1,
+              height: scale(44),
+              width: scale(44),
             },
           ]}
         />
         <FastImage
           source={require('@/assets/splash/marble.png')}
-          resizeMode={FastImage.resizeMode.cover}
-          style={[
-            styles.marble,
-            {
-              top: 82.5,
-              left: 87,
-              zIndex: 1,
-            },
-          ]}
-        />
-        <FastImage
-          source={require('@/assets/splash/marble.png')}
-          resizeMode={FastImage.resizeMode.cover}
+          resizeMode={FastImage.resizeMode.contain}
           style={[
             styles.marble,
             {
               top: 74.5,
-              left: 124,
+              left: 156,
               zIndex: 0,
+              height: scale(44),
+              width: scale(44),
             },
           ]}
         />
-        <MarblePath style={styles.marblePath} />
+        <CdnSvg path="/assets/splash/marble_path.svg" width={scale(100)} height={scale(50)} style={styles.marblePath} />
+
+        <Title1Regular style={{fontSize: scale(17),position: 'absolute',top: scale(120),left: '55%',zIndex: 1}}>+1</Title1Regular>
       </View>
     </LinearGradient>
   );
@@ -94,7 +105,8 @@ const styles = StyleSheet.create({
 
   marblePath: {
     position: 'absolute',
-    top: 95.5,
+    top: 120,
     zIndex: 0,
+    transform: [{rotate: '-8deg'}],
   },
 });

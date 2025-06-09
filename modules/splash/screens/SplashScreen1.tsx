@@ -26,7 +26,7 @@ import { useLocationStore } from '@/modules/location/store/locationStore';
 
 // assets
 import { CdnSvg } from '@/components/CdnSvg';
-
+import { scale } from '@/theme/responsive';
 type RootStackParamList = {
   SplashScreen2: undefined;
   screen2: undefined;
@@ -35,16 +35,16 @@ type RootStackParamList = {
 const SplashGraphic = () => (
   <CdnSvg 
     path="/assets/splash/splash_graphic.svg" 
-    width={375} // Adjust based on your design
-    height={200} // Adjust based on your design
+    width={scale(249)} // Adjust based on your design
+    height={scale(78)} // Adjust based on your design
   />
 );
 
 const MandalaFull = () => (
   <CdnSvg 
     path="/assets/splash/mandala_full.svg" 
-    width={375} // Adjust based on your design
-    height={375} // Adjust based on your design
+    width={scale(375)} // Adjust based on your design
+    height={scale(375)} // Adjust based on your design
   />
 );
 
@@ -61,7 +61,7 @@ const SplashScreen1: React.FC = () => {
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
-        duration: 50000, // 👈 10s per full rotation (slow and steady)
+        duration: 50000,
         easing: Easing.linear,
         useNativeDriver: true,
       }),

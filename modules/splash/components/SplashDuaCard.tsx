@@ -3,8 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, Body1Title2Medium, H5Bold } from '@/components';
 import LinearGradient from 'react-native-linear-gradient';
-import Bookmark from '@/assets/hadith/bookmark.svg';
-import ShareAlt from '@/assets/hadith/share_alt.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 
 const SplashDuaCard = () => {
   // Using the first dua from the fallback data
@@ -53,12 +52,12 @@ const SplashDuaCard = () => {
                     <View 
                       style={styles.actionButton}
                     >
-                       <Bookmark />
+                       <CdnSvg path="/assets/hadith/bookmark.svg" width={16} height={16} />
                     </View>
                     <View 
                       style={styles.actionButton}
                     >
-                      <ShareAlt />
+                      <CdnSvg path="/assets/hadith/share_alt.svg" width={16} height={16} />
                     </View>
                   </View>
         </View>
@@ -72,7 +71,7 @@ const styles = StyleSheet.create({
     width: scale(321),
     // height: verticalScale(186.968), // Removed for dynamic height
     paddingTop: scale(22),
-    paddingBottom: scale(18),
+    paddingBottom: scale(12),
     gap: scale(14),
     borderRadius: scale(13.7),
     borderWidth: scale(0.68),
@@ -150,7 +149,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // marginBottom: scale(16), // Removed, parent paddingBottom handles this
   },
   referenceContainer: {
     flexDirection: 'row',

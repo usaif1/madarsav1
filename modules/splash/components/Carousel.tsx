@@ -109,7 +109,7 @@ export default function App() {
 
     const animation = Animated.timing(currentAnim, {
       toValue: 1,
-      duration: 3000,
+      duration: 300000,
       useNativeDriver: false,
     });
 
@@ -148,7 +148,7 @@ export default function App() {
           // Second slide - Feelings and Dua Card Graphics
           return (
             <View style={styles.graphicsContainer}>
-              <FastImage 
+              {/* <FastImage 
                 source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/FeelingsGraphic.png' }} 
                 style={styles.feelingsImage} 
                 resizeMode={FastImage.resizeMode.cover}
@@ -158,7 +158,7 @@ export default function App() {
                 source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DuaCardGraphic.png' }} 
                 style={styles.duaCardImage} 
                 resizeMode={FastImage.resizeMode.cover}
-              />
+              /> */}
               <FeelingToday disabled={true} />
               <SplashDuaCard />
             </View>
