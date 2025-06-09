@@ -3,18 +3,39 @@ import {Text, View, TouchableOpacity, Share} from 'react-native';
 import React, {useState, useEffect} from 'react';
 
 // components
-// import ShareModal from './ShareModal'; // Commented out as per request
-
-// assets
-import AthanIcon from '@/assets/profile/athan_icon.svg';
-import Notification from '@/assets/profile/notification.svg';
-import ShareIcon from '@/assets/profile/invite_friends.svg'; // Renamed from Share to ShareIcon
-import Rate from '@/assets/profile/rate.svg';
-import ChevronRight from '@/assets/chevron-right.svg';
 import {Switch} from '@/components';
+import { CdnSvg } from '@/components/CdnSvg';
+import { scale } from '@/theme/responsive';
+
+// store
 import {useThemeStore} from '@/globalStore';
 import {useAuthStore} from '@/modules/auth/store/authStore';
 import {useUserDetails, useUpdateUserNotifications} from '@/modules/user/hooks/useUserProfile';
+
+// Define icon components using CdnSvg
+const AthanIcon = () => (
+  <CdnSvg path="/assets/profile/athan_icon.svg" width={scale(20)} height={scale(20)} />
+);
+
+const NotificationIcon = () => (
+  <CdnSvg path="/assets/profile/notification.svg" width={scale(20)} height={scale(20)} />
+);
+
+const ShareIcon = () => (
+  <CdnSvg path="/assets/profile/invite_friends.svg" width={scale(20)} height={scale(20)} />
+);
+
+const RateIcon = () => (
+  <CdnSvg path="/assets/profile/rate.svg" width={scale(20)} height={scale(20)} />
+);
+
+const ChevronRightIcon = () => (
+  <CdnSvg path="/assets/chevron-right.svg" width={scale(12)} height={scale(12)} />
+);
+
+const SubscriptionIcon = () => (
+  <CdnSvg path="/assets/profile/subscription.svg" width={scale(20)} height={scale(20)} />
+);
 
 const actionList = [
   {
@@ -28,22 +49,29 @@ const actionList = [
     id: 'push-notification',
     label: 'Push Notification',
     toggle: true,
-    iconLeft: Notification,
+    iconLeft: NotificationIcon,
     iconRight: null,
   },
   {
     id: 'invite-friends',
     label: 'Invite friends',
     toggle: false,
-    iconLeft: ShareIcon, // Updated to use ShareIcon
-    iconRight: ChevronRight,
+    iconLeft: ShareIcon,
+    iconRight: ChevronRightIcon,
   },
   {
     id: 'rate-app',
     label: 'Rate the app',
     toggle: false,
-    iconLeft: Rate,
-    iconRight: ChevronRight,
+    iconLeft: RateIcon,
+    iconRight: ChevronRightIcon,
+  },
+  {
+    id: 'subscription',
+    label: 'Subscription',
+    toggle: false,
+    iconLeft: SubscriptionIcon,
+    iconRight: ChevronRightIcon,
   },
 ];
 
@@ -53,7 +81,6 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
   const {user} = useAuthStore();
   const [athanNotification, setAthanNotification] = useState(false);
   const [pushNotification, setPushNotification] = useState(false);
-  // const [showShareModal, setShowShareModal] = useState(false); // Commented out as per request
   
   // Get user details to initialize notification settings
   const {data: userDetails, isLoading} = useUserDetails(user?.id);
@@ -93,7 +120,7 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
   // Filter out notification items if not logged in
   const filteredList = profileNotLoggedIn
     ? actionList.filter(
-        item => item.id !== 'athan-notification' && item.id !== 'push-notification'
+        item => item.id !== 'athan-notification' && item.id !== 'push-notification' && item.id !== 'subscription'
       )
     : actionList;
 
@@ -112,7 +139,6 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
   // Handle action item press
   const handleActionItemPress = (id: string) => {
     if (id === 'invite-friends') {
-      // setShowShareModal(true); // Commented out as per request
       handleDirectShare();
     }
     // Add other action handlers here as needed
@@ -130,10 +156,11 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <TouchableOpacity onPress={() => handleActionItemPress(actionItem.id)} style={{flexDirection: 'row', alignItems: 'center'}}>
+              <TouchableOpacity 
+                onPress={() => handleActionItemPress(actionItem.id)} 
+                style={{flexDirection: 'row', alignItems: 'center'}}
+              >
                 <actionItem.iconLeft />
-
-                {/* Title 1 */}
                 <Text style={{fontWeight: '400', fontSize: 17, marginLeft: 12}}>
                   {actionItem.label}
                 </Text>
@@ -155,20 +182,12 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
                     onValueChange={(value: boolean) => handleToggleNotification('push', value)}
                     disabled={updateNotificationsMutation.isPending || isLoading}
                   />
-                ) : (
-                  <Switch />
-                )
+                ) : null
               )}
             </View>
           );
         })}
       </View>
-      
-      {/* Share Modal - Commented out as per request */}
-      {/* <ShareModal 
-        isVisible={showShareModal} 
-        onClose={() => setShowShareModal(false)} 
-      /> */}
     </View>
   );
 };

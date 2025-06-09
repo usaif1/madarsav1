@@ -1,26 +1,18 @@
 // dependencies
-import {Text, View, TouchableOpacity} from 'react-native';
+import {Text, View, TouchableOpacity, useWindowDimensions} from 'react-native';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserStackParamList } from '../../navigation/user.navigator';
 
-// assets
-import LogoUrduSm from '@/assets/logo_urdu_small.svg';
-import LogoUrduSmPurple from '@/assets/logo_urdu_small_purple.svg';
-import TnCGraphic from '@/assets/profile/TnCGraphic.svg';
-import PrivacyPolicyGraphic from '@/assets/profile/PrivacyPolicyGraphic.svg';
-import TnCGraphicWide from '@/assets/profile/TnCGraphicWide.svg';
-import PrivacyPolicyGraphicWide from '@/assets/profile/PrivacyPolicyGraphicWide.svg';
-
-// store
-import {useThemeStore} from '@/globalStore';
-
 // components
 import {Divider} from '@/components';
 import {Body2Medium, CaptionBold, Title3Bold} from '@/components';
+import { CdnSvg } from '@/components/CdnSvg';
+import { scale } from '@/theme/responsive';
 
-import {useWindowDimensions} from 'react-native';
+// store
+import {useThemeStore} from '@/globalStore';
 
 const AppVersion = () => {
   const {shadows} = useThemeStore();
@@ -42,17 +34,21 @@ const AppVersion = () => {
         <View
           style={{
             backgroundColor: '#421984',
-            width: 52,
-            height: 52,
+            width: scale(42),
+            height: scale(42),
             borderRadius: 11,
             position: 'relative',
             alignItems: 'center',
             paddingTop: 5,
           }}>
-          <LogoUrduSm />
+          <CdnSvg 
+            path="/assets/logo_urdu_small.svg" 
+            width={scale(32)} 
+            height={scale(32)} 
+            style={{ marginTop: -8}}
+          />
           <View
             style={{
-              //   height: 13,
               backgroundColor: '#824FD4',
               borderBottomLeftRadius: 11,
               borderBottomRightRadius: 11,
@@ -71,9 +67,7 @@ const AppVersion = () => {
         </View>
 
         <View>
-          <View
-            style={{flexDirection: 'row', columnGap: 6, alignItems: 'center'}}>
-            {/* Title 3-bold */}
+          <View style={{flexDirection: 'row', columnGap: 6, alignItems: 'center'}}>
             <Title3Bold>Madrasa App</Title3Bold>
             <View
               style={{
@@ -88,12 +82,12 @@ const AppVersion = () => {
             </View>
           </View>
           <Divider height={4} />
-          <Body2Medium color="secondary">
+          <Body2Medium style={{fontSize: 12}} color="secondary">
             2025-2026 Madrasa. All Right Registered
           </Body2Medium>
         </View>
       </View>
-      <Divider height={14} />
+      <Divider height={10} />
       {isWide ? (
         <View
           style={{
@@ -103,10 +97,18 @@ const AppVersion = () => {
             justifyContent: 'center',
           }}>
           <TouchableOpacity onPress={navigateToTerms} activeOpacity={0.7}>
-            <TnCGraphicWide />
+            <CdnSvg 
+              path="/assets/profile/TnCGraphicWide.svg" 
+              width={164} 
+              height={80} 
+            />
           </TouchableOpacity>
           <TouchableOpacity onPress={navigateToPrivacy} activeOpacity={0.7}>
-            <PrivacyPolicyGraphicWide />
+            <CdnSvg 
+              path="/assets/profile/PrivacyPolicyGraphicWide.svg" 
+              width={164} 
+              height={80} 
+            />
           </TouchableOpacity>
         </View>
       ) : (
@@ -117,14 +119,22 @@ const AppVersion = () => {
             justifyContent: 'space-between',
           }}>
           <TouchableOpacity onPress={navigateToTerms} activeOpacity={0.7}>
-            <TnCGraphic />
+            <CdnSvg 
+              path="/assets/profile/TnCGraphic.svg" 
+              width={164} 
+              height={80} 
+            />
           </TouchableOpacity>
           <TouchableOpacity onPress={navigateToPrivacy} activeOpacity={0.7}>
-            <PrivacyPolicyGraphic />
+            <CdnSvg 
+              path="/assets/profile/PrivacyPolicyGraphic.svg" 
+              width={164} 
+              height={80} 
+            />
           </TouchableOpacity>
         </View>
       )}
-      <Divider height={24} />
+      <Divider height={2} />
       <View
         style={{
           flexDirection: 'row',
@@ -132,8 +142,12 @@ const AppVersion = () => {
           alignItems: 'center',
           columnGap: 6,
         }}>
-        <Body2Medium color="sub-heading">Powered by</Body2Medium>
-        <LogoUrduSmPurple />
+        <Body2Medium style={{fontSize: 12}} color="sub-heading">Powered by</Body2Medium>
+        <CdnSvg 
+          path="/assets/logo_urdu_small_purple.svg" 
+          width={scale(36)} 
+          height={scale(36)} 
+        />
       </View>
     </View>
   );
