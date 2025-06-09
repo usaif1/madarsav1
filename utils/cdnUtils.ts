@@ -33,4 +33,11 @@ export const DUA_ASSETS = {
   FAJR: '/assets/home/fajr.svg',
   ISHA: '/assets/calendar/isha.svg',
   BOOKMARK: '/assets/hadith/bookmark.svg',
+
+  // Maktab assets
+  MAKTAB_HEADER: '/assets/maktab/maktab-header-image.png',
+  MAKTAB_HEADER_SHADOW: '/assets/maktab/maktab-header-image-shadow.png',
+  MAKTAB_TOP_DESIGN: '/assets/maktab/maktab-top-design.svg',
+  MAKTAB_CALENDAR: '/assets/maktab/maktab-calendar.png',
+  MAKTAB_SALAM: '/assets/maktab/maktab-salam.png',
 };
