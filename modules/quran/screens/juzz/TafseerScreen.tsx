@@ -6,7 +6,8 @@ import { JuzzStackParamList } from '../../navigation/juzz.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
-import CloseIcon from '@/assets/close.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 type TafseerScreenRouteProp = RouteProp<JuzzStackParamList, 'tafseer'>;
 type TafseerScreenNavigationProp = NativeStackNavigationProp<JuzzStackParamList, 'tafseer'>;
@@ -39,9 +40,17 @@ The phrase appears at the beginning of every chapter (Surah) of the Quran except
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <H5Bold>Tafseer</H5Bold>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <CloseIcon width={24} height={24} />
+          <H5Bold style={styles.headerTitle}>Tafseer</H5Bold>
+          <TouchableOpacity 
+            onPress={() => navigation.goBack()}
+            style={styles.closeButton}
+          >
+            <CdnSvg 
+              path={DUA_ASSETS.CLOSE_ICON} 
+              width={24} 
+              height={24} 
+              fill="#404040"
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -83,7 +92,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: scale(16),
-    paddingVertical: scale(16),
+    paddingTop: verticalScale(16),
+    paddingBottom: verticalScale(12),
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
@@ -91,6 +101,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#171717',
+  },
+  closeButton: {
+    padding: scale(4),
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -126,19 +142,24 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     color: '#171717',
     marginBottom: scale(8),
+    fontFamily: 'ScheherazadeNew-Regular',
   },
   verseTranslation: {
     color: '#737373',
+    fontSize: scale(14),
+    lineHeight: scale(20),
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: scale(16),
+    paddingBottom: verticalScale(90), // Add space for any bottom navigation
   },
   tafseerText: {
     color: '#404040',
     lineHeight: scale(24),
+    fontSize: scale(14),
   },
 });
 

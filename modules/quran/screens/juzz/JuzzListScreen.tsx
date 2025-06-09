@@ -7,8 +7,8 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
 import SearchInput from '@/modules/hadith/components/SearchInput';
-import BookmarkIcon from '@/assets/hadith/bookmark.svg';
-import SettingsIcon from '@/assets/quran/settings.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 // Define the type for a Juzz item
@@ -99,11 +99,12 @@ const JuzzListScreen: React.FC = () => {
         <View style={styles.juzzTitleRow}>
           <Body2Bold>{item.name}</Body2Bold>
           <TouchableOpacity onPress={() => handleBookmarkToggle(item.id)}>
-            <BookmarkIcon 
-              width={20} 
-              height={20} 
-              fill={item.bookmarked ? ColorPrimary.primary500 : 'none'} 
-              stroke={item.bookmarked ? 'none' : '#737373'}
+            <CdnSvg 
+              path={item.bookmarked ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.BOOKMARK_WHITE}
+              width={20}
+              height={20}
+              fill={item.bookmarked ? ColorPrimary.primary500 : 'none'}
+              stroke={!item.bookmarked ? '#737373' : 'none'}
             />
           </TouchableOpacity>
         </View>
@@ -136,7 +137,7 @@ const JuzzListScreen: React.FC = () => {
           style={styles.settingsButton}
           onPress={handleSettingsPress}
         >
-          <SettingsIcon width={20} height={20} />
+          <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={20} height={20} />
         </TouchableOpacity>
       </View>
       
