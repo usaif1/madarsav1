@@ -25,7 +25,7 @@ export const DUA_ASSETS = {
   // Common UI icons
   SEARCH: '/assets/search.svg',
   CLOSE: '/assets/close.svg',
-  ARROW_LEFT: '/assets/duas/arrow-left.svg',
+  ARROW_LEFT: '/assets/arrow-left.svg',
   ARROW_RIGHT: '/assets/duas/arrow-right.svg',
   HAMBURGER_ICON: '/assets/duas/hamburger-icon.svg',
   
@@ -98,4 +98,5 @@ export const DUA_ASSETS = {
   HADITH_PLAY: '/assets/hadith/play.svg',
   HADITH_TOP_ILLUSTRATION: '/assets/hadith/hadith-info-top-illustration.svg',
   HADITH_BOOK_IMAGE: '/assets/hadith/BookImageBig.png',
+  NAV_PROFILE_MENU: '/assets/home/nav-profile-menu.svg',
 };

@@ -5,8 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ColorPrimary } from '@/theme/lightColors';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Title3Bold } from '@/components/Typography/Typography';
-import NavProfileMenu from '@/assets/home/nav-ptofile-menu.svg';
 import { useAuthStore } from '@/modules/auth/store/authStore';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 const QuranHeader: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -40,7 +41,11 @@ const QuranHeader: React.FC = () => {
           />
           {/* Menu Icon positioned on the bottom right of the image */}
           <View style={styles.menuIconContainer}>
-            <NavProfileMenu width={scale(12)} height={scale(12)} />
+            <CdnSvg 
+              path={DUA_ASSETS.NAV_PROFILE_MENU}
+              width={scale(12)}
+              height={scale(12)}
+            />
           </View>
         </TouchableOpacity>
       </View>
