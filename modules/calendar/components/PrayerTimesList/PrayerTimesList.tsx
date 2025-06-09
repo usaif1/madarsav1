@@ -2,13 +2,8 @@
 import React from 'react';
 import {View, StyleSheet, FlatList, ActivityIndicator, Text} from 'react-native';
 import {Body1Title2Bold, Body1Title2Medium} from '@/components';
-import {
-  FazrIcon,
-  SunriseIcon,
-  DhuhrAsrIcon,
-  MaghribIcon,
-  IshaIcon,
-} from '@/assets/calendar';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import {useThemeStore} from '@/globalStore';
 import {verticalScale, scale} from '@/theme/responsive';
 import {useCalendarPrayerTimes, formatPrayerTime} from '../../hooks/useCalendarPrayerTimes';
@@ -57,12 +52,42 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
     });
     
     return [
-      { id: 'fajr', name: 'Fajr', time: formatPrayerTime(timings.Fajr), icon: <FazrIcon /> },
-      { id: 'sunrise', name: 'Sunrise', time: formatPrayerTime(timings.Sunrise), icon: <SunriseIcon /> },
-      { id: 'dhuhr', name: 'Dhuhr', time: formatPrayerTime(timings.Dhuhr), icon: <DhuhrAsrIcon /> },
-      { id: 'asr', name: 'Asr', time: formatPrayerTime(timings.Asr), icon: <DhuhrAsrIcon /> },
-      { id: 'maghrib', name: 'Maghrib', time: formatPrayerTime(timings.Maghrib), icon: <MaghribIcon /> },
-      { id: 'isha', name: 'Isha', time: formatPrayerTime(timings.Isha), icon: <IshaIcon /> },
+      { 
+        id: 'fajr', 
+        name: 'Fajr', 
+        time: formatPrayerTime(timings.Fajr), 
+        icon: <CdnSvg path={DUA_ASSETS.CALENDAR_FAZR} width={20} height={20} /> 
+      },
+      { 
+        id: 'sunrise', 
+        name: 'Sunrise', 
+        time: formatPrayerTime(timings.Sunrise), 
+        icon: <CdnSvg path={DUA_ASSETS.SUNRISE} width={20} height={20} /> 
+      },
+      { 
+        id: 'dhuhr', 
+        name: 'Dhuhr', 
+        time: formatPrayerTime(timings.Dhuhr), 
+        icon: <CdnSvg path={DUA_ASSETS.DHUHR} width={20} height={20} /> 
+      },
+      { 
+        id: 'asr', 
+        name: 'Asr', 
+        time: formatPrayerTime(timings.Asr), 
+        icon: <CdnSvg path={DUA_ASSETS.DHUHR} width={20} height={20} /> 
+      },
+      { 
+        id: 'maghrib', 
+        name: 'Maghrib', 
+        time: formatPrayerTime(timings.Maghrib), 
+        icon: <CdnSvg path={DUA_ASSETS.CALENDAR_MAGHRIB} width={20} height={20} /> 
+      },
+      { 
+        id: 'isha', 
+        name: 'Isha', 
+        time: formatPrayerTime(timings.Isha), 
+        icon: <CdnSvg path={DUA_ASSETS.ISHA} width={20} height={20} /> 
+      },
     ];
   };
   
@@ -117,7 +142,9 @@ const PrayerTimesList: React.FC<PrayerTimesListProps> = ({selectedDate}) => {
                   backgroundColor: colors.primary.primary50,
                 },
               ]}>
-              {item.icon}
+              <View style={{ width: 20, height: 20 }}>
+                {item.icon}
+              </View>
             </View>
             <Body1Title2Bold color="heading" style={styles.name}>
               {item.name}

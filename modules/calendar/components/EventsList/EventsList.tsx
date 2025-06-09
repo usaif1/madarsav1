@@ -3,7 +3,8 @@ import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
 import { useThemeStore } from '@/globalStore';
-import { DotIcon } from '@/assets/calendar';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale, verticalScale } from '@/theme/responsive';
 
 // Import Hijri Calendar API hooks
@@ -35,6 +36,7 @@ interface EventsListProps {
 
 const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, displayYear }) => {
   const { colors } = useThemeStore();
+  const warningColor = colors.warning as string;
   
   // Use the provided display month/year or default to the selected date
   const currentDisplayMonth = displayMonth !== undefined ? displayMonth : selectedDate.getMonth();
@@ -66,10 +68,23 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
   const { data: holidaysData, isLoading: isHolidaysLoading } = useHijriHolidaysByYear(currentIslamicYear);
   
   // Get holiday for the selected date (if any)
-  const selectedHijriDay = selectedDateHijriData?.data?.hijri?.day 
-    ? parseInt(selectedDateHijriData.data.hijri.day) 
-    : null;
-  const selectedHijriMonth = selectedDateHijriData?.data?.hijri?.month?.number || null;
+  const selectedHijriDay = selectedDateHijriData?.data && 
+    typeof selectedDateHijriData.data === 'object' &&
+    'hijri' in selectedDateHijriData.data &&
+    selectedDateHijriData.data.hijri &&
+    'day' in selectedDateHijriData.data.hijri
+      ? parseInt(String(selectedDateHijriData.data.hijri.day))
+      : null;
+      
+  const selectedHijriMonth = selectedDateHijriData?.data && 
+    typeof selectedDateHijriData.data === 'object' &&
+    'hijri' in selectedDateHijriData.data &&
+    selectedDateHijriData.data.hijri &&
+    'month' in selectedDateHijriData.data.hijri &&
+    selectedDateHijriData.data.hijri.month &&
+    'number' in selectedDateHijriData.data.hijri.month
+      ? selectedDateHijriData.data.hijri.month.number
+      : null;
   
   const { data: selectedDayHolidayData, isLoading: isSelectedDayHolidayLoading } = 
     useHijriHoliday(
@@ -119,9 +134,12 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       selectedDate.getFullYear() === today.getFullYear();
     
     // 1. Add today's Hijri date information
-    if (selectedDateHijriData?.data?.hijri) {
-      const hijriData = selectedDateHijriData.data.hijri;
-      const gregorianData = selectedDateHijriData.data.gregorian;
+    if (selectedDateHijriData?.data && 
+        typeof selectedDateHijriData.data === 'object' &&
+        'hijri' in selectedDateHijriData.data &&
+        'gregorian' in selectedDateHijriData.data) {
+      const hijriData = (selectedDateHijriData.data as any).hijri;
+      const gregorianData = (selectedDateHijriData.data as any).gregorian;
       
       const eventItem: IslamicEvent = {
         id: 'current-hijri-date',
@@ -471,7 +489,12 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
               </View>
               {item.daysLeft !== undefined && (
                 <View style={styles.daysLeft}>
-                  <DotIcon width={scale(10)} height={scale(10)} />
+                  <CdnSvg 
+                    path={DUA_ASSETS.CALENDAR_DOT} 
+                    width={scale(10)} 
+                    height={scale(10)} 
+fill={warningColor} 
+                  />
                   {item.isToday ? (
                     <Body2Medium style={{fontSize: scale(12)}} color="warning">Today</Body2Medium>
                   ) : (

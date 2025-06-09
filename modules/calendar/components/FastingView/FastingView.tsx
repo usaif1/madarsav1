@@ -2,7 +2,9 @@
 import React, {useState} from 'react';
 import {View, StyleSheet, Pressable, ScrollView, ActivityIndicator, Text} from 'react-native';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium, Title3Bold} from '@/components';
-import {FazrIcon, MaghribIcon, FazrWhiteIcon, MaghribWhiteIcon,SehriDua, IftarDua} from '@/assets/calendar';
+// icons
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import {ShadowColors} from '@/theme/shadows';
 import {scale, verticalScale} from '@/theme/responsive';
 
@@ -148,10 +150,15 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
                 },
               ]}
             >
-              {activeType === 'sehri' ? <FazrWhiteIcon width={scale(16)} height={scale(16)} /> : <FazrIcon width={scale(16)} height={scale(16)} />}
+              <CdnSvg 
+                path={activeType === 'sehri' ? DUA_ASSETS.CALENDAR_FAZR_WHITE : DUA_ASSETS.CALENDAR_FAZR} 
+                width={scale(16)} 
+                height={scale(16)} 
+                fill={activeType === 'sehri' ? 'white' : undefined}
+              />
             </View>
-            <Body1Title2Medium>{sehriTime}</Body1Title2Medium>
-            <Body2Medium color="sub-heading">Sehri time</Body2Medium>
+            <Title3Bold>{sehriTime}</Title3Bold>
+            <Body1Title2Medium color="sub-heading">Sehri time</Body1Title2Medium>
           </Pressable>
 
           {/* Iftar Pressable */}
@@ -187,18 +194,33 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
                 },
               ]}
             >
-              {activeType === 'iftar' ? <MaghribWhiteIcon width={scale(16)} height={scale(16)} /> : <MaghribIcon width={scale(16)} height={scale(16)} />}
+              <CdnSvg 
+                path={activeType === 'iftar' ? DUA_ASSETS.CALENDAR_MAGHRIB_WHITE : DUA_ASSETS.CALENDAR_MAGHRIB} 
+                width={scale(16)} 
+                height={scale(16)} 
+                fill={activeType === 'iftar' ? 'white' : undefined}
+              />
             </View>
-            <Body1Title2Medium>{iftarTime}</Body1Title2Medium>
-            <Body2Medium color="sub-heading">Iftar time</Body2Medium>
+            <Title3Bold>{iftarTime}</Title3Bold>
+            <Body1Title2Medium color="sub-heading">Iftar time</Body1Title2Medium>
           </Pressable>
         </View>
       </View>
       <View style={styles.duaSvgWrapper}>
         {activeType === 'sehri' ? (
-          <SehriDua width="100%" height={verticalScale(160)} style={styles.duaSvg} />
+          <CdnSvg 
+            path={DUA_ASSETS.CALENDAR_SEHRI_DUA}
+            width={scale(375)} // Width of the container
+            height={verticalScale(160)}
+            style={[styles.duaSvg, { width: '100%' }]}
+          />
         ) : (
-          <IftarDua width="100%" height={verticalScale(160)} style={styles.duaSvg} />
+          <CdnSvg 
+            path={DUA_ASSETS.CALENDAR_IFTAR_DUA}
+            width={scale(375)} // Width of the container
+            height={verticalScale(160)}
+            style={[styles.duaSvg, { width: '100%' }]}
+          />
         )}
       </View>
     </ScrollView>
@@ -241,7 +263,7 @@ const getStyles =  (colors: any) => StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: verticalScale(8),
+    marginTop: verticalScale(-12),
     flexGrow: 1,
   },
   duaSvg: {

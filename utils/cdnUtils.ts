@@ -46,6 +46,8 @@ export const DUA_ASSETS = {
   FAJR: '/assets/home/fajr.svg',
   ISHA: '/assets/calendar/isha.svg',
   BOOKMARK: '/assets/hadith/bookmark.svg',
+  SUNRISE: '/assets/calendar/sunrise.svg',
+  DHUHR: '/assets/calendar/dhuhr_asr.svg',
 
   // Maktab assets
   MAKTAB_HEADER: '/assets/maktab/maktab-header-image.png',
@@ -64,6 +66,16 @@ export const DUA_ASSETS = {
   NAMES_RIGHT_TRIANGLE: '/assets/right-triangle.svg',
   NAMES_CLOSE: '/assets/close.svg',
   NAMES_PAUSE: '/assets/home/pause.svg',
+  
+  // Calendar module assets
+  CALENDAR_DOWN_ARROW: '/assets/calendar/down-arrow.svg',
+  CALENDAR_FAZR: '/assets/calendar/fazr.svg',
+  CALENDAR_FAZR_WHITE: '/assets/calendar/fazr_white.svg',
+  CALENDAR_MAGHRIB: '/assets/calendar/maghrib.svg',
+  CALENDAR_MAGHRIB_WHITE: '/assets/calendar/maghrib_white.svg',
+  CALENDAR_DOT: '/assets/calendar/dot.svg',
+  CALENDAR_SEHRI_DUA: '/assets/calendar/sehri_dua.svg',
+  CALENDAR_IFTAR_DUA: '/assets/calendar/iftar_dua.svg',
   
   // Compass assets
   COMPASS_BACKGROUND: '/assets/compass/compass.svg',

@@ -12,6 +12,7 @@ import MonthYearSelector from '../MonthYearSelection/MonthYearSelector';
 
 // icons
 import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // theme
 import {useThemeStore} from '@/globalStore';
@@ -124,7 +125,13 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
             <Title3Bold color={textColor}>
               {selectedMonth} {selectedYear}
             </Title3Bold>
-            <CdnSvg path="/assets/calendar/down-arrow.svg" width={scale(16)} height={scale(16)} fill={textColor} style={styles.arrow} />
+            <CdnSvg 
+              path={DUA_ASSETS.CALENDAR_DOWN_ARROW} 
+              width={scale(16)} 
+              height={scale(16)} 
+              fill={textColor} 
+              style={styles.arrow} 
+            />
           </View>
           <Body2Medium color={textColor} style={styles.subtitle}>
             {islamicDate}
