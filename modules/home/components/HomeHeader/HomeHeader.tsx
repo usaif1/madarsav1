@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {View, StyleSheet, Image, Text, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
+import {View, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
+import FastImage from 'react-native-fast-image';
 import {useNavigation, CompositeNavigationProp, CommonActions} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
@@ -8,9 +9,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ColorPrimary} from '@/theme/lightColors';
 import {scale, verticalScale} from '@/theme/responsive';
 import {Title3Bold, Body2Medium} from '@/components/Typography/Typography';
-import BellFill from '@/assets/home/Bell-fill.svg';
-import MapPinFill from '@/assets/home/map-pin-fill.svg';
-import NavProfileMenu from '@/assets/home/nav-ptofile-menu.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 import tokenService from '@/modules/auth/services/tokenService';
 import { mmkvStorage } from '@/modules/auth/storage/mmkvStorage';
@@ -155,13 +154,17 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             onPress={handleUserProfilePress}
             activeOpacity={0.8}
           >
-            <Image
-              source={user?.photoUrl ? {uri: user?.photoUrl} : require('@/assets/home/image_21.png')}
+            <FastImage
+              source={user?.photoUrl ? 
+                { uri: user.photoUrl, priority: FastImage.priority.high } : 
+                { uri: 'https://cdn.madrasaapp.com/assets/home/blank-profile-picture.png' }
+              }
               style={styles.userImage}
+              resizeMode={FastImage.resizeMode.cover}
             />
             {/* Menu Icon positioned on the bottom right of the image */}
             <View style={styles.menuIconContainer}>
-              <NavProfileMenu width={scale(12)} height={scale(12)} />
+              <CdnSvg path="/assets/home/nav-ptofile-menu.svg" width={12} height={12} />
             </View>
           </TouchableOpacity>
           
@@ -172,7 +175,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
               onPress={handleLocationPress}
               activeOpacity={0.7}
             >
-              <MapPinFill width={14} height={14} />
+              <CdnSvg path="/assets/home/map-pin-fill.svg" width={14} height={14} />
               {locationLoading ? (
                 <ActivityIndicator size="small" color="#F9F6FF" style={styles.locationLoader} />
               ) : (
@@ -189,7 +192,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
         
         {/* Notification Bell */}
         <View style={styles.bellContainer}>
-          <BellFill width={scale(24)} height={scale(24)} />
+          <CdnSvg path="/assets/home/Bell-fill.svg" width={24} height={24} />
           {notificationCount > 0 && (
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationText}>{notificationCount}</Text>
@@ -224,6 +227,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: scale(40),
     height: scale(40),
+    borderRadius: scale(24),
   },
   userImage: {
     width: scale(40),
