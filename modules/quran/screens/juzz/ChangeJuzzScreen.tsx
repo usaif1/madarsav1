@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { JuzzStackParamList } from '../../navigation/juzz.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
+import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
 import CloseIcon from '@/assets/close.svg';
 
 // Define the type for a Juzz item

@@ -116,4 +116,5 @@ export const DUA_ASSETS = {
   
   // Common Icons
   SEARCH_ICON: '/assets/search.svg',
+  DEFAULT_PROFILE_IMAGE: '/assets/home/blank-profile-picture.png',
 };

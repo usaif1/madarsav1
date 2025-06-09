@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body1Medium, Body2Medium, Body1Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
+import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
 import CloseIcon from '@/assets/close.svg';
 
 type QuranSettingsScreenNavigationProp = NativeStackNavigationProp<SurahStackParamList, 'quranSettings'>;

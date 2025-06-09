@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ColorPrimary } from '@/theme/lightColors';
@@ -7,7 +8,7 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { Title3Bold } from '@/components/Typography/Typography';
 import { useAuthStore } from '@/modules/auth/store/authStore';
 import { CdnSvg } from '@/components/CdnSvg';
-import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 const QuranHeader: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -17,8 +18,10 @@ const QuranHeader: React.FC = () => {
   // Handle user profile press - navigate to profile
   const handleUserProfilePress = () => {
     if (user) {
+      // @ts-ignore - Fix navigation type
       navigation.navigate('user', { screen: 'profile' });
     } else {
+      // @ts-ignore - Fix navigation type
       navigation.navigate('user', { screen: 'profileNotLoggedIn' });
     }
   };
@@ -35,9 +38,14 @@ const QuranHeader: React.FC = () => {
           onPress={handleUserProfilePress}
           activeOpacity={0.8}
         >
-          <Image
-            source={user?.photoUrl || user?.photo ? {uri: user?.photoUrl || user?.photo} : require('@/assets/home/blank-profile-picture.png')}
+          <FastImage
+            source={{ 
+              uri: user?.photoUrl || getCdnUrl(DUA_ASSETS.DEFAULT_PROFILE_IMAGE),
+              priority: FastImage.priority.normal,
+            }}
             style={styles.userImage}
+            defaultSource={require('@/assets/home/blank-profile-picture.png')}
+            resizeMode={FastImage.resizeMode.cover}
           />
           {/* Menu Icon positioned on the bottom right of the image */}
           <View style={styles.menuIconContainer}>
