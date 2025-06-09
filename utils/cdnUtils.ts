@@ -41,6 +41,10 @@ export const DUA_ASSETS = {
   TASBIH_RIGHT_FLOWER: '/assets/tasbih/rightFlowerChangeDua.svg',
   CLOSE_ICON: '/assets/close.svg',
   SHARE_ALT: '/assets/hadith/share_alt.svg',
+  BUBBLE: '/assets/tasbih/bubble.svg',
+  AL_HUSNA_BACKGROUND: '/assets/home/al-husna-background.png',
+  AL_HUSNA_TRACK_BACKGROUND: '/assets/home/al-husna-track-background.png',
+  AL_HUSNA_ICON: '/assets/home/al-husna.svg',
   
   // Prayer time icons
   FAJR: '/assets/home/fajr.svg',

@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Bold, CaptionMedium, Body1Title2Medium, CaptionBold } from '@/components/Typography/Typography';
+import { Body1Title2Bold, CaptionMedium, CaptionBold } from '@/components/Typography/Typography';
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
+import { CdnSvg } from '@/components/CdnSvg';
 
 export interface HadithListItemProps {
   hadith: {
@@ -24,8 +26,11 @@ const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Left portion with image */}
       <View style={styles.leftPortion}>
-      {/* <FastImage source={{ uri: hadith.image }} style={styles.image} /> */}
-        <FastImage source={require('@/assets/hadith/BookImageBig.png')} style={styles.image} />
+        <FastImage 
+          source={hadith.image ? { uri: hadith.image } : { uri: getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE) }} 
+          style={styles.image} 
+          resizeMode={FastImage.resizeMode.cover}
+        />
       </View>
       
       {/* Right portion with text */}

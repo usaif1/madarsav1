@@ -3,6 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity, ImageBackground, ActivityIndic
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Medium, CaptionMedium} from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import { useNameAudio } from '@/modules/names/hooks/useNameAudio';
 import { useGlobalStore } from '@/globalStore';
 import { useAll99Names } from '@/modules/names/hooks/use99Names';
@@ -117,16 +118,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require('@/assets/home/al-husna-background.png')}
+        source={{ uri: getCdnUrl(DUA_ASSETS.AL_HUSNA_BACKGROUND) }}
         style={styles.backgroundImage}
         imageStyle={styles.backgroundImageStyle}>
         {/* Track Image and Icon */}
         <ImageBackground
-          source={require('@/assets/home/al-husna-track-background.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.AL_HUSNA_TRACK_BACKGROUND) }}
           style={styles.trackImageContainer}
           imageStyle={styles.trackImageStyle}>
           <View style={styles.iconContainer}>
-          <CdnSvg path="/assets/home/al-husna.svg" width={80} height={100} />
+            <CdnSvg path={DUA_ASSETS.AL_HUSNA_ICON} width={80} height={100} />
           </View>
         </ImageBackground>
 
@@ -135,9 +136,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           {isLoading ? (
             <ActivityIndicator size="small" color="#000" />
           ) : isPlaying ? (
-            <CdnSvg path="/assets/home/pause.svg" width={14} height={14} />
+            <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={14} height={14} />
           ) : (
-            <CdnSvg path="/assets/home/play.svg" width={14} height={14} />
+            <CdnSvg path={DUA_ASSETS.HADITH_PLAY} width={14} height={14} />
           )}
         </TouchableOpacity>
 

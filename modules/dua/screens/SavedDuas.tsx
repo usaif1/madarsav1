@@ -11,24 +11,18 @@ import { useAllDuas, useDuaCategories } from '../hooks/useDuas';
 import { useThemeStore } from '@/globalStore';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
-// Icons for categories
-import DailyZikr from '@/assets/duas/daily_zikr.svg';
-import MorningAzkar from '@/assets/duas/praising_allah.svg';
-import EveningAzkar from '@/assets/duas/food_&_drink.svg';
-import MosqueDuas from '@/assets/duas/washroom.svg';
-import HomeDuas from '@/assets/duas/house.svg';
-import RamadanDuas from '@/assets/duas/good_etiquette.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 
 // Icon mapping for categories
-const categoryIconMap: Record<string, any> = {
-  'Morning Azkar': MorningAzkar,
-  'Evening Azkar': EveningAzkar,
-  'Daily Zikr': DailyZikr,
-  'Mosque Duas': MosqueDuas,
-  'Home': HomeDuas,
-  'Ramadan': RamadanDuas,
+const categoryIconMap: Record<string, string> = {
+  'Morning Azkar': DUA_ASSETS.PRAISING_ALLAH,
+  'Evening Azkar': DUA_ASSETS.FOOD_DRINK,
+  'Daily Zikr': DUA_ASSETS.DAILY_ZIKR,
+  'Mosque Duas': DUA_ASSETS.WASHROOM,
+  'Home': DUA_ASSETS.HOUSE,
+  'Ramadan': DUA_ASSETS.GOOD_ETIQUETTE,
   // Default fallback icon
-  'default': DailyZikr,
+  'default': DUA_ASSETS.DAILY_ZIKR,
 };
 
 interface SavedDuaItemProps {
@@ -36,7 +30,8 @@ interface SavedDuaItemProps {
   title: string;
   description: string;
   count: number;
-  icon: React.ComponentType<any>;
+  icon: string;
+  bookmarked: boolean;
 }
 
 const SavedDuas = () => {
@@ -75,26 +70,26 @@ const SavedDuas = () => {
     });
   };
 
-  const renderDuaItem = ({ item }: { item: SavedDuaItemProps }) => {
-    const IconComponent = item.icon;
-    
-    return (
-      <TouchableOpacity 
-        style={styles.card}
-        onPress={() => handleDuaPress(item)}
-        activeOpacity={0.7}
-      >
-        <IconComponent width={38} height={38} />
-        <View style={styles.textWrapper}>
-          <Body1Title2Bold>{item.title}</Body1Title2Bold>
-          <Divider height={4} />
-          <Body2Medium color="sub-heading">{item.description}</Body2Medium>
-        </View>
-        
-        <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
-      </TouchableOpacity>
-    );
-  };
+  const renderDuaItem = ({ item }: { item: SavedDuaItemProps }) => (
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => handleDuaPress(item)}
+      activeOpacity={0.7}
+    >
+      <CdnSvg 
+        path={item.icon}
+        width={scale(38)}
+        height={scale(38)}
+      />
+      <View style={styles.textWrapper}>
+        <Body1Title2Bold>{item.title}</Body1Title2Bold>
+        <Divider height={4} />
+        <Body2Medium color="sub-heading">{item.description}</Body2Medium>
+      </View>
+      
+      <Body2Medium color="sub-heading">{item.count} Duas</Body2Medium>
+    </TouchableOpacity>
+  );
 
   const renderSeparator = () => <View style={styles.separator} />;
 

@@ -8,7 +8,7 @@ import FastImage from 'react-native-fast-image';
 import { Body2Medium, CaptionMedium, CaptionBold, H5Bold, Body1Title2Bold, Body1Title2Regular } from '@/components/Typography/Typography';
 import HadithImageFooter from '../components/HadithImageFooter';
 import LinearGradient from 'react-native-linear-gradient';
-import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import { CdnSvg } from '@/components/CdnSvg';
 import { useNavigation } from '@react-navigation/native';
 
@@ -19,7 +19,7 @@ const hadithDetail = {
   author: 'Abu Abdullah Muhammad Ibn Isma\'il al-Bukhari(rahimahullah)',
   years: '202-275 AH',
   translator: 'Dr. M. Muhsin Khan',
-  image: require('@/assets/hadith/BookImageBig.png'),
+  image: DUA_ASSETS.HADITH_BOOK_IMAGE,
   highlight: 'Contains roughly 7500 Hadith (with repetitions) in 57 books',
   brief: `Ṣaḥīḥ al-Bukhārī is a collection of hadīth compiled by Abu Abdullāh Muhammad Ibn Ismā\`īl al-Bukhārī(rahimahullāh). His collection is recognised by the overwhelming majority of the Muslim world to be one of the most authentic collections of the Sunnah of the Prophet (ﷺ). It contains roughly 7563 hadīth (with repetitions) in 98 books. The translation provided here is by Dr. M. Muhsin Khan.`,
   authorBio: `Imām al-Bukhārī (rahimahullāh) is known as the Amīr al-Mu'minīn in hadīth. His genealogy is as follows: Abu Abdullāh Muhammad Ibn Ismā\`īl Ibn Ibrāhīm Ibn al-Mughīrah Ibn Bardizbah al-Bukhārī. His father Ismā\`īl was a well-known and famous muhaddith in his time and had been blessed with the chance of being in the company of Imām Mālik, Hammād Ibn Zaid and also Abdullāh Ibn Mubārak (rahimahullahum).
@@ -74,7 +74,7 @@ const HadithDetailScreen: React.FC = () => {
           <View style={styles.bookCard}>
             {/* Book Image */}
             <FastImage 
-              source={hadithDetail.image} 
+              source={{ uri: getCdnUrl(hadithDetail.image) }} 
               style={styles.bookImage}
               resizeMode={FastImage.resizeMode.contain}
             />

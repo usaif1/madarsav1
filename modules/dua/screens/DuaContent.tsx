@@ -7,10 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular, Body2Medium, H5Medium, Divider } from '@/components';
 import { Header } from '@/components';
 import { scale, verticalScale } from '@/theme/responsive';
-import Bookmark from '@/assets/hadith/bookmark.svg';
-import BookmarkFilled from '@/assets/duas/bookmark-primary.svg';
-import ShareAlt from '@/assets/hadith/share_alt.svg';
-import Bubble from '@/assets/tasbih/bubble.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
 import { useDuasBySubCategory, useAllDuas } from '@/modules/dua/hooks/useDuas';
 import { useDuaStore } from '../store/duaStore';
@@ -144,7 +141,11 @@ const DuaContent = () => {
           {item.arabic}
         </H5Medium>
         <View style={styles.bubbleWrap}>
-          <Bubble width={scale(26)} height={scale(26)} />
+          <CdnSvg 
+            path={DUA_ASSETS.BUBBLE}
+            width={scale(26)}
+            height={scale(26)}
+          />
           <Body1Title2Bold style={styles.bubbleNum}>
             {index + 1}
           </Body1Title2Bold>
@@ -179,13 +180,21 @@ const DuaContent = () => {
             style={styles.actionButton}
             onPress={() => toggleBookmark(item.id, item.category || category)}
           >
-            {item.bookmarked ? <BookmarkFilled /> : <Bookmark />}
+            <CdnSvg 
+              path={item.bookmarked ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.BOOKMARK}
+              width={scale(24)}
+              height={scale(24)}
+            />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.actionButton}
             onPress={() => handleShare(item)}
           >
-            <ShareAlt />
+            <CdnSvg 
+              path={DUA_ASSETS.SHARE_ALT}
+              width={scale(24)}
+              height={scale(24)}
+            />
           </TouchableOpacity>
         </View>
       </View>

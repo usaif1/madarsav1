@@ -5,7 +5,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // Components
 import { Body1Title2Bold, Body2Medium, Divider } from '@/components';
-import BookmarkPrimary from '@/assets/duas/bookmark-primary.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Header } from '@/components';
 import { useDuaSubCategories, useAllDuas } from '@/modules/dua/hooks/useDuas';
@@ -144,7 +145,12 @@ const DuaDetail = () => {
       </View>
       <View style={styles.rightContainer}>
         {item.bookmarked && (
-          <BookmarkPrimary width={16} height={16} style={styles.bookmarkIcon} />
+          <CdnSvg 
+            path={DUA_ASSETS.BOOKMARK_PRIMARY}
+            width={scale(16)}
+            height={scale(16)}
+            style={styles.bookmarkIcon}
+          />
         )}
         <Body2Medium style={styles.countText} color="sub-heading">{item.count} {fromSaved ? 'Saved' : ''} Duas</Body2Medium>
       </View>

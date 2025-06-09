@@ -12,9 +12,8 @@ import {DuaSearchbar} from './components/Duas';
 import DuaList from './components/Duas/DuaList';
 import {Body1Title2Bold, Divider} from '@/components';
 
-// assets
-import MandalaDua from '@/assets/duas/mandala_dua.svg';
-import BookmarkWhite from '@/assets/duas/bookmark-white.svg';
+// components
+import { CdnSvg } from '@/components/CdnSvg';
 
 const Duas = () => {
   const [isSaved, setIsSaved] = useState(false);
@@ -50,7 +49,10 @@ const Duas = () => {
           overflow: 'hidden',
         }}>
         <Body1Title2Bold color="primary">Daily Duas</Body1Title2Bold>
-        <MandalaDua
+        <CdnSvg
+          path={DUA_ASSETS.MANDALA_DUA}
+          width={scale(100)}
+          height={scale(100)}
           style={{
             position: 'absolute',
             left: 0,
@@ -59,7 +61,10 @@ const Duas = () => {
             transform: [{translateY: -56}],
           }}
         />
-        <MandalaDua
+        <CdnSvg
+          path={DUA_ASSETS.MANDALA_DUA}
+          width={scale(100)}
+          height={scale(100)}
           style={{
             position: 'absolute',
             right: 0,
@@ -86,7 +91,10 @@ const Duas = () => {
           overflow: 'hidden',
         }}>
         <Body1Title2Bold color="primary">Prayers</Body1Title2Bold>
-        <MandalaDua
+        <CdnSvg
+          path={DUA_ASSETS.MANDALA_DUA}
+          width={scale(100)}
+          height={scale(100)}
           style={{
             position: 'absolute',
             left: 0,
@@ -95,7 +103,10 @@ const Duas = () => {
             transform: [{translateY: -56}],
           }}
         />
-        <MandalaDua
+        <CdnSvg
+          path={DUA_ASSETS.MANDALA_DUA}
+          width={scale(100)}
+          height={scale(100)}
           style={{
             position: 'absolute',
             right: 0,
@@ -114,7 +125,11 @@ const Duas = () => {
         accessibilityLabel="View saved duas"
         accessibilityRole="button"
       >
-        <BookmarkWhite width={16} height={16} />
+        <CdnSvg 
+          path={DUA_ASSETS.BOOKMARK_WHITE}
+          width={scale(16)}
+          height={scale(16)}
+        />
         <Body1Title2Bold color="white" style={{marginLeft: 8}}>Saved</Body1Title2Bold>
       </TouchableOpacity>
     </View>
