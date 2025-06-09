@@ -117,4 +117,12 @@ export const DUA_ASSETS = {
   // Common Icons
   SEARCH_ICON: '/assets/search.svg',
   DEFAULT_PROFILE_IMAGE: '/assets/home/blank-profile-picture.png',
+  
+  // Quran Icons
+  QURAN_CLOSE_ICON: '/assets/close.svg',
+  QURAN_SETTINGS_ICON: '/assets/quran/settings.svg',
+  QURAN_PLAY_ICON: '/assets/hadith/Play.svg',
+  QURAN_BOOKMARK_ICON: '/assets/hadith/bookmark.svg',
+  QURAN_BOOKMARK_FILL_ICON: '/assets/hadith/bookmarked.svg',
+  QURAN_SHARE_ICON: '/assets/hadith/Share.svg',
 };

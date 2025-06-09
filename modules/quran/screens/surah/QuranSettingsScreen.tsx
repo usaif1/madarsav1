@@ -6,7 +6,8 @@ import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
-import CloseIcon from '@/assets/close.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 type QuranSettingsScreenNavigationProp = NativeStackNavigationProp<SurahStackParamList, 'quranSettings'>;
 
@@ -44,7 +45,7 @@ const QuranSettingsScreen: React.FC = () => {
         <View style={styles.headerContent}>
           <H5Bold>Quran settings</H5Bold>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <CloseIcon width={24} height={24} />
+            <CdnSvg path={DUA_ASSETS.QURAN_CLOSE_ICON} width={24} height={24} />
           </TouchableOpacity>
         </View>
       </View>
@@ -53,7 +54,7 @@ const QuranSettingsScreen: React.FC = () => {
       <View style={styles.settingsContainer}>
         {/* Font selection */}
         <View style={styles.settingSection}>
-          <Body1Bold style={styles.settingTitle}>Font</Body1Bold>
+          <Body2Bold style={styles.settingTitle}>Font</Body2Bold>
           <View style={styles.optionsRow}>
             <TouchableOpacity 
               style={[styles.optionButton, selectedFont === 1 && styles.selectedOption]}
@@ -81,13 +82,13 @@ const QuranSettingsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
           <View style={styles.fontPreview}>
-            <Body1Bold style={styles.arabicPreview}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Body1Bold>
+            <Body2Bold style={styles.arabicPreview}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Body2Bold>
           </View>
         </View>
         
         {/* Reciter selection */}
         <View style={styles.settingSection}>
-          <Body1Bold style={styles.settingTitle}>Reciter</Body1Bold>
+          <Body2Bold style={styles.settingTitle}>Reciter</Body2Bold>
           <View style={styles.optionsRow}>
             <TouchableOpacity 
               style={[styles.optionButton, selectedQari === 1 && styles.selectedOption]}
@@ -111,7 +112,7 @@ const QuranSettingsScreen: React.FC = () => {
         {/* Transliteration toggle */}
         <View style={styles.settingSection}>
           <View style={styles.toggleRow}>
-            <Body1Bold style={styles.settingTitle}>Transliteration</Body1Bold>
+            <Body2Bold style={styles.settingTitle}>Transliteration</Body2Bold>
             <Switch
               trackColor={{ false: '#E0E0E0', true: ColorPrimary.primary200 }}
               thumbColor={transliterationEnabled ? ColorPrimary.primary500 : '#FFFFFF'}
@@ -130,7 +131,7 @@ const QuranSettingsScreen: React.FC = () => {
           onPress={handleApplySettings}
           activeOpacity={0.8}
         >
-          <Body1Bold style={styles.applyButtonText}>Apply</Body1Bold>
+          <Body2Bold style={styles.applyButtonText}>Apply</Body2Bold>
         </TouchableOpacity>
       </View>
     </View>

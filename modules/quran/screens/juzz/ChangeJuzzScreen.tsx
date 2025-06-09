@@ -6,7 +6,8 @@ import { JuzzStackParamList } from '../../navigation/juzz.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
-import CloseIcon from '@/assets/close.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // Define the type for a Juzz item
 type JuzzItem = {
@@ -100,7 +101,7 @@ const ChangeJuzzScreen: React.FC = () => {
         <View style={styles.headerContent}>
           <H5Bold>Change Juzz</H5Bold>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <CloseIcon width={24} height={24} />
+            <CdnSvg path={DUA_ASSETS.QURAN_CLOSE_ICON} width={24} height={24} />
           </TouchableOpacity>
         </View>
       </View>

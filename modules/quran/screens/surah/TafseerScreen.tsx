@@ -6,7 +6,8 @@ import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
-import CloseIcon from '@/assets/close.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 type TafseerScreenRouteProp = RouteProp<SurahStackParamList, 'tafseer'>;
 type TafseerScreenNavigationProp = NativeStackNavigationProp<SurahStackParamList, 'tafseer'>;
@@ -41,7 +42,7 @@ The phrase appears at the beginning of every chapter (Surah) of the Quran except
         <View style={styles.headerContent}>
           <H5Bold>Tafseer</H5Bold>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <CloseIcon width={24} height={24} />
+            <CdnSvg path={DUA_ASSETS.QURAN_CLOSE_ICON} width={24} height={24} />
           </TouchableOpacity>
         </View>
       </View>

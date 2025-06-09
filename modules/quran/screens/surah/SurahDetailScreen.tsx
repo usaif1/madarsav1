@@ -6,14 +6,13 @@ import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, H5Bold, Body1Bold } from '@/components/Typography/Typography';
+import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
 import BackButton from '@/components/BackButton/BackButton';
-import SettingsIcon from '@/assets/quran/settings.svg';
-import PlayIcon from '@/assets/hadith/Play.svg';
-import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // Define the type for a verse
-type Verse = {
+type Verse = {  
   id: number;
   arabic: string;
   translation: string;
@@ -134,7 +133,7 @@ const SurahDetailScreen: React.FC = () => {
       
       {/* Arabic text */}
       <View style={styles.arabicContainer}>
-        <Body1Bold style={styles.arabicText}>{verse.arabic}</Body1Bold>
+        <Body2Bold style={styles.arabicText}>{verse.arabic}</Body2Bold>
       </View>
       
       {/* Translation */}
@@ -158,7 +157,7 @@ const SurahDetailScreen: React.FC = () => {
           <H5Bold>{surahName}</H5Bold>
         </View>
         <TouchableOpacity onPress={handleSettingsPress}>
-          <SettingsIcon width={24} height={24} />
+          <CdnSvg path={DUA_ASSETS.QURAN_SETTINGS_ICON} width={24} height={24} />
         </TouchableOpacity>
       </View>
       
@@ -191,7 +190,7 @@ const SurahDetailScreen: React.FC = () => {
         onPress={togglePlayPause}
         activeOpacity={0.8}
       >
-        <PlayIcon width={24} height={24} fill="#FFFFFF" />
+        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_ICON} width={24} height={24} fill="#FFFFFF" />
       </TouchableOpacity>
       
       {/* Audio player (visible when playing) */}

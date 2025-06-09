@@ -7,9 +7,8 @@ import { scale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
 import BackButton from '@/components/BackButton/BackButton';
-import BookmarkFillIcon from '@/assets/hadith/bookmarked.svg';
-import ShareIcon from '@/assets/hadith/Share.svg';
-import PlayIcon from '@/assets/hadith/Play.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 type AyahDetailScreenRouteProp = RouteProp<SavedStackParamList, 'savedAyahDetail'>;
@@ -90,17 +89,18 @@ const AyahDetailScreen: React.FC = () => {
               style={styles.actionButton}
               onPress={handleBookmarkToggle}
             >
-              <BookmarkFillIcon 
-                width={20} 
-                height={20} 
-                fill={isSaved ? ColorPrimary.primary500 : '#CCCCCC'} 
+              <CdnSvg 
+                path={isSaved ? DUA_ASSETS.QURAN_BOOKMARK_FILL_ICON : DUA_ASSETS.QURAN_BOOKMARK_ICON}
+                width={20}
+                height={20}
+                fill={isSaved ? ColorPrimary.primary500 : '#CCCCCC'}
               />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={handleShare}
             >
-              <ShareIcon width={20} height={20} fill="#404040" />
+              <CdnSvg path={DUA_ASSETS.QURAN_SHARE_ICON} width={20} height={20} fill="#404040" />
             </TouchableOpacity>
           </View>
         </View>
@@ -174,7 +174,7 @@ const AyahDetailScreen: React.FC = () => {
         style={styles.playButton}
         onPress={handlePlayPause}
       >
-        <PlayIcon width={24} height={24} fill="#FFFFFF" />
+        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_ICON} width={24} height={24} fill="#FFFFFF" />
       </TouchableOpacity>
       
       {/* Footer */}

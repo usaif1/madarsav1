@@ -7,7 +7,8 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, CaptionMedium } from '@/components/Typography/Typography';
 import SearchInput from '@/modules/hadith/components/SearchInput';
-import BookmarkIcon from '@/assets/hadith/bookmark.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // Define the type for a Surah item
 type SurahItem = {
@@ -85,7 +86,7 @@ const SurahListScreen: React.FC = () => {
           <CaptionMedium style={styles.surahInfo}>
             {item.type === 'meccan' ? 'Meccan' : 'Medinan'} • {item.ayahCount} Ayyahs
           </CaptionMedium>
-          <BookmarkIcon width={16} height={16} />
+          <CdnSvg path={DUA_ASSETS.QURAN_BOOKMARK_ICON} width={16} height={16} />
         </View>
       </View>
     </TouchableOpacity>
@@ -99,7 +100,6 @@ const SurahListScreen: React.FC = () => {
           value={searchQuery}
           onChangeText={handleSearch}
           placeholder="Salam, surah khojein"
-          style={styles.searchInput}
         />
       </View>
       
@@ -124,9 +124,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(16),
     paddingVertical: scale(12),
   },
-  searchInput: {
-    width: '100%',
-  },
+
   listContainer: {
     paddingHorizontal: scale(16),
     paddingBottom: scale(20),
