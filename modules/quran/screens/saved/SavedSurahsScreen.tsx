@@ -7,8 +7,9 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
 import BackButton from '@/components/BackButton/BackButton';
-import BookmarkFillIcon from '@/assets/hadith/bookmarked.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // Define the type for a saved surah
 type SavedSurah = {
@@ -67,7 +68,7 @@ const SavedSurahsScreen: React.FC = () => {
         <View style={styles.surahNameRow}>
           <Body2Bold>{item.name}</Body2Bold>
           <TouchableOpacity onPress={() => handleBookmarkToggle(item.id)}>
-            <BookmarkFillIcon width={20} height={20} fill={ColorPrimary.primary500} />
+            <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={20} height={20} fill={ColorPrimary.primary500} />
           </TouchableOpacity>
         </View>
         <CaptionMedium style={styles.surahInfo}>
