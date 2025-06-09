@@ -5,8 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Image,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,23 +17,25 @@ const DEFAULT_CARD_WIDTH = scale(339);
 const DISABLED_CARD_WIDTH = scale(321);
 
 // Emoji data with day mapping
+const BASE_CDN_URL = 'https://cdn.madrasaapp.com/assets/home/';
+
 const emojiData = [
   {
     id: 'mon',
     day: 'Mon',
-    emoji: require('@/assets/home/face-with-thermometer.png'),
+    emoji: `${BASE_CDN_URL}face-with-thermometer.png`,
     selected: true,
   },
   {
     id: 'tue',
     day: 'Tue',
-    emoji: require('@/assets/home/smiling-face-with-halo.png'),
+    emoji: `${BASE_CDN_URL}smiling-face-with-halo.png`,
     selected: true,
   },
   {
     id: 'wed',
     day: 'Wed',
-    emoji: require('@/assets/home/hugging-face.png'),
+    emoji: `${BASE_CDN_URL}hugging-face.png`,
     selected: true,
   },
   {
@@ -101,7 +103,11 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             <View style={styles.emojiCircle}>
               {item.selected ? (
                 item.emoji ? (
-                  <Image source={item.emoji} style={styles.emojiImage} />
+                  <FastImage 
+                    source={{ uri: item.emoji }} 
+                    style={styles.emojiImage}
+                    resizeMode={FastImage.resizeMode.contain}
+                  />
                 ) : (
                   <View style={styles.plusContainer}>
                     <Text style={styles.plusText}>+</Text>

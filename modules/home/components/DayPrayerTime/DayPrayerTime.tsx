@@ -11,12 +11,8 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Regular, Body1Title2Bold, Body2Medium, Body2Bold, H4Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
 import { ShadowColors } from '@/theme/shadows';
-import FajrIcon from '@/assets/home/fajr.svg';
-import DhuhrIcon from '@/assets/home/dhuhr.svg';
-import AsrIcon from '@/assets/home/asr.svg';
-import MaghribIcon from '@/assets/home/maghrib.svg';
-import IshaIcon from '@/assets/home/isha.svg';
-import { Image } from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { CdnSvg } from '@/components/CdnSvg';
 import { usePrayerTimes, PrayerType } from '../../hooks/usePrayerTimes';
 import { useThemeStore } from '@/globalStore';
 
@@ -24,13 +20,15 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
 const CARD_HEIGHT = verticalScale(279);
 
-// Map prayer types to their icons
-const prayerIcons: Record<string, React.FC<any>> = {
-  fajr: FajrIcon,
-  dhuhr: DhuhrIcon,
-  asr: AsrIcon,
-  maghrib: MaghribIcon,
-  isha: IshaIcon,
+const BASE_CDN_URL = 'https://cdn.madrasaapp.com/assets/home/';
+
+// Map prayer types to their CDN icon paths
+const prayerIcons: Record<string, string> = {
+  fajr: '/assets/home/fajr.svg',
+  dhuhr: '/assets/home/dhuhr.svg',
+  asr: '/assets/home/asr.svg',
+  maghrib: '/assets/home/maghrib.svg',
+  isha: '/assets/home/isha.svg',
 };
 
 // Get gradient colors based on prayer type
@@ -212,16 +210,23 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
               <View style={styles.iconNameContainer}>
                 <View style={{flexDirection:'row',width:'100%',justifyContent:'space-between'}}>
                   <View style={{flexDirection: 'row'}}>
-                {NextPrayerIcon && <NextPrayerIcon width={scale(24)} height={scale(24)} fill="white" />}
-                <H4Bold color="white" style={styles.prayerTitle}>{nextPrayerName}</H4Bold>
+                    <CdnSvg
+                      path={prayerIcons[nextPrayer]}
+                      width={24}
+                      height={24}
+                      fill="white"
+                    />
+                    <H4Bold color="white" style={styles.prayerTitle}>{nextPrayerName}</H4Bold>
+                  </View>
+                  {/* Day Pill */}
+                  <View style={styles.dayPill}>
+                    <Body2Bold color="white">{dayName}</Body2Bold>
+                  </View>
                 </View>
-                {/* Day Pill */}
-              <View style={styles.dayPill}>
-                <Body2Bold color="white">{dayName}</Body2Bold>
-              </View></View>
                 <View style={{flexDirection: 'row'}}>
-            {/* Time Left */}
-            <Body2Medium color="white" style={styles.timeLeft}>{timeLeft}</Body2Medium></View>
+                  {/* Time Left */}
+                  <Body2Medium color="white" style={styles.timeLeft}>{timeLeft}</Body2Medium>
+                </View>
               </View>
             </View>
           </View>
@@ -237,11 +242,12 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
                 prayer.isCurrent && styles.currentPrayerItem
               ]}>
               {/* Prayer Icon */}
-              <prayer.icon 
-                width={scale(24)} 
-                height={scale(24)} 
-                fill="white" 
-                style={prayer.isCurrent ? styles.currentIcon : styles.icon} 
+              <CdnSvg
+                path={prayerIcons[prayer.key]}
+                width={24}
+                height={24}
+                fill="white"
+                style={prayer.isCurrent ? styles.currentIcon : styles.icon}
               />
               
               {/* Prayer Name */}
@@ -271,10 +277,10 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
         
         {/* Arc with Ball Indicator */}
         <View style={styles.arcContainer}>
-          <Image 
-            source={require('@/assets/home/arc.png')} 
+          <FastImage 
+            source={{ uri: `${BASE_CDN_URL}arc.png` }} 
             style={styles.arcImage} 
-            resizeMode="contain"
+            resizeMode={FastImage.resizeMode.contain}
           />
           <View style={[styles.ball, { left: ballPosition.left, top: ballPosition.top }]} />
         </View>
