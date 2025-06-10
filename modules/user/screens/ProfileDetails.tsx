@@ -290,6 +290,35 @@ const ProfileDetails: React.FC = () => {
     });
   };
 
+  // Handle profile image update
+  const handleProfileImageUpdate = async (fileUrl: string) => {
+    if (!userDetails?.userId) {
+      Alert.alert('Error', 'User ID not found');
+      return;
+    }
+
+    try {
+      updateUser({
+        userId: userDetails.userId,
+        firstName: userDetails.firstName,
+        lastName: userDetails.lastName,
+        phone: userDetails.phone || undefined,
+        dob: userDetails.dob,
+        gender: userDetails.gender as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
+        profileImage: fileUrl,
+      }, {
+        onSuccess: () => {
+          Alert.alert('Success', 'Profile image updated successfully');
+        },
+        onError: (error: Error) => {
+          Alert.alert('Error', error.message);
+        },
+      });
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update profile image');
+    }
+  };
+
   // Show loading state
   if (isLoadingDetails && !userDetails) {
     return (
@@ -335,20 +364,7 @@ const ProfileDetails: React.FC = () => {
         <Avatar 
           imageUrl={userDetails?.profileImage || user?.photoUrl || ''}
           userId={userDetails?.userId || user?.id || ''}
-          onImageUploaded={(fileUrl) => {
-            // Update user details with new profile image
-            if (userDetails?.userId) {
-              updateUser({
-                userId: userDetails.userId,
-                firstName: userDetails.firstName,
-                lastName: userDetails.lastName,
-                phone: userDetails.phone || undefined,
-                dob: userDetails.dob,
-                gender: userDetails.gender as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
-                profileImage: fileUrl,
-              });
-            }
-          }}
+          onImageUploaded={handleProfileImageUpdate}
         />
         <Divider height={24} />
 

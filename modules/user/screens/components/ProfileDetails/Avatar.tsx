@@ -1,12 +1,10 @@
 import {Pressable, StyleSheet, View, Alert, Platform} from 'react-native';
-import * as ImagePicker from 'react-native-image-picker';
-import {useUploadFile} from '@/modules/user/hooks/useUserProfile';
 import React from 'react';
 import {useThemeStore} from '@/globalStore';
-
-// assets
 import { CdnSvg } from '@/components/CdnSvg';
 import FastImage from 'react-native-fast-image';
+import { ImagePickerHelper } from '@/modules/user/utils/imagePickerHelper';
+import { uploadFile, prepareImageForUpload } from '@/modules/user/services/imageUploadService';
 
 interface AvatarProps {
   imageUrl: string;
@@ -20,89 +18,54 @@ const Camera = () => (
 
 const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
   const {shadows} = useThemeStore();
-  const {mutate: uploadFile, isPending} = useUploadFile();
+  const [isUploading, setIsUploading] = React.useState(false);
 
-  const handleImageSelection = () => {
-    const options: ImagePicker.ImageLibraryOptions = {
-      mediaType: 'photo',
-      maxWidth: 500,
-      maxHeight: 500,
-      quality: 0.7,
-    };
-
-    Alert.alert(
-      'Update Profile Picture',
-      'Choose an option',
-      [
-        {
-          text: 'Take Photo',
-          onPress: () => {
-            ImagePicker.launchCamera(options, handleImageResponse);
-          },
-        },
-        {
-          text: 'Choose from Library',
-          onPress: () => {
-            ImagePicker.launchImageLibrary(options, handleImageResponse);
-          },
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ],
-    );
-  };
-
-  const handleImageResponse = (response: ImagePicker.ImagePickerResponse) => {
-    if (response.didCancel || response.errorCode || !response.assets?.[0]) {
-      if (response.errorMessage) {
-        Alert.alert('Error', response.errorMessage);
+  const handleImageSelection = async () => {
+    try {
+      const selectedImage = await ImagePickerHelper.showImagePickerOptions();
+      
+      if (!selectedImage) {
+        return;
       }
-      return;
+
+      setIsUploading(true);
+      
+      // Prepare form data
+      const formData = await prepareImageForUpload(selectedImage);
+      formData.append('userId', userId);
+
+      // Upload image
+      const response = await uploadFile(userId, formData);
+      
+      // Call success callback
+      onImageUploaded?.(response.fileLink);
+      
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      Alert.alert('Error', error.message || 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
     }
-
-    const selectedImage = response.assets[0];
-    
-    // Create file object for upload
-    const fileToUpload = {
-      uri: Platform.OS === 'ios' ? selectedImage.uri?.replace('file://', '') : selectedImage.uri,
-      type: selectedImage.type || 'image/jpeg',
-      name: selectedImage.fileName || 'image.jpg',
-    } as any;
-
-    // Upload image
-    uploadFile(
-      { userId, file: fileToUpload },
-      {
-        onSuccess: (data) => {
-          onImageUploaded?.(data.fileLink);
-        },
-        onError: (error: Error) => {
-          Alert.alert('Error', error.message);
-        },
-      },
-    );
   };
 
   return (
     <View style={[styles.avatar, shadows.md1]}>
       <FastImage
-  source={imageUrl 
-    ? { uri: imageUrl } 
-    : { 
-        uri: 'https://cdn.madrasaapp.com/assets/profile/face.png',
-        priority: FastImage.priority.normal,
-        cache: FastImage.cacheControl.immutable,
-      }
-  }
-  resizeMode={FastImage.resizeMode.contain}
-  style={[styles.avatar, {width: 100, height: 100}]}
-/>
+        source={imageUrl 
+          ? { uri: imageUrl } 
+          : { 
+              uri: 'https://cdn.madrasaapp.com/assets/profile/face.png',
+              priority: FastImage.priority.normal,
+              cache: FastImage.cacheControl.immutable,
+            }
+        }
+        resizeMode={FastImage.resizeMode.contain}
+        style={[styles.avatar, {width: 100, height: 100}]}
+      />
       <Pressable 
-        style={[styles.cameraBtn, isPending && styles.disabledBtn]}
+        style={[styles.cameraBtn, isUploading && styles.disabledBtn]}
         onPress={handleImageSelection}
-        disabled={isPending}>
+        disabled={isUploading}>
         <Camera />
       </Pressable>
     </View>
@@ -121,21 +84,20 @@ const styles = StyleSheet.create({
   avatar: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
-    borderWidth:4,
+    borderWidth: 4,
     borderRadius: 50,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor:'lightgrey'
+    borderColor: 'lightgrey'
   },
-
   cameraBtn: {
     width: CAMERA_SIZE,
     height: CAMERA_SIZE,
     borderRadius: 100,
     backgroundColor: '#8A57DC',
     position: 'absolute',
-    bottom: -CAMERA_SIZE / 2 ,
+    bottom: -CAMERA_SIZE / 2,
     left: '50%',
     transform: [{translateX: -CAMERA_SIZE / 2}],
     right: 0,
