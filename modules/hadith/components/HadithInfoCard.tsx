@@ -58,7 +58,7 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
             <Body1Title2Bold style={styles.title} numberOfLines={1}>{title}</Body1Title2Bold>
             <View style={styles.arrowBtn}>
               <CdnSvg 
-                path={DUA_ASSETS.ARROW_RIGHT}
+                path={DUA_ASSETS.ARROW_RIGHT_DUA_CARD}
                 width={16}
                 height={16}
               />
