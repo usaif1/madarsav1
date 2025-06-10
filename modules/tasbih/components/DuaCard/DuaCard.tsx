@@ -89,7 +89,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         hitSlop={8} 
         accessibilityLabel="Previous dua"
       >
-        <CdnSvg path={DUA_ASSETS.ARROW_LEFT} width={16} height={16} />
+        <CdnSvg path={DUA_ASSETS.ARROW_LEFT_DUA_CARD} width={12} height={12} />
       </Pressable>
       <Pressable 
         onPress={onNext} 
@@ -97,7 +97,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         hitSlop={8} 
         accessibilityLabel="Next dua"
       >
-        <CdnSvg path={DUA_ASSETS.ARROW_RIGHT} width={16} height={16} />
+        <CdnSvg path={DUA_ASSETS.ARROW_RIGHT_DUA_CARD} width={12} height={12} />
       </Pressable>
       {/* Change Dua Button positioned at bottom center - Fixed onPress handler */}
       <Pressable 

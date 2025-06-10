@@ -26,7 +26,8 @@ export const DUA_ASSETS = {
   SEARCH: '/assets/search.svg',
   CLOSE: '/assets/close.svg',
   ARROW_LEFT: '/assets/arrow-left.svg',
-  ARROW_RIGHT: '/assets/duas/arrow-right.svg',
+  ARROW_LEFT_DUA_CARD: '/assets/profile/arrowleft.svg',
+  ARROW_RIGHT_DUA_CARD: '/assets/profile/arrowright.svg',
   HAMBURGER_ICON: '/assets/duas/hamburger-icon.svg',
   
   // Tasbih assets
