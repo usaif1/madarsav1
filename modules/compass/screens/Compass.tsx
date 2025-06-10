@@ -9,6 +9,7 @@ import {
   Text,
   ActivityIndicator,
   Platform,
+  Dimensions,
 } from 'react-native';
 import CompassHeading from 'react-native-compass-heading';
 import geomagnetism from 'geomagnetism';
@@ -28,6 +29,29 @@ import {Body1Title2Bold, Body2Medium} from '@/components/Typography/Typography';
 const KAABA_LAT = 21.4225;
 const KAABA_LON = 39.8262;
 
+// Function to normalize heading based on device orientation
+function normalizeHeading(heading: number, orientation: string): number {
+  // Default orientation (portrait, home button down)
+  let normalizedHeading = heading;
+
+  // Adjust heading based on device orientation
+  switch (orientation) {
+    case 'LANDSCAPE-LEFT': // USB port towards right
+      normalizedHeading = (heading + 90) % 360;
+      break;
+    case 'LANDSCAPE-RIGHT': // USB port towards left
+      normalizedHeading = (heading - 90 + 360) % 360;
+      break;
+    case 'PORTRAIT-UPSIDEDOWN': // USB port up
+      normalizedHeading = (heading + 180) % 360;
+      break;
+    default: // PORTRAIT (USB port down)
+      normalizedHeading = heading;
+  }
+
+  return normalizedHeading;
+}
+
 // great-circle bearing to Kaaba (true north)
 function getQiblaBearing(lat: number, lon: number) {
   const φ1 = (lat * Math.PI) / 180;
@@ -44,6 +68,7 @@ function getQiblaBearing(lat: number, lon: number) {
 const Compass: React.FC = () => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const {bottom} = useSafeAreaInsets();
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
   /* state */
   const [coords, setCoords] = useState<{lat: number; lon: number} | null>(null);
@@ -52,6 +77,18 @@ const Compass: React.FC = () => {
   const [decl, setDecl] = useState(0); // local declination °
   const [trueHeading, setTrueHeading] = useState(0);
   const [qiblaBearing, setQiblaBearing] = useState<number | null>(null);
+  const [orientation, setOrientation] = useState('PORTRAIT');
+
+  // Update orientation when dimensions change
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({window}) => {
+      setDimensions(window);
+      const isLandscape = window.width > window.height;
+      setOrientation(isLandscape ? 'LANDSCAPE-LEFT' : 'PORTRAIT');
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   /* ---- one-shot location request ---- */
   useEffect(() => {
@@ -73,64 +110,59 @@ const Compass: React.FC = () => {
 
   /* ---- start compass sensor ---- */
   useEffect(() => {
-    // Use an even smaller delta for smoother updates
     const DELTA_DEG = 0.1;
-    
-    // Improved low-pass filter configuration
     let lastHeading = 0;
-    const filterCoefficient = 0.1; // Lower value for even smoother response
+    const filterCoefficient = 0.1;
     let lastFilteredHeading = 0;
     
-    CompassHeading.start(DELTA_DEG, ({heading}) => {
-      // Apply enhanced low-pass filter for smoother heading
-      let filteredHeading = heading;
+    CompassHeading.start(DELTA_DEG, ({heading}: {heading: number}) => {
+      // Normalize heading based on device orientation
+      const normalizedHeading = normalizeHeading(heading, orientation);
+      
+      // Apply low-pass filter
+      let filteredHeading = normalizedHeading;
       
       if (lastHeading !== 0) {
-        // Enhanced 0/360 boundary handling
-        if (Math.abs(heading - lastFilteredHeading) > 180) {
-          if (heading > lastFilteredHeading) {
+        if (Math.abs(normalizedHeading - lastFilteredHeading) > 180) {
+          if (normalizedHeading > lastFilteredHeading) {
             lastFilteredHeading += 360;
           } else {
             filteredHeading += 360;
           }
         }
         
-        // Double filtering for extra smoothness
         filteredHeading = lastFilteredHeading + filterCoefficient * (filteredHeading - lastFilteredHeading);
         filteredHeading = filteredHeading % 360;
       }
       
-      lastHeading = heading;
+      lastHeading = normalizedHeading;
       lastFilteredHeading = filteredHeading;
       
       setMagHeading(filteredHeading);
-      // Calculate true heading by adding magnetic declination
       const trueH = (filteredHeading + decl + 360) % 360;
       setTrueHeading(trueH);
 
-      // Enhanced spring animation for ultra-smooth movement
+      // Update rotation animation
       Animated.spring(rotateAnim, {
-        toValue: trueH,
-        friction: 12, // Higher friction for more stability
-        tension: 8, // Lower tension for smoother movement
+        toValue: -trueH,
+        friction: 12,
+        tension: 8,
         useNativeDriver: true,
-        restSpeedThreshold: 0.01, // Lower threshold for smoother stops
+        restSpeedThreshold: 0.01,
         restDisplacementThreshold: 0.01
       }).start();
     });
     return () => CompassHeading.stop();
-  }, [decl, rotateAnim]);
+  }, [decl, rotateAnim, orientation]);
 
   /* rotations */
-  // Fix the compass rotation to be correct (we need to invert it since we want the compass to rotate opposite to our movement)
   const rotate = rotateAnim.interpolate({
-    inputRange: [0, 360],
-    outputRange: ['360deg', '0deg'], // Inverted to make compass rotate correctly
+    inputRange: [-360, 0],
+    outputRange: ['-360deg', '0deg'],
   });
   
-  // Calculate the qibla angle correctly
-  // The qibla bearing is fixed relative to true north, while our heading changes as we rotate
-  const qiblaAngle = qiblaBearing != null ? (qiblaBearing - trueHeading + 360) % 360 : 0;
+  // Calculate qibla angle using normalized heading
+  const qiblaAngle = qiblaBearing != null ? (qiblaBearing - magHeading + 360) % 360 : 0;
 
   // ───── loading / error UI ─────
   if (!coords && !locError) {
@@ -178,7 +210,7 @@ const Compass: React.FC = () => {
             <QiblaIndicator angle={qiblaAngle} compassRadius={150} />
           )}
           
-          {/* Debug info - comment out in production */}
+          {/* Debug info - uncomment for testing */}
           {/* {__DEV__ && (
             <View style={styles.debugInfo}>
               <Text style={styles.debugText}>Mag: {magHeading.toFixed(1)}°</Text>
