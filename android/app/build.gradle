@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+apply from: "../env.gradle"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -84,6 +86,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        resValue "string", "facebook_app_id", facebookAppId
+        resValue "string", "facebook_client_token", facebookClientToken
+        resValue "string", "fb_login_protocol_scheme", facebookLoginProtocolScheme
     }
     signingConfigs {
         debug {

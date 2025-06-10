@@ -13,12 +13,12 @@ import {
   import { storage } from '../storage/mmkvStorage';
   import DeviceInfo from 'react-native-device-info';
   import { useLocationStore } from '@/modules/location/store/locationStore';
+  import { GOOGLE_WEB_CLIENT_ID } from '@env';
   
   // Configure Google Sign-In
   export const configureGoogleSignIn = () => {
     GoogleSignin.configure({
-      // Get this from Google Cloud Console
-      webClientId: '195416187581-qpimoedkpn9ar93kf13sss1ape1s8lv4.apps.googleusercontent.com',
+      webClientId: GOOGLE_WEB_CLIENT_ID,
       offlineAccess: true,
       forceCodeForRefreshToken: true,
     });
