@@ -1,14 +1,14 @@
-import React from 'react';
-import {TextInput, StyleSheet, View, Text, ViewStyle, StyleProp} from 'react-native';
+import React, { forwardRef } from 'react';
+import {TextInput, StyleSheet, View, Text, ViewStyle, StyleProp, TextInputProps} from 'react-native';
 
 // component
 import {Body1Title2Medium} from '@/components';
 
-interface Props {
+interface Props extends TextInputProps {
   label: string;
   value: string;
   disabled?: boolean;
-  onChange?: (text: string) => void;
+  onChangeText?: (text: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
   error?: string;
@@ -18,12 +18,13 @@ interface Props {
   customStyle?: StyleProp<ViewStyle>;
 }
 
-const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onChange, onFocus, onBlur, error, helperText, placeholder, rightIcon, customStyle}) => {
+const CustomTextInput = forwardRef<TextInput, Props>(({label, value, disabled = false, onChangeText, onFocus, onBlur, error, helperText, placeholder, rightIcon, customStyle, ...rest}, ref) => {
   return (
     <View style={styles.container}>
       <Body1Title2Medium color="sub-heading">{label}</Body1Title2Medium>
       <View style={styles.inputContainer}>
         <TextInput
+          ref={ref}
           value={value}
           style={[
             styles.input,
@@ -36,11 +37,12 @@ const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onCha
             customStyle, // Apply custom styles if provided
           ]}
           editable={!disabled}
-          onChangeText={onChange}
+          onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor="#A3A3A3"
           onFocus={onFocus}
           onBlur={onBlur}
+          {...rest} // Pass through other TextInput props like onSubmitEditing, returnKeyType
         />
         {rightIcon && (
           <View style={styles.iconContainer}>
@@ -55,7 +57,7 @@ const CustomTextInput: React.FC<Props> = ({label, value, disabled = false, onCha
       ) : null}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

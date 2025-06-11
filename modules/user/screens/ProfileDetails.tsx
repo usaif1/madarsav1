@@ -1,6 +1,6 @@
 // dependencies
-import {Pressable, StyleSheet, View, ActivityIndicator, Alert, Platform, TouchableOpacity, Modal, Keyboard, ViewStyle} from 'react-native';
-import React, {useState, useEffect} from 'react';
+import {Pressable, StyleSheet, View, ActivityIndicator, Alert, Platform, TouchableOpacity, Modal, Keyboard, ViewStyle, TextInput, findNodeHandle} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
 import {Picker} from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -127,6 +127,16 @@ const ProfileDetails: React.FC = () => {
   };
   const {user} = useAuthStore();
   
+  // Refs for text inputs and scroll view
+  const firstNameRef = useRef<TextInput>(null);
+  const lastNameRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const scrollViewRef = useRef<KeyboardAwareScrollView>(null); // Ref for KeyboardAwareScrollView
+
+  // Refs for layout measurements to scroll to specific elements
+  const genderPickerRef = useRef<View>(null);
+  const dobInputRef = useRef<View>(null);
+
   // Fetch user details from API
   const {data: userDetails, isLoading: isLoadingDetails, error: userError} = useUserDetails();
   
@@ -143,6 +153,10 @@ const ProfileDetails: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerDate, setDatePickerDate] = useState(new Date());
   const [focusedInput, setFocusedInput] = useState<string>('');
+
+  // State to store layout positions for scrolling
+  const [genderPickerY, setGenderPickerY] = useState(0);
+  const [dobInputY, setDobInputY] = useState(0);
 
   const [formErrors, setFormErrors] = useState<{
     firstName?: string;
@@ -326,12 +340,13 @@ const ProfileDetails: React.FC = () => {
       onPress={handleScreenPress}
       style={styles.container}>
       <KeyboardAwareScrollView
+        innerRef={r => (scrollViewRef.current = r as any)} // Use innerRef to access internal methods
         style={styles.container}
         contentContainerStyle={{ flexGrow: 1, alignItems: 'center', paddingTop: 32 }}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         enableAutomaticScroll={true}
-        extraScrollHeight={20}>
+        extraScrollHeight={100}>
         <Avatar 
           imageUrl={userDetails?.profileImage || user?.photoUrl || ''}
           userId={userDetails?.userId || user?.id || ''}
@@ -364,9 +379,12 @@ const ProfileDetails: React.FC = () => {
             }}>
             <View style={{ flex: 1 }}>
               <CustomTextInput 
+                ref={firstNameRef}
                 label="First name" 
                 value={firstName}
-                onChange={(text: string) => setFirstName(text)}
+                onChangeText={(text: string) => setFirstName(text)} 
+                onSubmitEditing={() => lastNameRef.current?.focus()} 
+                returnKeyType="next"
                 onFocus={() => setFocusedInput('firstName')}
                 onBlur={() => setFocusedInput('')}
                 customStyle={focusedInput === 'firstName' ? { borderColor: '#8A57DC', borderWidth: 1 } : undefined}
@@ -375,9 +393,12 @@ const ProfileDetails: React.FC = () => {
             </View>
             <View style={{ flex: 1 }}>
               <CustomTextInput 
+                ref={lastNameRef}
                 label="Last name" 
                 value={lastName}
-                onChange={(text: string) => setLastName(text)}
+                onChangeText={(text: string) => setLastName(text)} 
+                onSubmitEditing={() => phoneRef.current?.focus()} 
+                returnKeyType="next"
                 onFocus={() => setFocusedInput('lastName')}
                 onBlur={() => setFocusedInput('')}
                 customStyle={focusedInput === 'lastName' ? { borderColor: '#8A57DC', borderWidth: 1 } : undefined}
@@ -394,16 +415,34 @@ const ProfileDetails: React.FC = () => {
           </View>
           <View>
             <CustomTextInput 
+              ref={phoneRef}
               label="Phone number" 
               value={phone}
-              onChange={(text: string) => setPhone(text.replace(/[^0-9]/g, ''))}
+              onChangeText={(text: string) => setPhone(text.replace(/[^0-9]/g, ''))} 
+              onSubmitEditing={() => {
+                Keyboard.dismiss(); // Dismiss keyboard
+                // Scroll to the gender picker after phone number is entered
+                if (genderPickerRef.current && scrollViewRef.current) {
+                  setTimeout(() => {
+                    (scrollViewRef.current as any).scrollIntoView(genderPickerRef.current, { animated: true });
+                  }, 100); // Add a small delay
+                }
+              }} 
+              keyboardType="phone-pad"
+              returnKeyType="done"
               onFocus={() => setFocusedInput('phone')}
               onBlur={() => setFocusedInput('')}
               customStyle={focusedInput === 'phone' ? { borderColor: '#8A57DC', borderWidth: 1 } : undefined}
               error={formErrors.phone}
             />
           </View>
-          <View>
+          <View
+            ref={genderPickerRef} // Attach ref for layout measurement
+            onLayout={(event) => {
+              const { y } = event.nativeEvent.layout;
+              setGenderPickerY(y);
+            }} 
+          >
             <View style={styles.pickerContainer}>
               <Body1Title2Medium color="sub-heading" style={styles.inputLabel}>
                 Gender
@@ -411,7 +450,15 @@ const ProfileDetails: React.FC = () => {
               <View style={[styles.pickerWrapper, formErrors.gender && styles.pickerError]}>
                 <Picker
                   selectedValue={gender}
-                  onValueChange={(itemValue: string) => setGender(itemValue)}
+                  onValueChange={(itemValue: string) => {
+                    setGender(itemValue);
+                    // After gender selection, scroll to DOB input
+                    if (dobInputRef.current && scrollViewRef.current) {
+                      setTimeout(() => {
+                        (scrollViewRef.current as any).scrollIntoView(dobInputRef.current, { animated: true });
+                      }, 100); // Add a small delay
+                    }
+                  }}
                   style={styles.picker}
                   enabled={true}
                   itemStyle={styles.pickerItem}
@@ -435,7 +482,13 @@ const ProfileDetails: React.FC = () => {
               )}
             </View>
           </View>
-          <View>
+          <View
+            ref={dobInputRef} // Attach ref for layout measurement
+            onLayout={(event) => {
+              const { y } = event.nativeEvent.layout;
+              setDobInputY(y);
+            }} 
+          >
             <View style={styles.datePickerContainer}>
               <CustomTextInput 
                 label="Date of Birth" 
@@ -443,7 +496,7 @@ const ProfileDetails: React.FC = () => {
                 onFocus={() => setFocusedInput('dob')}
                 onBlur={() => setFocusedInput('')}
                 customStyle={focusedInput === 'dob' ? { borderColor: '#8A57DC', borderWidth: 1 } : undefined}
-                onChange={(text: string) => {
+                onChangeText={(text: string) => {
                   // Only allow digits and -
                   const cleaned = text.replace(/[^0-9-]/g, '');
                   // Prevent multiple dashes
@@ -459,6 +512,7 @@ const ProfileDetails: React.FC = () => {
                     <CdnSvg path={DUA_ASSETS.CALENDAR_ICON} width={24} height={24} />
                   </TouchableOpacity>
                 }
+                // No onSubmitEditing for Date of Birth as it uses a picker
               />
             </View>
             
@@ -482,7 +536,7 @@ const ProfileDetails: React.FC = () => {
               />
             )}
           </View>
-          </View> {/* Closing formInputsContainer */} 
+          </View> {/* Closing formInputsContainer */}
 
           <Pressable 
             style={[styles.submitBtn, hasChanges ? styles.submitBtnActive : {}]}
