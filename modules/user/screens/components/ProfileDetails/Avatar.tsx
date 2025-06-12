@@ -88,7 +88,7 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
         source={imageUrl 
           ? { uri: imageUrl } 
           : { 
-              uri: 'https://cdn.madrasaapp.com/assets/profile/face.png',
+              uri: 'https://cdn.madrasaapp.com/assets/home/blank-profile-picture.png',
               priority: FastImage.priority.normal,
               cache: FastImage.cacheControl.immutable,
             }
