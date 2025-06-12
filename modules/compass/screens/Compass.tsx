@@ -198,12 +198,12 @@ const Compass: React.FC = () => {
               height={300} 
               style={styles.compass} 
             />
-            <CdnSvg 
+            {/* <CdnSvg 
               path={DUA_ASSETS.COMPASS_CENTER} 
               width={100} 
               height={100} 
               style={styles.compassCenter} 
-            />
+            /> */}
           </Animated.View>
 
           {qiblaBearing !== null && (

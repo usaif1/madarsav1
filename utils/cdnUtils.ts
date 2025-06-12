@@ -89,7 +89,7 @@ export const DUA_ASSETS = {
   COMPASS_3D: '/assets/compass/compass_3d.png',
   COMPASS_MOSQUE: '/assets/compass/mosque.svg',
   COMPASS_NEXT_SALAH: '/assets/compass/next_salah_icon.svg',
-  COMPASS_SHARE: '/assets/compass/share-light.svg',
+  COMPASS_SHARE: '/assets/share-light.svg',
   
   // Hadith assets
   HADITH_MORE_LEFT: '/assets/hadith/more-hadiths-left.svg',
