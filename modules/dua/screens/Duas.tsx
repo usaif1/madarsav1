@@ -29,52 +29,30 @@ const Duas = () => {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: '#FAFAFA',
-        paddingTop: 10,
-      }}>
+    <View style={styles.container}>
       <StatusBar barStyle={'light-content'} />
-      <View style={{paddingHorizontal: 18}}>
+      <View style={styles.searchContainer}>
         <DuaSearchbar onSearchChange={handleSearchChange} />
       </View>
       <Divider height={10} />
-      <View
-        style={{
-          backgroundColor: '#F9F6FF',
-          paddingVertical: 5,
-          alignItems: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
+      <View style={styles.sectionHeader}>
         <Body1Title2Bold color="primary">Daily Duas</Body1Title2Bold>
         <CdnSvg
           path={DUA_ASSETS.MANDALA_DUA}
           width={scale(100)}
           height={scale(100)}
-          style={{
-            position: 'absolute',
-            left: 0,
-            zIndex: 99,
-            top: 0,
-            transform: [{translateY: -56}],
-          }}
+          style={styles.leftMandala}
         />
         <CdnSvg
           path={DUA_ASSETS.MANDALA_DUA}
           width={scale(100)}
           height={scale(100)}
-          style={{
-            position: 'absolute',
-            right: 0,
-            zIndex: 99,
-            top: 0,
-            transform: [{scaleX: -1}, {translateY: -56}],
-          }}
+          style={styles.rightMandala}
         />
       </View>
-      <DuaList searchQuery={searchQuery} />
+      <View style={styles.listContainer}>
+        <DuaList searchQuery={searchQuery} />
+      </View>
       <View style={styles.footerContainer}>
         <FastImage 
           source={{ uri: getCdnUrl(DUA_ASSETS.DUA_AYAH) }}
@@ -82,40 +60,22 @@ const Duas = () => {
           resizeMode={FastImage.resizeMode.contain}
         />
       </View>
-      <View
-        style={{
-          backgroundColor: '#F9F6FF',
-          paddingVertical: 5,
-          alignItems: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
+      <View style={styles.sectionHeader}>
         <Body1Title2Bold color="primary">Prayers</Body1Title2Bold>
         <CdnSvg
           path={DUA_ASSETS.MANDALA_DUA}
           width={scale(100)}
           height={scale(100)}
-          style={{
-            position: 'absolute',
-            left: 0,
-            zIndex: 99,
-            top: 0,
-            transform: [{translateY: -56}],
-          }}
+          style={styles.leftMandala}
         />
         <CdnSvg
           path={DUA_ASSETS.MANDALA_DUA}
           width={scale(100)}
           height={scale(100)}
-          style={{
-            position: 'absolute',
-            right: 0,
-            zIndex: 99,
-            top: 0,
-            transform: [{scaleX: -1}, {translateY: -56}],
-          }}
+          style={styles.rightMandala}
         />
       </View>
+      <View style={styles.prayersPadding} />
 
       {/* Floating Saved Button */}
       <TouchableOpacity 
@@ -139,33 +99,69 @@ const Duas = () => {
 export default Duas;
 
 const styles = StyleSheet.create({
-    footerContainer: {
-        width: scale(375),
-        height: verticalScale(121),
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    footerImage: {
-        width: '100%',
-        height: '100%',
-    },
-    savedButton: {
-        position: 'absolute',
-        bottom: 40,
-        right: 16,
-        width: scale(89),
-        height: verticalScale(40),
-        borderRadius: 60,
-        backgroundColor: '#000000',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        shadowColor: '#171717',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-        elevation: 2,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+    paddingTop: 10,
+  },
+  searchContainer: {
+    paddingHorizontal: 18,
+  },
+  sectionHeader: {
+    backgroundColor: '#F9F6FF',
+    paddingVertical: 5,
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  leftMandala: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 99,
+    top: 0,
+    transform: [{translateY: -56}],
+  },
+  rightMandala: {
+    position: 'absolute',
+    right: 0,
+    zIndex: 99,
+    top: 0,
+    transform: [{scaleX: -1}, {translateY: -56}],
+  },
+  listContainer: {
+    flex: 1,
+    minHeight: 0, // This is important for scroll to work
+  },
+  footerContainer: {
+    width: scale(375),
+    height: verticalScale(121),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  prayersPadding: {
+    height: scale(40), // Add padding below prayers section
+  },
+  savedButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 16,
+    width: scale(89),
+    height: verticalScale(40),
+    borderRadius: 60,
+    backgroundColor: '#000000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    shadowColor: '#171717',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
 });
