@@ -35,13 +35,9 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
         file,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
             'Accept': 'application/json',
           },
-          transformRequest: (data, headers) => {
-            // Don't transform FormData
-            return data;
-          },
+          transformRequest: (data) => data, // Don't transform FormData
           timeout: 60000,
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));

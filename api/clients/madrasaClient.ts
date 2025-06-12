@@ -26,28 +26,21 @@ const madrasaClient = axios.create({
   // Don't transform data by default
   transformRequest: [(data, headers) => {
     if (data instanceof FormData) {
-      // If data is FormData, simply return it. Axios should handle setting the
-      // 'Content-Type' to 'multipart/form-data' with the correct boundary, primarily guided
-      // by the 'Content-Type': undefined setting in the specific request config (e.g., in userService).
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📦 FormData in transformRequest (passing through). Current headers[Content-Type]:', headers ? headers['Content-Type'] : 'headers undefined');
+      // For FormData, we need to let the browser set the Content-Type with boundary
+      if (headers) {
+        delete headers['Content-Type'];
       }
       return data;
     }
 
     // For other data types (e.g., plain objects for JSON payloads)
     if (headers && data && typeof data === 'object') {
-      // Ensure Content-Type is not set if data is null or undefined, even if headers object exists
-      if (data === null || data === undefined) {
-        if (headers['Content-Type']) delete headers['Content-Type'];
-      } else {
-        headers['Content-Type'] = 'application/json';
-        try {
-          return JSON.stringify(data);
-        } catch (e) {
-          console.error('Error stringifying request data:', e);
-          return data; 
-        }
+      headers['Content-Type'] = 'application/json';
+      try {
+        return JSON.stringify(data);
+      } catch (e) {
+        console.error('Error stringifying request data:', e);
+        return data; 
       }
     }
     return data;

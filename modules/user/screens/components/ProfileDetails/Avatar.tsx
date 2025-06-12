@@ -1,11 +1,10 @@
-import {Pressable, StyleSheet, View, Alert, Platform} from 'react-native';
+import {Pressable, StyleSheet, View, Alert} from 'react-native';
 import React from 'react';
 import {useThemeStore} from '@/globalStore';
 import { CdnSvg } from '@/components/CdnSvg';
 import FastImage from 'react-native-fast-image';
 import { ImagePickerHelper } from '@/modules/user/utils/imagePickerHelper';
 import { uploadFile, prepareImageForUpload } from '@/modules/user/services/imageUploadService';
-import { Linking } from 'react-native';
 
 interface AvatarProps {
   imageUrl: string;
@@ -23,35 +22,7 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
 
   const handleImageSelection = async () => {
     try {
-      // First check if we have necessary permissions
-      const hasCameraPermission = await ImagePickerHelper.requestCameraPermissions();
-      const hasStoragePermission = await ImagePickerHelper.requestStoragePermissions();
-
-      if (!hasCameraPermission || !hasStoragePermission) {
-        Alert.alert(
-          'Permissions Required',
-          'Camera and storage permissions are required to update your profile picture. Please enable them in your device settings.',
-          [
-            {
-              text: 'Open Settings',
-              onPress: () => {
-                if (Platform.OS === 'ios') {
-                  Linking.openURL('app-settings:');
-                } else {
-                  Linking.openSettings();
-                }
-              },
-            },
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-          ]
-        );
-        return;
-      }
-
-      // Now that we have permissions, show image picker options
+      // Show image picker options
       const selectedImage = await ImagePickerHelper.showImagePickerOptions();
       
       if (!selectedImage) {

@@ -1,5 +1,5 @@
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, PhotoQuality } from 'react-native-image-picker';
-import { Alert, PermissionsAndroid, Platform, Linking } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 export interface ImagePickerResult {
   uri: string;
@@ -8,73 +8,8 @@ export interface ImagePickerResult {
 }
 
 export class ImagePickerHelper {
-  static async requestCameraPermissions(): Promise<boolean> {
-    try {
-      if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: 'Camera Permission',
-            message: 'This app needs access to your camera to take photos.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      }
-      return true; // iOS permissions are handled automatically
-    } catch (error) {
-      console.error('Error requesting camera permissions:', error);
-      return false;
-    }
-  }
-
-  static async requestStoragePermissions(): Promise<boolean> {
-    try {
-      if (Platform.OS === 'android') {
-        // For Android 13+ (API level 33+), we need to request READ_MEDIA_IMAGES
-        if (Platform.Version >= 33) {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-            {
-              title: 'Photo Permission',
-              message: 'This app needs access to your photos to select profile pictures.',
-              buttonNeutral: 'Ask Me Later',
-              buttonNegative: 'Cancel',
-              buttonPositive: 'OK',
-            }
-          );
-          return granted === PermissionsAndroid.RESULTS.GRANTED;
-        } else {
-          // For Android 12 and below, we need READ_EXTERNAL_STORAGE
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          {
-            title: 'Storage Permission',
-            message: 'This app needs access to your storage to select photos.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-        }
-      }
-      return true; // iOS permissions are handled automatically
-    } catch (error) {
-      console.error('Error requesting storage permissions:', error);
-      return false;
-    }
-  }
-
   static async captureImage(): Promise<ImagePickerResult | null> {
     try {
-      const hasPermission = await this.requestCameraPermissions();
-      if (!hasPermission) {
-        return null;
-      }
-
       return new Promise((resolve) => {
         const options = {
           mediaType: 'photo' as MediaType,
@@ -111,11 +46,6 @@ export class ImagePickerHelper {
 
   static async pickImageFromGallery(): Promise<ImagePickerResult | null> {
     try {
-      const hasPermission = await this.requestStoragePermissions();
-      if (!hasPermission) {
-        return null;
-      }
-
       return new Promise((resolve) => {
         const options = {
           mediaType: 'photo' as MediaType,
