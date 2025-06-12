@@ -138,7 +138,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           ) : isPlaying ? (
             <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={14} height={14} />
           ) : (
-            <CdnSvg path={DUA_ASSETS.HADITH_PLAY} width={14} height={14} />
+            <CdnSvg path={DUA_ASSETS.PLAY} width={14} height={14} />
           )}
         </TouchableOpacity>
 

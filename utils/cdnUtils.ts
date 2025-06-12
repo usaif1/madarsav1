@@ -28,7 +28,7 @@ export const DUA_ASSETS = {
   ARROW_LEFT: '/assets/arrow-left.svg',
   ARROW_LEFT_DUA_CARD: '/assets/profile/arrowleft.svg',
   ARROW_RIGHT_DUA_CARD: '/assets/profile/arrowright.svg',
-  HAMBURGER_ICON: '/assets/duas/hamburger-icon.svg',
+  HAMBURGER_ICON: '/assets/profile/hamburger.svg',
   
   // Tasbih assets
   TASBIH_PENCIL: '/assets/tasbih/pencil.svg',
@@ -100,10 +100,11 @@ export const DUA_ASSETS = {
   HADITH_BOOKMARK: '/assets/hadith/bookmark.svg',
   HADITH_SHARE: '/assets/hadith/share_alt.svg',
   HADITH_DASHED_LINE: '/assets/hadith/dashed-line.svg',
-  HADITH_PLAY: '/assets/hadith/play.svg',
+  HADITH_PLAY: '/assets/hadith/Play.svg',
+  PLAY: '/assets/home/play.svg',
   HADITH_TOP_ILLUSTRATION: '/assets/hadith/hadith-info-top-illustration.svg',
   HADITH_BOOK_IMAGE: '/assets/hadith/BookImageBig.png',
-  CALENDAR_ICON: '/assets/calendar/calendar-icon.svg',
+  CALENDAR_ICON: '/assets/profile/calendar_icon.svg',
   NAV_PROFILE_MENU: '/assets/home/nav-profile-menu.svg',
   MARBLE_ICON: '/assets/splash/marble.png',
   

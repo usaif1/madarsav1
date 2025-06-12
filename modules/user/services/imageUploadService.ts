@@ -1,6 +1,7 @@
-import axios, { AxiosInstance } from 'axios';
 import { Platform } from 'react-native';
 import { MADRASA_API_ENDPOINTS } from '@/api/config/madrasaApiConfig';
+import madrasaClient from '@/api/clients/madrasaClient';
+import authService from '@/modules/auth/services/authService';
 
 export interface FileUploadResponse {
   fileExtension: string;
@@ -14,23 +15,6 @@ export interface ImageFile {
   fileName?: string;
 }
 
-class ImageUploadClient {
-  private static instance: AxiosInstance;
-
-  static getInstance(): AxiosInstance {
-    if (!this.instance) {
-      this.instance = axios.create({
-        baseURL: process.env.API_BASE_URL || 'https://api.madrasaapp.com',
-        timeout: 60000, // 60 seconds timeout for uploads
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-    }
-    return this.instance;
-  }
-}
-
 export const uploadFile = async (userId: string, file: FormData): Promise<FileUploadResponse> => {
   try {
     console.log('📤 Uploading file for userId:', userId);
@@ -39,21 +23,32 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
     if (process.env.NODE_ENV === 'development') {
       console.log('📦 FormData in service:', {
         userId,
-        url: MADRASA_API_ENDPOINTS.UPLOAD_FILE
+        url: MADRASA_API_ENDPOINTS.UPLOAD_FILE,
+        hasFormData: !!file
       });
     }
     
-    const client = ImageUploadClient.getInstance();
-    const response = await client.post<FileUploadResponse>(
-      MADRASA_API_ENDPOINTS.UPLOAD_FILE,
-      file,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
-        },
-        timeout: 60000,
-      }
+    // Use executeWithTokenRefresh to handle token expiration
+    const response = await authService.executeWithTokenRefresh(() => 
+      madrasaClient.post<FileUploadResponse>(
+        MADRASA_API_ENDPOINTS.UPLOAD_FILE,
+        file,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json',
+          },
+          transformRequest: (data, headers) => {
+            // Don't transform FormData
+            return data;
+          },
+          timeout: 60000,
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+            console.log(`Upload progress: ${percentCompleted}%`);
+          },
+        }
+      )
     );
     
     console.log('✅ File uploaded successfully:', response.data);
@@ -70,15 +65,35 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
         headers: error.config?.headers
       }
     });
-    throw error;
+
+    // Provide more specific error messages
+    if (error.response) {
+      switch (error.response.status) {
+        case 404:
+          throw new Error('Upload endpoint not found. Please check the API configuration.');
+        case 401:
+          throw new Error('Unauthorized. Please make sure you are logged in.');
+        case 413:
+          throw new Error('File is too large. Please choose a smaller image.');
+        case 400:
+          throw new Error('Invalid file format or request. Please check the file and try again.');
+        default:
+          throw new Error(error.response.data?.message || 'Failed to upload file. Please try again.');
+      }
+    } else if (error.request) {
+      throw new Error('No response from server. Please check your internet connection.');
+    } else {
+      throw new Error('Error preparing upload. Please try again.');
+    }
   }
 };
 
-export const prepareImageForUpload = async (imageFile: ImageFile): Promise<FormData> => {
+export const prepareImageForUpload = async (imageFile: ImageFile, userId: string): Promise<FormData> => {
   const formData = new FormData();
   
-  // Add required fields
+  // Add required fields with exact parameter names from API docs
   formData.append('fileRequestType', 'PROFILE_IMAGE');
+  formData.append('userId', userId);
   
   // Handle file based on platform
   if (Platform.OS === 'ios' || Platform.OS === 'android') {
@@ -86,21 +101,50 @@ export const prepareImageForUpload = async (imageFile: ImageFile): Promise<FormD
       ? `file://${imageFile.uri}` 
       : imageFile.uri;
 
-    // Fetch the file content and convert to blob
-    const fetchResponse = await fetch(fileUri);
-    const blob = await fetchResponse.blob();
+    try {
+      // Fetch the file content
+      const fetchResponse = await fetch(fileUri);
+      const blob = await fetchResponse.blob();
 
-    const fileName = imageFile.fileName || imageFile.uri.split('/').pop() || 'profile.jpg';
-    const effectiveType = (blob.type && blob.type !== 'application/octet-stream') 
-      ? blob.type 
-      : (imageFile.type || 'image/jpeg');
-    
-    // Create a File object from the blob
-    const fileToAppend = new File([blob], fileName, { type: effectiveType });
-    formData.append('file', fileToAppend);
+      const fileName = imageFile.fileName || imageFile.uri.split('/').pop() || 'profile.jpg';
+      const effectiveType = (blob.type && blob.type !== 'application/octet-stream') 
+        ? blob.type 
+        : (imageFile.type || 'image/jpeg');
+      
+      // Log file details for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📁 File details:', {
+          uri: fileUri,
+          type: effectiveType,
+          name: fileName
+        });
+      }
+      
+      // Create a new file object that matches the API's expectations
+      const fileToUpload = {
+        uri: fileUri,
+        type: effectiveType,
+        name: fileName,
+      };
+
+      // Append the file directly to FormData
+      formData.append('file', fileToUpload as any);
+    } catch (error) {
+      console.error('Error preparing file for upload:', error);
+      throw new Error('Failed to prepare file for upload');
+    }
   } else {
     // Web browser File/Blob handling
     formData.append('file', imageFile as any);
+  }
+
+  // Log the final FormData for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📦 Final FormData contents:', {
+      fileRequestType: 'PROFILE_IMAGE',
+      userId,
+      hasFile: true
+    });
   }
 
   return formData;

@@ -16,6 +16,7 @@ import { CdnSvg } from '@/components/CdnSvg';
 import {useAuthStore} from '@/modules/auth/store/authStore';
 import {useUserDetails, useUpdateUserDetails} from '../hooks/useUserProfile';
 import {UserDetails, UserUpdateDTO} from '../services/userService';
+import { ImagePickerHelper } from '../utils/imagePickerHelper';
 
 const styles = StyleSheet.create({
   container: {
@@ -304,6 +305,81 @@ const ProfileDetails: React.FC = () => {
     });
   };
 
+  // Handle profile image update
+  const handleProfileImageUpdate = async (fileUrl: string) => {
+    if (!userDetails?.userId) {
+      Alert.alert('Error', 'User ID not found');
+      return;
+    }
+
+    try {
+      updateUser({
+        userId: userDetails.userId,
+        firstName: userDetails.firstName,
+        lastName: userDetails.lastName,
+        phone: userDetails.phone || undefined,
+        dob: userDetails.dob,
+        gender: userDetails.gender as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
+        profileImage: fileUrl,
+      }, {
+        onSuccess: () => {
+          Alert.alert('Success', 'Profile image updated successfully');
+        },
+        onError: (error: Error) => {
+          Alert.alert('Error', error.message);
+        },
+      });
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update profile image');
+    }
+  };
+
+  // Handle image selection with permissions
+  const handleImageSelection = async () => {
+    try {
+      // Check and request permissions
+      const hasCameraPermission = await ImagePickerHelper.requestCameraPermissions();
+      const hasStoragePermission = await ImagePickerHelper.requestStoragePermissions();
+
+      if (!hasCameraPermission || !hasStoragePermission) {
+        Alert.alert(
+          'Permissions Required',
+          'Camera and storage permissions are required to update your profile picture. Please enable them in your device settings.',
+          [
+            {
+              text: 'Open Settings',
+              onPress: () => {
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('app-settings:');
+                } else {
+                  Linking.openSettings();
+                }
+              },
+            },
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+          ]
+        );
+        return;
+      }
+
+      // Show image picker options
+      const selectedImage = await ImagePickerHelper.showImagePickerOptions();
+      
+      if (!selectedImage) {
+        return;
+      }
+
+      // Update profile with selected image
+      handleProfileImageUpdate(selectedImage.uri);
+    } catch (error: any) {
+      console.error('Image selection error:', error);
+      Alert.alert('Error', error.message || 'Failed to select image');
+    }
+  };
+
   // Show loading state
   if (isLoadingDetails && !userDetails) {
     return (
@@ -350,20 +426,7 @@ const ProfileDetails: React.FC = () => {
         <Avatar 
           imageUrl={userDetails?.profileImage || user?.photoUrl || ''}
           userId={userDetails?.userId || user?.id || ''}
-          onImageUploaded={(fileUrl) => {
-            // Update user details with new profile image
-            if (userDetails?.userId) {
-              updateUser({
-                userId: userDetails.userId,
-                firstName: userDetails.firstName,
-                lastName: userDetails.lastName,
-                phone: userDetails.phone || undefined,
-                dob: userDetails.dob,
-                gender: userDetails.gender as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
-                profileImage: fileUrl,
-              });
-            }
-          }}
+          onImageUploaded={handleImageSelection}
         />
         <Divider height={24} />
 

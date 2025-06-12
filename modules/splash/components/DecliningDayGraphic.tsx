@@ -12,7 +12,7 @@ import { scale } from '@/theme/responsive';
 
 const {height} = Dimensions.get('window');
 
-const SplashScreen1: React.FC = () => {
+const DecliningDayGraphic: React.FC = () => {
   return (
     <LinearGradient
       colors={['#FFFFFF', '#F2DEFF']}
@@ -30,7 +30,7 @@ const SplashScreen1: React.FC = () => {
           borderColor: '#F5F5F5',
           height: height * 0.2,
         }}>
-        <View style={{justifyContent: 'flex-end'}}>
+        <View style={{justifyContent: 'flex-end',marginLeft: scale(10)}}>
           <CdnSvg path="/assets/splash/decling_day.svg" width={scale(131)} height={scale(39)} />
           <Divider height={4} />
           <Title1Regular style={{fontSize: scale(15)}}>The Declining Day</Title1Regular>
@@ -60,4 +60,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SplashScreen1;
+export default DecliningDayGraphic;

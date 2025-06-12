@@ -1,5 +1,5 @@
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, PhotoQuality } from 'react-native-image-picker';
-import { Alert, PermissionsAndroid, Platform } from 'react-native';
+import { Alert, PermissionsAndroid, Platform, Linking } from 'react-native';
 
 export interface ImagePickerResult {
   uri: string;
@@ -33,6 +33,21 @@ export class ImagePickerHelper {
   static async requestStoragePermissions(): Promise<boolean> {
     try {
       if (Platform.OS === 'android') {
+        // For Android 13+ (API level 33+), we need to request READ_MEDIA_IMAGES
+        if (Platform.Version >= 33) {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+            {
+              title: 'Photo Permission',
+              message: 'This app needs access to your photos to select profile pictures.',
+              buttonNeutral: 'Ask Me Later',
+              buttonNegative: 'Cancel',
+              buttonPositive: 'OK',
+            }
+          );
+          return granted === PermissionsAndroid.RESULTS.GRANTED;
+        } else {
+          // For Android 12 and below, we need READ_EXTERNAL_STORAGE
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           {
@@ -44,6 +59,7 @@ export class ImagePickerHelper {
           }
         );
         return granted === PermissionsAndroid.RESULTS.GRANTED;
+        }
       }
       return true; // iOS permissions are handled automatically
     } catch (error) {
@@ -56,11 +72,6 @@ export class ImagePickerHelper {
     try {
       const hasPermission = await this.requestCameraPermissions();
       if (!hasPermission) {
-        Alert.alert(
-          'Permission Required',
-          'Camera permission is required to take photos.',
-          [{ text: 'OK' }]
-        );
         return null;
       }
 
@@ -74,7 +85,13 @@ export class ImagePickerHelper {
         };
 
         launchCamera(options, (response: ImagePickerResponse) => {
-          if (response.didCancel || response.errorMessage) {
+          if (response.didCancel) {
+            resolve(null);
+            return;
+          }
+
+          if (response.errorMessage) {
+            console.error('Camera error:', response.errorMessage);
             resolve(null);
             return;
           }
@@ -88,7 +105,6 @@ export class ImagePickerHelper {
       });
     } catch (error) {
       console.error('Error capturing image:', error);
-      Alert.alert('Error', 'Failed to capture image. Please try again.');
       return null;
     }
   }
@@ -97,11 +113,6 @@ export class ImagePickerHelper {
     try {
       const hasPermission = await this.requestStoragePermissions();
       if (!hasPermission) {
-        Alert.alert(
-          'Permission Required',
-          'Storage permission is required to select photos.',
-          [{ text: 'OK' }]
-        );
         return null;
       }
 
@@ -115,7 +126,13 @@ export class ImagePickerHelper {
         };
 
         launchImageLibrary(options, (response: ImagePickerResponse) => {
-          if (response.didCancel || response.errorMessage) {
+          if (response.didCancel) {
+            resolve(null);
+            return;
+          }
+
+          if (response.errorMessage) {
+            console.error('Gallery error:', response.errorMessage);
             resolve(null);
             return;
           }
@@ -129,7 +146,6 @@ export class ImagePickerHelper {
       });
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
       return null;
     }
   }
