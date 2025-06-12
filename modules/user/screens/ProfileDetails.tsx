@@ -15,7 +15,7 @@ import { CdnSvg } from '@/components/CdnSvg';
 // hooks
 import {useAuthStore} from '@/modules/auth/store/authStore';
 import {useUserDetails, useUpdateUserDetails} from '../hooks/useUserProfile';
-import {UserDetails, UserUpdateDTO} from '../services/userService';
+import { UserDetails, UserUpdateDTO } from '../services/userService';
 import { ImagePickerHelper } from '../utils/imagePickerHelper';
 
 const styles = StyleSheet.create({
@@ -35,6 +35,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
     marginTop: 8,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   pickerError: {
     borderColor: '#FF0000',
@@ -43,24 +45,27 @@ const styles = StyleSheet.create({
     height: 50,
     width: '100%',
     color: '#000000',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    marginLeft: -8,
   },
   pickerItem: {
     color: '#000000',
     backgroundColor: '#FFFFFF',
+    fontSize: 16,
   },
   placeholderText: {
     color: '#999999',
+    fontSize: 16,
   },
   pickerModal: Platform.select({
     android: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: 'transparent',
     } as ViewStyle,
     ios: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: 'transparent',
     } as ViewStyle,
     default: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: 'transparent',
     } as ViewStyle,
   }) as ViewStyle,
   inputLabel: {
@@ -337,34 +342,6 @@ const ProfileDetails: React.FC = () => {
   // Handle image selection with permissions
   const handleImageSelection = async () => {
     try {
-      // Check and request permissions
-      const hasCameraPermission = await ImagePickerHelper.requestCameraPermissions();
-      const hasStoragePermission = await ImagePickerHelper.requestStoragePermissions();
-
-      if (!hasCameraPermission || !hasStoragePermission) {
-        Alert.alert(
-          'Permissions Required',
-          'Camera and storage permissions are required to update your profile picture. Please enable them in your device settings.',
-          [
-            {
-              text: 'Open Settings',
-              onPress: () => {
-                if (Platform.OS === 'ios') {
-                  Linking.openURL('app-settings:');
-                } else {
-                  Linking.openSettings();
-                }
-              },
-            },
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-          ]
-        );
-        return;
-      }
-
       // Show image picker options
       const selectedImage = await ImagePickerHelper.showImagePickerOptions();
       
@@ -500,7 +477,7 @@ const ProfileDetails: React.FC = () => {
             />
           </View>
           <View
-            ref={genderPickerRef} // Attach ref for layout measurement
+            ref={genderPickerRef}
             onLayout={(event) => {
               const { y } = event.nativeEvent.layout;
               setGenderPickerY(y);
@@ -510,16 +487,19 @@ const ProfileDetails: React.FC = () => {
               <Body1Title2Medium color="sub-heading" style={styles.inputLabel}>
                 Gender
               </Body1Title2Medium>
-              <View style={[styles.pickerWrapper, formErrors.gender && styles.pickerError]}>
+              <View style={[
+                styles.pickerWrapper, 
+                formErrors.gender && styles.pickerError,
+                focusedInput === 'gender' ? { borderColor: '#8A57DC', borderWidth: 1 } : { borderColor: '#E5E5E5', borderWidth: 1 }
+              ]}>
                 <Picker
                   selectedValue={gender}
                   onValueChange={(itemValue: string) => {
                     setGender(itemValue);
-                    // After gender selection, scroll to DOB input
                     if (dobInputRef.current && scrollViewRef.current) {
                       setTimeout(() => {
                         (scrollViewRef.current as any).scrollIntoView(dobInputRef.current, { animated: true });
-                      }, 100); // Add a small delay
+                      }, 100);
                     }
                   }}
                   style={styles.picker}
@@ -528,6 +508,8 @@ const ProfileDetails: React.FC = () => {
                   dropdownIconColor="#000000"
                   mode="dropdown"
                   prompt="Select Gender"
+                  onFocus={() => setFocusedInput('gender')}
+                  onBlur={() => setFocusedInput('')}
                   {...Platform.select({
                     android: {
                       style: [styles.picker, styles.pickerModal],
