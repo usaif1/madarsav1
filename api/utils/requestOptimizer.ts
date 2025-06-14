@@ -41,6 +41,12 @@ export const prepareDataForCompression = (data: any): any => {
 export const addCompressionHeaders = (config: AxiosRequestConfig): AxiosRequestConfig => {
   const headers = config.headers || {};
   
+  // Don't modify headers if this is a FormData request
+  if (config.data instanceof FormData) {
+    console.warn('⚠️ Attempted to add compression headers to FormData request - skipping');
+    return config;
+  }
+  
   return {
     ...config,
     headers: {

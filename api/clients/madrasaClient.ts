@@ -28,41 +28,59 @@ const madrasaClient = axios.create({
   },
   responseType: 'json',
   // Custom transform request to handle different data types
-  transformRequest: [(data, headers) => {
-    console.log('🔄 Transform request called:', {
-      isFormData: data instanceof FormData,
-      dataType: typeof data,
-      hasHeaders: !!headers
-    });
+  transformRequest: [
+    // First transformer: Handle FormData specially
+    (data, headers) => {
+      console.log('🔄 Transform request called:', {
+        isFormData: data instanceof FormData,
+        dataType: typeof data,
+        hasHeaders: !!headers
+      });
 
-    // Handle FormData - don't transform and let browser/React Native set Content-Type
-    if (data instanceof FormData) {
-      console.log('📦 Handling FormData in transform request');
-      if (headers) {
-        console.log('📦 Headers before Content-Type removal:', headers);
-        // Remove Content-Type to let browser/RN set it with proper boundary
-        delete headers['Content-Type'];
-        console.log('🗑️ Removed Content-Type header for FormData');
-        console.log('📦 Headers after Content-Type removal:', headers);
-      }
-      return data;
-    }
-
-    // Handle JSON data
-    if (data && typeof data === 'object' && headers) {
-      console.log('📄 Handling JSON data in transform request');
-      headers['Content-Type'] = 'application/json';
-      try {
-        return JSON.stringify(data);
-      } catch (error) {
-        console.error('❌ Error stringifying request data:', error);
+      // Handle FormData - CRITICAL: Return early to avoid Axios defaults
+      if (data instanceof FormData) {
+        console.log('📦 Handling FormData in transform request');
+        if (headers) {
+          console.log('📦 Headers before Content-Type removal:', headers);
+          
+          // Aggressively remove ALL Content-Type variants
+          const keysToDelete = Object.keys(headers).filter(key => 
+            key.toLowerCase() === 'content-type'
+          );
+          keysToDelete.forEach(key => {
+            delete headers[key];
+          });
+          
+          // Also try common variations
+          delete headers['Content-Type'];
+          delete headers['content-type'];
+          delete headers['CONTENT-TYPE'];
+          
+          console.log('🗑️ Removed ALL Content-Type variants for FormData');
+          console.log('📦 Headers after Content-Type removal:', headers);
+        }
+        
+        // CRITICAL: Return FormData unchanged - don't let Axios process it further
+        console.log('✅ Returning FormData unchanged to preserve boundary');
         return data;
       }
+
+      // Handle JSON data
+      if (data && typeof data === 'object' && headers) {
+        console.log('📄 Handling JSON data in transform request');
+        headers['Content-Type'] = 'application/json';
+        try {
+          return JSON.stringify(data);
+        } catch (error) {
+          console.error('❌ Error stringifying request data:', error);
+          return data;
+        }
+      }
+      
+      console.log('➡️ Passing data through unchanged');
+      return data;
     }
-    
-    console.log('➡️ Passing data through unchanged');
-    return data;
-  }],
+  ],
 });
 
 /**
@@ -113,21 +131,23 @@ madrasaClient.interceptors.request.use(
       
       // Handle FormData requests specially
       if (config.data instanceof FormData) {
-        console.log('📦 Processing FormData request - ensuring no Content-Type interference');
+        console.log('📦 Processing FormData request - removing Content-Type for proper boundary');
         
-        // Ensure Content-Type is completely removed for FormData
-        if (config.headers && 'Content-Type' in config.headers) {
+        // Remove Content-Type to let FormData set it with proper boundary
+        if (config.headers) {
           delete (config.headers as any)['Content-Type'];
-          console.log('🗑️ Removed Content-Type header for FormData in interceptor');
+          delete (config.headers as any)['content-type'];
+          console.log('🗑️ Removed Content-Type in interceptor for FormData boundary');
         }
         
         // Skip compression for FormData
         console.log('⏭️ Skipping compression for FormData request');
         
       } else if (
-        // Apply compression for non-FormData requests
+        // Apply compression for non-FormData requests ONLY
         ['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '') &&
         config.data &&
+        !(config.data instanceof FormData) && // Explicitly exclude FormData
         extendedConfig.compress !== false
       ) {
         console.log('🗜️ Applying compression for non-FormData request');
@@ -148,16 +168,14 @@ madrasaClient.interceptors.request.use(
         return compressedConfig as InternalAxiosRequestConfig;
       }
       
-      // Final check for FormData requests to ensure Content-Type is not set
+      // Final check for FormData requests to ensure no Content-Type interference
       if (config.data instanceof FormData) {
-        console.log('🔍 FINAL FORMDATA CHECK - ensuring Content-Type is not set');
-        if (config.headers && 'Content-Type' in config.headers) {
-          console.log('⚠️ Found Content-Type in headers, removing it:', config.headers['Content-Type']);
+        console.log('🔍 FINAL FORMDATA CHECK - ensuring no Content-Type interference');
+        if (config.headers) {
+          // Aggressively remove any Content-Type that might have been added
           delete (config.headers as any)['Content-Type'];
-        }
-        if (config.headers && 'content-type' in config.headers) {
-          console.log('⚠️ Found content-type in headers, removing it:', (config.headers as any)['content-type']);
           delete (config.headers as any)['content-type'];
+          console.log('🗑️ FINAL: Removed any Content-Type for FormData boundary');
         }
       }
       
@@ -169,6 +187,33 @@ madrasaClient.interceptors.request.use(
         isFormData: config.data instanceof FormData,
         headers: config.headers
       });
+      
+      // Final validation before sending request
+      if (config.data instanceof FormData) {
+        console.log('🔍 FINAL VALIDATION: FormData request details:');
+        console.log('🔍 URL:', `${config.baseURL}${config.url}`);
+        console.log('🔍 Method:', config.method);
+        console.log('🔍 Headers:', JSON.stringify(config.headers, null, 2));
+        console.log('🔍 Data type:', config.data.constructor.name);
+        console.log('🔍 Timeout:', config.timeout);
+        
+        // Check if all required headers are present
+        const requiredHeaders = ['Authorization', 'Accept'];
+        const missingHeaders = requiredHeaders.filter(header => !config.headers[header]);
+        if (missingHeaders.length > 0) {
+          console.warn('⚠️ Missing required headers:', missingHeaders);
+        }
+        
+        // Ensure no Content-Type is set
+        const hasContentType = Object.keys(config.headers).some(key => 
+          key.toLowerCase() === 'content-type'
+        );
+        if (hasContentType) {
+          console.error('❌ CRITICAL: Content-Type still present in headers!');
+        } else {
+          console.log('✅ GOOD: No Content-Type header found - FormData can set its own');
+        }
+      }
       
       return config;
       

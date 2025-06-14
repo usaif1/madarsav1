@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { MADRASA_API_ENDPOINTS, MADRASA_API_URL } from '@/api/config/madrasaApiConfig';
 import madrasaClient from '@/api/clients/madrasaClient';
 import authService from '@/modules/auth/services/authService';
+import tokenService from '@/modules/auth/services/tokenService';
 
 export interface FileUploadResponse {
   fileExtension: string;
@@ -77,11 +78,11 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
     const requestConfig = {
       timeout: 60000, // 60 seconds for large files
       headers: {
-        // For file uploads, completely omit Content-Type to let the browser/RN set it
+        // For file uploads, only set Accept header - NO Content-Type for FormData
         'Accept': 'application/json',
-        // Explicitly prevent setting of wrong Content-Type
+        // FormData will automatically set: Content-Type: multipart/form-data; boundary=...
       },
-      // Override the default transform to ensure FormData is not modified
+      // CRITICAL: Completely disable Axios default transforms for FormData
       transformRequest: [(data: any, headers: any) => {
         console.log('📤 Step 5: Upload service transform - data type:', typeof data);
         console.log('📤 Step 5b: Upload service transform - Is FormData?', data instanceof FormData);
@@ -89,12 +90,12 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
         if (data instanceof FormData) {
           console.log('📤 Step 5c: Processing FormData in upload service transform');
           
-          // Aggressively remove any Content-Type header for FormData
+          // Remove Content-Type to let FormData set proper boundary
           if (headers) {
-            console.log('📤 Step 5d: Headers before cleanup:', headers);
+            console.log('📤 Step 5d: Headers before Content-Type removal:', headers);
             delete headers['Content-Type'];
-            delete headers['content-type']; // Also check lowercase
-            console.log('📤 Step 5e: Headers after cleanup:', headers);
+            delete headers['content-type'];
+            console.log('📤 Step 5e: Headers after Content-Type removal:', headers);
           }
         }
         
@@ -121,11 +122,75 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
       requestConfig.headers
     );
     
-    console.log('�� Step 7: Making API call through authService.executeWithTokenRefresh...');
+    // Add detailed FormData inspection
+    console.log('🔍 DETAILED FORMDATA INSPECTION:');
+    console.log('🔍 FormData instanceof check:', file instanceof FormData);
+    console.log('🔍 FormData constructor:', file.constructor.name);
+    console.log('🔍 FormData toString:', file.toString());
+    
+    // Try to log FormData entries if possible
+    try {
+      if (file instanceof FormData) {
+        console.log('🔍 FormData entries:');
+        // Use a safer approach to iterate FormData
+        const formDataEntries = (file as any).entries;
+        if (typeof formDataEntries === 'function') {
+          for (const [key, value] of formDataEntries.call(file)) {
+            console.log(`🔍   ${key}:`, typeof value, value instanceof File ? `File(${value.name}, ${value.size}b, ${value.type})` : value);
+          }
+        } else {
+          console.log('🔍 FormData.entries() not available, using alternative inspection');
+          // Alternative: try to access known keys
+          const knownKeys = ['fileRequestType', 'userId', 'file'];
+          knownKeys.forEach(key => {
+            try {
+              const value = (file as any).get(key);
+              if (value !== null) {
+                console.log(`🔍   ${key}:`, typeof value, value instanceof File ? `File(${value.name}, ${value.size}b, ${value.type})` : value);
+              }
+            } catch (e) {
+              console.log(`🔍   ${key}: Could not access`);
+            }
+          });
+        }
+      }
+    } catch (entriesError) {
+      console.log('🔍 Could not iterate FormData entries:', entriesError);
+    }
+    
+    // Log the exact URL being called
+    const fullUrl = `${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`;
+    console.log('🔍 FULL REQUEST URL:', fullUrl);
+    console.log('🔍 BASE URL:', MADRASA_API_URL);
+    console.log('🔍 ENDPOINT:', MADRASA_API_ENDPOINTS.UPLOAD_FILE);
+    
+    console.log('📤 Step 7: Making API call through authService.executeWithTokenRefresh...');
+    
+    // Add a test to see if we can make a simple request first
+    console.log('🧪 NETWORK TEST: Testing basic connectivity...');
+    try {
+      // Test basic connectivity with a simple GET request
+      const testResponse = await madrasaClient.get('/api/v1/health-check', { timeout: 5000 }).catch(testError => {
+        console.log('🧪 Basic connectivity test failed:', testError.message);
+        return null;
+      });
+      console.log('🧪 Basic connectivity test result:', testResponse ? 'SUCCESS' : 'FAILED');
+    } catch (testError) {
+      console.log('🧪 Basic connectivity test error:', testError);
+    }
+    
+    console.log('📤 Step 8: Proceeding with actual upload request...');
     
     // Use executeWithTokenRefresh to handle token expiration automatically
     const response = await authService.executeWithTokenRefresh(() => {
-      console.log('📤 Step 8: Inside executeWithTokenRefresh callback, making actual HTTP request...');
+      console.log('📤 Step 9: Inside executeWithTokenRefresh callback, making actual HTTP request...');
+      console.log('📤 Step 9a: About to call madrasaClient.post with:', {
+        endpoint: MADRASA_API_ENDPOINTS.UPLOAD_FILE,
+        dataType: file instanceof FormData ? 'FormData' : typeof file,
+        configHeaders: requestConfig.headers,
+        configTimeout: requestConfig.timeout
+      });
+      
       return madrasaClient.post<FileUploadResponse>(
         MADRASA_API_ENDPOINTS.UPLOAD_FILE,
         file,
@@ -134,7 +199,7 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
     });
     
     console.log('✅ === FILE UPLOAD SUCCESSFUL ===');
-    console.log('✅ Step 9: Response received:', {
+    console.log('✅ Step 10: Response received:', {
       status: response.status,
       statusText: response.statusText,
       data: response.data,
@@ -199,6 +264,219 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
       console.error('❌ Request Setup Error:', error.message);
       throw new Error('Failed to prepare upload request. Please try again.');
     }
+  }
+};
+
+/**
+ * Test function to isolate network connectivity issues
+ * @param userId - User ID for testing
+ * @returns Promise<void>
+ */
+export const testNetworkConnectivity = async (userId: string): Promise<void> => {
+  console.log('🧪 === NETWORK CONNECTIVITY TEST ===');
+  
+  try {
+    // Get access token
+    const accessToken = await tokenService.getAccessToken();
+    console.log('🧪 Step 1: Access token available:', !!accessToken);
+    
+    // Test 1: Basic HTTP request
+    console.log('🧪 Step 2: Testing basic HTTP request...');
+    const basicResponse = await fetch('https://httpbin.org/get');
+    console.log('🧪 Basic HTTP test result:', {
+      status: basicResponse.status,
+      ok: basicResponse.ok
+    });
+    
+    // Test 2: Server connectivity
+    console.log('🧪 Step 3: Testing server connectivity...');
+    const serverResponse = await fetch(`${MADRASA_API_URL}/api/v1/health-check`);
+    console.log('🧪 Server connectivity test result:', {
+      status: serverResponse.status,
+      ok: serverResponse.ok
+    });
+    
+    // Test 3: Authenticated request
+    if (accessToken) {
+      console.log('🧪 Step 4: Testing authenticated request...');
+      const authResponse = await fetch(`${MADRASA_API_URL}/api/v1/user-details/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      });
+      console.log('🧪 Auth test result:', {
+        status: authResponse.status,
+        ok: authResponse.ok
+      });
+    }
+    
+    // Test 4: Simple POST request
+    console.log('🧪 Step 5: Testing simple POST request...');
+    const postResponse = await fetch('https://httpbin.org/post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ test: 'data' })
+    });
+    console.log('🧪 POST test result:', {
+      status: postResponse.status,
+      ok: postResponse.ok
+    });
+    
+    console.log('✅ All network tests passed');
+    
+  } catch (error) {
+    console.error('❌ Network test failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload file using native fetch API to bypass Axios Content-Type issues
+ * @param userId - User ID for the upload
+ * @param file - FormData containing the file
+ * @returns Promise<FileUploadResponse> - Upload response
+ */
+export const uploadFileWithFetch = async (userId: string, file: FormData): Promise<FileUploadResponse> => {
+  console.log('🚀 === STARTING NATIVE FETCH UPLOAD ===');
+  console.log('📤 Step 1: Upload initiated for userId:', userId);
+  
+  try {
+    // Get access token
+    const accessToken = await tokenService.getAccessToken();
+    if (!accessToken) {
+      throw new Error('No access token available');
+    }
+    
+    // Prepare URL
+    const url = `${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`;
+    console.log('📤 Step 2: Upload URL:', url);
+    
+    // Log FormData details
+    logFormData(file, 'uploadFileWithFetch');
+    
+    // Prepare headers - CRITICAL: Don't set Content-Type for FormData
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Accept': 'application/json',
+      // DO NOT set Content-Type - let FormData handle it automatically
+    };
+    
+    console.log('📤 Step 3: Request headers:', headers);
+    
+    // Make the fetch request
+    console.log('📤 Step 4: Making native fetch request...');
+    
+    // Add detailed debugging before the request
+    console.log('🔍 PRE-REQUEST DEBUGGING:');
+    console.log('🔍 URL:', url);
+    console.log('🔍 Method: POST');
+    console.log('🔍 Headers:', JSON.stringify(headers, null, 2));
+    console.log('🔍 Body type:', file.constructor.name);
+    console.log('🔍 FormData size estimate:', file.toString().length);
+    
+    // Test basic connectivity first
+    console.log('🧪 Testing basic connectivity to server...');
+    try {
+      const testResponse = await fetch(`${MADRASA_API_URL}/api/v1/health-check`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      console.log('🧪 Basic connectivity test result:', {
+        status: testResponse.status,
+        ok: testResponse.ok
+      });
+    } catch (connectivityError) {
+      console.error('🧪 Basic connectivity test failed:', connectivityError);
+      throw new Error('Cannot reach server. Please check your internet connection.');
+    }
+    
+    console.log('📤 Step 4b: Basic connectivity OK, proceeding with upload...');
+    
+    // Test authenticated request without FormData
+    console.log('🧪 Testing authenticated request without FormData...');
+    try {
+      const authTestResponse = await fetch(`${MADRASA_API_URL}/api/v1/user-details/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      });
+      console.log('🧪 Auth test result:', {
+        status: authTestResponse.status,
+        ok: authTestResponse.ok
+      });
+    } catch (authError) {
+      console.error('🧪 Auth test failed:', authError);
+      throw new Error('Authentication failed. Please log in again.');
+    }
+    
+    console.log('📤 Step 4c: Authentication OK, proceeding with FormData upload...');
+    
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      console.error('⏰ Upload request timed out after 60 seconds');
+    }, 60000);
+    
+    let response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: file, // FormData will automatically set Content-Type with boundary
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      console.error('❌ Fetch request failed:', {
+        name: fetchError.name,
+        message: fetchError.message,
+        stack: fetchError.stack,
+        code: fetchError.code
+      });
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Upload timed out. Please try again with a smaller image.');
+      }
+      
+      // Check if it's a network error
+      if (fetchError.message.includes('Network request failed')) {
+        throw new Error('Network error. Please check your internet connection and try again.');
+      }
+      
+      throw fetchError;
+    }
+    
+    console.log('📤 Step 5: Response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Upload failed with status:', response.status, errorText);
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const responseData = await response.json();
+    console.log('✅ === NATIVE FETCH UPLOAD SUCCESSFUL ===');
+    console.log('✅ Response data:', responseData);
+    
+    return responseData;
+    
+  } catch (error: any) {
+    console.error('❌ === NATIVE FETCH UPLOAD FAILED ===');
+    console.error('❌ Error details:', error);
+    throw error;
   }
 };
 

@@ -4,7 +4,7 @@ import {useThemeStore} from '@/globalStore';
 import { CdnSvg } from '@/components/CdnSvg';
 import FastImage from 'react-native-fast-image';
 import { ImagePickerHelper } from '@/modules/user/utils/imagePickerHelper';
-import { uploadFile, prepareImageForUpload, validateImageFile } from '@/modules/user/services/imageUploadService';
+import { uploadFile, uploadFileWithFetch, prepareImageForUpload, validateImageFile, testNetworkConnectivity } from '@/modules/user/services/imageUploadService';
 
 interface AvatarProps {
   imageUrl: string;
@@ -62,21 +62,27 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
       setIsUploading(true);
       
       try {
-        console.log('🖼️ Step 7: Preparing FormData for upload...');
+        console.log('🖼️ Step 7: Running network connectivity test...');
+        
+        // Test network connectivity first
+        await testNetworkConnectivity(userId);
+        
+        console.log('🖼️ Step 8: Network test passed, preparing FormData for upload...');
         
         // Prepare form data
         const formData = await prepareImageForUpload(imageFile, userId);
         
-        console.log('🖼️ Step 8: FormData prepared, starting upload...');
+        console.log('🖼️ Step 9: FormData prepared, starting upload...');
 
-        // Upload image
-        const response = await uploadFile(userId, formData);
+        // Try native fetch upload first to bypass Axios Content-Type issues
+        console.log('🖼️ Step 10: Attempting native fetch upload...');
+        const response = await uploadFileWithFetch(userId, formData);
         
         console.log('✅ === AVATAR UPLOAD SUCCESSFUL ===');
-        console.log('🖼️ Step 9: Upload response:', response);
+        console.log('🖼️ Step 11: Upload response:', response);
         
         // Call success callback
-        console.log('🖼️ Step 10: Calling success callback with file URL:', response.fileLink);
+        console.log('🖼️ Step 12: Calling success callback with file URL:', response.fileLink);
         onImageUploaded?.(response.fileLink);
         
         Alert.alert('Success', 'Profile image updated successfully!');
@@ -91,7 +97,7 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
         
         Alert.alert('Upload Error', error.message || 'Failed to upload image. Please try again.');
       } finally {
-        console.log('🖼️ Step 11: Resetting upload state...');
+        console.log('🖼️ Step 13: Resetting upload state...');
         setIsUploading(false);
       }
     } catch (error: any) {
