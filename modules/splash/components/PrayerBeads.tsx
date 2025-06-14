@@ -89,7 +89,7 @@ const PrayerBeads = () => {
         />
         <CdnSvg path="/assets/splash/marble_path.svg" width={scale(100)} height={scale(50)} style={styles.marblePath} />
 
-        <Title1Regular style={{fontSize: scale(17),position: 'absolute',top: scale(120),left: '60%',zIndex: 1}}>+1</Title1Regular>
+        <Title1Regular style={{fontSize: scale(17),position: 'absolute',top: scale(120),left: '65%',zIndex: 1}}>+1</Title1Regular>
       </View>
     </LinearGradient>
   );

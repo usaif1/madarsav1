@@ -298,7 +298,7 @@ headerImage: {
     position: 'absolute',
     top: '50%',
     left: '55%',
-    transform: [{ translateX: -6 }, { translateY: -9 }],
+    transform: [{ translateX: -3 }, { translateY: -8 }],
     color: ColorPrimary.primary600,
     fontSize: 12,
   },

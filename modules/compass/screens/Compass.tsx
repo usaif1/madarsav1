@@ -112,27 +112,24 @@ const Compass: React.FC = () => {
   useEffect(() => {
     const DELTA_DEG = 0.1;
     let lastHeading = 0;
-    const filterCoefficient = 0.1;
+    const filterCoefficient = 0.2;
     let lastFilteredHeading = 0;
     
     CompassHeading.start(DELTA_DEG, ({heading}: {heading: number}) => {
       // Normalize heading based on device orientation
       const normalizedHeading = normalizeHeading(heading, orientation);
       
-      // Apply low-pass filter
+      // Apply low-pass filter with improved handling of angle transitions
       let filteredHeading = normalizedHeading;
       
       if (lastHeading !== 0) {
-        if (Math.abs(normalizedHeading - lastFilteredHeading) > 180) {
-          if (normalizedHeading > lastFilteredHeading) {
-            lastFilteredHeading += 360;
-          } else {
-            filteredHeading += 360;
-          }
-        }
+        // Handle angle wrapping more smoothly
+        let diff = normalizedHeading - lastFilteredHeading;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
         
-        filteredHeading = lastFilteredHeading + filterCoefficient * (filteredHeading - lastFilteredHeading);
-        filteredHeading = filteredHeading % 360;
+        filteredHeading = lastFilteredHeading + filterCoefficient * diff;
+        filteredHeading = (filteredHeading + 360) % 360;
       }
       
       lastHeading = normalizedHeading;
@@ -142,14 +139,15 @@ const Compass: React.FC = () => {
       const trueH = (filteredHeading + decl + 360) % 360;
       setTrueHeading(trueH);
 
-      // Update rotation animation
+      // Update rotation animation with optimized spring configuration
       Animated.spring(rotateAnim, {
         toValue: -trueH,
-        friction: 12,
-        tension: 8,
+        friction: 8,
+        tension: 12,
         useNativeDriver: true,
-        restSpeedThreshold: 0.01,
-        restDisplacementThreshold: 0.01
+        restSpeedThreshold: 0.001,
+        restDisplacementThreshold: 0.001,
+        velocity: 0.5,
       }).start();
     });
     return () => CompassHeading.stop();
