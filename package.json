@@ -14,6 +14,8 @@
     "clean-ios": "cd ios && xcodebuild clean && cd ..",
     "clean": "npx react-native clean-project",
     "postinstall": "patch-package",
+    "uninstall-nokia": "adb -s CTLID18111503032 uninstall com.madarsav1",
+    "install-nokia": "npx react-native run-android --deviceId=CTLID18111503032",
     "build-android": "cd android && ./gradlew assembleRelease && cd .."
   },
   "dependencies": {
