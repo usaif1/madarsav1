@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchPrayerTimes } from '@/api/services/prayerTimesService';
-import { useLocation } from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 import { formatDate } from '../utils/dateUtils';
 import { useState, useEffect, useRef } from 'react';
 
@@ -16,10 +16,8 @@ export const useCalendarPrayerTimes = (date: Date, method: number = 3) => {
     loading: locationLoading, 
     error: locationError,
     usingFallback,
-    fallbackSource,
-    setCustomLocation,
-    majorCities
-  } = useLocation();
+    fallbackSource
+  } = useLocationData();
   
   // Track retry attempts
   const [retryAttempts, setRetryAttempts] = useState(0);
@@ -45,21 +43,17 @@ export const useCalendarPrayerTimes = (date: Date, method: number = 3) => {
     }
   }, [formattedDate, latitude, longitude, method, usingFallback, fallbackSource]);
   
-  // Try a different city if we're having issues
+  // Fallback logic removed - using store-based location instead
   useEffect(() => {
-    if (lastError && retryAttempts < 3 && majorCities && majorCities.length > 0 && isMountedRef.current) {
-      // Try a different major city each time
-      const cityIndex = retryAttempts % majorCities.length;
-      const cityToTry = majorCities[cityIndex];
-      
+    if (lastError && retryAttempts < 3 && isMountedRef.current) {
+      // Just retry with current location data from store
       if (__DEV__) {
-        console.log(`Prayer times fetch failed. Trying fallback city: ${cityToTry}`);
+        console.log(`Prayer times fetch failed. Retrying with store location data...`);
       }
       
-      setCustomLocation(cityToTry as any);
       setRetryAttempts(prev => prev + 1);
     }
-  }, [lastError, retryAttempts, majorCities, setCustomLocation]);
+  }, [lastError, retryAttempts]);
   
   const { 
     data, 
@@ -136,8 +130,7 @@ export const useCalendarPrayerTimes = (date: Date, method: number = 3) => {
     error: locationError || prayerTimesError,
     refetch,
     usingFallback,
-    fallbackSource,
-    setCustomLocation
+    fallbackSource
   };
 };
 

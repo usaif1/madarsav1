@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { mmkvStorage } from '../../auth/storage/mmkvStorage';
-import { useLocation } from '../../../api/hooks/useLocation';
+// Removed import of old useLocation hook - no longer needed
 
 // Location state interface
 export interface LocationState {
@@ -25,6 +25,7 @@ interface LocationActions {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   refreshLocation: () => Promise<void>;
+  requestPreciseLocation: () => Promise<boolean>;
   resetLocationStore: () => void;
 }
 
@@ -62,62 +63,19 @@ export const useLocationStore = create<LocationState & LocationActions>()(
       
       setError: (error) => set({ error }),
       
-      // Refresh location data
-      refreshLocation: async () => {
-        set({ loading: true, error: null });
-        
-        try {
-          // Use the existing useLocation hook to get location
-          const locationHook = useLocation();
-          
-          // Wait for location to be fetched
-          await new Promise<void>((resolve) => {
-            const checkLocation = () => {
-              if (!locationHook.loading) {
-                resolve();
-              } else {
-                setTimeout(checkLocation, 500);
-              }
-            };
-            checkLocation();
-          });
-          
-          // Update location state with the fetched data
-          set({
-            latitude: locationHook.latitude,
-            longitude: locationHook.longitude,
-            usingFallback: locationHook.usingFallback,
-            fallbackSource: locationHook.fallbackSource,
-            loading: false,
-            error: locationHook.error,
-          });
-          
-          // Try to get city and country from coordinates
-          if (locationHook.latitude && locationHook.longitude) {
-            try {
-              const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${locationHook.latitude}&lon=${locationHook.longitude}&zoom=10`
-              );
-              const data = await response.json();
-              
-              if (data && data.address) {
-                set({
-                  city: data.address.city || data.address.town || data.address.village || null,
-                  country: data.address.country || null,
-                });
-              }
-            } catch (error) {
-              console.warn('Error fetching city/country data:', error);
-              // Don't set an error state here as we already have coordinates
-            }
-          }
-        } catch (error: any) {
-          set({
-            error: error.message || 'Failed to get location',
-            loading: false,
-          });
-        }
-      },
+        // Refresh location data using location service
+  refreshLocation: async () => {
+    // Import the location service dynamically to avoid circular imports
+    const { default: locationService } = await import('../services/locationService');
+    await locationService.initializeLocation();
+  },
+
+  // Request precise location (user-triggered)
+  requestPreciseLocation: async () => {
+    // Import the location service dynamically to avoid circular imports
+    const { default: locationService } = await import('../services/locationService');
+    return await locationService.requestPreciseLocation();
+  },
       
       // Reset store to initial state
       resetLocationStore: () => set(initialState),
@@ -156,6 +114,7 @@ export const useLocationData = () => {
     setLoading,
     setError,
     refreshLocation,
+    requestPreciseLocation,
     resetLocationStore,
   } = useLocationStore();
   
@@ -175,6 +134,7 @@ export const useLocationData = () => {
     setLoading,
     setError,
     refreshLocation,
+    requestPreciseLocation,
     resetLocationStore,
     
     // Helper method to get location data in a format suitable for API requests

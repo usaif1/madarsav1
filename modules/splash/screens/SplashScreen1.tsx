@@ -22,7 +22,6 @@ import { useGlobalStore } from '@/globalStore';
 
 // Location imports
 import locationService from '@/modules/location/services/locationService';
-import { useLocationStore } from '@/modules/location/store/locationStore';
 
 // assets
 import SplashGraphic from '@/assets/splash/splash_graphic.svg';
@@ -84,6 +83,7 @@ const SplashScreen1: React.FC = () => {
     const checkAuth = async () => {
       try {
         // Get location data for authentication requests
+        const { useLocationStore } = await import('@/modules/location/store/locationStore');
         const locationData = useLocationStore.getState();
         console.log('🌍 Using location data for auth:', {
           latitude: locationData.latitude,

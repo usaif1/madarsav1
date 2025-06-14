@@ -12,7 +12,7 @@ import {scale, verticalScale} from '@/theme/responsive';
 import {useThemeStore} from '@/globalStore';
 
 // hooks
-import {useLocation} from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 import {usePrayerTimes} from '@/api/hooks/usePrayerTimes';
 
 interface FastingViewProps {
@@ -39,7 +39,7 @@ const FastingView: React.FC<FastingViewProps> = ({selectedDate}: FastingViewProp
   console.log('FastingView: Rendering with selectedDate:', selectedDate);
   
   // Get location data
-  const { latitude, longitude, loading: locationLoading, error: locationError } = useLocation();
+  const { latitude, longitude, loading: locationLoading, error: locationError } = useLocationData();
   
   // Format date for prayer times API (DD-MM-YYYY)
   const formattedDate = formatDateForAPI(selectedDate);

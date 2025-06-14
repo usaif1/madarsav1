@@ -10,7 +10,7 @@ import FastImage from 'react-native-fast-image';
 
 // hooks
 import {useQiblaDirection} from '../../../hooks/useQibla';
-import {useLocation} from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 // Calculate distance between two coordinates in KM
@@ -40,16 +40,16 @@ const deg2rad = (deg: number) => {
 
 const GeographicDetails: React.FC = () => {
   const {colors} = useThemeStore();
-  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocation();
+  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocationData();
   
   const {
     data: qiblaData,
     isLoading: qiblaLoading,
     error: qiblaError,
-  } = useQiblaDirection(latitude || undefined, longitude || undefined);
+  } = useQiblaDirection();
 
   const isLoading = locationLoading || qiblaLoading;
-  const error = locationError || (qiblaError ? qiblaError.message : null);
+  const error = locationError || (qiblaError ? (qiblaError instanceof Error ? qiblaError.message : String(qiblaError)) : null);
 
   // Calculate distance to Kaaba
   const distance = qiblaData && latitude && longitude

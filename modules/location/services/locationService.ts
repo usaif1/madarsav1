@@ -5,12 +5,42 @@ import { PermissionsAndroid } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { useLocationStore } from '../store/locationStore';
 
-// We'll only use IP-based location as fallback, no hardcoded coordinates
-
 /**
  * Service for handling location-related functionality
+ * Priority order: 1) Native location -> 2) Store -> 3) IP address -> Store
  */
 const locationService = {
+  /**
+   * Check if location permission is granted
+   * @returns Promise<boolean> - True if permission granted, false otherwise
+   */
+  checkLocationPermission: async (): Promise<boolean> => {
+    if (Platform.OS === 'ios') {
+      // For iOS, we need to try getting location to know if permission is granted
+      return new Promise((resolve) => {
+        Geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false),
+          { timeout: 1000 }
+        );
+      });
+    }
+
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        return granted;
+      } catch (error) {
+        console.warn('Error checking Android location permission:', error);
+        return false;
+      }
+    }
+    
+    return false;
+  },
+
   /**
    * Request location permission based on platform
    * @returns Promise<boolean> - True if permission granted, false otherwise
@@ -57,26 +87,31 @@ const locationService = {
   },
   
   /**
-   * Get current location
-   * @returns Promise with location data
+   * Get current location from native geolocation
+   * @returns Promise with location data or null if failed
    */
-  getCurrentLocation: (): Promise<{latitude: number, longitude: number}> => {
-    return new Promise((resolve, reject) => {
+  getCurrentLocationFromNative: (): Promise<{latitude: number, longitude: number} | null> => {
+    return new Promise((resolve) => {
       Geolocation.getCurrentPosition(
         position => {
+          console.log('✅ Got precise location from native:', {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          });
           resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
         },
         error => {
-          console.warn('Geolocation error:', error.message);
-          reject(error);
+          console.warn('❌ Native geolocation failed:', error.message);
+          resolve(null);
         },
         { 
           enableHighAccuracy: false, // Set to false for faster response
           timeout: 8000,            // Shorter timeout (8 seconds)
-          maximumAge: 60000,        // Accept positions up to 1 minute old
+          maximumAge: 300000,       // Accept positions up to 5 minutes old
         },
       );
     });
@@ -84,32 +119,39 @@ const locationService = {
   
   /**
    * Get location from IP address as fallback
-   * @returns Promise with location data
+   * @returns Promise with location data or null if failed
    */
-  getLocationFromIP: async (): Promise<{latitude: number, longitude: number} | null> => {
+  getLocationFromIP: async (): Promise<{latitude: number, longitude: number, city: string | null, country: string | null} | null> => {
     try {
       // Check if we have internet connection first
       const netInfo = await NetInfo.fetch();
       if (!netInfo.isConnected) {
-        console.log('No internet connection for IP geolocation');
+        console.log('❌ No internet connection for IP geolocation');
         return null;
       }
 
-      console.log('Attempting to get location from IP address...');
+      console.log('🔍 Attempting to get location from IP address...');
       // Use a free IP geolocation service that doesn't require an API key
       const response = await fetch('https://ipapi.co/json/');
       const data = await response.json();
       
       if (data && data.latitude && data.longitude) {
-        console.log('Successfully got location from IP:', data);
+        console.log('✅ Successfully got location from IP:', {
+          latitude: data.latitude,
+          longitude: data.longitude,
+          city: data.city,
+          country: data.country_name
+        });
         return {
           latitude: data.latitude,
           longitude: data.longitude,
+          city: data.city || null,
+          country: data.country_name || null,
         };
       }
       return null;
     } catch (error) {
-      console.warn('Error getting location from IP:', error);
+      console.warn('❌ Error getting location from IP:', error);
       return null;
     }
   },
@@ -126,118 +168,199 @@ const locationService = {
   ): Promise<{city: string | null, country: string | null}> => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+            'User-Agent': 'MadrasaApp/1.0',
+          },
+        }
       );
       const data = await response.json();
       
       if (data && data.address) {
-        return {
-          city: data.address.city || data.address.town || data.address.village || null,
-          country: data.address.country || null,
-        };
+        const city = data.address?.city || 
+                    data.address?.town || 
+                    data.address?.village || 
+                    data.address?.hamlet || 
+                    null;
+        const country = data.address?.country || null;
+        
+        return { city, country };
       }
       
       return { city: null, country: null };
     } catch (error) {
-      console.warn('Error fetching city/country data:', error);
+      console.warn('⚠️ Error fetching city/country data:', error);
       return { city: null, country: null };
     }
   },
   
   /**
-   * Initialize location data and store it
-   * This should be called early in the app lifecycle (e.g., splash screen)
+   * Initialize location data following the priority order:
+   * 1. Native geolocation (if permission granted)
+   * 2. Check store for existing location
+   * 3. Get from IP address and store
    */
   initializeLocation: async (): Promise<void> => {
     const locationStore = useLocationStore.getState();
     locationStore.setLoading(true);
+    locationStore.setError(null);
+    
+    console.log('🌍 Starting location initialization...');
     
     try {
-      // First try to get permission and current location
-      const hasPermission = await locationService.requestLocationPermission();
+      // Step 1: Try native location if permission exists
+      const hasPermission = await locationService.checkLocationPermission();
+      console.log('🔐 Location permission status:', hasPermission);
       
       if (hasPermission) {
-        try {
-          // Get current location
-          const location = await locationService.getCurrentLocation();
-          
-          // Update store with location data
-          locationStore.setLocation(location.latitude, location.longitude);
-          locationStore.setLocationData({ 
-            usingFallback: false,
-            fallbackSource: null,
-          });
-          
-          // Get city and country
+        console.log('✅ Permission granted, trying native location...');
+        const nativeLocation = await locationService.getCurrentLocationFromNative();
+        
+        if (nativeLocation) {
+          console.log('✅ Got native location, fetching city/country...');
+          // Get city and country for native location
           const { city, country } = await locationService.getCityAndCountry(
-            location.latitude, 
-            location.longitude
+            nativeLocation.latitude, 
+            nativeLocation.longitude
           );
           
-          locationStore.setCity(city);
-          locationStore.setCountry(country);
-          
-          console.log('Location initialized successfully:', {
-            latitude: location.latitude,
-            longitude: location.longitude,
+          // Store native location data
+          locationStore.setLocationData({
+            latitude: nativeLocation.latitude,
+            longitude: nativeLocation.longitude,
             city,
             country,
+            usingFallback: false,
+            fallbackSource: null,
+            loading: false,
+            error: null,
           });
           
-          locationStore.setLoading(false);
+          console.log('✅ Native location stored successfully');
           return;
-        } catch (error) {
-          console.warn('Error getting current location, trying fallback:', error);
         }
       }
       
-      // If we couldn't get the current location, try IP-based location
+             // Step 2: Check store for existing location
+       const currentState = useLocationStore.getState();
+       if (currentState.latitude && currentState.longitude) {
+                 console.log('📦 Found existing location in store:', {
+           latitude: currentState.latitude,
+           longitude: currentState.longitude,
+           city: currentState.city,
+           country: currentState.country,
+         });
+        
+        // Update only loading state, keep existing data
+        locationStore.setLoading(false);
+        return;
+      }
+      
+      // Step 3: Fallback to IP location and store it
+      console.log('🔍 No stored location found, trying IP geolocation...');
       const ipLocation = await locationService.getLocationFromIP();
       
       if (ipLocation) {
-        // Update store with IP-based location
-        locationStore.setLocation(ipLocation.latitude, ipLocation.longitude);
+        // Store IP-based location
         locationStore.setLocationData({
-          usingFallback: true,
-          fallbackSource: 'ip_address',
-        });
-        
-        // Get city and country
-        const { city, country } = await locationService.getCityAndCountry(
-          ipLocation.latitude,
-          ipLocation.longitude
-        );
-        
-        locationStore.setCity(city);
-        locationStore.setCountry(country);
-        
-        console.log('Location initialized from IP:', {
           latitude: ipLocation.latitude,
           longitude: ipLocation.longitude,
-          city,
-          country,
-        });
-      } else {
-        // No fallback available - set error state
-        locationStore.setError('Could not determine location. Please enable location services.');
-        locationStore.setLocationData({
+          city: ipLocation.city,
+          country: ipLocation.country,
           usingFallback: true,
-          fallbackSource: 'no_location',
+          fallbackSource: 'ip_address',
+          loading: false,
+          error: null,
         });
         
-        console.log('No location data available');
+        console.log('✅ IP location stored successfully');
+      } else {
+        // No location available anywhere
+        locationStore.setLocationData({
+          latitude: null,
+          longitude: null,
+          city: null,
+          country: null,
+          usingFallback: true,
+          fallbackSource: 'no_location',
+          loading: false,
+          error: 'Could not determine location. Please enable location services.',
+        });
+        
+        console.log('❌ No location data available from any source');
       }
     } catch (error: any) {
-      console.error('Error initializing location:', error);
-      locationStore.setError(error.message || 'Failed to initialize location');
-      
-      // Set error state without fallback location
+      console.error('❌ Error initializing location:', error);
       locationStore.setLocationData({
+        latitude: null,
+        longitude: null,
+        city: null,
+        country: null,
         usingFallback: true,
         fallbackSource: 'error',
+        loading: false,
+        error: error.message || 'Failed to initialize location',
       });
-    } finally {
+    }
+  },
+
+  /**
+   * Request precise location (user-triggered)
+   * This will request permission and get native location
+   */
+  requestPreciseLocation: async (): Promise<boolean> => {
+    const locationStore = useLocationStore.getState();
+    locationStore.setLoading(true);
+    locationStore.setError(null);
+    
+    console.log('🎯 User requested precise location...');
+    
+    try {
+      // Request permission
+      const hasPermission = await locationService.requestLocationPermission();
+      
+      if (!hasPermission) {
+        console.log('❌ User denied location permission');
+        locationStore.setLoading(false);
+        return false;
+      }
+      
+      // Get native location
+      const nativeLocation = await locationService.getCurrentLocationFromNative();
+      
+      if (nativeLocation) {
+        console.log('✅ Got precise location from user request');
+        // Get city and country
+        const { city, country } = await locationService.getCityAndCountry(
+          nativeLocation.latitude, 
+          nativeLocation.longitude
+        );
+        
+        // Store precise location data
+        locationStore.setLocationData({
+          latitude: nativeLocation.latitude,
+          longitude: nativeLocation.longitude,
+          city,
+          country,
+          usingFallback: false,
+          fallbackSource: null,
+          loading: false,
+          error: null,
+        });
+        
+        return true;
+      } else {
+        console.log('❌ Failed to get native location even with permission');
+        locationStore.setLoading(false);
+        return false;
+      }
+    } catch (error: any) {
+      console.error('❌ Error requesting precise location:', error);
+      locationStore.setError(error.message || 'Failed to get precise location');
       locationStore.setLoading(false);
+      return false;
     }
   },
 };

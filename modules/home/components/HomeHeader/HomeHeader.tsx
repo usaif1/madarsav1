@@ -14,7 +14,7 @@ import { useAuthStore } from '@/modules/auth/store/authStore';
 import tokenService from '@/modules/auth/services/tokenService';
 import { mmkvStorage } from '@/modules/auth/storage/mmkvStorage';
 import { User } from '@/modules/auth/store/authStore';
-import { useLocation } from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 
 interface HomeHeaderProps {
   locationText?: string;
@@ -52,22 +52,23 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   
   // Get location data
   const { 
-    address, 
     loading: locationLoading, 
     usingFallback,
     fallbackSource,
     latitude,
     longitude,
-    requestLocationPermissionDirectly,
-  } = useLocation();
+    requestPreciseLocation,
+    getDisplayLocation,
+  } = useLocationData();
   
   // Determine location text to display
   const [locationText, setLocationText] = useState<string>(propLocationText || 'Get accurate namaz time');
   
-  // Update location text when address changes
+  // Update location text when location changes
   useEffect(() => {
+    const displayLocation = getDisplayLocation();
     console.log('📍 HomeHeader location data:', { 
-      address, 
+      displayLocation, 
       loading: locationLoading, 
       usingFallback, 
       fallbackSource, 
@@ -75,22 +76,17 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
       longitude 
     });
     
-    if (address) {
-      console.log('📍 Setting location text to address:', address);
-      setLocationText(address);
-    } else if (propLocationText) {
+    if (propLocationText) {
       console.log('📍 Setting location text to prop:', propLocationText);
       setLocationText(propLocationText);
-    } else if (latitude && longitude) {
-      // If we have coordinates but no address yet, show coordinates
-      const coordText = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-      console.log('📍 Setting location text to coordinates:', coordText);
-      setLocationText(coordText);
+    } else if (displayLocation && displayLocation !== 'Location not available') {
+      console.log('📍 Setting location text to display location:', displayLocation);
+      setLocationText(displayLocation);
     } else {
       console.log('📍 Setting default location text');
       setLocationText('Get accurate namaz time');
     }
-  }, [address, propLocationText, latitude, longitude, usingFallback, fallbackSource]);
+  }, [getDisplayLocation, propLocationText, latitude, longitude, usingFallback, fallbackSource]);
   
   // Handle location press
   const handleLocationPress = async () => {
@@ -101,9 +97,9 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
     
     // If we're using fallback location or don't have a location yet,
     // request precise location permission
-    if (usingFallback || !address) {
+    if (usingFallback || !latitude || !longitude) {
       try {
-        const granted = await requestLocationPermissionDirectly();
+        const granted = await requestPreciseLocation();
         if (!granted) {
           Alert.alert(
             'Location Permission',

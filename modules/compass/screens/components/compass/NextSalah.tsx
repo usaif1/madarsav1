@@ -10,13 +10,13 @@ import {useThemeStore} from '@/globalStore';
 
 // hooks
 import {useNextPrayer, formatPrayerTime, getNextPrayerName} from '@/api/hooks/usePrayerTimes';
-import {useLocation} from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 
 const NextSalah: React.FC = () => {
   const {colors} = useThemeStore();
 
   // Get user location
-  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocation();
+  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocationData();
 
   // Get next prayer time
   const {

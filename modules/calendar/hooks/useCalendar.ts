@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchCalendarData, CalendarParams, CalendarResponse } from '../services/calendarService';
-import { useLocation } from '../../../api/hooks/useLocation';
+import { useLocationData } from '../../location/hooks/useLocationData';
 
 export const useCalendarData = (params: CalendarParams) => {
   return useQuery<CalendarResponse[], Error>({
@@ -22,7 +22,7 @@ export const useCalendarData = (params: CalendarParams) => {
 
 // Hook that combines location with calendar data
 export const useCalendarWithLocation = (date: Date, method: string = 'MuslimWorldLeague') => {
-  const { latitude, longitude, loading: locationLoading, error: locationError } = useLocation();
+  const { latitude, longitude, loading: locationLoading, error: locationError } = useLocationData();
   
   const year = date.getFullYear();
   const month = date.getMonth() + 1; // JavaScript months are 0-based, API expects 1-based

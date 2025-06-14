@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchQiblaDirection, QiblaResponse } from '../services/qiblaService';
-import { useLocation } from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 
 /**
  * Hook to get Qibla direction based on user's location
@@ -15,7 +15,7 @@ export const useQiblaDirection = () => {
     error: locationError,
     usingFallback,
     fallbackSource 
-  } = useLocation();
+  } = useLocationData();
 
   const { 
     data, 

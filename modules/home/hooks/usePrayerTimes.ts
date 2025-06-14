@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useCalendarPrayerTimes, formatPrayerTime } from '@/modules/calendar/hooks/useCalendarPrayerTimes';
 import { PrayerTiming } from '@/api/services/prayerTimesService';
-import { useLocation } from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 
 // Prayer time types
 export type PrayerType = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -27,7 +27,7 @@ export const usePrayerTimes = () => {
     usingFallback,
     fallbackSource,
     refreshLocation: refreshLocationData
-  } = useLocation();
+  } = useLocationData();
   
   // Get prayer times data
   const { 

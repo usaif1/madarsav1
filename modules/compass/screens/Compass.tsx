@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import CompassHeading from 'react-native-compass-heading';
 import geomagnetism from 'geomagnetism';
-import Geolocation from '@react-native-community/geolocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 
 // components
 import {FindMosqueButton, NextSalah} from './components/compass';
@@ -69,10 +69,11 @@ const Compass: React.FC = () => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const {bottom} = useSafeAreaInsets();
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  
+  // Get location from store
+  const { latitude, longitude, loading: locationLoading, error: locationError } = useLocationData();
 
   /* state */
-  const [coords, setCoords] = useState<{lat: number; lon: number} | null>(null);
-  const [locError, setLocError] = useState<string | null>(null);
   const [magHeading, setMagHeading] = useState(0); // magnetic °
   const [decl, setDecl] = useState(0); // local declination °
   const [trueHeading, setTrueHeading] = useState(0);
@@ -90,23 +91,13 @@ const Compass: React.FC = () => {
     return () => subscription.remove();
   }, []);
 
-  /* ---- one-shot location request ---- */
+  /* ---- calculate qibla bearing when location changes ---- */
   useEffect(() => {
-    Geolocation.getCurrentPosition(
-      ({coords}) => {
-        const {latitude, longitude} = coords;
-        setCoords({lat: latitude, lon: longitude});
-        setQiblaBearing(getQiblaBearing(latitude, longitude));
-        setDecl(geomagnetism.model().point([latitude, longitude]).decl);
-      },
-      err => setLocError(err.message),
-      {
-        enableHighAccuracy: false,
-        timeout: 30000,
-        maximumAge: 60000,
-      },
-    );
-  }, []);
+    if (latitude && longitude) {
+      setQiblaBearing(getQiblaBearing(latitude, longitude));
+      setDecl(geomagnetism.model().point([latitude, longitude]).decl);
+    }
+  }, [latitude, longitude]);
 
   /* ---- start compass sensor ---- */
   useEffect(() => {
@@ -163,7 +154,7 @@ const Compass: React.FC = () => {
   const qiblaAngle = qiblaBearing != null ? (qiblaBearing - magHeading + 360) % 360 : 0;
 
   // ───── loading / error UI ─────
-  if (!coords && !locError) {
+  if (locationLoading) {
     return (
       <View style={[styles.topContainer, styles.loadingContainer]}>
         <StatusBar barStyle="light-content" />
@@ -172,11 +163,11 @@ const Compass: React.FC = () => {
       </View>
     );
   }
-  if (locError) {
+  if (locationError) {
     return (
       <View style={[styles.topContainer, styles.errorContainer]}>
         <StatusBar barStyle="light-content" />
-        <Text style={styles.errorText}>{locError}</Text>
+        <Text style={styles.errorText}>{locationError}</Text>
       </View>
     );
   }
