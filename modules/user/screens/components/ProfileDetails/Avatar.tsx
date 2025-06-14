@@ -4,7 +4,7 @@ import {useThemeStore} from '@/globalStore';
 import { CdnSvg } from '@/components/CdnSvg';
 import FastImage from 'react-native-fast-image';
 import { ImagePickerHelper } from '@/modules/user/utils/imagePickerHelper';
-import { uploadFile, prepareImageForUpload } from '@/modules/user/services/imageUploadService';
+import { uploadFile, prepareImageForUpload, validateImageFile } from '@/modules/user/services/imageUploadService';
 
 interface AvatarProps {
   imageUrl: string;
@@ -21,37 +21,97 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
   const [isUploading, setIsUploading] = React.useState(false);
 
   const handleImageSelection = async () => {
+    console.log('🖼️ === AVATAR IMAGE SELECTION STARTED ===');
+    console.log('🖼️ Step 1: User tapped camera button');
+    console.log('🖼️ Step 2: Current userId:', userId);
+    
     try {
+      console.log('🖼️ Step 3: Showing image picker options...');
+      
       // Show image picker options
       const selectedImage = await ImagePickerHelper.showImagePickerOptions();
       
       if (!selectedImage) {
+        console.log('🖼️ Step 4: User cancelled image selection');
         return;
       }
 
+      console.log('🖼️ Step 4: Image selected successfully:', {
+        uri: selectedImage.uri,
+        type: selectedImage.type,
+        name: selectedImage.name
+      });
+
+      console.log('🖼️ Step 5: Validating selected image...');
+      
+      // Validate the selected image
+      const imageFile = {
+        uri: selectedImage.uri,
+        type: selectedImage.type,
+        fileName: selectedImage.name
+      };
+      
+      if (!validateImageFile(imageFile)) {
+        console.error('❌ Image validation failed');
+        Alert.alert('Error', 'Invalid image format. Please select a JPG, PNG, GIF, or WebP image.');
+        return;
+      }
+      
+      console.log('✅ Image validation passed');
+      console.log('🖼️ Step 6: Setting upload state to loading...');
       setIsUploading(true);
       
       try {
+        console.log('🖼️ Step 7: Preparing FormData for upload...');
+        
         // Prepare form data
-        const formData = await prepareImageForUpload(selectedImage, userId);
+        const formData = await prepareImageForUpload(imageFile, userId);
+        
+        console.log('🖼️ Step 8: FormData prepared, starting upload...');
 
         // Upload image
         const response = await uploadFile(userId, formData);
         
+        console.log('✅ === AVATAR UPLOAD SUCCESSFUL ===');
+        console.log('🖼️ Step 9: Upload response:', response);
+        
         // Call success callback
+        console.log('🖼️ Step 10: Calling success callback with file URL:', response.fileLink);
         onImageUploaded?.(response.fileLink);
+        
+        Alert.alert('Success', 'Profile image updated successfully!');
+        
       } catch (error: any) {
-        console.error('Upload error:', error);
-        Alert.alert('Error', error.message || 'Failed to upload image');
+        console.error('❌ === AVATAR UPLOAD FAILED ===');
+        console.error('❌ Upload error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        Alert.alert('Upload Error', error.message || 'Failed to upload image. Please try again.');
       } finally {
+        console.log('🖼️ Step 11: Resetting upload state...');
         setIsUploading(false);
       }
     } catch (error: any) {
-      console.error('Image selection error:', error);
-      Alert.alert('Error', error.message || 'Failed to select image');
+      console.error('❌ === IMAGE SELECTION FAILED ===');
+      console.error('❌ Image selection error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      Alert.alert('Selection Error', error.message || 'Failed to select image. Please try again.');
       setIsUploading(false);
     }
   };
+
+  console.log('🖼️ Avatar component rendered:', {
+    hasImageUrl: !!imageUrl,
+    userId: userId,
+    isUploading
+  });
 
   return (
     <View style={[styles.avatar, shadows.md1]}>
@@ -73,6 +133,11 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
         disabled={isUploading}>
         <Camera />
       </Pressable>
+      {isUploading && (
+        <View style={styles.uploadingOverlay}>
+          {/* You could add a loading spinner here if desired */}
+        </View>
+      )}
     </View>
   );
 };
@@ -109,5 +174,14 @@ const styles = StyleSheet.create({
     margin: 'auto',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  uploadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(138, 87, 220, 0.1)',
+    borderRadius: 50,
   },
 });
