@@ -5,13 +5,13 @@ import {
     User as GoogleUser,
   } from '@react-native-google-signin/google-signin';
   import { useAuthStore, User } from '../store/authStore';
-  import { GOOGLE_WEB_CLIENT_ID } from '@env';
+  import Config from 'react-native-config';
   import authService, { AuthenticateRequest } from './authService';
   
   // Debug: Test environment variables at module load time
-  console.log('🧪 MODULE LOAD TEST - GOOGLE_WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID);
-  console.log('🧪 MODULE LOAD TEST - Type:', typeof GOOGLE_WEB_CLIENT_ID);
-  console.log('🧪 MODULE LOAD TEST - Length:', GOOGLE_WEB_CLIENT_ID?.length || 'N/A');
+  console.log('🧪 MODULE LOAD TEST - GOOGLE_WEB_CLIENT_ID:', Config.GOOGLE_WEB_CLIENT_ID);
+  console.log('🧪 MODULE LOAD TEST - Type:', typeof Config.GOOGLE_WEB_CLIENT_ID);
+  console.log('🧪 MODULE LOAD TEST - Length:', Config.GOOGLE_WEB_CLIENT_ID?.length || 'N/A');
   import tokenService from './tokenService';
   import { useErrorStore } from '@/modules/error/store/errorStore';
   import { ErrorType } from '@/api/utils/errorHandling';
@@ -24,18 +24,18 @@ import {
   export const configureGoogleSignIn = () => {
     try {
       console.log('🔧 Configuring Google Sign-In...');
-      console.log('🔧 GOOGLE_WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID);
+      console.log('🔧 GOOGLE_WEB_CLIENT_ID:', Config.GOOGLE_WEB_CLIENT_ID);
       
-      if (!GOOGLE_WEB_CLIENT_ID) {
-        console.error('❌ GOOGLE_WEB_CLIENT_ID is undefined! Check your .env file and babel config.');
-        console.error('❌ Current value:', GOOGLE_WEB_CLIENT_ID);
-        console.error('❌ Type of value:', typeof GOOGLE_WEB_CLIENT_ID);
+      if (!Config.GOOGLE_WEB_CLIENT_ID) {
+        console.error('❌ GOOGLE_WEB_CLIENT_ID is undefined! Check your .env file and react-native-config setup.');
+        console.error('❌ Current value:', Config.GOOGLE_WEB_CLIENT_ID);
+        console.error('❌ Type of value:', typeof Config.GOOGLE_WEB_CLIENT_ID);
         throw new Error('GOOGLE_WEB_CLIENT_ID is not defined');
       }
       
       GoogleSignin.configure({
         // Get this from Google Cloud Console
-        webClientId: GOOGLE_WEB_CLIENT_ID,
+        webClientId: Config.GOOGLE_WEB_CLIENT_ID,
         offlineAccess: true,
         forceCodeForRefreshToken: true,
       });

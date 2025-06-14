@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">madarsav1</string>
-    <!-- Facebook values are now injected by gradle from .env file -->
+    <!-- Facebook values are automatically injected by react-native-config -->
+    <string name="facebook_app_id">@string/FACEBOOK_APP_ID</string>
+    <string name="facebook_client_token">@string/FACEBOOK_CLIENT_TOKEN</string>
+    <string name="fb_login_protocol_scheme">fb@string/FACEBOOK_APP_ID</string>
 </resources>
