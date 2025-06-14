@@ -128,8 +128,11 @@ const SplashScreen1: React.FC = () => {
         // Check if user is signed in with Google
         try {
           // Configure Google client first
+          console.log('🔧 Attempting to configure Google Sign-In...');
           await googleAuthService.configureGoogleSignIn();
+          console.log('✅ Google Sign-In configured successfully');
           
+          console.log('🔍 Checking if user is already signed in with Google...');
           const isGoogleSignIn = await isGoogleSignedIn();
           console.log('isGoogleSignIn', isGoogleSignIn);
           
@@ -159,8 +162,14 @@ const SplashScreen1: React.FC = () => {
               await googleAuthService.signOutFromGoogle();
             }
           }
-        } catch (error) {
-          console.error('Google sign in check failed:', error);
+        } catch (error: any) {
+          console.error('❌ Google sign in check failed:', error);
+          console.error('❌ Error details:', {
+            message: error?.message || 'Unknown error',
+            code: error?.code || 'No code',
+            stack: error?.stack || 'No stack trace',
+          });
+          // Continue with the app flow instead of crashing
         }
         
         // Check if user is signed in with Facebook

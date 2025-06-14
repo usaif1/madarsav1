@@ -1,6 +1,4 @@
 <resources>
     <string name="app_name">madarsav1</string>
-    <string name="facebook_app_id">2547931728729102</string>
-    <string name="facebook_client_token">1ebc9e2ef6252b634628b72b308442ec</string>
-    <string name="fb_login_protocol_scheme">fb2547931728729102</string>
+    <!-- Facebook values are now injected by gradle from .env file -->
 </resources>

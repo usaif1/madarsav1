@@ -84,6 +84,23 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+
+        // Read environment variables and set as build config fields
+        def Properties props = new Properties()
+        def propFile = new File('../../.env')
+        if (propFile.canRead()) {
+            props.load(new FileInputStream(propFile))
+            
+            // Facebook configuration
+            resValue "string", "facebook_app_id", (props.getProperty('FACEBOOK_APP_ID') ?: "")
+            resValue "string", "facebook_client_token", (props.getProperty('FACEBOOK_CLIENT_TOKEN') ?: "")
+            resValue "string", "fb_login_protocol_scheme", "fb" + (props.getProperty('FACEBOOK_APP_ID') ?: "")
+        } else {
+            // Fallback values
+            resValue "string", "facebook_app_id", ""
+            resValue "string", "facebook_client_token", ""
+            resValue "string", "fb_login_protocol_scheme", ""
+        }
     }
     signingConfigs {
         debug {

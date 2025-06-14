@@ -5,7 +5,13 @@ import {
     User as GoogleUser,
   } from '@react-native-google-signin/google-signin';
   import { useAuthStore, User } from '../store/authStore';
+  import { GOOGLE_WEB_CLIENT_ID } from '@env';
   import authService, { AuthenticateRequest } from './authService';
+  
+  // Debug: Test environment variables at module load time
+  console.log('🧪 MODULE LOAD TEST - GOOGLE_WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID);
+  console.log('🧪 MODULE LOAD TEST - Type:', typeof GOOGLE_WEB_CLIENT_ID);
+  console.log('🧪 MODULE LOAD TEST - Length:', GOOGLE_WEB_CLIENT_ID?.length || 'N/A');
   import tokenService from './tokenService';
   import { useErrorStore } from '@/modules/error/store/errorStore';
   import { ErrorType } from '@/api/utils/errorHandling';
@@ -16,12 +22,29 @@ import {
   
   // Configure Google Sign-In
   export const configureGoogleSignIn = () => {
-    GoogleSignin.configure({
-      // Get this from Google Cloud Console
-      webClientId: '195416187581-qpimoedkpn9ar93kf13sss1ape1s8lv4.apps.googleusercontent.com',
-      offlineAccess: true,
-      forceCodeForRefreshToken: true,
-    });
+    try {
+      console.log('🔧 Configuring Google Sign-In...');
+      console.log('🔧 GOOGLE_WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID);
+      
+      if (!GOOGLE_WEB_CLIENT_ID) {
+        console.error('❌ GOOGLE_WEB_CLIENT_ID is undefined! Check your .env file and babel config.');
+        console.error('❌ Current value:', GOOGLE_WEB_CLIENT_ID);
+        console.error('❌ Type of value:', typeof GOOGLE_WEB_CLIENT_ID);
+        throw new Error('GOOGLE_WEB_CLIENT_ID is not defined');
+      }
+      
+      GoogleSignin.configure({
+        // Get this from Google Cloud Console
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        offlineAccess: true,
+        forceCodeForRefreshToken: true,
+      });
+      
+      console.log('✅ Google Sign-In configured successfully');
+    } catch (error) {
+      console.error('❌ Failed to configure Google Sign-In:', error);
+      throw error;
+    }
   };
   
   // Check if user is already signed in with Google
