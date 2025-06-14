@@ -38,7 +38,7 @@ const initialState: LocationState = {
   country: null,
   usingFallback: false,
   fallbackSource: null,
-  loading: true,
+  loading: false, // ✅ Start with loading false, initializeLocation will set it to true
   error: null,
 };
 
@@ -51,16 +51,23 @@ export const useLocationStore = create<LocationState & LocationActions>()(
       // State setters
       setLocation: (latitude, longitude) => set({ latitude, longitude }),
       
-      setLocationData: (data) => set((state) => ({
-        ...state,
-        ...data,
-      })),
+      setLocationData: (data) => {
+        console.log('🔄 locationStore.setLocationData called with:', data);
+        set((state) => {
+          const newState = { ...state, ...data };
+          console.log('🔄 locationStore new state:', newState);
+          return newState;
+        });
+      },
       
       setCity: (city) => set({ city }),
       
       setCountry: (country) => set({ country }),
       
-      setLoading: (loading) => set({ loading }),
+      setLoading: (loading) => {
+        console.log('🔄 locationStore.setLoading called with:', loading);
+        set({ loading });
+      },
       
       setError: (error) => set({ error }),
       

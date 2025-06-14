@@ -15,8 +15,29 @@ const locationService = {
    * @returns Promise<boolean> - True if permission granted, false otherwise
    */
   checkLocationPermission: async (): Promise<boolean> => {
-    const status = await locationService.getPermissionStatus();
-    return status === 'granted';
+    console.log('🔐 Checking location permission...');
+    
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        console.log('🔐 Android permission check result:', granted);
+        return granted;
+      } catch (error) {
+        console.warn('Error checking Android location permission:', error);
+        return false;
+      }
+    }
+    
+    if (Platform.OS === 'ios') {
+      // For iOS, we can't check permission without potentially triggering a request
+      // So we'll just return false to force a proper permission request
+      console.log('🔐 iOS permission check - returning false to trigger request');
+      return false;
+    }
+    
+    return false;
   },
 
   /**
@@ -24,6 +45,8 @@ const locationService = {
    * @returns Promise<boolean> - True if permission granted, false otherwise
    */
   requestLocationPermission: async (): Promise<boolean> => {
+    console.log('🔐 Requesting location permission...');
+    
     if (Platform.OS === 'ios') {
       try {
         // Configure Geolocation for iOS
@@ -32,9 +55,24 @@ const locationService = {
           authorizationLevel: 'whenInUse',
         });
         
-        // iOS doesn't return a promise, so we'll assume it's granted
-        // The actual permission dialog will show up when getCurrentPosition is called
-        return true;
+        // For iOS, we need to actually try to get location to trigger permission request
+        return new Promise((resolve) => {
+          Geolocation.getCurrentPosition(
+            (position) => {
+              console.log('✅ iOS location permission granted');
+              resolve(true);
+            },
+            (error) => {
+              console.log('❌ iOS location permission denied:', error.message);
+              resolve(false);
+            },
+            { 
+              enableHighAccuracy: false, 
+              timeout: 10000,
+              maximumAge: 60000 
+            }
+          );
+        });
       } catch (error) {
         console.warn('Error requesting iOS location permission:', error);
         return false;
@@ -43,16 +81,34 @@ const locationService = {
 
     if (Platform.OS === 'android') {
       try {
+        // First check if permission is already granted
+        const alreadyGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        
+        if (alreadyGranted) {
+          console.log('✅ Android location permission already granted');
+          return true;
+        }
+        
+        console.log('🔐 Requesting Android location permission...');
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
-            title: 'Location Permission',
-            message: 'This app needs access to your location to show Qibla direction and prayer times.',
+            title: 'Location Permission Required',
+            message: 'This app needs access to your location to show accurate prayer times and Qibla direction.',
             buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
+            buttonNegative: 'Deny',
+            buttonPositive: 'Allow',
           },
         );
+        
+        console.log('🔐 Android permission result:', granted);
+        console.log('🔐 Available results:', {
+          GRANTED: PermissionsAndroid.RESULTS.GRANTED,
+          DENIED: PermissionsAndroid.RESULTS.DENIED,
+          NEVER_ASK_AGAIN: PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+        });
         
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (error) {
@@ -96,8 +152,8 @@ const locationService = {
   },
   
   /**
-   * Get location from IP address as fallback
-   * @returns Promise with location data or null if failed
+   * Get location from IP address using multiple services as fallbacks
+   * @returns Promise with location data or null if all services failed
    */
   getLocationFromIP: async (): Promise<{latitude: number, longitude: number, city: string | null, country: string | null} | null> => {
     try {
@@ -109,27 +165,122 @@ const locationService = {
       }
 
       console.log('🔍 Attempting to get location from IP address...');
-      // Use a free IP geolocation service that doesn't require an API key
-      const response = await fetch('https://ipapi.co/json/');
-      const data = await response.json();
       
-      if (data && data.latitude && data.longitude) {
-        console.log('✅ Successfully got location from IP:', {
-          latitude: data.latitude,
-          longitude: data.longitude,
-          city: data.city,
-          country: data.country_name
-        });
-        return {
-          latitude: data.latitude,
-          longitude: data.longitude,
-          city: data.city || null,
-          country: data.country_name || null,
-        };
+      // Try multiple IP geolocation services in sequence
+      const services = [
+        {
+          name: 'ip-api.com',
+          url: 'http://ip-api.com/json/',
+          parseResponse: (data: any) => ({
+            latitude: data.lat,
+            longitude: data.lon,
+            city: data.city || null,
+            country: data.country || null,
+          })
+        },
+        {
+          name: 'ipapi.co',
+          url: 'https://ipapi.co/json/',
+          parseResponse: (data: any) => ({
+            latitude: data.latitude,
+            longitude: data.longitude,
+            city: data.city || null,
+            country: data.country_name || null,
+          })
+        },
+        {
+          name: 'ipinfo.io',
+          url: 'https://ipinfo.io/json',
+          parseResponse: (data: any) => {
+            if (data.loc) {
+              const [lat, lon] = data.loc.split(',').map(Number);
+              return {
+                latitude: lat,
+                longitude: lon,
+                city: data.city || null,
+                country: data.country || null,
+              };
+            }
+            return null;
+          }
+        },
+        {
+          name: 'geoip.nekudo.com',
+          url: 'https://geoip.nekudo.com/api/',
+          parseResponse: (data: any) => ({
+            latitude: data.location?.latitude,
+            longitude: data.location?.longitude,
+            city: data.city || null,
+            country: data.country?.name || null,
+          })
+        }
+      ];
+
+      // Try each service until one works
+      for (const service of services) {
+        try {
+          console.log(`🌐 Trying ${service.name}...`);
+          
+          // Create a timeout promise for manual timeout handling
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout')), 8000);
+          });
+          
+          const fetchPromise = fetch(service.url, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'MadrasaApp/1.0',
+            },
+          });
+          
+          const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+          
+          if (!response.ok) {
+            console.warn(`❌ ${service.name} returned ${response.status}`);
+            continue;
+          }
+          
+          const data = await response.json();
+          console.log(`📡 ${service.name} response:`, data);
+          
+          // Check for rate limiting or error responses
+          if (data.error || data.message) {
+            console.warn(`❌ ${service.name} error:`, data.error || data.message);
+            continue;
+          }
+          
+          const parsedData = service.parseResponse(data);
+          
+          if (parsedData && parsedData.latitude && parsedData.longitude) {
+            console.log(`✅ Successfully got location from ${service.name}:`, {
+              latitude: parsedData.latitude,
+              longitude: parsedData.longitude,
+              city: parsedData.city,
+              country: parsedData.country
+            });
+            
+            return {
+              latitude: parsedData.latitude,
+              longitude: parsedData.longitude,
+              city: parsedData.city,
+              country: parsedData.country,
+            };
+          } else {
+            console.warn(`❌ ${service.name} returned invalid data:`, parsedData);
+          }
+          
+        } catch (serviceError: any) {
+          console.warn(`❌ Error with ${service.name}:`, serviceError.message);
+          // Continue to next service
+        }
       }
+      
+      console.log('❌ All IP geolocation services failed');
       return null;
-    } catch (error) {
-      console.warn('❌ Error getting location from IP:', error);
+      
+    } catch (error: any) {
+      console.warn('❌ Error in IP geolocation process:', error);
       return null;
     }
   },
@@ -174,44 +325,7 @@ const locationService = {
     }
   },
   
-  /**
-   * Check permission status details (granted, denied, never ask again)
-   * @returns Promise<'granted' | 'denied' | 'never_ask_again' | 'unknown'>
-   */
-  getPermissionStatus: async (): Promise<'granted' | 'denied' | 'never_ask_again' | 'unknown'> => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
-        
-        return granted ? 'granted' : 'denied';
-      } catch (error) {
-        console.warn('Error checking permission status:', error);
-        return 'unknown';
-      }
-    }
-    
-    if (Platform.OS === 'ios') {
-      // For iOS, we can only check by trying to get location
-      return new Promise((resolve) => {
-        Geolocation.getCurrentPosition(
-          () => resolve('granted'),
-          (error) => {
-            // iOS error codes: 1 = denied, 2 = network error, 3 = timeout
-            if (error.code === 1) {
-              resolve('denied');
-            } else {
-              resolve('unknown');
-            }
-          },
-          { timeout: 1000 }
-        );
-      });
-    }
-    
-    return 'unknown';
-  },
+
 
   /**
    * Initialize location data following the priority order:
@@ -227,9 +341,11 @@ const locationService = {
     locationStore.setError(null);
     
     console.log('🌍 Starting location initialization...');
+    console.log('🌍 Platform:', Platform.OS);
     
     try {
       // Step 1: Check if permission is already granted
+      console.log('🔐 Step 1: Checking existing permission...');
       const hasPermission = await locationService.checkLocationPermission();
       console.log('🔐 Location permission status:', hasPermission);
       
@@ -259,13 +375,16 @@ const locationService = {
           
           console.log('✅ Native location stored successfully');
           return;
+        } else {
+          console.log('⚠️ Permission granted but failed to get location, proceeding to request permission');
         }
       }
       
       // Step 2: If no permission, request it
       if (!hasPermission) {
-        console.log('🔐 No permission, requesting location permission...');
+        console.log('🔐 Step 2: No permission found, requesting location permission...');
         const permissionGranted = await locationService.requestLocationPermission();
+        console.log('🔐 Permission request result:', permissionGranted);
         
         if (permissionGranted) {
           console.log('✅ Permission granted, trying native location...');
@@ -295,26 +414,26 @@ const locationService = {
             return;
           }
         } else {
-          console.log('❌ Location permission declined');
-          // Show settings alert if user wants to enable location later
-          locationService.showLocationSettingsAlert();
-          
-          // Set fallback to IP location
+          console.log('❌ Location permission declined or failed');
+          // Don't show settings alert immediately, just proceed to fallback
           console.log('⚠️ User declined location permission, falling back to IP location');
         }
       }
       
       // Step 3: Check store for existing location
       const currentState = useLocationStore.getState();
-      if (currentState.latitude && currentState.longitude && !currentState.usingFallback) {
-        console.log('📦 Found existing precise location in store:', {
+      if (currentState.latitude && currentState.longitude) {
+        console.log('📦 Found existing location in store:', {
           latitude: currentState.latitude,
           longitude: currentState.longitude,
           city: currentState.city,
           country: currentState.country,
+          usingFallback: currentState.usingFallback,
+          fallbackSource: currentState.fallbackSource
         });
         
         // Update only loading state, keep existing data
+        console.log('📦 Setting loading to false for existing location');
         locationStore.setLoading(false);
         return;
       }
@@ -324,7 +443,8 @@ const locationService = {
       const ipLocation = await locationService.getLocationFromIP();
       
       if (ipLocation) {
-        // Store IP-based location
+        // Store IP-based location and MAKE SURE to set loading to false
+        console.log('💾 Storing IP location data:', ipLocation);
         locationStore.setLocationData({
           latitude: ipLocation.latitude,
           longitude: ipLocation.longitude,
@@ -332,13 +452,23 @@ const locationService = {
           country: ipLocation.country,
           usingFallback: true,
           fallbackSource: 'ip_address',
-          loading: false,
+          loading: false,  // ✅ CRITICAL: Set loading to false
           error: null,
         });
         
-        console.log('✅ IP location stored successfully');
+        console.log('✅ IP location stored successfully with loading=false');
+        
+        // Log the store state to verify
+        const currentState = useLocationStore.getState();
+        console.log('📦 Store state after IP location:', {
+          latitude: currentState.latitude,
+          longitude: currentState.longitude,
+          loading: currentState.loading,
+          fallbackSource: currentState.fallbackSource
+        });
       } else {
         // No location available anywhere
+        console.log('❌ Failed to get IP location, setting error state');
         locationStore.setLocationData({
           latitude: null,
           longitude: null,
@@ -346,7 +476,7 @@ const locationService = {
           country: null,
           usingFallback: true,
           fallbackSource: 'no_location',
-          loading: false,
+          loading: false,  // ✅ Set loading to false even on error
           error: 'Could not determine location. Please enable location services.',
         });
         

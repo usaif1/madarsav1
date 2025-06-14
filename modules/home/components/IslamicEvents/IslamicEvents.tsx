@@ -314,15 +314,14 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
         
         {/* Content */}
         <View style={styles.contentContainer}>
-        <ScrollView>
           {hasEvents ? (
             <FlatList
               data={events}
               keyExtractor={item => item.id}
               renderItem={renderEventItem}
               contentContainerStyle={styles.eventsList}
-              scrollEnabled={events.length > 3}
               showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
             />
           ) : (
             <View style={styles.noEventsContainer}>
@@ -332,7 +331,6 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
               </Body1Title2Medium>
             </View>
           )}
-        </ScrollView>
         </View>
       </LinearGradient>
 
@@ -422,7 +420,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: scale(8),
     borderTopWidth: 0.5,
     borderTopColor: '#E5E5E5',
-    maxHeight: verticalScale(192),
+    height: verticalScale(192), // Fixed height instead of maxHeight
   },
   eventsList: {
     paddingVertical: scale(8),
