@@ -85,7 +85,8 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
     'number' in selectedDateHijriData.data.hijri.month
       ? selectedDateHijriData.data.hijri.month.number
       : null;
-  
+  console.log('selectedHijriDay', selectedHijriDay);
+  console.log('selectedHijriMonth', selectedHijriMonth);
   const { data: selectedDayHolidayData, isLoading: isSelectedDayHolidayLoading } = 
     useHijriHoliday(
       selectedHijriDay || 1, 

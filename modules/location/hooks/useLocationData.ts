@@ -17,6 +17,7 @@ export const useLocationData = () => {
     error,
     refreshLocation,
     requestPreciseLocation,
+    showLocationSettingsAlert,
   } = useLocationStore();
   
   return {
@@ -35,10 +36,13 @@ export const useLocationData = () => {
     // Actions
     refreshLocation,
     requestPreciseLocation,
+    showLocationSettingsAlert,
     
     // Helper methods
     hasLocation: latitude !== null && longitude !== null,
     isUsingFallback: usingFallback,
+    isPermissionDenied: fallbackSource === 'permission_denied' || fallbackSource === 'permission_denied_ip_fallback',
+    isUsingEstimatedLocation: fallbackSource === 'ip_address' || fallbackSource === 'permission_denied_ip_fallback',
     
     // For API requests
     getLocationForApi: () => ({
@@ -55,6 +59,17 @@ export const useLocationData = () => {
       if (country) return country;
       if (latitude && longitude) return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
       return 'Location not available';
+    },
+    
+    // Get status message for UI
+    getLocationStatus: () => {
+      if (loading) return 'Getting location...';
+      if (error) return error;
+      if (fallbackSource === 'permission_denied') return 'Location permission denied';
+      if (fallbackSource === 'permission_denied_ip_fallback') return 'Using estimated location';
+      if (fallbackSource === 'ip_address') return 'Using estimated location';
+      if (usingFallback) return 'Using approximate location';
+      return 'Using precise location';
     },
   };
 };

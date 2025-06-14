@@ -26,6 +26,7 @@ interface LocationActions {
   setError: (error: string | null) => void;
   refreshLocation: () => Promise<void>;
   requestPreciseLocation: () => Promise<boolean>;
+  showLocationSettingsAlert: () => void;
   resetLocationStore: () => void;
 }
 
@@ -76,6 +77,14 @@ export const useLocationStore = create<LocationState & LocationActions>()(
     const { default: locationService } = await import('../services/locationService');
     return await locationService.requestPreciseLocation();
   },
+
+  // Show settings alert for location permission
+  showLocationSettingsAlert: () => {
+    // Import the location service dynamically to avoid circular imports
+    import('../services/locationService').then(({ default: locationService }) => {
+      locationService.showLocationSettingsAlert();
+    });
+  },
       
       // Reset store to initial state
       resetLocationStore: () => set(initialState),
@@ -115,6 +124,7 @@ export const useLocationData = () => {
     setError,
     refreshLocation,
     requestPreciseLocation,
+    showLocationSettingsAlert,
     resetLocationStore,
   } = useLocationStore();
   
@@ -135,6 +145,7 @@ export const useLocationData = () => {
     setError,
     refreshLocation,
     requestPreciseLocation,
+    showLocationSettingsAlert,
     resetLocationStore,
     
     // Helper method to get location data in a format suitable for API requests

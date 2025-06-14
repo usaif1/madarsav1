@@ -1,5 +1,5 @@
 // modules/location/services/locationService.ts
-import { Platform } from 'react-native';
+import { Platform, Linking, Alert } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
@@ -15,30 +15,8 @@ const locationService = {
    * @returns Promise<boolean> - True if permission granted, false otherwise
    */
   checkLocationPermission: async (): Promise<boolean> => {
-    if (Platform.OS === 'ios') {
-      // For iOS, we need to try getting location to know if permission is granted
-      return new Promise((resolve) => {
-        Geolocation.getCurrentPosition(
-          () => resolve(true),
-          () => resolve(false),
-          { timeout: 1000 }
-        );
-      });
-    }
-
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
-        return granted;
-      } catch (error) {
-        console.warn('Error checking Android location permission:', error);
-        return false;
-      }
-    }
-    
-    return false;
+    const status = await locationService.getPermissionStatus();
+    return status === 'granted';
   },
 
   /**
@@ -197,10 +175,51 @@ const locationService = {
   },
   
   /**
+   * Check permission status details (granted, denied, never ask again)
+   * @returns Promise<'granted' | 'denied' | 'never_ask_again' | 'unknown'>
+   */
+  getPermissionStatus: async (): Promise<'granted' | 'denied' | 'never_ask_again' | 'unknown'> => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        
+        return granted ? 'granted' : 'denied';
+      } catch (error) {
+        console.warn('Error checking permission status:', error);
+        return 'unknown';
+      }
+    }
+    
+    if (Platform.OS === 'ios') {
+      // For iOS, we can only check by trying to get location
+      return new Promise((resolve) => {
+        Geolocation.getCurrentPosition(
+          () => resolve('granted'),
+          (error) => {
+            // iOS error codes: 1 = denied, 2 = network error, 3 = timeout
+            if (error.code === 1) {
+              resolve('denied');
+            } else {
+              resolve('unknown');
+            }
+          },
+          { timeout: 1000 }
+        );
+      });
+    }
+    
+    return 'unknown';
+  },
+
+  /**
    * Initialize location data following the priority order:
-   * 1. Native geolocation (if permission granted)
-   * 2. Check store for existing location
-   * 3. Get from IP address and store
+   * 1. Check if permission is already granted -> get native location
+   * 2. If no permission, request it -> if granted, get native location
+   * 3. If permission denied permanently, show settings prompt
+   * 4. If user cancels/declines, use IP location
+   * 5. Check store for existing location as backup
    */
   initializeLocation: async (): Promise<void> => {
     const locationStore = useLocationStore.getState();
@@ -210,12 +229,12 @@ const locationService = {
     console.log('🌍 Starting location initialization...');
     
     try {
-      // Step 1: Try native location if permission exists
+      // Step 1: Check if permission is already granted
       const hasPermission = await locationService.checkLocationPermission();
       console.log('🔐 Location permission status:', hasPermission);
       
       if (hasPermission) {
-        console.log('✅ Permission granted, trying native location...');
+        console.log('✅ Permission already granted, trying native location...');
         const nativeLocation = await locationService.getCurrentLocationFromNative();
         
         if (nativeLocation) {
@@ -243,23 +262,65 @@ const locationService = {
         }
       }
       
-             // Step 2: Check store for existing location
-       const currentState = useLocationStore.getState();
-       if (currentState.latitude && currentState.longitude) {
-                 console.log('📦 Found existing location in store:', {
-           latitude: currentState.latitude,
-           longitude: currentState.longitude,
-           city: currentState.city,
-           country: currentState.country,
-         });
+      // Step 2: If no permission, request it
+      if (!hasPermission) {
+        console.log('🔐 No permission, requesting location permission...');
+        const permissionGranted = await locationService.requestLocationPermission();
+        
+        if (permissionGranted) {
+          console.log('✅ Permission granted, trying native location...');
+          const nativeLocation = await locationService.getCurrentLocationFromNative();
+          
+          if (nativeLocation) {
+            console.log('✅ Got native location after permission request, fetching city/country...');
+            // Get city and country for native location
+            const { city, country } = await locationService.getCityAndCountry(
+              nativeLocation.latitude, 
+              nativeLocation.longitude
+            );
+            
+            // Store native location data
+            locationStore.setLocationData({
+              latitude: nativeLocation.latitude,
+              longitude: nativeLocation.longitude,
+              city,
+              country,
+              usingFallback: false,
+              fallbackSource: null,
+              loading: false,
+              error: null,
+            });
+            
+            console.log('✅ Native location stored successfully after permission request');
+            return;
+          }
+        } else {
+          console.log('❌ Location permission declined');
+          // Show settings alert if user wants to enable location later
+          locationService.showLocationSettingsAlert();
+          
+          // Set fallback to IP location
+          console.log('⚠️ User declined location permission, falling back to IP location');
+        }
+      }
+      
+      // Step 3: Check store for existing location
+      const currentState = useLocationStore.getState();
+      if (currentState.latitude && currentState.longitude && !currentState.usingFallback) {
+        console.log('📦 Found existing precise location in store:', {
+          latitude: currentState.latitude,
+          longitude: currentState.longitude,
+          city: currentState.city,
+          country: currentState.country,
+        });
         
         // Update only loading state, keep existing data
         locationStore.setLoading(false);
         return;
       }
       
-      // Step 3: Fallback to IP location and store it
-      console.log('🔍 No stored location found, trying IP geolocation...');
+      // Step 4: Fallback to IP location and store it
+      console.log('🔍 No precise location available, trying IP geolocation...');
       const ipLocation = await locationService.getLocationFromIP();
       
       if (ipLocation) {
@@ -304,6 +365,32 @@ const locationService = {
         error: error.message || 'Failed to initialize location',
       });
     }
+  },
+
+  /**
+   * Show alert to guide user to app settings for location permission
+   */
+  showLocationSettingsAlert: (): void => {
+    Alert.alert(
+      'Location Permission Required',
+      'This app needs location access to show accurate prayer times and Qibla direction. Please enable location access in your device settings.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Open Settings',
+          onPress: () => {
+            if (Platform.OS === 'ios') {
+              Linking.openURL('app-settings:');
+            } else {
+              Linking.openSettings();
+            }
+          },
+        },
+      ]
+    );
   },
 
   /**
