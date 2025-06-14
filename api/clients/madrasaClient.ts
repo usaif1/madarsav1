@@ -24,6 +24,7 @@ const madrasaClient = axios.create({
   headers: {
     'Accept': 'application/json',
     'Accept-Encoding': 'gzip, deflate, br', // Enable compression
+    // Don't set any default Content-Type - let it be determined per request
   },
   responseType: 'json',
   // Custom transform request to handle different data types
@@ -38,9 +39,11 @@ const madrasaClient = axios.create({
     if (data instanceof FormData) {
       console.log('📦 Handling FormData in transform request');
       if (headers) {
+        console.log('📦 Headers before Content-Type removal:', headers);
         // Remove Content-Type to let browser/RN set it with proper boundary
         delete headers['Content-Type'];
         console.log('🗑️ Removed Content-Type header for FormData');
+        console.log('📦 Headers after Content-Type removal:', headers);
       }
       return data;
     }
@@ -108,13 +111,27 @@ madrasaClient.interceptors.request.use(
         console.log('⚠️ No access token available');
       }
       
-      // Apply compression for non-FormData requests
-      if (
+      // Handle FormData requests specially
+      if (config.data instanceof FormData) {
+        console.log('📦 Processing FormData request - ensuring no Content-Type interference');
+        
+        // Ensure Content-Type is completely removed for FormData
+        if (config.headers && 'Content-Type' in config.headers) {
+          delete (config.headers as any)['Content-Type'];
+          console.log('🗑️ Removed Content-Type header for FormData in interceptor');
+        }
+        
+        // Skip compression for FormData
+        console.log('⏭️ Skipping compression for FormData request');
+        
+      } else if (
+        // Apply compression for non-FormData requests
         ['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '') &&
         config.data &&
-        !(config.data instanceof FormData) &&
         extendedConfig.compress !== false
       ) {
+        console.log('🗜️ Applying compression for non-FormData request');
+        
         // Add compression headers
         const compressedConfig = addCompressionHeaders(config);
         
@@ -131,11 +148,25 @@ madrasaClient.interceptors.request.use(
         return compressedConfig as InternalAxiosRequestConfig;
       }
       
+      // Final check for FormData requests to ensure Content-Type is not set
+      if (config.data instanceof FormData) {
+        console.log('🔍 FINAL FORMDATA CHECK - ensuring Content-Type is not set');
+        if (config.headers && 'Content-Type' in config.headers) {
+          console.log('⚠️ Found Content-Type in headers, removing it:', config.headers['Content-Type']);
+          delete (config.headers as any)['Content-Type'];
+        }
+        if (config.headers && 'content-type' in config.headers) {
+          console.log('⚠️ Found content-type in headers, removing it:', (config.headers as any)['content-type']);
+          delete (config.headers as any)['content-type'];
+        }
+      }
+      
       console.log('✅ REQUEST INTERCEPTOR COMPLETE');
       console.log('🔄 Final config:', {
         method: config.method,
         url: config.url,
         hasAuth: !!config.headers.Authorization,
+        isFormData: config.data instanceof FormData,
         headers: config.headers
       });
       
@@ -180,8 +211,27 @@ madrasaClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const extendedRequest = originalRequest as ExtendedAxiosRequestConfig;
     
-    // Handle network errors with caching fallback
-    if (!error.response && error.message?.includes('Network Error')) {
+    // Handle network errors with detailed logging
+    if (!error.response) {
+      console.error('❌ No response received. Full error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        config: {
+          method: error.config?.method,
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          headers: error.config?.headers,
+          data: error.config?.data instanceof FormData ? 'FormData' : error.config?.data
+        }
+      });
+      
+      // Check if it's a file upload request
+      if (error.config?.data instanceof FormData) {
+        console.error('❌ FormData upload failed - this might be a Content-Type issue');
+        return Promise.reject(new Error('File upload failed. The server may not be accepting the request format.'));
+      }
+      
       if (extendedRequest.cache) {
         try {
           const cacheKey = extendedRequest.cacheKey || generateCacheKey(originalRequest);

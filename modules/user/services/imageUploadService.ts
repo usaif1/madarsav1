@@ -77,16 +77,29 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
     const requestConfig = {
       timeout: 60000, // 60 seconds for large files
       headers: {
-        // For file uploads, we need to be careful with headers
-        // Don't set Content-Type - let FormData/browser handle it with boundary
+        // For file uploads, completely omit Content-Type to let the browser/RN set it
         'Accept': 'application/json',
+        // Explicitly prevent setting of wrong Content-Type
       },
       // Override the default transform to ensure FormData is not modified
-      transformRequest: (data: any) => {
-        console.log('📤 Step 5: Transform request called with data type:', typeof data);
-        console.log('📤 Step 5b: Is FormData?', data instanceof FormData);
+      transformRequest: [(data: any, headers: any) => {
+        console.log('📤 Step 5: Upload service transform - data type:', typeof data);
+        console.log('📤 Step 5b: Upload service transform - Is FormData?', data instanceof FormData);
+        
+        if (data instanceof FormData) {
+          console.log('📤 Step 5c: Processing FormData in upload service transform');
+          
+          // Aggressively remove any Content-Type header for FormData
+          if (headers) {
+            console.log('📤 Step 5d: Headers before cleanup:', headers);
+            delete headers['Content-Type'];
+            delete headers['content-type']; // Also check lowercase
+            console.log('📤 Step 5e: Headers after cleanup:', headers);
+          }
+        }
+        
         return data; // Don't transform FormData
-      },
+      }],
       onUploadProgress: (progressEvent: any) => {
         if (progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
