@@ -51,13 +51,10 @@ const madrasaClient = axios.create({
       hasHeaders: !!headers
     });
 
-    // Handle FormData - set proper Content-Type
+    // IMPORTANT: Do NOT handle FormData here - let axios handle it naturally
+    // FormData handling is done in the request interceptor
     if (data instanceof FormData) {
-      console.log('📦 Handling FormData in transform request');
-      
-      // Set proper Content-Type for FormData
-      handleFormDataHeaders(headers, data);
-      
+      console.log('📦 FormData detected - letting axios handle it naturally');
       console.log('🔄 FormData transform complete - returning data unchanged');
       return data;
     }
@@ -132,13 +129,17 @@ madrasaClient.interceptors.request.use(
       
       // Handle FormData requests specially - BEFORE other processing
       if (config.data instanceof FormData) {
-        console.log('📦 Processing FormData request - ensuring proper headers');
+        console.log('📦 Processing FormData request - letting axios handle Content-Type');
         
-        // Set proper Content-Type for FormData
-        handleFormDataHeaders(config.headers, config.data);
+        // IMPORTANT: Do NOT set Content-Type for FormData - let axios handle it
+        // Remove any existing Content-Type to ensure axios sets it properly
+        if (config.headers['Content-Type']) {
+          console.log('🔧 Removing existing Content-Type to let axios handle FormData');
+          delete config.headers['Content-Type'];
+        }
         
         console.log('⏭️ Skipping compression for FormData request');
-        console.log('✅ FormData request processing complete');
+        console.log('✅ FormData request processing complete - axios will set proper Content-Type');
         
       } else if (
         // Apply compression for non-FormData requests only

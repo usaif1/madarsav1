@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { MADRASA_API_ENDPOINTS, MADRASA_API_URL } from '@/api/config/madrasaApiConfig';
 import madrasaClient from '@/api/clients/madrasaClient';
 import authService from '@/modules/auth/services/authService';
+import tokenService from '@/modules/auth/services/tokenService';
 
 export interface FileUploadResponse {
   fileExtension: string;
@@ -26,7 +27,7 @@ const logFormData = (formData: FormData, context: string) => {
     // For React Native, we can't iterate over FormData directly
     // So we'll log what we know we added
     console.log('  - Fields added to FormData:');
-    console.log('    • fileRequestType: PROFILE_IMAGE');
+    console.log('    • fileRequestType: PUBLIC_PROFILE_IMAGE');
     console.log('    • userId: [provided]');
     console.log('    • file: [binary data]');
   } catch (error) {
@@ -50,7 +51,7 @@ const logCurlEquivalent = (url: string, formData: FormData, headers: any) => {
     }
   });
   
-  console.log('  -F "fileRequestType=PROFILE_IMAGE" \\');
+  console.log('  -F "fileRequestType=PUBLIC_PROFILE_IMAGE" \\');
   console.log('  -F "userId=[USER_ID]" \\');
   console.log('  -F "file=@[IMAGE_FILE]"');
 };
@@ -94,7 +95,7 @@ export const testFormDataSubmission = async (userId: string): Promise<boolean> =
   
   try {
     const formData = new FormData();
-    (formData as any).append('fileRequestType', 'TEST');
+    (formData as any).append('fileRequestType', 'PUBLIC_PROFILE_IMAGE');
     (formData as any).append('userId', userId);
     (formData as any).append('testField', 'test-value');
     
@@ -128,13 +129,13 @@ export const testFormDataSubmission = async (userId: string): Promise<boolean> =
 };
 
 /**
- * Upload file to S3 using the Madrasa API
+ * Upload file to S3 using the Madrasa API with native fetch (bypassing axios issues)
  * @param userId - User ID for the upload
  * @param file - FormData containing the file and metadata
  * @returns Promise<FileUploadResponse> - Upload response with file details
  */
 export const uploadFile = async (userId: string, file: FormData): Promise<FileUploadResponse> => {
-  console.log('🚀 === STARTING FILE UPLOAD PROCESS ===');
+  console.log('🚀 === STARTING FILE UPLOAD PROCESS (FETCH API) ===');
   console.log('📤 Step 1: Upload initiated for userId:', userId);
   console.log('📤 Step 2: API Endpoint:', MADRASA_API_ENDPOINTS.UPLOAD_FILE);
   console.log('📤 Step 3: Full URL:', `${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`);
@@ -143,59 +144,92 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
     // Log FormData details
     logFormData(file, 'uploadFile');
     
-    console.log('📤 Step 4: Preparing request configuration...');
+    console.log('📤 Step 4: Getting access token...');
     
-    // Simplified request configuration for FormData uploads
-    const requestConfig = {
-      timeout: 120000, // 2 minutes for file uploads
+    // Get access token directly from token service
+    const accessToken = await tokenService.getAccessToken();
+    if (!accessToken) {
+      throw new Error('No access token available. Please log in again.');
+    }
+    
+    console.log('📤 Step 5: Preparing fetch request with proper headers...');
+    
+    // Use native fetch API which handles FormData properly in React Native
+    const fetchOptions = {
+      method: 'POST',
       headers: {
-        // Only set Accept header - let React Native handle Content-Type for FormData
         'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+        // IMPORTANT: Do NOT set Content-Type for FormData - let fetch handle it
+        // fetch will automatically set: Content-Type: multipart/form-data; boundary=xyz
       },
-      // Disable any transformations that might interfere with FormData
-      transformRequest: [],
-      onUploadProgress: (progressEvent: any) => {
-        if (progressEvent.total) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          console.log(`📊 Upload progress: ${percentCompleted}% (${progressEvent.loaded}/${progressEvent.total} bytes)`);
-        }
-      },
+      body: file, // FormData body
     };
     
-    console.log('📤 Step 5: Request config prepared:', {
-      timeout: requestConfig.timeout,
-      headers: requestConfig.headers,
-      hasFormData: file instanceof FormData,
+    console.log('📤 Step 6: Fetch options prepared:', {
+      method: fetchOptions.method,
+      hasAuth: !!fetchOptions.headers.Authorization,
+      hasFormDataBody: file instanceof FormData,
+      headers: fetchOptions.headers
     });
     
     // Log equivalent CURL command
     logCurlEquivalent(
       `${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`,
       file,
-      requestConfig.headers
+      fetchOptions.headers
     );
     
-    console.log('📤 Step 6: Making API call through authService.executeWithTokenRefresh...');
+    console.log('📤 Step 7: Making fetch request...');
     
-    // Use executeWithTokenRefresh to handle token expiration automatically
-    const response = await authService.executeWithTokenRefresh(() => {
-      console.log('📤 Step 7: Inside executeWithTokenRefresh callback, making actual HTTP request...');
-      return madrasaClient.post<FileUploadResponse>(
-        MADRASA_API_ENDPOINTS.UPLOAD_FILE,
-        file,
-        requestConfig
-      );
-    });
+    const response = await fetch(`${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`, fetchOptions);
     
-    console.log('✅ === FILE UPLOAD SUCCESSFUL ===');
-    console.log('✅ Step 8: Response received:', {
+    console.log('📤 Step 8: Fetch response received:', {
       status: response.status,
       statusText: response.statusText,
-      data: response.data,
-      headers: response.headers
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
     });
     
-    return response.data;
+    if (!response.ok) {
+      // Handle HTTP error responses
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+      }
+      
+      console.error('❌ HTTP Error Response:', { status: response.status, data: errorData });
+      
+      switch (response.status) {
+        case 400:
+          throw new Error(errorData?.message || 'Invalid file format or missing required fields. Please check the file and try again.');
+        case 401:
+          throw new Error('Authentication failed. Please log in again.');
+        case 403:
+          throw new Error('You do not have permission to upload files.');
+        case 404:
+          throw new Error('Upload endpoint not found. Please contact support.');
+        case 413:
+          throw new Error('File is too large. Please choose a smaller image (max 10MB).');
+        case 415:
+          throw new Error('Unsupported file type. Please use JPG, PNG, or GIF format.');
+        case 429:
+          throw new Error('Too many upload attempts. Please wait a moment before trying again.');
+        case 500:
+          throw new Error('Server error occurred. Please try again later.');
+        default:
+          throw new Error(errorData?.message || `Upload failed with status ${response.status}. Please try again.`);
+      }
+    }
+    
+    const responseData = await response.json();
+    
+    console.log('✅ === FILE UPLOAD SUCCESSFUL ===');
+    console.log('✅ Step 9: Response data:', responseData);
+    
+    return responseData;
     
   } catch (error: any) {
     console.error('❌ === FILE UPLOAD FAILED ===');
@@ -288,10 +322,10 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
     console.log('🔧 Step 3: Adding required API fields...');
     
     // Add required API fields as per documentation
-    formData.append('fileRequestType', 'PROFILE_IMAGE');
+    formData.append('fileRequestType', 'PUBLIC_PROFILE_IMAGE');
     formData.append('userId', userId);
     
-    console.log('🔧 Step 4: Added fields - fileRequestType: PROFILE_IMAGE, userId:', userId);
+    console.log('🔧 Step 4: Added fields - fileRequestType: PUBLIC_PROFILE_IMAGE, userId:', userId);
     
     // Determine file details
     const fileName = imageFile.fileName || 
@@ -358,7 +392,7 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
         
         // Log exactly what we are sending
         console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
-        console.log('📤 Field 1 - fileRequestType:', 'PROFILE_IMAGE');
+        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_IMAGE');
         console.log('📤 Field 2 - userId:', userId);
         console.log('📤 Field 3 - file:', {
           data: `Binary Blob (${finalBlob.size} bytes)`,
@@ -387,7 +421,7 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
         
         // Log exactly what we are sending
         console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
-        console.log('📤 Field 1 - fileRequestType:', 'PROFILE_IMAGE');
+        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_IMAGE');
         console.log('📤 Field 2 - userId:', userId);
         console.log('📤 Field 3 - file:', {
           data: `Binary Blob (${finalBlob.size} bytes)`,
@@ -403,7 +437,7 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
 
     // Log final FormData state
     console.log('🔧 Step 12: FormData preparation completed:', {
-      fileRequestType: 'PROFILE_IMAGE',
+      fileRequestType: 'PUBLIC_PROFILE_IMAGE',
       userId,
       fileName,
       hasFile: true,
