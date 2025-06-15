@@ -554,7 +554,7 @@ const ProfileDetails: React.FC = () => {
                 placeholder="dd-mm-yyyy"
                 rightIcon={
                   <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                    <CdnSvg path={DUA_ASSETS.CALENDAR_ICON} width={24} height={24} />
+                    <CdnSvg path={DUA_ASSETS.CALENDAR_ICON} width={20} height={20} />
                   </TouchableOpacity>
                 }
                 // No onSubmitEditing for Date of Birth as it uses a picker
