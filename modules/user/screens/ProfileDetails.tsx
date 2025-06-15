@@ -1,7 +1,6 @@
 // dependencies
 import {Pressable, StyleSheet, View, ActivityIndicator, Alert, Platform, TouchableOpacity, Modal, Keyboard, ViewStyle, TextInput, findNodeHandle} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
-import {Picker} from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
@@ -26,48 +25,37 @@ const styles = StyleSheet.create({
   datePickerContainer: {
     position: 'relative',
   },
-  pickerContainer: {
+  radioContainer: {
     marginBottom: 16,
   },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 20,
     marginTop: 8,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#E5E5E5',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
   },
-  pickerError: {
-    borderColor: '#FF0000',
+  radioButtonSelected: {
+    borderColor: '#8A57DC',
   },
-  picker: {
-    height: 50,
-    width: '100%',
-    color: '#000000',
-    backgroundColor: 'transparent',
-    marginLeft: -8,
+  radioButtonInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#8A57DC',
   },
-  pickerItem: {
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
-    fontSize: 16,
-  },
-  placeholderText: {
-    color: '#999999',
-    fontSize: 16,
-  },
-  pickerModal: Platform.select({
-    android: {
-      backgroundColor: 'transparent',
-    } as ViewStyle,
-    ios: {
-      backgroundColor: 'transparent',
-    } as ViewStyle,
-    default: {
-      backgroundColor: 'transparent',
-    } as ViewStyle,
-  }) as ViewStyle,
   inputLabel: {
     marginBottom: 4,
   },
@@ -140,7 +128,7 @@ const ProfileDetails: React.FC = () => {
   const scrollViewRef = useRef<KeyboardAwareScrollView>(null); // Ref for KeyboardAwareScrollView
 
   // Refs for layout measurements to scroll to specific elements
-  const genderPickerRef = useRef<View>(null);
+  const genderRadioRef = useRef<View>(null);
   const dobInputRef = useRef<View>(null);
 
   // Fetch user details from API
@@ -161,7 +149,7 @@ const ProfileDetails: React.FC = () => {
   const [focusedInput, setFocusedInput] = useState<string>('');
 
   // State to store layout positions for scrolling
-  const [genderPickerY, setGenderPickerY] = useState(0);
+  const [genderRadioY, setGenderRadioY] = useState(0);
   const [dobInputY, setDobInputY] = useState(0);
 
   const [formErrors, setFormErrors] = useState<{
@@ -269,9 +257,9 @@ const ProfileDetails: React.FC = () => {
           date.getMonth() !== month - 1 ||
           date.getFullYear() !== year ||
           year < 1900 ||
-          year > new Date().getFullYear()
+          date > new Date() // Prevent future dates
         ) {
-          errors.dob = 'Please enter a valid date';
+          errors.dob = 'Please enter a valid date (no future dates)';
         }
       }
     }
@@ -356,6 +344,23 @@ const ProfileDetails: React.FC = () => {
       Alert.alert('Error', error.message || 'Failed to select image');
     }
   };
+
+  // Radio button component
+  const RadioButton = ({ label, value, selected, onPress }: { 
+    label: string; 
+    value: string; 
+    selected: boolean; 
+    onPress: () => void; 
+  }) => (
+    <TouchableOpacity style={styles.radioOption} onPress={onPress}>
+      <View style={[styles.radioButton, selected && styles.radioButtonSelected]}>
+        {selected && <View style={styles.radioButtonInner} />}
+      </View>
+      <Body1Title2Medium color={selected ? "primary" : "sub-heading"}>
+        {label}
+      </Body1Title2Medium>
+    </TouchableOpacity>
+  );
 
   // Show loading state
   if (isLoadingDetails && !userDetails) {
@@ -461,10 +466,10 @@ const ProfileDetails: React.FC = () => {
               onChangeText={(text: string) => setPhone(text.replace(/[^0-9]/g, ''))} 
               onSubmitEditing={() => {
                 Keyboard.dismiss(); // Dismiss keyboard
-                // Scroll to the gender picker after phone number is entered
-                if (genderPickerRef.current && scrollViewRef.current) {
+                // Scroll to the gender radio buttons after phone number is entered
+                if (genderRadioRef.current && scrollViewRef.current) {
                   setTimeout(() => {
-                    (scrollViewRef.current as any).scrollIntoView(genderPickerRef.current, { animated: true });
+                    (scrollViewRef.current as any).scrollIntoView(genderRadioRef.current, { animated: true });
                   }, 100); // Add a small delay
                 }
               }} 
@@ -477,48 +482,43 @@ const ProfileDetails: React.FC = () => {
             />
           </View>
           <View
-            ref={genderPickerRef}
+            ref={genderRadioRef}
             onLayout={(event) => {
               const { y } = event.nativeEvent.layout;
-              setGenderPickerY(y);
+              setGenderRadioY(y);
             }} 
           >
-            <View style={styles.pickerContainer}>
+            <View style={styles.radioContainer}>
               <Body1Title2Medium color="sub-heading" style={styles.inputLabel}>
                 Gender
               </Body1Title2Medium>
-              <View style={[
-                styles.pickerWrapper, 
-                formErrors.gender && styles.pickerError,
-                focusedInput === 'gender' ? { borderColor: '#8A57DC', borderWidth: 1 } : { borderColor: '#E5E5E5', borderWidth: 1 }
-              ]}>
-                <Picker
-                  selectedValue={gender}
-                  onValueChange={(itemValue: string) => {
-                    setGender(itemValue);
+              <View style={styles.radioGroup}>
+                <RadioButton
+                  label="Male"
+                  value="MALE"
+                  selected={gender === 'MALE'}
+                  onPress={() => {
+                    setGender('MALE');
                     if (dobInputRef.current && scrollViewRef.current) {
                       setTimeout(() => {
                         (scrollViewRef.current as any).scrollIntoView(dobInputRef.current, { animated: true });
                       }, 100);
                     }
                   }}
-                  style={styles.picker}
-                  enabled={true}
-                  itemStyle={styles.pickerItem}
-                  dropdownIconColor="#000000"
-                  mode="dropdown"
-                  prompt="Select Gender"
-                  onFocus={() => setFocusedInput('gender')}
-                  onBlur={() => setFocusedInput('')}
-                  {...Platform.select({
-                    android: {
-                      style: [styles.picker, styles.pickerModal],
-                    },
-                  })}>
-                  <Picker.Item label="Select Gender" value="" style={styles.placeholderText} color="#999999" />
-                  <Picker.Item label="Male" value="MALE" style={styles.pickerItem} color="#000000" />
-                  <Picker.Item label="Female" value="FEMALE" style={styles.pickerItem} color="#000000" />
-                </Picker>
+                />
+                <RadioButton
+                  label="Female"
+                  value="FEMALE"
+                  selected={gender === 'FEMALE'}
+                  onPress={() => {
+                    setGender('FEMALE');
+                    if (dobInputRef.current && scrollViewRef.current) {
+                      setTimeout(() => {
+                        (scrollViewRef.current as any).scrollIntoView(dobInputRef.current, { animated: true });
+                      }, 100);
+                    }
+                  }}
+                />
               </View>
               {formErrors.gender && (
                 <Body1Title2Medium color="sub-heading" style={[styles.errorText, {color: '#FF0000'}]}>
@@ -567,15 +567,19 @@ const ProfileDetails: React.FC = () => {
                 value={datePickerDate}
                 mode="date"
                 display="default"
+                maximumDate={new Date()} // Disable future dates
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
                   if (selectedDate) {
-                    setDatePickerDate(selectedDate);
-                    // Format date as dd-mm-yyyy
-                    const day = selectedDate.getDate().toString().padStart(2, '0');
-                    const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-                    const year = selectedDate.getFullYear();
-                    setDob(`${day}-${month}-${year}`);
+                    // Check if selected date is not in the future
+                    if (selectedDate <= new Date()) {
+                      setDatePickerDate(selectedDate);
+                      // Format date as dd-mm-yyyy
+                      const day = selectedDate.getDate().toString().padStart(2, '0');
+                      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+                      const year = selectedDate.getFullYear();
+                      setDob(`${day}-${month}-${year}`);
+                    }
                   }
                 }}
               />

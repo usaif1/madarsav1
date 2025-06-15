@@ -333,16 +333,8 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
         animationIn="fadeIn"
         animationOut="fadeOut"
       >
-        <Animated.View 
-          style={[
-            stylesModal.card,
-            {
-              transform: [{ translateX: pan.x }],
-              opacity: opacity,
-            }
-          ]}
-          {...panResponder.panHandlers}>
-          {/* Close button */}
+        <View style={stylesModal.card}>
+          {/* Close button - Fixed position */}
           <Pressable
             style={stylesModal.closeButton}
             onPress={handleCloseModal}
@@ -352,56 +344,32 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
             <Close />
           </Pressable>
 
-          {/* Counter badge */}
+          {/* Counter badge - Fixed position */}
           <View style={[stylesModal.counterBadge, { backgroundColor: colors.secondary.neutral600 }]}>
             <Body1Title2Bold color="white">
               {currentItemIndex + 1}/99
             </Body1Title2Bold>
           </View>
-          
-          {/* Swipe indicators */}
-          {/* {currentItemIndex > 0 && (
-            <View style={[stylesModal.swipeIndicator, stylesModal.swipeLeft]}>
-              <Body2Medium color="white">← Swipe for previous</Body2Medium>
-            </View>
-          )}
-          {currentItemIndex < filteredNames.length - 1 && (
-            <View style={[stylesModal.swipeIndicator, stylesModal.swipeRight]}>
-              <Body2Medium color="white">Swipe for next →</Body2Medium>
-            </View>
-          )} */}
 
-          {/* Main image with text overlay */}
-          <View style={stylesModal.imageContainer}>
+          {/* Swipeable Image Container */}
+          <Animated.View 
+            style={[
+              stylesModal.imageContainer,
+              {
+                transform: [{ translateX: pan.x }],
+                opacity: opacity,
+              }
+            ]}
+            {...panResponder.panHandlers}>
             {/* Use the image from API instead of local asset */}
             <FastImage
               source={{ uri: filteredNames[currentItemIndex]?.imageLink }}
               style={stylesModal.image}
               resizeMode={FastImage.resizeMode.cover}
             />
-            
-            {/* Dynamic Text Overlay */}
-            {/* <View style={stylesModal.textOverlay}>
-              <Text style={stylesModal.arabicText}>
-                {filteredNames[currentItemIndex].arabicName}
-              </Text>
-              <Text style={stylesModal.nameText}>
-                {filteredNames[currentItemIndex].englishName}
-              </Text>
-              <Text style={stylesModal.meaningText}>
-                {filteredNames[currentItemIndex].englishTranslation}
-              </Text>
-            </View> */}
-          </View>
-          
-          {/* Description */}
-          {/* <View style={stylesModal.descriptionContainer}>
-            <Text style={stylesModal.descriptionText}>
-              {filteredNames[currentItemIndex].description}
-            </Text>
-          </View> */}
+          </Animated.View>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Fixed position */}
           <View style={stylesModal.actions}>
             <Pressable
               onPress={handleCloseModal}
@@ -445,7 +413,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               <Body1Title2Bold color="white">Share</Body1Title2Bold>
             </Pressable>
           </View>
-        </Animated.View>
+        </View>
       </Modal>
     </>
   );
