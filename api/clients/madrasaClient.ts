@@ -15,6 +15,22 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 /**
+ * Helper function to handle FormData Content-Type properly
+ */
+const handleFormDataHeaders = (headers: any, data: any) => {
+  if (data instanceof FormData && headers) {
+    console.log('🔧 Handling FormData - letting axios set Content-Type automatically');
+    
+    // IMPORTANT: Do NOT manually set Content-Type for FormData
+    // Axios/React Native needs to set it with the correct boundary
+    // Remove any existing Content-Type to let axios handle it
+    delete headers['Content-Type'];
+    
+    console.log('✅ Content-Type removed - axios will set multipart/form-data with boundary');
+  }
+};
+
+/**
  * Create Madrasa API client with optimized configuration
  * Handles authentication, caching, compression, and error handling
  */
@@ -35,16 +51,14 @@ const madrasaClient = axios.create({
       hasHeaders: !!headers
     });
 
-    // Handle FormData - don't transform and let browser/React Native set Content-Type
+    // Handle FormData - set proper Content-Type
     if (data instanceof FormData) {
       console.log('📦 Handling FormData in transform request');
-      if (headers) {
-        console.log('📦 Headers before Content-Type removal:', headers);
-        // Remove Content-Type to let browser/RN set it with proper boundary
-        delete headers['Content-Type'];
-        console.log('🗑️ Removed Content-Type header for FormData');
-        console.log('📦 Headers after Content-Type removal:', headers);
-      }
+      
+      // Set proper Content-Type for FormData
+      handleFormDataHeaders(headers, data);
+      
+      console.log('🔄 FormData transform complete - returning data unchanged');
       return data;
     }
 
@@ -84,22 +98,27 @@ madrasaClient.interceptors.request.use(
     const extendedConfig = config as ExtendedAxiosRequestConfig;
     
     try {
-      // Check network connectivity before making request
-      const netInfo = await NetInfo.fetch();
-      const isConnected = netInfo.isConnected && netInfo.isInternetReachable;
-      
-      // Handle offline mode with caching
-      if (!isConnected && extendedConfig.cache) {
-        const cacheKey = extendedConfig.cacheKey || generateCacheKey(config);
-        const cachedResponse = getFromCache(cacheKey);
+      // Skip network connectivity check for FormData uploads to avoid interference
+      if (!(config.data instanceof FormData)) {
+        // Check network connectivity before making request
+        const netInfo = await NetInfo.fetch();
+        const isConnected = netInfo.isConnected && netInfo.isInternetReachable;
         
-        if (cachedResponse) {
-          console.log('📱 Using cached response for offline request');
-          return Promise.resolve({
-            ...config,
-            adapter: () => Promise.resolve(cachedResponse)
-          } as InternalAxiosRequestConfig);
+        // Handle offline mode with caching
+        if (!isConnected && extendedConfig.cache) {
+          const cacheKey = extendedConfig.cacheKey || generateCacheKey(config);
+          const cachedResponse = getFromCache(cacheKey);
+          
+          if (cachedResponse) {
+            console.log('📱 Using cached response for offline request');
+            return Promise.resolve({
+              ...config,
+              adapter: () => Promise.resolve(cachedResponse)
+            } as InternalAxiosRequestConfig);
+          }
         }
+      } else {
+        console.log('⏭️ Skipping network check for FormData upload');
       }
       
       // Add authentication token
@@ -111,23 +130,21 @@ madrasaClient.interceptors.request.use(
         console.log('⚠️ No access token available');
       }
       
-      // Handle FormData requests specially
+      // Handle FormData requests specially - BEFORE other processing
       if (config.data instanceof FormData) {
-        console.log('📦 Processing FormData request - ensuring no Content-Type interference');
+        console.log('📦 Processing FormData request - ensuring proper headers');
         
-        // Ensure Content-Type is completely removed for FormData
-        if (config.headers && 'Content-Type' in config.headers) {
-          delete (config.headers as any)['Content-Type'];
-          console.log('🗑️ Removed Content-Type header for FormData in interceptor');
-        }
+        // Set proper Content-Type for FormData
+        handleFormDataHeaders(config.headers, config.data);
         
-        // Skip compression for FormData
         console.log('⏭️ Skipping compression for FormData request');
+        console.log('✅ FormData request processing complete');
         
       } else if (
-        // Apply compression for non-FormData requests
+        // Apply compression for non-FormData requests only
         ['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '') &&
         config.data &&
+        !(config.data instanceof FormData) &&
         extendedConfig.compress !== false
       ) {
         console.log('🗜️ Applying compression for non-FormData request');
@@ -148,25 +165,13 @@ madrasaClient.interceptors.request.use(
         return compressedConfig as InternalAxiosRequestConfig;
       }
       
-      // Final check for FormData requests to ensure Content-Type is not set
-      if (config.data instanceof FormData) {
-        console.log('🔍 FINAL FORMDATA CHECK - ensuring Content-Type is not set');
-        if (config.headers && 'Content-Type' in config.headers) {
-          console.log('⚠️ Found Content-Type in headers, removing it:', config.headers['Content-Type']);
-          delete (config.headers as any)['Content-Type'];
-        }
-        if (config.headers && 'content-type' in config.headers) {
-          console.log('⚠️ Found content-type in headers, removing it:', (config.headers as any)['content-type']);
-          delete (config.headers as any)['content-type'];
-        }
-      }
-      
       console.log('✅ REQUEST INTERCEPTOR COMPLETE');
       console.log('🔄 Final config:', {
         method: config.method,
         url: config.url,
         hasAuth: !!config.headers.Authorization,
         isFormData: config.data instanceof FormData,
+        contentType: config.headers['Content-Type'],
         headers: config.headers
       });
       

@@ -56,6 +56,78 @@ const logCurlEquivalent = (url: string, formData: FormData, headers: any) => {
 };
 
 /**
+ * Simple test function to verify API connectivity
+ */
+export const testApiConnectivity = async (): Promise<boolean> => {
+  console.log('🧪 === TESTING API CONNECTIVITY ===');
+  
+  try {
+    const result = await authService.executeWithTokenRefresh(async () => {
+      console.log('🧪 Making simple GET request to test connectivity...');
+      
+      // Make a simple request to a known endpoint
+      const response = await madrasaClient.get('/api/v1/user/profile'); // or any simple endpoint
+      
+      console.log('🧪 Test request successful:', {
+        status: response.status,
+        statusText: response.statusText,
+        hasData: !!response.data
+      });
+      
+      return response;
+    });
+    
+    console.log('✅ API connectivity test PASSED');
+    return true;
+    
+  } catch (error) {
+    console.log('❌ API connectivity test FAILED:', error);
+    return false;
+  }
+};
+
+/**
+ * Simple FormData test without file upload
+ */
+export const testFormDataSubmission = async (userId: string): Promise<boolean> => {
+  console.log('🧪 === TESTING FORMDATA SUBMISSION ===');
+  
+  try {
+    const formData = new FormData();
+    (formData as any).append('fileRequestType', 'TEST');
+    (formData as any).append('userId', userId);
+    (formData as any).append('testField', 'test-value');
+    
+    console.log('🧪 Test FormData created with basic fields');
+    
+    const result = await authService.executeWithTokenRefresh(async () => {
+      console.log('🧪 Making FormData test request...');
+      
+      const response = await madrasaClient.post('/api/v1/upload-file-to-s3', formData, {
+        timeout: 60000, // 1 minute timeout for test
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      console.log('🧪 FormData test successful:', {
+        status: response.status,
+        statusText: response.statusText
+      });
+      
+      return response;
+    });
+    
+    console.log('✅ FormData test PASSED');
+    return true;
+    
+  } catch (error) {
+    console.log('❌ FormData test FAILED:', error);
+    return false;
+  }
+};
+
+/**
  * Upload file to S3 using the Madrasa API
  * @param userId - User ID for the upload
  * @param file - FormData containing the file and metadata
@@ -73,33 +145,15 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
     
     console.log('📤 Step 4: Preparing request configuration...');
     
-    // Prepare request configuration
+    // Simplified request configuration for FormData uploads
     const requestConfig = {
-      timeout: 60000, // 60 seconds for large files
+      timeout: 120000, // 2 minutes for file uploads
       headers: {
-        // For file uploads, completely omit Content-Type to let the browser/RN set it
+        // Only set Accept header - let React Native handle Content-Type for FormData
         'Accept': 'application/json',
-        // Explicitly prevent setting of wrong Content-Type
       },
-      // Override the default transform to ensure FormData is not modified
-      transformRequest: [(data: any, headers: any) => {
-        console.log('📤 Step 5: Upload service transform - data type:', typeof data);
-        console.log('📤 Step 5b: Upload service transform - Is FormData?', data instanceof FormData);
-        
-        if (data instanceof FormData) {
-          console.log('📤 Step 5c: Processing FormData in upload service transform');
-          
-          // Aggressively remove any Content-Type header for FormData
-          if (headers) {
-            console.log('📤 Step 5d: Headers before cleanup:', headers);
-            delete headers['Content-Type'];
-            delete headers['content-type']; // Also check lowercase
-            console.log('📤 Step 5e: Headers after cleanup:', headers);
-          }
-        }
-        
-        return data; // Don't transform FormData
-      }],
+      // Disable any transformations that might interfere with FormData
+      transformRequest: [],
       onUploadProgress: (progressEvent: any) => {
         if (progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -108,7 +162,7 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
       },
     };
     
-    console.log('📤 Step 6: Request config prepared:', {
+    console.log('📤 Step 5: Request config prepared:', {
       timeout: requestConfig.timeout,
       headers: requestConfig.headers,
       hasFormData: file instanceof FormData,
@@ -121,11 +175,11 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
       requestConfig.headers
     );
     
-    console.log('�� Step 7: Making API call through authService.executeWithTokenRefresh...');
+    console.log('📤 Step 6: Making API call through authService.executeWithTokenRefresh...');
     
     // Use executeWithTokenRefresh to handle token expiration automatically
     const response = await authService.executeWithTokenRefresh(() => {
-      console.log('📤 Step 8: Inside executeWithTokenRefresh callback, making actual HTTP request...');
+      console.log('📤 Step 7: Inside executeWithTokenRefresh callback, making actual HTTP request...');
       return madrasaClient.post<FileUploadResponse>(
         MADRASA_API_ENDPOINTS.UPLOAD_FILE,
         file,
@@ -134,7 +188,7 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
     });
     
     console.log('✅ === FILE UPLOAD SUCCESSFUL ===');
-    console.log('✅ Step 9: Response received:', {
+    console.log('✅ Step 8: Response received:', {
       status: response.status,
       statusText: response.statusText,
       data: response.data,
@@ -248,9 +302,9 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
     
     // Handle platform-specific file preparation
     if (Platform.OS === 'ios' || Platform.OS === 'android') {
-      console.log('🔧 Step 6: Processing for mobile platform...');
+      console.log('🔧 Step 6: Processing for mobile platform - converting to binary...');
       
-      // Mobile platform - handle native file URI
+      // Mobile platform - convert file to binary
       let fileUri = imageFile.uri;
       
       // Ensure proper file:// prefix for Android
@@ -272,9 +326,9 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
       });
       
       try {
-        console.log('🔧 Step 8: Fetching file content from URI...');
+        console.log('🔧 Step 8: Fetching file content and converting to binary...');
         
-        // Fetch the file content to convert to blob
+        // Fetch the file content
         const response = await fetch(fileUri);
         console.log('🔧 Step 8b: Fetch response status:', response.status);
         
@@ -282,32 +336,38 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
           throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
         }
         
-        const blob = await response.blob();
-        console.log('🔧 Step 9: File converted to blob:', {
-          size: blob.size,
-          type: blob.type
+        // Get blob directly from response (React Native friendly)
+        const binaryBlob = await response.blob();
+        console.log('🔧 Step 9: File converted to binary blob:', {
+          size: binaryBlob.size,
+          type: binaryBlob.type,
+          constructor: binaryBlob.constructor.name
         });
         
-        // Ensure we have a proper MIME type
-        const finalMimeType = (blob.type && blob.type !== 'application/octet-stream') 
-          ? blob.type 
-          : mimeType;
-        
-        // Create a File object with proper name and type
-        const fileObject = new File([blob], fileName, { 
-          type: finalMimeType 
+        // Create a new blob with correct MIME type if needed
+        const finalBlob = binaryBlob.type ? binaryBlob : new Blob([binaryBlob as any], { type: mimeType });
+        console.log('🔧 Step 10: Final binary blob prepared:', {
+          size: finalBlob.size,
+          type: finalBlob.type,
+          constructor: finalBlob.constructor.name
         });
         
-        console.log('🔧 Step 10: Created File object:', {
-          name: fileObject.name,
-          size: fileObject.size,
-          type: fileObject.type,
-          lastModified: fileObject.lastModified
-        });
+        // Append the binary blob to FormData (React Native FormData.append supports 3 parameters)
+        (formData as any).append('file', finalBlob, fileName);
+        console.log('✅ Step 11: Binary file appended to FormData successfully');
         
-        // Append the file to FormData
-        formData.append('file', fileObject);
-        console.log('🔧 Step 11: File appended to FormData successfully');
+        // Log exactly what we are sending
+        console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
+        console.log('📤 Field 1 - fileRequestType:', 'PROFILE_IMAGE');
+        console.log('📤 Field 2 - userId:', userId);
+        console.log('📤 Field 3 - file:', {
+          data: `Binary Blob (${finalBlob.size} bytes)`,
+          type: finalBlob.type,
+          name: fileName,
+          format: 'Binary Blob from fetch response',
+          constructor: finalBlob.constructor.name
+        });
+        console.log('📤 === END OF WHAT WE ARE SENDING ===');
         
       } catch (fetchError: any) {
         console.error('❌ Error fetching/processing file:', fetchError);
@@ -317,10 +377,25 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
     } else {
       console.log('🔧 Step 6: Processing for web platform...');
       
-      // Web platform - handle File/Blob objects
+      // Web platform - handle File/Blob objects as binary
       if (imageFile instanceof File || imageFile instanceof Blob) {
-        formData.append('file', imageFile as any);
-        console.log('🔧 Step 7: Web file appended to FormData');
+        // Use the file/blob directly for web platform
+        const finalBlob = imageFile;
+        
+        (formData as any).append('file', finalBlob, fileName);
+        console.log('✅ Step 7: Web binary file appended to FormData');
+        
+        // Log exactly what we are sending
+        console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
+        console.log('📤 Field 1 - fileRequestType:', 'PROFILE_IMAGE');
+        console.log('📤 Field 2 - userId:', userId);
+        console.log('📤 Field 3 - file:', {
+          data: `Binary Blob (${finalBlob.size} bytes)`,
+          type: finalBlob.type,
+          name: fileName,
+          format: 'Direct File/Blob'
+        });
+        console.log('📤 === END OF WHAT WE ARE SENDING ===');
       } else {
         throw new Error('Invalid file format for web platform');
       }
@@ -332,7 +407,8 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
       userId,
       fileName,
       hasFile: true,
-      platform: Platform.OS
+      platform: Platform.OS,
+      format: 'Binary Blob'
     });
 
     logFormData(formData, 'prepareImageForUpload - final');
