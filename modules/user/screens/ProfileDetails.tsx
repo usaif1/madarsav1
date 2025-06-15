@@ -469,7 +469,7 @@ const ProfileDetails: React.FC = () => {
                 // Scroll to the gender radio buttons after phone number is entered
                 if (genderRadioRef.current && scrollViewRef.current) {
                   setTimeout(() => {
-                    (scrollViewRef.current as any).scrollIntoView(genderRadioRef.current, { animated: true });
+                    scrollViewRef.current?.scrollToEnd(true);
                   }, 100); // Add a small delay
                 }
               }} 
@@ -501,7 +501,7 @@ const ProfileDetails: React.FC = () => {
                     setGender('MALE');
                     if (dobInputRef.current && scrollViewRef.current) {
                       setTimeout(() => {
-                        (scrollViewRef.current as any).scrollIntoView(dobInputRef.current, { animated: true });
+                        scrollViewRef.current?.scrollToEnd(true);
                       }, 100);
                     }
                   }}
@@ -514,7 +514,7 @@ const ProfileDetails: React.FC = () => {
                     setGender('FEMALE');
                     if (dobInputRef.current && scrollViewRef.current) {
                       setTimeout(() => {
-                        (scrollViewRef.current as any).scrollIntoView(dobInputRef.current, { animated: true });
+                        scrollViewRef.current?.scrollToEnd(true);
                       }, 100);
                     }
                   }}

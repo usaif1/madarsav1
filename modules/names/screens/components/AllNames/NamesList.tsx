@@ -264,17 +264,19 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
 
     try {
       const message =
-      `Download Madarsa App to discover one of the 99 Names of Allah:\n` +
-      `App Store: ${appStoreLink}\n` +
-      `Play Store: ${playStoreLink}\n\n` +
+      `${currentName.englishName} - One of the 99 Names of Allah\n\n` +
       `Arabic: ${currentName.arabicName}\n` +
       `English: ${currentName.englishName}\n` +
       `Meaning: ${currentName.englishTranslation}\n\n` +
-      `Learn more in the app!`;
+      `Download Madarsa App to learn more:\n` +
+      `App Store: ${appStoreLink}\n` +
+      `Play Store: ${playStoreLink}`;
 
+      console.log('🔍 Sharing name image:', currentName.imageLink);
       await ReactNativeShare.share({
+        title: `${currentName.englishName} - 99 Names of Allah`,
         message: message,
-        title: `Share ${currentName.englishName}`, // Optional: Title for the share dialog
+        url: currentName.imageLink, // Share the image URL along with the message
       });
     } catch (error) {
       Alert.alert('Error', 'Could not share at this time.');

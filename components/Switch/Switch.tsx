@@ -9,41 +9,38 @@ interface SwitchProps {
 }
 
 const CustomSwitch = ({
-  value,
+  value = false,
   onValueChange,
   disabled = false,
   style,
 }: SwitchProps) => {
-  const [isOn, setIsOn] = useState(value || false);
+  const [internalValue, setInternalValue] = useState(value);
   const animation = useRef(new Animated.Value(value ? 1 : 0)).current;
   
-  // Update internal state when value prop changes
+  // Update when value prop changes
   useEffect(() => {
-    if (value !== undefined && value !== isOn) {
-      setIsOn(value);
+    if (value !== internalValue) {
+      setInternalValue(value);
       Animated.timing(animation, {
         toValue: value ? 1 : 0,
         duration: 200,
         useNativeDriver: false,
       }).start();
     }
-  }, [value, animation, isOn]);
+  }, [value]);
 
   const toggleSwitch = () => {
     if (disabled) return;
     
-    const newValue = !isOn;
-    const toValue = newValue ? 1 : 0;
-
+    const newValue = !internalValue;
+    setInternalValue(newValue);
+    
     Animated.timing(animation, {
-      toValue,
+      toValue: newValue ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
     }).start();
 
-    setIsOn(newValue);
-    
-    // Call the onValueChange callback if provided
     if (onValueChange) {
       onValueChange(newValue);
     }

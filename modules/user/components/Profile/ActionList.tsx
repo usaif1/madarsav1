@@ -1,6 +1,6 @@
 // dependencies
 import {Text, View, TouchableOpacity, Share} from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 
 // components
 import {Switch} from '@/components';
@@ -96,25 +96,28 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
     }
   }, [userDetails]);
   
-  // Handle toggle for notification settings
-  const handleToggleNotification = (type: 'athan' | 'push', value: boolean) => {
+  // Handle toggle for athan notification
+  const handleAthanToggle = (value: boolean) => {
     if (!user?.id) return;
     
-    if (type === 'athan') {
-      setAthanNotification(value);
-      updateNotificationsMutation.mutate({
-        userId: user.id,
-        athanNotification: value,
-        pushNotification: pushNotification,
-      });
-    } else {
-      setPushNotification(value);
-      updateNotificationsMutation.mutate({
-        userId: user.id,
-        athanNotification: athanNotification,
-        pushNotification: value,
-      });
-    }
+    setAthanNotification(value);
+    updateNotificationsMutation.mutate({
+      userId: user.id,
+      athanNotification: value,
+      pushNotification: pushNotification,
+    });
+  };
+
+  // Handle toggle for push notification
+  const handlePushToggle = (value: boolean) => {
+    if (!user?.id) return;
+    
+    setPushNotification(value);
+    updateNotificationsMutation.mutate({
+      userId: user.id,
+      athanNotification: athanNotification,
+      pushNotification: value,
+    });
   };
 
   // Filter out notification items if not logged in
@@ -173,14 +176,14 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
                 actionItem.id === 'athan-notification' ? (
                   <Switch 
                     value={athanNotification} 
-                    onValueChange={(value: boolean) => handleToggleNotification('athan', value)}
-                    disabled={updateNotificationsMutation.isPending || isLoading}
+                    onValueChange={handleAthanToggle}
+                    disabled={isLoading}
                   />
                 ) : actionItem.id === 'push-notification' ? (
                   <Switch 
                     value={pushNotification} 
-                    onValueChange={(value: boolean) => handleToggleNotification('push', value)}
-                    disabled={updateNotificationsMutation.isPending || isLoading}
+                    onValueChange={handlePushToggle}
+                    disabled={isLoading}
                   />
                 ) : null
               )}
