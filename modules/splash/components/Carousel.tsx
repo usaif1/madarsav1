@@ -174,12 +174,12 @@ export default function App() {
               />
               <FastImage 
                 source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DeenGraphic2.png' }} 
-                style={[styles.slideImage, {marginTop: scale(-10)}]} 
+                style={[styles.slideImage, {marginTop: scale(-20)}]} 
                 resizeMode={FastImage.resizeMode.contain}
               />
               <FastImage 
                 source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DuniyaGraphic2.png' }} 
-                style={[styles.slideImage, {marginTop: scale(-10)}]} 
+                style={[styles.slideImage, {marginTop: scale(-20)}]} 
                 resizeMode={FastImage.resizeMode.contain}
               />
             </View>
