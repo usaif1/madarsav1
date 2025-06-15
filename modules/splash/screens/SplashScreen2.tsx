@@ -137,6 +137,7 @@ const SplashPrimary: React.FC = () => {
           <Pressable
             onPress={handleSkipLogin}
             disabled={loadingButton !== null}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
             style={{
               alignItems: 'center',
               justifyContent: 'center',
