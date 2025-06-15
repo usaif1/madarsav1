@@ -97,11 +97,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       if (namesData && homeAudio.currentNameId) {
         const currentName = namesData.find(name => name.number === homeAudio.currentNameId);
         if (currentName && currentName.audioLink) {
-          // If we were previously playing this track, resume from where we left off
+          // If we have a position > 0, always resume from that position
           if (position > 0) {
             await resumeAudio();
           } else {
-            // Otherwise start from the beginning
+            // Start from the beginning
             await playAudioFromUrl(currentName.audioLink);
           }
         } else {
@@ -112,6 +112,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     
     if (onPlayPause) {
       onPlayPause();
+    }
+  };
+
+  // Handle seek functionality with proper position calculation
+  const handleSeek = (event: any) => {
+    const { locationX } = event.nativeEvent;
+    const progressBarWidth = scale(299); // Width of progress bar
+    const percentage = Math.max(0, Math.min(1, locationX / progressBarWidth));
+    const newPosition = percentage * duration;
+    
+    if (duration > 0) {
+      seekTo(newPosition);
     }
   };
 
@@ -155,19 +167,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             </CaptionMedium>
           </View>
 
-          {/* Progress Bar */}
-          <TouchableOpacity 
-            style={styles.progressBarContainer}
-            onPress={(event) => {
-              const { locationX } = event.nativeEvent;
-              const progressBarWidth = scale(299); // Width of progress bar
-              const percentage = locationX / progressBarWidth;
-              const newPosition = percentage * duration;
-              seekTo(newPosition);
-            }}>
-            <View style={styles.progressBarBackground} />
-            <View style={[styles.progressBar, {width: `${Math.min(100, Math.max(0, progress * 100))}%`}]} />
-          </TouchableOpacity>
+          {/* Progress Bar with larger touch area */}
+          <View style={styles.progressBarTouchContainer}>
+            <TouchableOpacity 
+              style={styles.progressBarTouchArea}
+              onPress={handleSeek}
+              activeOpacity={0.7}>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBackground} />
+                <View style={[styles.progressBar, {width: `${Math.min(100, Math.max(0, progress * 100))}%`}]} />
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
       </ImageBackground>
     </View>
@@ -252,6 +263,18 @@ const styles = StyleSheet.create({
     fontSize: scale(10),
     lineHeight: scale(14),
     color: '#E5E5E5',
+  },
+  progressBarTouchContainer: {
+    width: scale(299),
+    height: verticalScale(20), // Larger touch area
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressBarTouchArea: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   progressBarContainer: {
     width: scale(299),

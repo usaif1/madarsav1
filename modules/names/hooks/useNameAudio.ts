@@ -26,11 +26,12 @@ export const useNameAudio = (): UseNameAudioReturn => {
   const [position, setPosition] = useState<number>(0);
   const [volume, setVolumeState] = useState<number>(1.0);
   
-  // Reference to store the current audio URL for resuming playback
+  // Reference to store the current audio URL and real-time position
   const currentAudioRef = useRef<{
     url: string;
     id: string;
     lastPosition: number;
+    currentPosition: number; // Real-time position tracking
   } | null>(null);
 
   // Initialize audio pro
@@ -43,20 +44,33 @@ export const useNameAudio = (): UseNameAudioReturn => {
     const subscription = AudioPro.addEventListener((event) => {
       switch (event.type) {
         case 'STATE_CHANGED':
-          setIsPlaying(event.payload?.state === 'PLAYING');
-          setIsLoading(event.payload?.state === 'LOADING');
-          // Store the current position when paused
+          const newIsPlaying = event.payload?.state === 'PLAYING';
+          const newIsLoading = event.payload?.state === 'LOADING';
+          
+          setIsPlaying(newIsPlaying);
+          setIsLoading(newIsLoading);
+          
+          // Store the current position when paused or stopped using real-time position
           if (event.payload?.state === 'PAUSED' && currentAudioRef.current) {
-            currentAudioRef.current.lastPosition = position;
+            currentAudioRef.current.lastPosition = currentAudioRef.current.currentPosition;
           }
           break;
         case 'PROGRESS':
-          // Convert milliseconds to seconds for better time display
-          setPosition((event.payload?.position || 0) / 1000);
-          setDuration((event.payload?.duration || 0) / 1000);
+          // Convert milliseconds to seconds and update both state and ref
+          const currentPos = (event.payload?.position || 0) / 1000;
+          const currentDur = (event.payload?.duration || 0) / 1000;
+          
+          setPosition(currentPos);
+          setDuration(currentDur);
+          
+          // Update real-time position in ref
+          if (currentAudioRef.current) {
+            currentAudioRef.current.currentPosition = currentPos;
+          }
           break;
         case 'PLAYBACK_ERROR':
           setError(event.payload?.error || 'Playback error');
+          setIsLoading(false);
           break;
       }
     });
@@ -85,11 +99,12 @@ export const useNameAudio = (): UseNameAudioReturn => {
         artwork: 'test',
       };
 
-      // Store the current audio information for potential resume later
+      // Store the current audio information
       currentAudioRef.current = {
         url: audioUrl,
         id: trackId,
         lastPosition: startPosition,
+        currentPosition: startPosition,
       };
 
       await AudioPro.play(track);
@@ -98,7 +113,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
       if (startPosition > 0) {
         setTimeout(() => {
           AudioPro.seekTo(startPosition * 1000);
-        }, 200); // Small delay to ensure track is loaded
+        }, 300); // Slightly longer delay to ensure track is fully loaded
       }
     } catch (err) {
       setError('Failed to play audio');
@@ -116,43 +131,52 @@ export const useNameAudio = (): UseNameAudioReturn => {
 
   const pauseAudio = useCallback(() => {
     if (isPlaying) {
-      // Save current position before pausing
-      if (currentAudioRef.current) {
-        currentAudioRef.current.lastPosition = position;
-      }
       AudioPro.pause();
+      // Position will be updated in the STATE_CHANGED event handler
     }
-  }, [isPlaying, position]);
+  }, [isPlaying]);
 
   const resumeAudio = useCallback(async () => {
     if (!isPlaying && currentAudioRef.current) {
       try {
-        await AudioPro.resume();
-        // If resume fails (which can happen with URL audio), fallback to replay
-        if (!isPlaying) {
-          await playAudioFromUrl(currentAudioRef.current.url, currentAudioRef.current.lastPosition);
-        }
+        setIsLoading(true);
+        setError(null);
+        
+        // Always use playAudioFromUrl with the last position for consistency
+        // This ensures we start from the correct position every time
+        await playAudioFromUrl(
+          currentAudioRef.current.url, 
+          currentAudioRef.current.lastPosition
+        );
       } catch (err) {
-        // Fallback to replay if resume fails
-        await playAudioFromUrl(currentAudioRef.current.url, currentAudioRef.current.lastPosition);
+        setError('Failed to resume audio');
+        setIsLoading(false);
       }
     }
   }, [isPlaying, playAudioFromUrl]);
 
   const stopAudio = useCallback(() => {
     AudioPro.stop();
-    // Reset current audio reference
+    // Reset positions
     if (currentAudioRef.current) {
       currentAudioRef.current.lastPosition = 0;
+      currentAudioRef.current.currentPosition = 0;
     }
+    setPosition(0);
   }, []);
 
   const seekTo = useCallback((newPosition: number) => {
     // Convert seconds to milliseconds for the AudioPro API
     AudioPro.seekTo(newPosition * 1000);
+    
+    // Update both the current position and last position immediately
     if (currentAudioRef.current) {
+      currentAudioRef.current.currentPosition = newPosition;
       currentAudioRef.current.lastPosition = newPosition;
     }
+    
+    // Update position state immediately for UI responsiveness
+    setPosition(newPosition);
   }, []);
 
   const setVolume = useCallback((newVolume: number) => {

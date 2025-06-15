@@ -42,7 +42,6 @@
     "patch-package": "^8.0.0",
     "react": "19.0.0",
     "react-native": "0.79.0",
-    "react-native-audio-api": "^0.6.0",
     "react-native-audio-pro": "^9.9.1",
     "react-native-calendars": "^1.1311.1",
     "react-native-compass-heading": "^2.0.2",
