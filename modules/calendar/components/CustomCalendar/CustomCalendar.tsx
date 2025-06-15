@@ -130,13 +130,10 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         );
         const dateString = dateObj.toISOString().split('T')[0];
 
-        // Skip if this is the selected date (to avoid overriding styling)
-        if (dateString === formattedSelected) return;
-
         // Get the corresponding Hijri date
         const hijriDate = dayData.hijri;
 
-        // Add Hijri date to the marking
+        // Add Hijri date to the marking (merge with existing data)
         marked[dateString] = {
           ...marked[dateString],
           hijriDate: {
