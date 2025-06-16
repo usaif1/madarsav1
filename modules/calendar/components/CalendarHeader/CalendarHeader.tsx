@@ -29,9 +29,10 @@ interface CalendarHeaderProps {
   onMonthYearChange?: (month: string, year: string) => void;
   currentMonth?: string;
   currentYear?: string;
+  selectedDate?: Date; // Add selected date to get accurate Hijri date
 }
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChange, currentMonth, currentYear}) => {
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChange, currentMonth, currentYear, selectedDate}) => {
   const insets = useSafeAreaInsets();
   const {colors, shadows} = useThemeStore();
 
@@ -39,13 +40,16 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
   const now = new Date();
   const initialMonth = currentMonth || monthNames[now.getMonth()];
   const initialYear = currentYear || now.getFullYear().toString();
-  // Compute initial Islamic date
-  const toInitialIslamicDate = () => {
-    // Use provided month/year if available, otherwise use current date
-    const yearToUse = currentYear ? parseInt(currentYear, 10) : now.getFullYear();
-    const monthToUse = currentMonth ? monthNames.indexOf(currentMonth) + 1 : now.getMonth() + 1;
+  // Compute Islamic date based on the actual selected date, not just the Gregorian month
+  const toSelectedDateIslamicDate = (dateToUse?: Date) => {
+    const targetDate = dateToUse || selectedDate || now;
     
-    const hijri = toHijri(yearToUse, monthToUse, 1);
+    const hijri = toHijri(
+      targetDate.getFullYear(), 
+      targetDate.getMonth() + 1, // toHijri expects 1-based month
+      targetDate.getDate()
+    );
+    
     const hijriMonthNames = [
       'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani",
       'Jumada al-awwal', 'Jumada al-thani', 'Rajab', "Sha'ban",
@@ -58,49 +62,59 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({onBack, onMonthYearChang
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [selectedYear, setSelectedYear] = useState(initialYear);
-  const [islamicDate, setIslamicDate] = useState(toInitialIslamicDate());
+  const [islamicDate, setIslamicDate] = useState(toSelectedDateIslamicDate());
   
-  // Update when props change
+  // Update Islamic date based on priority: current month first, then selected date if in same month
   useEffect(() => {
     if (currentMonth && currentYear) {
+      // Always update the Gregorian month/year display first
       setSelectedMonth(currentMonth);
       setSelectedYear(currentYear);
       
-      // Update Islamic date
-      const yearToUse = parseInt(currentYear, 10);
-      const monthToUse = monthNames.indexOf(currentMonth) + 1;
+      const currentMonthIndex = monthNames.indexOf(currentMonth);
+      const currentYearNum = parseInt(currentYear, 10);
+      const firstDayOfCurrentMonth = new Date(currentYearNum, currentMonthIndex, 1);
       
-      const hijri = toHijri(yearToUse, monthToUse, 1);
-      const hijriMonthNames = [
-        'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani",
-        'Jumada al-awwal', 'Jumada al-thani', 'Rajab', "Sha'ban",
-        'Ramadan', 'Shawwal', "Dhu al-Qi'dah", "Dhu al-Hijjah"
-      ];
-      const hijriMonth = hijriMonthNames[hijri.hm - 1];
-      setIslamicDate(`${hijriMonth}, ${hijri.hy} AH`);
+      // Check if selectedDate is in the same month as the currently displayed month
+      const isSelectedDateInCurrentMonth = selectedDate && 
+        selectedDate.getMonth() === currentMonthIndex && 
+        selectedDate.getFullYear() === currentYearNum;
+      
+      if (isSelectedDateInCurrentMonth) {
+        // Selected date is in current month - show Islamic date for selected date
+        const newIslamicDate = toSelectedDateIslamicDate(selectedDate);
+        console.log('📅 CalendarHeader: Selected date', selectedDate.toDateString(), 'is in current month', currentMonth, '→ Islamic:', newIslamicDate);
+        setIslamicDate(newIslamicDate);
+      } else {
+        // Selected date is NOT in current month OR no date selected - show Islamic date for 1st of current month
+        const newIslamicDate = toSelectedDateIslamicDate(firstDayOfCurrentMonth);
+        console.log('📅 CalendarHeader: Using first day of', currentMonth, currentYear, '→ Islamic:', newIslamicDate);
+        if (selectedDate && !isSelectedDateInCurrentMonth) {
+          console.log('   → Selected date', selectedDate.toDateString(), 'is in different month, using current month instead');
+        }
+        setIslamicDate(newIslamicDate);
+      }
+    } else if (selectedDate) {
+      // Fallback: when no currentMonth/currentYear but selectedDate available
+      const newIslamicDate = toSelectedDateIslamicDate(selectedDate);
+      console.log('📅 CalendarHeader: No current month, using selected date', selectedDate.toDateString(), '→ Islamic:', newIslamicDate);
+      setIslamicDate(newIslamicDate);
     }
-  }, [currentMonth, currentYear]);
+  }, [selectedDate, currentMonth, currentYear]);
 
   const toggleModal = () => setModalVisible(!isModalVisible);
 
   const handleMonthYearConfirm = (month: string, year: string, _islamicDate: string) => {
     setSelectedMonth(month);
     setSelectedYear(year);
-    // Map month name to JS month index (0-based)
+    
+    // When month/year changes from selector, we'll update the Islamic date
+    // based on the first day of the selected month, but it will be overridden
+    // when a specific date is selected within that month
     const monthIndex = monthNames.indexOf(month);
-    // Use 1st of selected month/year for conversion
-    const gregorianYear = parseInt(year, 10);
-    const gregorianMonth = monthIndex + 1; // toHijri expects 1-based month
-    const hijri = toHijri(gregorianYear, gregorianMonth, 1);
-    // Format: Month, Year AH
-    const hijriMonthNames = [
-      'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani",
-      'Jumada al-awwal', 'Jumada al-thani', 'Rajab', 'Sha‘ban',
-      'Ramadan', 'Shawwal', 'Dhu al-Qi‘dah', 'Dhu al-Hijjah'
-    ];
-    const hijriMonth = hijriMonthNames[hijri.hm - 1];
-    const hijriYear = hijri.hy;
-    setIslamicDate(`${hijriMonth}, ${hijriYear} AH`);
+    const firstDayOfMonth = new Date(parseInt(year, 10), monthIndex, 1);
+    setIslamicDate(toSelectedDateIslamicDate(firstDayOfMonth));
+    
     setModalVisible(false);
     if (onMonthYearChange) onMonthYearChange(month, year);
   };

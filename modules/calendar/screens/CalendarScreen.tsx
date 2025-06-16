@@ -75,6 +75,7 @@ const CalendarScreen: React.FC = () => {
         onMonthYearChange={handleMonthYearChange}
         currentMonth={currentMonthName}
         currentYear={currentYearString}
+        selectedDate={selectedDate}
       />
       <CustomCalendar 
         onDateSelect={setSelectedDate}
