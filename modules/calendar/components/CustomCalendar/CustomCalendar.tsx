@@ -18,7 +18,7 @@ interface CustomCalendarProps {
   onDateSelect: (date: Date) => void;
   month?: number;
   year?: number;
-  onMonthChange?: (month: number, year: number) => void;
+  onMonthChange?: (direction: 'next' | 'prev') => void;
 }
 
 // Helper: Map event IDs to theme color keys
@@ -171,28 +171,8 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   const handleMonthNavigation = (direction: 'next' | 'prev') => {
     if (!onMonthChange) return;
     
-    const currentMonth = typeof month === 'number' ? month : selectedDate.getMonth();
-    const currentYear = typeof year === 'number' ? year : selectedDate.getFullYear();
-    
-    let newMonth = currentMonth;
-    let newYear = currentYear;
-    
-    if (direction === 'next') {
-      newMonth = currentMonth + 1;
-      if (newMonth > 11) {
-        newMonth = 0;
-        newYear = currentYear + 1;
-      }
-    } else {
-      newMonth = currentMonth - 1;
-      if (newMonth < 0) {
-        newMonth = 11;
-        newYear = currentYear - 1;
-      }
-    }
-    
-    console.log('CustomCalendar: Navigating to month', newMonth, 'year', newYear);
-    onMonthChange(newMonth, newYear);
+    console.log('CustomCalendar: Navigating', direction);
+    onMonthChange(direction);
   };
 
   // Pan responder for swipe gestures
@@ -219,7 +199,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         const isSwipeLeft = dx < -80 || vx < -0.3;
 
         if (isSwipeRight) {
-          // Swipe right - go to previous month (like turning a page backwards)
+          // Swipe right - go to previous month (intuitive like flipping calendar backwards)
           console.log('Swiping right - going to previous month');
           Animated.parallel([
             Animated.timing(pan.x, { toValue: 300, duration: 200, useNativeDriver: true }),
@@ -238,7 +218,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
             });
           });
         } else if (isSwipeLeft) {
-          // Swipe left - go to next month (like turning a page forwards)
+          // Swipe left - go to next month (intuitive like flipping calendar forwards)
           console.log('Swiping left - going to next month');
           Animated.parallel([
             Animated.timing(pan.x, { toValue: -300, duration: 200, useNativeDriver: true }),
@@ -333,12 +313,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
           current={currentDateString}
           style={{backgroundColor: 'white'}}
           onMonthChange={monthData => {
-            const newMonth = monthData.month - 1; // Convert to 0-indexed month
-            const newYear = monthData.year;
-            if (onMonthChange) {
-              console.log('Calendar onMonthChange called:', newMonth, newYear);
-              onMonthChange(newMonth, newYear);
-            }
+            // Note: This is called by the internal Calendar component navigation
+            // We'll handle this in the swipe gestures instead
+            console.log('Calendar onMonthChange called (ignored):', monthData);
           }}
           theme={{
             calendarBackground: 'white',
