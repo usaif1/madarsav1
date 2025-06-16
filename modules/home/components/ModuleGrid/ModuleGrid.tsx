@@ -31,10 +31,16 @@ const modules: ModuleItem[] = [
     route: 'quran',
   },
   {
-    id: 'maktab',
-    image: `${BASE_CDN_URL}maktab-card.png`,
-    route: 'maktab',
+    id: 'dua',
+    image: `${BASE_CDN_URL}dua-card.png`,
+    // image:require('@/assets/DuaHome.png'),
+    route: 'dua',
   },
+  // {
+  //   id: 'maktab',
+  //   image: `${BASE_CDN_URL}maktab-card.png`,
+  //   route: 'maktab',
+  // },
   {
     id: 'qiblah',
     image: `${BASE_CDN_URL}qiblah-card.png`,
@@ -93,6 +99,9 @@ const ModuleGrid: React.FC = () => {
         break;
       case 'compass':
         navigation.navigate('compass');
+        break;
+      case 'dua':
+        navigation.navigate('dua');
         break;
       default:
         // Do nothing for modules not yet created

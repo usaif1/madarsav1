@@ -215,11 +215,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
   // Show loading state
   if (isLoading) {
     return (
-      <TouchableOpacity 
-        style={styles.container}
-        onPress={onViewCalendarPress}
-        activeOpacity={0.9}
-      >
+      <View style={styles.container}>
         <LinearGradient
           colors={['#FDA29B', '#8A57DC']}
           start={{x: 0, y: 0}}
@@ -284,16 +280,23 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
             </View>
           </TouchableWithoutFeedback>
         </Modal>
-      </TouchableOpacity>
+
+        {/* Footer - View Calendar */}
+        <TouchableOpacity
+          style={styles.viewCalendarContainer}
+          onPress={onViewCalendarPress}
+          activeOpacity={0.8}>
+          <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
+          <View style={styles.arrowContainer}>
+            <Text style={styles.arrowText}>›</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     );
   }
   
   return (
-    <TouchableOpacity 
-      style={styles.container}
-      onPress={onViewCalendarPress}
-      activeOpacity={0.9}
-    >
+    <View style={styles.container}>
       <LinearGradient
         colors={['#FDA29B', '#8A57DC']}
         start={{x: 0, y: 0}}
@@ -373,14 +376,25 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </TouchableOpacity>
+
+      {/* Footer - View Calendar */}
+      <TouchableOpacity
+        style={styles.viewCalendarContainer}
+        onPress={onViewCalendarPress}
+        activeOpacity={0.8}>
+        <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
+        <View style={styles.arrowContainer}>
+          <Text style={styles.arrowText}>›</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     width: scale(339),
-    height: verticalScale(230),
+    height: verticalScale(268), // Increased height to accommodate footer (230 + 38)
     borderRadius: scale(8),
     alignSelf: 'center',
     marginBottom: verticalScale(16),
@@ -421,7 +435,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: scale(8),
     borderTopWidth: 0.5,
     borderTopColor: '#E5E5E5',
-    height: verticalScale(190), // Fixed height for container
+    height: verticalScale(190), // Fixed height for content (footer will be outside this)
   },
   eventsList: {
     paddingVertical: scale(8),
@@ -583,6 +597,32 @@ const styles = StyleSheet.create({
   },
   scrollableList: {
     flex: 1,
+  },
+  viewCalendarContainer: {
+    width: scale(339),
+    height: verticalScale(38),
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: scale(14),
+    gap: scale(4),
+    backgroundColor: '#F9F6FF', // Primitives-Primary-50
+    borderTopWidth: 1, // Primitives/Regular
+    borderTopColor: '#E5E5E5',
+  },
+  arrowContainer: {
+    width: scale(18),
+    height: scale(18),
+    borderRadius: scale(9),
+    backgroundColor: '#8A57DC', // Primitives-Primary-500
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  arrowText: {
+    color: '#FFFFFF',
+    fontSize: scale(14),
+    lineHeight: scale(14),
+    textAlign: 'center',
   },
 });
 

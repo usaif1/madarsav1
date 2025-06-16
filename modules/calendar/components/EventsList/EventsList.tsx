@@ -37,7 +37,7 @@ interface EventsListProps {
 
 const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, displayYear }) => {
   const { colors } = useThemeStore();
-  const warningColor = colors.warning as string;
+  const warningColor = String(colors.warning);
   const flatListRef = useRef<FlatList>(null);
   
   // Use the provided display month/year or default to the selected date
@@ -47,14 +47,14 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
   // Format the selected date for API calls
   const formattedSelectedDate = formatDate(selectedDate);
   
-  // Get current Islamic year
+  // Get current Islamic year (we'll calculate display year dynamically)
   const { data: currentIslamicYearData, isLoading: isYearLoading } = useCurrentIslamicYear();
   
   // Get next Hijri holiday
   const { data: nextHolidayData, isLoading: isNextHolidayLoading } = useNextHijriHoliday();
   
-  // Get special days
-  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays();
+  // Get special days for the display year - pass month and year to get year-specific data
+  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays(currentDisplayMonth + 1, currentDisplayYear);
   
   // Get Hijri date for the selected date
   const { data: selectedDateHijriData, isLoading: isSelectedDateHijriLoading } = useGregorianToHijri(selectedDate);
@@ -63,7 +63,7 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
   const currentIslamicYear = currentIslamicYearData?.data 
     ? (typeof currentIslamicYearData.data === 'number' 
       ? currentIslamicYearData.data 
-      : parseInt(currentIslamicYearData.data.hijri?.year || '1445'))
+      : parseInt((currentIslamicYearData.data as any)?.hijri?.year || '1445'))
     : 1445;
   
   // Get Hijri holidays for the current Islamic year
@@ -99,9 +99,32 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
   const { data: hijriCalendarData, isLoading: isHijriCalendarLoading } = 
     useHijriCalendar(currentDisplayMonth + 1, currentDisplayYear);
   
-  // Get holidays for the entire Islamic year to show full year events
+  // Calculate Islamic year for the display year to make events list dynamic
+  // For a rough approximation: Hijri year ≈ Gregorian year - 622 + 33/32 correction factor
+  // More accurate: get the Islamic year that corresponds to January 1st of the display year
+  const calculateIslamicYearForGregorianYear = (gregorianYear: number): number => {
+    // Simple approximation: Islamic year is about 33 years behind Gregorian
+    // This gives us a starting point for the Islamic year that overlaps with the Gregorian year
+    const approximateIslamicYear = Math.floor(gregorianYear - 580); // Rough calculation
+    return approximateIslamicYear;
+  };
+  
+  const displayIslamicYear = currentDisplayYear === new Date().getFullYear() 
+    ? currentIslamicYear // Use current year if viewing current year
+    : calculateIslamicYearForGregorianYear(currentDisplayYear); // Calculate for other years
+    
+  console.log('📊 Display Year Logic:', {
+    currentDisplayYear,
+    currentYear: new Date().getFullYear(),
+    isCurrentYear: currentDisplayYear === new Date().getFullYear(),
+    currentIslamicYear,
+    calculatedDisplayIslamicYear: displayIslamicYear
+  });
+  
   const { data: yearHolidaysData, isLoading: isYearHolidaysLoading } = 
-    useHijriHolidaysByYear(currentIslamicYear);
+    useHijriHolidaysByYear(displayIslamicYear);
+    
+  console.log('📊 Using Islamic Year for holidays:', displayIslamicYear, 'for display year:', currentDisplayYear);
   
   // Log API responses for debugging
   useEffect(() => {
@@ -129,9 +152,14 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
     console.log('🎯 === EVENTS ARRAY CREATION STARTED ===');
     console.log('📅 Selected Date:', selectedDate);
     console.log('📊 Display Month/Year:', currentDisplayMonth, currentDisplayYear);
+    console.log('🔄 YEAR-DYNAMIC BEHAVIOR: Events will be fetched for display year', currentDisplayYear, 'instead of current year', new Date().getFullYear());
     
     const eventsArray: IslamicEvent[] = [];
     const today = new Date();
+    
+    console.log('📅 Today Date:', today);
+    console.log('📅 Current Gregorian Year:', today.getFullYear());
+    console.log('📅 Current Islamic Year:', currentIslamicYear);
     
     // Get all months for the current year to fetch events from
     const allMonthsInYear = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -274,20 +302,34 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
         const gregorianDate = dayData.gregorian;
         const hijriDate = dayData.hijri;
         
+        // Log the raw API data to understand the format
+        console.log(`🔍 Year Day ${index} Raw Data:`, {
+          gregorian: gregorianDate,
+          hijri: hijriDate,
+          apiYear: gregorianDate.year,
+          currentDisplayYear: currentDisplayYear
+        });
+        
         // Check if this day has any holidays
         if (hijriDate.holidays && hijriDate.holidays.length > 0) {
           console.log(`🎉 Year Day ${index}: Found holidays for ${gregorianDate.day}/${gregorianDate.month.number}:`, hijriDate.holidays);
           
-          // Create a date object for this day
-          const holidayDate = new Date(
-            parseInt(gregorianDate.year),
-            gregorianDate.month.number - 1,
-            parseInt(gregorianDate.day)
-          );
+          // USE API'S ACTUAL DATE - No hardcoded assumptions!
+          // The API provides the correct Gregorian date for each Islamic event
+          
+          const apiYear = parseInt(gregorianDate.year);
+          const apiMonth = gregorianDate.month.number - 1; // Convert to 0-based month
+          const apiDay = parseInt(gregorianDate.day);
+          
+          const holidayDate = new Date(apiYear, apiMonth, apiDay);
+          
+          console.log(`📅 Year Holiday: Using API date ${holidayDate.toDateString()} (API Year: ${apiYear}, Month: ${apiMonth + 1}, Day: ${apiDay})`);
           
           // Calculate days left relative to selected date
           const daysLeft = Math.ceil((holidayDate.getTime() - selectedDate.getTime()) / (1000 * 60 * 60 * 24));
           const isPast = holidayDate.getTime() < today.getTime();
+          
+          console.log(`📊 Days calculation: Holiday ${holidayDate.toDateString()} vs Selected ${selectedDate.toDateString()} = ${daysLeft} days, isPast: ${isPast}`);
           
           // Add each holiday for this day
           hijriDate.holidays.forEach((holiday, holidayIndex) => {
@@ -335,8 +377,11 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
         const specialDayMonth = specialDay.month;
         const specialDayDay = specialDay.day;
         
-        // Create a date for this special day in the current year
+        // Create a date for this special day using the DISPLAY YEAR (not current year!)
+        // This makes special days dynamic based on what year the user is viewing
         const specialDayDate = new Date(currentDisplayYear, specialDayMonth - 1, specialDayDay);
+        
+        console.log(`📅 Special Day: ${specialDay.name} on ${specialDayDate.toDateString()} (Month: ${specialDayMonth}, Day: ${specialDayDay}, Display Year: ${currentDisplayYear})`);
         
         // Calculate days left relative to selected date
         const daysLeft = Math.ceil((specialDayDate.getTime() - selectedDate.getTime()) / (1000 * 60 * 60 * 24));

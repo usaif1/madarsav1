@@ -184,7 +184,7 @@ export const useUploadFile = () => {
         // Create FormData instance
         const formData = new FormData();
         
-        const fileRequestType = 'PROFILE_IMAGE';
+        const fileRequestType = 'PUBLIC_PROFILE_PHOTO';
         const currentUserId = userId;
 
         if (process.env.NODE_ENV === 'development') {
@@ -248,7 +248,7 @@ export const useUploadFile = () => {
 
         // Log FormData contents safely
         console.log('📦 FormData contents:', {
-          fileRequestType: 'PROFILE_IMAGE',
+          fileRequestType: 'PUBLIC_PROFILE_PHOTO',
           userId,
           file: Platform.OS === 'web' ? (file as File | Blob) : {
             uri: isImageFile(file) ? file.uri : 'unknown',

@@ -133,10 +133,8 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
         file,
         {
           headers: {
-            // Explicitly setting 'Content-Type' to 'multipart/form-data' as requested.
-            // Note: This typically omits the 'boundary' parameter, which Axios would add
-            // if 'Content-Type' were undefined with FormData.
-            'Content-Type': 'multipart/form-data',
+            // DO NOT set Content-Type for FormData - let axios handle it with proper boundary
+            // 'Content-Type': 'multipart/form-data', // REMOVED - this was causing the issue!
             // Explicitly state that we accept a JSON response.
             'Accept': 'application/json',
           },

@@ -27,7 +27,7 @@ const logFormData = (formData: FormData, context: string) => {
     // For React Native, we can't iterate over FormData directly
     // So we'll log what we know we added
     console.log('  - Fields added to FormData:');
-    console.log('    • fileRequestType: PUBLIC_PROFILE_IMAGE');
+    console.log('    • fileRequestType: PUBLIC_PROFILE_PHOTO');
     console.log('    • userId: [provided]');
     console.log('    • file: [binary data]');
   } catch (error) {
@@ -51,7 +51,7 @@ const logCurlEquivalent = (url: string, formData: FormData, headers: any) => {
     }
   });
   
-  console.log('  -F "fileRequestType=PUBLIC_PROFILE_IMAGE" \\');
+  console.log('  -F "fileRequestType=PUBLIC_PROFILE_PHOTO" \\');
   console.log('  -F "userId=[USER_ID]" \\');
   console.log('  -F "file=@[IMAGE_FILE]"');
 };
@@ -322,10 +322,10 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
     console.log('🔧 Step 3: Adding required API fields...');
     
     // Add required API fields as per documentation
-    formData.append('fileRequestType', 'PUBLIC_PROFILE_IMAGE');
+    formData.append('fileRequestType', 'PUBLIC_PROFILE_PHOTO');
     formData.append('userId', userId);
     
-    console.log('🔧 Step 4: Added fields - fileRequestType: PUBLIC_PROFILE_IMAGE, userId:', userId);
+    console.log('🔧 Step 4: Added fields - fileRequestType: PUBLIC_PROFILE_PHOTO, userId:', userId);
     
     // Determine file details
     const fileName = imageFile.fileName || 
@@ -379,7 +379,7 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
         });
         
         // Create a new blob with correct MIME type if needed
-        const finalBlob = binaryBlob.type ? binaryBlob : new Blob([binaryBlob as any], { type: mimeType });
+        const finalBlob = binaryBlob.type ? binaryBlob : new Blob([binaryBlob as any]);
         console.log('🔧 Step 10: Final binary blob prepared:', {
           size: finalBlob.size,
           type: finalBlob.type,
@@ -392,7 +392,7 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
         
         // Log exactly what we are sending
         console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
-        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_IMAGE');
+        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_PHOTO');
         console.log('📤 Field 2 - userId:', userId);
         console.log('📤 Field 3 - file:', {
           data: `Binary Blob (${finalBlob.size} bytes)`,
@@ -421,7 +421,7 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
         
         // Log exactly what we are sending
         console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
-        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_IMAGE');
+        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_PHOTO');
         console.log('📤 Field 2 - userId:', userId);
         console.log('📤 Field 3 - file:', {
           data: `Binary Blob (${finalBlob.size} bytes)`,
@@ -437,7 +437,7 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
 
     // Log final FormData state
     console.log('🔧 Step 12: FormData preparation completed:', {
-      fileRequestType: 'PUBLIC_PROFILE_IMAGE',
+      fileRequestType: 'PUBLIC_PROFILE_PHOTO',
       userId,
       fileName,
       hasFile: true,

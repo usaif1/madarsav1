@@ -73,8 +73,8 @@ const IslamicTools: React.FC = () => {
   };
   
   const handleExploreDuas = () => {
-    console.log('Explore Duas pressed');
-    navigation.navigate('dua');
+    console.log('Explore Duas pressed for feelings module');
+    // navigation.navigate('dua');
   };
   
   const handleEmojiPress = (day: string) => {
