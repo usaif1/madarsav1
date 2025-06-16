@@ -124,7 +124,7 @@ const IslamicTools: React.FC = () => {
         {/* Gallery Section */}
         <Gallery onViewAllPress={handleViewAllGallery} />
         
-        <View style={styles.emptySpace} />
+        {/* <View style={styles.emptySpace} /> */}
 
         {/* Footer */}
         <HadithImageFooter />
