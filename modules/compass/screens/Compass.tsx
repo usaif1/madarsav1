@@ -11,6 +11,7 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import CompassHeading from 'react-native-compass-heading';
 import geomagnetism from 'geomagnetism';
 import { useLocationData } from '@/modules/location/hooks/useLocationData';
@@ -64,6 +65,35 @@ function getQiblaBearing(lat: number, lon: number) {
   return (θ + 360) % 360;
 }
 
+// ─────────── CUSTOM COMPASS COMPONENT ───────────
+interface CustomCompassProps {
+  rotate: Animated.AnimatedInterpolation<string>;
+}
+
+const CustomCompass: React.FC<CustomCompassProps> = ({ rotate }) => {
+  return (
+    <View style={styles.compassWrapper}>
+      {/*  Rotating Frame */}
+      <Animated.View style={[styles.compassFrame, {transform: [{rotate}]}]}>
+        <FastImage 
+          source={require('@/assets/compass-frame.png')} 
+          style={styles.compassFrameImage}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+      </Animated.View>
+      
+      {/* Fixed Center */}
+      <View style={styles.compassCenter}>
+        <FastImage 
+          source={require('@/assets/compass-center.png')} 
+          style={styles.compassCenterImage}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+      </View>
+    </View>
+  );
+};
+
 // ─────────── COMPONENT ───────────
 const Compass: React.FC = () => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -101,16 +131,16 @@ const Compass: React.FC = () => {
 
   /* ---- start compass sensor ---- */
   useEffect(() => {
-    const DELTA_DEG = 0.1;
+    const DELTA_DEG = 0.05; // Reduced for smoother updates
     let lastHeading = 0;
-    const filterCoefficient = 0.2;
+    const filterCoefficient = 0.15; // Reduced for smoother filtering
     let lastFilteredHeading = 0;
     
     CompassHeading.start(DELTA_DEG, ({heading}: {heading: number}) => {
       // Normalize heading based on device orientation
       const normalizedHeading = normalizeHeading(heading, orientation);
       
-      // Apply low-pass filter with improved handling of angle transitions
+      // Apply enhanced low-pass filter for smoother transitions
       let filteredHeading = normalizedHeading;
       
       if (lastHeading !== 0) {
@@ -130,15 +160,15 @@ const Compass: React.FC = () => {
       const trueH = (filteredHeading + decl + 360) % 360;
       setTrueHeading(trueH);
 
-      // Update rotation animation with optimized spring configuration
+      // Update rotation animation with enhanced spring configuration for smoothness
       Animated.spring(rotateAnim, {
         toValue: -trueH,
-        friction: 8,
-        tension: 12,
+        friction: 12, // Increased for smoother motion
+        tension: 8, // Reduced for less aggressive animation
         useNativeDriver: true,
-        restSpeedThreshold: 0.001,
-        restDisplacementThreshold: 0.001,
-        velocity: 0.5,
+        restSpeedThreshold: 0.0005, // Reduced for finer precision
+        restDisplacementThreshold: 0.0005, // Reduced for finer precision
+        velocity: 0.3, // Reduced for smoother start
       }).start();
     });
     return () => CompassHeading.stop();
@@ -179,36 +209,21 @@ const Compass: React.FC = () => {
       <NextSalah />
 
       <View style={styles.compassContainer}>
-        <View style={styles.compassWrapper}>
-          <Animated.View style={[styles.compass, {transform: [{rotate}]}]}>
-            <CdnSvg 
-              path={DUA_ASSETS.COMPASS_BACKGROUND} 
-              width={300} 
-              height={300} 
-              style={styles.compass} 
-            />
-            {/* <CdnSvg 
-              path={DUA_ASSETS.COMPASS_CENTER} 
-              width={100} 
-              height={100} 
-              style={styles.compassCenter} 
-            /> */}
-          </Animated.View>
+        <CustomCompass rotate={rotate} />
 
-          {qiblaBearing !== null && (
-            <QiblaIndicator angle={qiblaAngle} compassRadius={150} />
-          )}
-          
-          {/* Debug info - uncomment for testing */}
-          {/* {__DEV__ && (
-            <View style={styles.debugInfo}>
-              <Text style={styles.debugText}>Mag: {magHeading.toFixed(1)}°</Text>
-              <Text style={styles.debugText}>True: {trueHeading.toFixed(1)}°</Text>
-              <Text style={styles.debugText}>Qibla: {qiblaBearing?.toFixed(1)}°</Text>
-              <Text style={styles.debugText}>Angle: {qiblaAngle.toFixed(1)}°</Text>
-            </View>
-          )} */}
-        </View>
+        {qiblaBearing !== null && (
+          <QiblaIndicator angle={qiblaAngle} compassRadius={190} />
+        )}
+        
+        {/* Debug info - uncomment for testing */}
+        {/* {__DEV__ && (
+          <View style={styles.debugInfo}>
+            <Text style={styles.debugText}>Mag: {magHeading.toFixed(1)}°</Text>
+            <Text style={styles.debugText}>True: {trueHeading.toFixed(1)}°</Text>
+            <Text style={styles.debugText}>Qibla: {qiblaBearing?.toFixed(1)}°</Text>
+            <Text style={styles.debugText}>Angle: {qiblaAngle.toFixed(1)}°</Text>
+          </View>
+        )} */}
       </View>
 
       <Divider height={82} />
@@ -228,13 +243,6 @@ const Compass: React.FC = () => {
 
 // ─────────── styles ───────────
 const styles = StyleSheet.create({
-  compassCenter: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{translateX: -55}, {translateY: -45}],
-    zIndex: 2,
-  },
   topContainer: {flex: 1, backgroundColor: '#FFFFFF'},
   compassContainer: {
     paddingTop: 80,
@@ -248,7 +256,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-  compass: {width: 300, height: 300},
+  compassFrame: {
+    width: 280,
+    height: 280,
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    borderRadius: 373.33,
+    borderWidth: 6,
+    backgroundColor: '#F9F6FF',
+    borderColor: '#E2D5F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  compassFrameImage: {
+    width: 268,
+    height: 268,
+  },
+  compassCenter: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -75}, {translateY: -75}], // Adjusted for larger center
+    zIndex: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  compassCenterImage: {
+    width: 150, // Increased from 100
+    height: 150, // Increased from 100
+  },
   loadingContainer: {justifyContent: 'center', alignItems: 'center'},
   loadingText: {
     marginTop: 20,

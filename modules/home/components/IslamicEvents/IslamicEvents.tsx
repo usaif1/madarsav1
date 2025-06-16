@@ -75,7 +75,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
   const currentIslamicYear = currentIslamicYearData?.data 
     ? (typeof currentIslamicYearData.data === 'number' 
       ? currentIslamicYearData.data 
-      : parseInt(currentIslamicYearData.data?.hijri?.year || '1445'))
+      : parseInt(String(currentIslamicYearData.data) || '1445'))
     : 1445;
   
   // Get Hijri holidays for the current Islamic year
@@ -322,6 +322,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
               contentContainerStyle={styles.eventsList}
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled={true}
+              style={styles.scrollableList}
             />
           ) : (
             <View style={styles.noEventsContainer}>
@@ -420,10 +421,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: scale(8),
     borderTopWidth: 0.5,
     borderTopColor: '#E5E5E5',
-    height: verticalScale(192), // Fixed height instead of maxHeight
+    height: verticalScale(190), // Fixed height for container
   },
   eventsList: {
     paddingVertical: scale(8),
+    flexGrow: 1,
   },
   eventItem: {
     flexDirection: 'row',
@@ -519,10 +521,15 @@ const styles = StyleSheet.create({
     color: '#737373', // Tokens-Sub-heading
   },
   noEventsContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     gap: scale(16),
+    paddingHorizontal: scale(16),
   },
   noEventsText: {
     fontSize: scale(14),
@@ -531,7 +538,11 @@ const styles = StyleSheet.create({
     color: '#919091',
   },
   loadingContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -569,6 +580,9 @@ const styles = StyleSheet.create({
   selectedMonthItemText: {
     color: '#8A57DC',
     fontFamily: 'Geist-Bold',
+  },
+  scrollableList: {
+    flex: 1,
   },
 });
 

@@ -33,7 +33,7 @@ const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
     ]}>
       <CdnSvg path={DUA_ASSETS.SEARCH} width={20} height={20} />
       <TextInput
-        placeholder="Salam, dua khojein"
+        placeholder="Salam, search dua"
         placeholderTextColor="#737373"
         style={styles.input}
         value={searchText}

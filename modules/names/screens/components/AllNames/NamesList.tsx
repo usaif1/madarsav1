@@ -16,8 +16,12 @@ import { useAll99Names, Name99Data } from '../../../hooks/use99Names';
 import { useThemeStore } from '@/globalStore';
 import { ColorPrimary } from '@/theme/lightColors';
 
+// Audio Components
+import FloatingPlayButton from '@/modules/home/components/AudioPlayer/FloatingPlayButton';
+import { verticalScale } from '@/theme/responsive';
+
 const width = Dimensions.get('screen').width;
-const CARD_SIZE = Math.min(width, 375);
+const CARD_SIZE = Math.min(width,);
 
 interface NamesListProps {
   searchQuery?: string;
@@ -322,6 +326,9 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
         }
       />
 
+      {/* Floating Play Button */}
+      <FloatingPlayButton />
+
       {/* Modal view for detailed name */}
       <Modal
         isVisible={isVisible}
@@ -614,7 +621,7 @@ const stylesModal = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 70,
+    top: verticalScale(60),
     left: 10,
     zIndex: 1,
     padding: 8, // Larger touch area

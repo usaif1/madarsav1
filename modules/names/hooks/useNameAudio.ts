@@ -21,7 +21,7 @@ interface UseNameAudioReturn {
 export const useNameAudio = (): UseNameAudioReturn => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null)
   const [duration, setDuration] = useState<number>(0);
   const [position, setPosition] = useState<number>(0);
   const [volume, setVolumeState] = useState<number>(1.0);
@@ -47,12 +47,15 @@ export const useNameAudio = (): UseNameAudioReturn => {
           const newIsPlaying = event.payload?.state === 'PLAYING';
           const newIsLoading = event.payload?.state === 'LOADING';
           
+          console.log('Audio state changed:', event.payload?.state);
+          
           setIsPlaying(newIsPlaying);
           setIsLoading(newIsLoading);
           
           // Store the current position when paused or stopped using real-time position
-          if (event.payload?.state === 'PAUSED' && currentAudioRef.current) {
+          if ((event.payload?.state === 'PAUSED' || event.payload?.state === 'STOPPED') && currentAudioRef.current) {
             currentAudioRef.current.lastPosition = currentAudioRef.current.currentPosition;
+            console.log('Position saved on pause/stop:', currentAudioRef.current.lastPosition);
           }
           break;
         case 'PROGRESS':
@@ -130,30 +133,57 @@ export const useNameAudio = (): UseNameAudioReturn => {
   }, [getAudioUrl, playAudioFromUrl]);
 
   const pauseAudio = useCallback(() => {
-    if (isPlaying) {
+    if (isPlaying && currentAudioRef.current) {
+      // Store current position before pausing
+      currentAudioRef.current.lastPosition = currentAudioRef.current.currentPosition;
+      console.log('Pausing audio at position:', currentAudioRef.current.lastPosition);
       AudioPro.pause();
       // Position will be updated in the STATE_CHANGED event handler
+    } else {
+      console.log('Cannot pause:', { isPlaying, hasCurrentAudio: !!currentAudioRef.current });
     }
   }, [isPlaying]);
 
   const resumeAudio = useCallback(async () => {
     if (!isPlaying && currentAudioRef.current) {
       try {
+        console.log('Attempting to resume audio:', {
+          url: currentAudioRef.current.url,
+          lastPosition: currentAudioRef.current.lastPosition,
+          currentPosition: currentAudioRef.current.currentPosition
+        });
+        
         setIsLoading(true);
         setError(null);
         
-        // Always use playAudioFromUrl with the last position for consistency
-        // This ensures we start from the correct position every time
-        await playAudioFromUrl(
-          currentAudioRef.current.url, 
-          currentAudioRef.current.lastPosition
-        );
+        // Create the track object for resuming
+        const track = {
+          id: currentAudioRef.current.id,
+          url: currentAudioRef.current.url,
+          title: '99 Names of Allah',
+          artist: '',
+          artwork: 'test',
+        };
+        
+        // Resume playing the track
+        await AudioPro.play(track);
+        
+        // If we have a saved position, seek to it
+        if (currentAudioRef.current.lastPosition > 0) {
+          console.log('Seeking to position:', currentAudioRef.current.lastPosition);
+          setTimeout(() => {
+            AudioPro.seekTo(currentAudioRef.current!.lastPosition * 1000);
+          }, 200); // Increased delay to ensure audio is ready
+        }
       } catch (err) {
+        console.error('Resume error:', err);
         setError('Failed to resume audio');
         setIsLoading(false);
       }
+    } else {
+      console.log('Cannot resume:', { isPlaying, hasCurrentAudio: !!currentAudioRef.current });
     }
-  }, [isPlaying, playAudioFromUrl]);
+  }, [isPlaying]);
 
   const stopAudio = useCallback(() => {
     AudioPro.stop();

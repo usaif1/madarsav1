@@ -1,5 +1,5 @@
-import React, {useMemo, useEffect} from 'react';
-import {StyleSheet, View, Text, ActivityIndicator} from 'react-native';
+import React, {useMemo, useEffect, useRef} from 'react';
+import {StyleSheet, View, Text, ActivityIndicator, PanResponder, Animated} from 'react-native';
 import {Calendar, DateData} from 'react-native-calendars';
 import CalendarDay from './CalendarDay';
 import {useThemeStore} from '@/globalStore';
@@ -42,6 +42,10 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 }) => {
   const {colors} = useThemeStore();
   const radiusMd = scale(8);
+  
+  // Animation values for swipe
+  const pan = useRef(new Animated.ValueXY()).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   // Get the current display month and year
   const displayMonth =
@@ -163,6 +167,106 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     onDateSelect(newDate);
   };
 
+  // Handle month navigation
+  const handleMonthNavigation = (direction: 'next' | 'prev') => {
+    if (!onMonthChange) return;
+    
+    const currentMonth = typeof month === 'number' ? month : selectedDate.getMonth();
+    const currentYear = typeof year === 'number' ? year : selectedDate.getFullYear();
+    
+    let newMonth = currentMonth;
+    let newYear = currentYear;
+    
+    if (direction === 'next') {
+      newMonth = currentMonth + 1;
+      if (newMonth > 11) {
+        newMonth = 0;
+        newYear = currentYear + 1;
+      }
+    } else {
+      newMonth = currentMonth - 1;
+      if (newMonth < 0) {
+        newMonth = 11;
+        newYear = currentYear - 1;
+      }
+    }
+    
+    console.log('CustomCalendar: Navigating to month', newMonth, 'year', newYear);
+    onMonthChange(newMonth, newYear);
+  };
+
+  // Pan responder for swipe gestures
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to horizontal swipes
+        return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow horizontal movement
+        pan.x.setValue(gestureState.dx);
+        
+        // Fade out as we swipe
+        const absX = Math.abs(gestureState.dx);
+        const maxDistance = 150; // Max swipe distance
+        const newOpacity = Math.max(0.6, 1 - (absX / maxDistance) * 0.4);
+        opacity.setValue(newOpacity);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const { dx, vx } = gestureState;
+        const isSwipeRight = dx > 80 || vx > 0.3;
+        const isSwipeLeft = dx < -80 || vx < -0.3;
+
+        if (isSwipeRight) {
+          // Swipe right - go to previous month (like turning a page backwards)
+          console.log('Swiping right - going to previous month');
+          Animated.parallel([
+            Animated.timing(pan.x, { toValue: 300, duration: 200, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+          ]).start(() => {
+            handleMonthNavigation('prev');
+            // Reset animations for next month
+            pan.x.setValue(-300);
+            opacity.setValue(0);
+            
+            requestAnimationFrame(() => {
+              Animated.parallel([
+                Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+                Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+              ]).start();
+            });
+          });
+        } else if (isSwipeLeft) {
+          // Swipe left - go to next month (like turning a page forwards)
+          console.log('Swiping left - going to next month');
+          Animated.parallel([
+            Animated.timing(pan.x, { toValue: -300, duration: 200, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+          ]).start(() => {
+            handleMonthNavigation('next');
+            // Reset animations for next month
+            pan.x.setValue(300);
+            opacity.setValue(0);
+            
+            requestAnimationFrame(() => {
+              Animated.parallel([
+                Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+                Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+              ]).start();
+            });
+          });
+        } else {
+          // Not enough swipe, return to center
+          Animated.parallel([
+            Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 5 }),
+            Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 5 }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
+
   const CustomDayHeader = () => {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -208,45 +312,59 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   return (
     <View style={[styles.container, {backgroundColor: 'white'}]}>
       <CustomDayHeader />
-      <Calendar
-        key={currentDateString}
-        markingType={'custom'}
-        markedDates={markedDates}
-        onDayPress={handleDayPress}
-        hideArrows={false}
-        hideExtraDays={true}
-        renderHeader={() => null}
-        customHeader={() => null}
-        current={currentDateString}
-        style={{backgroundColor: 'white'}}
-        onMonthChange={monthData => {
-          const newMonth = monthData.month - 1; // Convert to 0-indexed month
-          const newYear = monthData.year;
-          if (onMonthChange) {
-            onMonthChange(newMonth, newYear);
+      <Animated.View 
+        style={[
+          {
+            transform: [{ translateX: pan.x }],
+            opacity: opacity,
           }
-        }}
-        theme={{
-          calendarBackground: 'white',
-          textSectionTitleColor: colors.secondary.neutral800,
-          dayTextColor: colors.secondary.neutral800,
-          textDisabledColor: colors.secondary.neutral300,
-          arrowColor: colors.primary.primary600,
-          monthTextColor: colors.primary.primary800,
-          textMonthFontWeight: 'bold',
-          textDayFontSize: scale(14),
-          textMonthFontSize: scale(14),
-          textDayHeaderFontSize: scale(14),
-        }}
-        dayComponent={({date, state, marking}) => (
-          <CalendarDay
-            date={date}
-            state={state as '' | 'disabled' | 'today' | undefined}
-            marking={marking}
-            onPress={handleDayPress}
-          />
-        )}
-      />
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <Calendar
+          key={currentDateString}
+          markingType={'custom'}
+          markedDates={markedDates}
+          onDayPress={handleDayPress}
+          hideArrows={false}
+          hideExtraDays={true}
+          renderHeader={() => null}
+          customHeader={() => null}
+          current={currentDateString}
+          style={{backgroundColor: 'white'}}
+          onMonthChange={monthData => {
+            const newMonth = monthData.month - 1; // Convert to 0-indexed month
+            const newYear = monthData.year;
+            if (onMonthChange) {
+              console.log('Calendar onMonthChange called:', newMonth, newYear);
+              onMonthChange(newMonth, newYear);
+            }
+          }}
+          theme={{
+            calendarBackground: 'white',
+            textSectionTitleColor: colors.secondary.neutral800,
+            dayTextColor: colors.secondary.neutral800,
+            textDisabledColor: colors.secondary.neutral300,
+            arrowColor: colors.primary.primary600,
+            monthTextColor: colors.primary.primary800,
+            textMonthFontWeight: 'bold',
+            textDayFontSize: scale(14),
+            textMonthFontSize: scale(14),
+            textDayHeaderFontSize: scale(14),
+          }}
+          dayComponent={({date, state, marking}) => {
+            if (!date) return null;
+            return (
+              <CalendarDay
+                date={date}
+                state={state as '' | 'disabled' | 'today' | undefined}
+                marking={marking}
+                onPress={handleDayPress}
+              />
+            );
+          }}
+        />
+      </Animated.View>
     </View>
   );
 };
