@@ -89,7 +89,7 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
           {(isLoading || namesLoading) ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : isPlaying ? (
-            <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={18} height={18} />
+            <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={18} height={18} />
           ) : (
             <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={18} height={18} />
           )}

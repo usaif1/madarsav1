@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator, PanResponder, Animated, Share as ReactNativeShare } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
+import { AudioPro } from 'react-native-audio-pro';
 
 // Components & Data
 import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
@@ -33,6 +34,68 @@ const Close = () => {
   )
 }
 
+// Create a separate audio hook for the modal to avoid interference
+const useModalAudio = () => {
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentAudioRef, setCurrentAudioRef] = useState<any>(null);
+
+  // AudioPro is imported at the top
+  
+  const playAudioFromUrl = useCallback(async (audioUrl: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const trackId = `modal-${Date.now()}`;
+      const track = {
+        id: trackId,
+        url: audioUrl,
+        title: 'Name Audio',
+        artist: '',
+        artwork: 'test',
+      };
+
+      setCurrentAudioRef({ url: audioUrl, id: trackId });
+      await AudioPro.play(track);
+      setIsPlaying(true);
+      setIsLoading(false);
+    } catch (err) {
+      setError('Failed to play audio');
+      setIsLoading(false);
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const pauseAudio = useCallback(() => {
+    if (isPlaying) {
+      AudioPro.pause();
+      setIsPlaying(false);
+    }
+  }, [isPlaying]);
+
+  const stopAudio = useCallback(() => {
+    AudioPro.stop();
+    setIsPlaying(false);
+    setCurrentAudioRef(null);
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return {
+    isPlaying,
+    isLoading,
+    error,
+    playAudioFromUrl,
+    pauseAudio,
+    stopAudio,
+    clearError,
+  };
+};
+
 /**
  * Main component for displaying list of Islamic names
  * Features: Search, Modal view, Audio playback
@@ -55,8 +118,8 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
     currentItemIndexRef.current = newIndex;
     setCurrentItemIndex(newIndex);
     // Pause audio if playing when index changes due to swipe
-    if (isPlaying) {
-      pauseAudio();
+    if (modalAudioIsPlaying) {
+      modalPauseAudio();
     }
   };
   
@@ -64,16 +127,16 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const pan = useRef(new Animated.ValueXY()).current;
   const opacity = useRef(new Animated.Value(1)).current;
   
-  // Audio hook
+  // Separate audio hook for modal only
   const { 
-    isPlaying, 
-    isLoading: isAudioLoading, 
-    error: audioError, 
-    playAudio, 
-    pauseAudio, 
-    clearError,
-    playAudioFromUrl
-  } = useNameAudio();
+    isPlaying: modalAudioIsPlaying, 
+    isLoading: modalAudioIsLoading, 
+    error: modalAudioError, 
+    playAudioFromUrl: modalPlayAudioFromUrl,
+    pauseAudio: modalPauseAudio, 
+    stopAudio: modalStopAudio,
+    clearError: modalClearError
+  } = useModalAudio();
 
   /**
    * Filter names based on search query with multiple criteria
@@ -108,31 +171,31 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   // Cleanup when component unmounts - pause any playing audio
   useEffect(() => {
     return () => {
-      if (isPlaying) {
-        console.log('🔍 Component unmounting - pausing audio');
-        pauseAudio();
+      if (modalAudioIsPlaying) {
+        console.log('🔍 Component unmounting - pausing modal audio');
+        modalPauseAudio();
       }
     };
-  }, [isPlaying, pauseAudio]);
+  }, [modalAudioIsPlaying, modalPauseAudio]);
 
   /**
    * Handle audio playback with error handling
    */
   const handleAudioPlayback = () => {
     try {
-      if (isPlaying) {
-        pauseAudio();
+      if (modalAudioIsPlaying) {
+        modalPauseAudio();
       } else {
         // Clear any previous errors
-        if (audioError) {
-          clearError();
+        if (modalAudioError) {
+          modalClearError();
         }
         
         // Get the current name from filtered results
         const currentName = filteredNames[currentItemIndex];
         if (currentName && currentName.audioLink) {
           // Use the direct audio URL from the API
-          playAudioFromUrl(currentName.audioLink);
+          modalPlayAudioFromUrl(currentName.audioLink);
         } else {
           Alert.alert('Error', 'Unable to find audio for the selected name.');
         }
@@ -149,8 +212,8 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const handleCloseModal = () => {
     setIsVisible(false);
     // Stop audio when closing modal
-    if (isPlaying) {
-      pauseAudio();
+    if (modalAudioIsPlaying) {
+      modalStopAudio();
     }
     // Reset animation values
     pan.setValue({ x: 0, y: 0 });
@@ -238,16 +301,16 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
    * Show error alert for audio issues
    */
   useEffect(() => {
-    if (audioError) {
+    if (modalAudioError) {
       Alert.alert(
         'Audio Error',
-        audioError,
+        modalAudioError,
         [
-          { text: 'OK', onPress: clearError }
+          { text: 'OK', onPress: modalClearError }
         ]
       );
     }
-  }, [audioError, clearError]);
+  }, [modalAudioError, modalClearError]);
 
   // Show loading state
   if (isLoading) {
@@ -393,22 +456,22 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               style={[
                 stylesModal.btn, 
                 { 
-                  backgroundColor: isAudioLoading ? '#666' : '#8A57DC',
-                  opacity: isAudioLoading ? 0.7 : 1
+                  backgroundColor: modalAudioIsLoading ? '#666' : '#8A57DC',
+                  opacity: modalAudioIsLoading ? 0.7 : 1
                 }
               ]}
               onPress={handleAudioPlayback}
-              disabled={isAudioLoading}
-              accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
+              disabled={modalAudioIsLoading}
+              accessibilityLabel={modalAudioIsPlaying ? "Pause audio" : "Play audio"}
               accessibilityRole="button"
             >
-              {isPlaying ? (
+              {modalAudioIsPlaying ? (
                 <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={24} height={24} />
               ) : (
                 <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={24} height={24} />
               )}
               <Body1Title2Bold color="white">
-                {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
+                {modalAudioIsLoading ? 'Loading...' : modalAudioIsPlaying ? 'Pause' : 'Listen'}
               </Body1Title2Bold>
             </Pressable>
 
