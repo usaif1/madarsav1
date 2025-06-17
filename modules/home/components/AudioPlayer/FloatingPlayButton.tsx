@@ -17,6 +17,7 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
   onPress,
 }) => {
   const [showPlayer, setShowPlayer] = useState<boolean>(false);
+  const [manuallyClosedRef, setManuallyClosedRef] = useState<boolean>(false);
   
   // Get audio functionality from the hook
   const { 
@@ -39,8 +40,8 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
   
   // Debug logging for button state
   useEffect(() => {
-    console.log('🔵 FloatingPlayButton state update:', { isPlaying, isLoading, namesLoading });
-  }, [isPlaying, isLoading, namesLoading]);
+    console.log('🔵 FloatingPlayButton state update:', { isPlaying, isLoading, namesLoading, showPlayer });
+  }, [isPlaying, isLoading, namesLoading, showPlayer]);
   
   // Initialize with the first name when component mounts
   useEffect(() => {
@@ -50,40 +51,41 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
     }
   }, [namesData]);
 
-  // Auto-show player if audio is already playing when component mounts
+  // Auto-show NameAudioPlayer when audio is playing (only if not manually closed)
   useEffect(() => {
-    if (isPlaying && !isLoading) {
-      console.log('🔵 Audio is already playing on mount, showing player...');
+    if (isPlaying && !showPlayer && !manuallyClosedRef) {
+      console.log('🔵 Audio is playing, auto-showing NameAudioPlayer');
       setShowPlayer(true);
     }
-  }, [isPlaying, isLoading]);
+  }, [isPlaying, manuallyClosedRef]); // Respect manual close flag
 
-  // Show/hide player based on audio state changes
+  // Auto-hide NameAudioPlayer when audio stops playing
   useEffect(() => {
-    if (isPlaying && !isLoading) {
-      console.log('🔵 Audio started playing, showing player...');
-      setShowPlayer(true);
-    } else if (!isPlaying && !isLoading) {
-      console.log('🔵 Audio stopped playing, hiding player...');
+    if (!isPlaying && showPlayer && !isLoading) {
+      console.log('🔵 Audio stopped, auto-hiding NameAudioPlayer');
       setShowPlayer(false);
+      setManuallyClosedRef(false); // Reset manual close flag when audio stops
     }
-  }, [isPlaying, isLoading]);
+  }, [isPlaying, isLoading]); // Removed showPlayer dependency
 
   const handlePress = async () => {
     if (onPress) {
       onPress();
     }
     
-    // Always show the player when pressed
+    // Always show the player when pressed and clear manual close flag
     setShowPlayer(true);
+    setManuallyClosedRef(false);
     
     // If not playing, start/resume audio
     if (!isPlaying && namesData && namesData.length > 0) {
       const firstName = namesData[0];
       if (firstName && firstName.audioLink) {
         if (position > 0) {
+          console.log('🔵 Resuming audio from position:', position);
           await resumeAudio();
         } else {
+          console.log('🔵 Starting fresh audio');
           await playAudioFromUrl(firstName.audioLink);
         }
       }
@@ -91,22 +93,20 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
   };
 
   const handleClosePlayer = () => {
-    // Only allow closing if audio is not playing, or pause audio when closing
-    if (isPlaying) {
-      // Pause the audio when closing the player
-      pauseAudio();
-    }
+    console.log('🔵 Manually closing NameAudioPlayer');
     setShowPlayer(false);
+    setManuallyClosedRef(true); // Mark as manually closed
   };
 
   const handlePlayerPlayPause = () => {
-    // Player handles its own play/pause logic
+    // The NameAudioPlayer handles its own play/pause logic
+    // No need to duplicate logic here
   };
 
   return (
     <>
-      {/* Floating Button - Show only when audio is not playing and player is not open */}
-      {!showPlayer && !isPlaying && (
+      {/* Floating Button - Hide when player is open */}
+      {!showPlayer && (
         <TouchableOpacity 
           style={styles.floatingButton} 
           onPress={handlePress}
@@ -115,21 +115,26 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
         >
           {(isLoading || namesLoading) ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : isPlaying ? (
+            <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={18} height={18} />
           ) : (
             <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={18} height={18} />
           )}
         </TouchableOpacity>
       )}
 
-      {/* Modal for NameAudioPlayer - Show when audio is playing or when manually opened */}
+      {/* Modal for NameAudioPlayer */}
       <Modal
         isVisible={showPlayer}
-        backdropOpacity={0}
+        backdropOpacity={0.3}
+        backdropColor="#000000"
         style={styles.modal}
         animationIn="slideInUp"
         animationOut="slideOutDown"
         onBackdropPress={handleClosePlayer}
         onBackButtonPress={handleClosePlayer}
+        swipeDirection={['down']}
+        onSwipeComplete={handleClosePlayer}
       >
         <View style={styles.playerContainer}>
           <NameAudioPlayer 

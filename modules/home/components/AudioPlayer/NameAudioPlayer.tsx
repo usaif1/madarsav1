@@ -88,7 +88,10 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
   
   const handlePlayPause = async () => {
     try {
+      console.log('🟡 NameAudioPlayer handlePlayPause called - isPlaying:', isPlaying);
+      
       if (isPlaying) {
+        console.log('🟡 Pausing audio from NameAudioPlayer');
         pauseAudio();
       } else {
         // Find the current name data to get the audio URL
@@ -98,9 +101,10 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
           if (firstName && firstName.audioLink) {
             // If we have a position > 0, always resume from that position
             if (position > 0) {
+              console.log('🟡 Resuming audio from NameAudioPlayer at position:', position);
               await resumeAudio();
             } else {
-              // Start from the beginning
+              console.log('🟡 Starting fresh audio from NameAudioPlayer');
               await playAudioFromUrl(firstName.audioLink);
             }
           } else {
@@ -130,10 +134,7 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
   };
 
   const handleClose = () => {
-    // Pause audio when closing the player manually
-    if (isPlaying) {
-      pauseAudio();
-    }
+    // Don't stop audio when closing - let it continue in background
     if (onClose) {
       onClose();
     }
@@ -184,13 +185,30 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
       </View>
 
       {/* Play/Pause Button */}
-      <TouchableOpacity style={styles.playPauseButton} onPress={handlePlayPause} disabled={isLoading}>
+      <TouchableOpacity 
+        style={[styles.playPauseButton, { zIndex: 1000 }]} 
+        onPress={() => {
+          console.log('🟡 TouchableOpacity pressed in NameAudioPlayer');
+          handlePlayPause();
+        }} 
+        disabled={isLoading}
+        activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         {isLoading ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : isPlaying ? (
-          <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={12} height={12} />
+          <View style={styles.iconContainer}>
+            <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={12} height={12} />
+            {/* Fallback text if icon doesn't load */}
+            <Text style={styles.fallbackIcon}>⏸️</Text>
+          </View>
         ) : (
-          <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={12} height={12} />
+          <View style={styles.iconContainer}>
+            <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={12} height={12} />
+            {/* Fallback text if icon doesn't load */}
+            <Text style={styles.fallbackIcon}>▶️</Text>
+          </View>
         )}
       </TouchableOpacity>
     </View>
@@ -296,6 +314,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#8A57DC',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  fallbackIcon: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    position: 'absolute',
+    textAlign: 'center',
   },
 });
 

@@ -124,6 +124,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
         currentPosition: startPosition,
       };
 
+      console.log('🎵 Playing audio from URL:', audioUrl, 'startPosition:', startPosition);
       await AudioPro.play(track);
       
       // If we have a start position, seek to it (convert seconds to milliseconds)
@@ -133,6 +134,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
         }, 300); // Slightly longer delay to ensure track is fully loaded
       }
     } catch (err) {
+      console.error('🎵 Error playing audio:', err);
       setError('Failed to play audio');
       setIsLoading(false);
     }
@@ -159,52 +161,60 @@ export const useNameAudio = (): UseNameAudioReturn => {
   }, [isPlaying]);
 
   const resumeAudio = useCallback(async () => {
-    if (!isPlaying && currentAudioRef.current) {
+    if (!isPlaying) {
       try {
-        console.log('Attempting to resume audio:', {
-          url: currentAudioRef.current.url,
-          lastPosition: currentAudioRef.current.lastPosition,
-          currentPosition: currentAudioRef.current.currentPosition
+        console.log('🎵 Attempting to resume audio:', {
+          hasCurrentAudio: !!currentAudioRef.current,
+          url: currentAudioRef.current?.url,
+          lastPosition: currentAudioRef.current?.lastPosition,
+          currentPosition: currentAudioRef.current?.currentPosition
         });
         
         setIsLoading(true);
         setError(null);
         
-        // Create the track object for resuming
-        const track = {
-          id: currentAudioRef.current.id,
-          url: currentAudioRef.current.url,
-          title: '99 Names of Allah',
-          artist: '',
-          artwork: 'test',
-        };
-        
-        // Resume playing the track
-        await AudioPro.play(track);
-        
-        // If we have a saved position, seek to it
-        if (currentAudioRef.current.lastPosition > 0) {
-          console.log('Seeking to position:', currentAudioRef.current.lastPosition);
-          setTimeout(() => {
-            AudioPro.seekTo(currentAudioRef.current!.lastPosition * 1000);
-          }, 200); // Increased delay to ensure audio is ready
+        if (currentAudioRef.current) {
+          // Create the track object for resuming
+          const track = {
+            id: currentAudioRef.current.id,
+            url: currentAudioRef.current.url,
+            title: '99 Names of Allah',
+            artist: '',
+            artwork: 'test',
+          };
+          
+          // Resume playing the track
+          await AudioPro.play(track);
+          
+          // If we have a saved position, seek to it
+          if (currentAudioRef.current.lastPosition > 0) {
+            console.log('🎵 Seeking to position:', currentAudioRef.current.lastPosition);
+            setTimeout(() => {
+              AudioPro.seekTo(currentAudioRef.current!.lastPosition * 1000);
+            }, 200); // Increased delay to ensure audio is ready
+          }
+        } else {
+          console.log('🎵 No current audio reference, cannot resume');
+          setIsLoading(false);
         }
       } catch (err) {
-        console.error('Resume error:', err);
+        console.error('🎵 Resume error:', err);
         setError('Failed to resume audio');
         setIsLoading(false);
       }
     } else {
-      console.log('Cannot resume:', { isPlaying, hasCurrentAudio: !!currentAudioRef.current });
+      console.log('🎵 Cannot resume - audio is already playing');
     }
   }, [isPlaying]);
 
   const stopAudio = useCallback(() => {
+    console.log('🎵 Stopping audio');
     AudioPro.stop();
-    // Reset positions
+    // Reset positions but preserve the URL for potential resume
     if (currentAudioRef.current) {
       currentAudioRef.current.lastPosition = 0;
       currentAudioRef.current.currentPosition = 0;
+      // Don't clear the URL and ID so we can resume later
     }
     setPosition(0);
   }, []);
