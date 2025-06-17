@@ -76,12 +76,12 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
       longitude 
     });
     
-    if (propLocationText) {
-      console.log('📍 Setting location text to prop:', propLocationText);
-      setLocationText(propLocationText);
-    } else if (displayLocation && displayLocation !== 'Location not available') {
+     if (displayLocation && displayLocation !== 'Location not available') {
       console.log('📍 Setting location text to display location:', displayLocation);
       setLocationText(displayLocation);
+    } else if (propLocationText) {
+      console.log('📍 Setting location text to prop:', propLocationText);
+      setLocationText(propLocationText);
     } else {
       console.log('📍 Setting default location text');
       setLocationText('Get accurate namaz time');
