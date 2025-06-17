@@ -14,7 +14,7 @@ import { useNameAudio } from '../../../hooks/useNameAudio'; // Adjust path as ne
 import { useAll99Names, Name99Data } from '../../../hooks/use99Names';
 
 // Store
-import { useThemeStore } from '@/globalStore';
+import { useThemeStore, useGlobalStore } from '@/globalStore';
 import { ColorPrimary } from '@/theme/lightColors';
 
 // Audio Components
@@ -34,14 +34,12 @@ const Close = () => {
   )
 }
 
-// Create a separate audio hook for the modal to avoid interference
+// Create a completely separate audio hook for the modal
 const useModalAudio = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [currentAudioRef, setCurrentAudioRef] = useState<any>(null);
-
-  // AudioPro is imported at the top
   
   const playAudioFromUrl = useCallback(async (audioUrl: string) => {
     try {
@@ -52,16 +50,19 @@ const useModalAudio = () => {
       const track = {
         id: trackId,
         url: audioUrl,
-        title: 'Name Audio',
+        title: 'Modal Name Audio',
         artist: '',
         artwork: 'test',
       };
 
       setCurrentAudioRef({ url: audioUrl, id: trackId });
+      
+      console.log('🎭 Modal: Playing separate modal audio:', audioUrl);
       await AudioPro.play(track);
       setIsPlaying(true);
       setIsLoading(false);
     } catch (err) {
+      console.error('🎭 Modal: Error playing modal audio:', err);
       setError('Failed to play audio');
       setIsLoading(false);
       setIsPlaying(false);
@@ -70,12 +71,14 @@ const useModalAudio = () => {
 
   const pauseAudio = useCallback(() => {
     if (isPlaying) {
+      console.log('🎭 Modal: Pausing modal audio');
       AudioPro.pause();
       setIsPlaying(false);
     }
   }, [isPlaying]);
 
   const stopAudio = useCallback(() => {
+    console.log('🎭 Modal: Stopping modal audio');
     AudioPro.stop();
     setIsPlaying(false);
     setCurrentAudioRef(null);
@@ -211,8 +214,9 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
    */
   const handleCloseModal = () => {
     setIsVisible(false);
-    // Stop audio when closing modal
+    // Stop modal audio when closing modal (this will restore shared audio state)
     if (modalAudioIsPlaying) {
+      console.log('🎭 Modal: Closing modal and stopping modal audio');
       modalStopAudio();
     }
     // Reset animation values
