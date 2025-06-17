@@ -71,6 +71,7 @@ export const DUA_ASSETS = {
   NAMES_RIGHT_TRIANGLE: '/assets/right-triangle.svg',
   NAMES_CLOSE: '/assets/close.svg',
   NAMES_PAUSE: '/assets/home/pause.svg',
+  NAMES_PAUSE_WHITE: '/assets/home/pause_white.svg',
   
   // Calendar module assets
   CALENDAR_DOWN_ARROW: '/assets/calendar/down-arrow.svg',
@@ -84,7 +85,8 @@ export const DUA_ASSETS = {
   
   // Compass assets
   COMPASS_BACKGROUND: '/assets/compass/compass.svg',
-  COMPASS_CENTER: '/assets/compass/compass_center.svg',
+  COMPASS_CENTER: '/assets/compass/compass_center.png',
+  COMPASS_FRAME: '/assets/compass/compass_frame.png',
   COMPASS_KAABA: '/assets/compass/Kaaba.png',
   COMPASS_3D: '/assets/compass/compass_3d.png',
   COMPASS_MOSQUE: '/assets/compass/mosque.svg',

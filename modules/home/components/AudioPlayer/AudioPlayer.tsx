@@ -1,12 +1,13 @@
 import React, {useState, useEffect, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, ImageBackground, ActivityIndicator} from 'react-native';
 import {scale, verticalScale} from '@/theme/responsive';
-import {Body1Title2Medium, CaptionMedium} from '@/components/Typography/Typography';
+import {Body1Title2Medium, CaptionMedium, Title3Bold} from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import { useNameAudio } from '@/modules/names/hooks/useNameAudio';
 import { useGlobalStore } from '@/globalStore';
 import { useAll99Names } from '@/modules/names/hooks/use99Names';
+import { useNavigation } from '@react-navigation/native';
 
 interface AudioPlayerProps {
   trackName?: string;
@@ -17,6 +18,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   trackName = 'Asma-ul-husna',
   onPlayPause,
 }) => {
+  const navigation = useNavigation();
+  
   // Get audio functionality from the hook
   const { 
     isPlaying, 
@@ -118,7 +121,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   // Handle seek functionality with proper position calculation
   const handleSeek = (event: any) => {
     const { locationX } = event.nativeEvent;
-    const progressBarWidth = scale(299); // Width of progress bar
+    const progressBarWidth = scale(259); // Updated width for progress bar
     const percentage = Math.max(0, Math.min(1, locationX / progressBarWidth));
     const newPosition = percentage * duration;
     
@@ -127,56 +130,83 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
+  // Navigate to names module
+  const handleViewAllNames = () => {
+    navigation.navigate('names' as never);
+  };
+
   return (
     <View style={styles.container}>
       <ImageBackground
         source={{ uri: getCdnUrl(DUA_ASSETS.AL_HUSNA_BACKGROUND) }}
         style={styles.backgroundImage}
         imageStyle={styles.backgroundImageStyle}>
-        {/* Track Image and Icon */}
-        <ImageBackground
-          source={{ uri: getCdnUrl(DUA_ASSETS.AL_HUSNA_TRACK_BACKGROUND) }}
-          style={styles.trackImageContainer}
-          imageStyle={styles.trackImageStyle}>
-          <View style={styles.iconContainer}>
-            <CdnSvg path={DUA_ASSETS.AL_HUSNA_ICON} width={80} height={100} />
-          </View>
-        </ImageBackground>
-
-        {/* Play/Pause Button */}
-        <TouchableOpacity style={styles.playPauseButton} onPress={handlePlayPause} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#000" />
-          ) : isPlaying ? (
-            <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={14} height={14} />
-          ) : (
-            <CdnSvg path={DUA_ASSETS.PLAY} width={14} height={14} />
-          )}
-        </TouchableOpacity>
-
-        {/* Track Info and Progress */}
-        <View style={styles.trackInfoContainer}>
-          {/* Track Name and Time */}
-          <View style={styles.trackNameContainer}>
-            <Body1Title2Medium color="white" style={styles.trackName}>
-              {trackName}
-            </Body1Title2Medium>
-            
-            <CaptionMedium style={styles.timeText}>
-              {formatTime(position)} / {formatTime(duration)}
-            </CaptionMedium>
+        
+        {/* Upper Section with Title and Icon */}
+        <View style={styles.upperSection}>
+          {/* Left side - Title and Link */}
+          <View style={styles.titleContainer}>
+            <Title3Bold color="white" style={styles.title}>
+              99 Names of Allah
+            </Title3Bold>
+            <TouchableOpacity onPress={handleViewAllNames} style={styles.viewAllContainer}>
+              <CaptionMedium style={styles.viewAllText}>
+                View all names
+              </CaptionMedium>
+              <Text style={{color:'#E5E5E5'}}>&gt;</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Progress Bar with larger touch area */}
-          <View style={styles.progressBarTouchContainer}>
-            <TouchableOpacity 
-              style={styles.progressBarTouchArea}
-              onPress={handleSeek}
-              activeOpacity={0.7}>
-              <View style={styles.progressBarContainer}>
-                <View style={styles.progressBarBackground} />
-                <View style={[styles.progressBar, {width: `${Math.min(100, Math.max(0, progress * 100))}%`}]} />
+          {/* Right side - Icon */}
+          <ImageBackground
+            source={{ uri: getCdnUrl(DUA_ASSETS.AL_HUSNA_TRACK_BACKGROUND) }}
+            style={styles.trackImageContainer}
+            imageStyle={styles.trackImageStyle}>
+            <View style={styles.iconContainer}>
+              <CdnSvg path={DUA_ASSETS.AL_HUSNA_ICON} width={45} height={56} />
+            </View>
+          </ImageBackground>
+        </View>
+
+        {/* Lower Section with Blurred Background */}
+        <View style={styles.lowerSection}>
+          {/* Track Name, Time and Play/Pause */}
+          <View style={styles.trackControlsRow}>
+            {/* Left Section: Track Info and Progress Bar */}
+            <View style={styles.leftSection}>
+              {/* Track Name and Time in same row */}
+              <View style={styles.trackInfoRow}>
+                <Body1Title2Medium style={styles.trackName}>
+                  {trackName}
+                </Body1Title2Medium>
+                <CaptionMedium style={styles.timeText}>
+                  {formatTime(position)} / {formatTime(duration)}
+                </CaptionMedium>
               </View>
+
+              {/* Progress Bar below track info */}
+              <View style={styles.progressBarTouchContainer}>
+                <TouchableOpacity 
+                  style={styles.progressBarTouchArea}
+                  onPress={handleSeek}
+                  activeOpacity={0.7}>
+                  <View style={styles.progressBarContainer}>
+                    <View style={styles.progressBarBackground} />
+                    <View style={[styles.progressBar, {width: `${Math.min(100, Math.max(0, progress * 100))}%`}]} />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Play/Pause Button - centered beside left section */}
+            <TouchableOpacity style={styles.playPauseButton} onPress={handlePlayPause} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : isPlaying ? (
+                <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={14} height={14} />
+              ) : (
+                <CdnSvg path={DUA_ASSETS.PLAY} width={14} height={14} />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -188,7 +218,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: scale(339),
-    height: verticalScale(240),
+    height: verticalScale(170),
     borderRadius: scale(8), // radius-md
     borderWidth: 0.5,
     borderColor: '#E5E5E5',
@@ -199,19 +229,47 @@ const styles = StyleSheet.create({
   backgroundImage: {
     width: '100%',
     height: '100%',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
   },
   backgroundImageStyle: {
     borderRadius: scale(8),
     resizeMode: 'cover',
+    transform: [{ scaleX: -1 }],
+  },
+  upperSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: scale(20),
+    paddingTop: scale(14),
+    flex: 1,
+  },
+  titleContainer: {
+    flex: 1,
+    marginRight: scale(16),
+    paddingTop: scale(20),
+  },
+  title: {
+    fontSize: scale(17),
+    fontWeight: '600',
+    marginBottom: scale(4),
+  },
+  viewAllContainer: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(4),
+  },
+  viewAllText: {
+    fontSize: scale(12),
+    color: '#E5E5E5',
+    opacity: 0.8,
+    textDecorationLine: 'underline',
   },
   trackImageContainer: {
-    position: 'absolute',
-    width: scale(137),
-    height: scale(137),
-    top: scale(20),
-    left: scale(20),
-    borderRadius: scale(12),
+    width: scale(80),
+    height: scale(80),
+    borderRadius: scale(8),
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -219,12 +277,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   trackImageStyle: {
-    borderRadius: scale(12),
+    borderRadius: scale(8),
     resizeMode: 'cover',
     opacity: 0.9,
-    flex: 1,
-    width: '100%',
-    height: '100%',
   },
   iconContainer: {
     width: '100%',
@@ -232,66 +287,95 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  playPauseButton: {
+  lowerSection: {
     position: 'absolute',
-    width: scale(35),
-    height: scale(35),
-    top: scale(24),
-    right: scale(24),
-    borderRadius: scale(24.5),
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: verticalScale(52),
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderBottomLeftRadius: scale(8),
+    borderBottomRightRadius: scale(8),
+    paddingTop: scale(8),
+    paddingBottom: scale(12),
+    paddingHorizontal: scale(20),
   },
-  trackInfoContainer: {
-    width: scale(299),
-    alignSelf: 'center',
-    marginBottom: scale(20),
-    marginHorizontal: scale(20),
-  },
-  trackNameContainer: {
-    width: scale(299),
+  trackControlsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: verticalScale(8),
+    width: '100%',
+  },
+  leftSection: {
+    flex: 1,
+    marginRight: scale(12),
+  },
+  trackInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: scale(4),
+  },
+  trackInfoLeft: {
+    flex: 1,
+    marginRight: scale(12),
+    flexDirection:'row',
+    alignItems:'center',
+justifyContent:'space-between',
+width:'100%'
   },
   trackName: {
-    fontSize: scale(17),
+    fontSize: scale(14),
+    fontWeight: '500',
+    color: 'white',
   },
   timeText: {
     fontSize: scale(10),
-    lineHeight: scale(14),
     color: '#E5E5E5',
   },
-  progressBarTouchContainer: {
-    width: scale(299),
-    height: verticalScale(20), // Larger touch area
+  playPauseButton: {
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  progressBarTouchContainer: {
+    width: '100%',
+    height: verticalScale(12),
+    justifyContent: 'center',
   },
   progressBarTouchArea: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
-    alignItems: 'center',
   },
   progressBarContainer: {
-    width: scale(299),
-    height: verticalScale(4),
-    borderRadius: scale(2),
-    backgroundColor: '#FFFFFF4D',
+    width: '100%',
+    height: verticalScale(3),
+    borderRadius: scale(1.5),
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     overflow: 'hidden',
   },
   progressBarBackground: {
     position: 'absolute',
     width: '100%',
     height: '100%',
-    backgroundColor: '#FFFFFF4D',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   progressBar: {
     height: '100%',
     backgroundColor: '#FFFFFF',
+    borderRadius: scale(1.5),
   },
 });
 

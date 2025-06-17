@@ -403,7 +403,7 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
               accessibilityRole="button"
             >
               {isPlaying ? (
-                <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={24} height={24} />
+                <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={24} height={24} />
               ) : (
                 <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={24} height={24} />
               )}

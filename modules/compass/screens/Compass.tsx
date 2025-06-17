@@ -20,7 +20,7 @@ import { useLocationData } from '@/modules/location/hooks/useLocationData';
 import {FindMosqueButton, NextSalah} from './components/compass';
 import {Divider} from '@/components';
 import { CdnSvg } from '@/components/CdnSvg';
-import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import GeographicDetails from './components/compass/GeographicDetails';
 import QiblaIndicator from './components/compass/QiblaIndicator';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -76,7 +76,7 @@ const CustomCompass: React.FC<CustomCompassProps> = ({ rotate }) => {
       {/*  Rotating Frame */}
       <Animated.View style={[styles.compassFrame, {transform: [{rotate}]}]}>
         <FastImage 
-          source={require('@/assets/compass-frame.png')} 
+          source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_FRAME) }} 
           style={styles.compassFrameImage}
           resizeMode={FastImage.resizeMode.contain}
         />
@@ -85,7 +85,7 @@ const CustomCompass: React.FC<CustomCompassProps> = ({ rotate }) => {
       {/* Fixed Center */}
       <View style={styles.compassCenter}>
         <FastImage 
-          source={require('@/assets/compass-center.png')} 
+          source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_CENTER) }} 
           style={styles.compassCenterImage}
           resizeMode={FastImage.resizeMode.contain}
         />

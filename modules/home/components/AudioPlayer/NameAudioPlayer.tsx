@@ -180,7 +180,7 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
         {isLoading ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : isPlaying ? (
-          <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={12} height={12} />
+          <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={12} height={12} />
         ) : (
           <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={12} height={12} />
         )}
