@@ -58,10 +58,15 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
   // Get current name data to access the audio URL
   const { data: namesData, isLoading: namesLoading } = useAll99Names();
   
+  // Debug logging for button state
+  useEffect(() => {
+    console.log('🟡 NameAudioPlayer state update:', { isPlaying, isLoading, namesLoading });
+  }, [isPlaying, isLoading, namesLoading]);
+  
   // Initialize with the first name when component mounts
   useEffect(() => {
-    if (namesData && namesData.length > 0 && !isPlaying && !isLoading) {
-      // Set the first name as the current audio
+    if (namesData && namesData.length > 0) {
+      // Set the first name as the current audio (don't depend on isPlaying state)
       setHomeAudioNameId(namesData[0].number);
     }
   }, [namesData]);
@@ -125,7 +130,10 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
   };
 
   const handleClose = () => {
-    // Don't stop audio when closing - let it continue in background
+    // Pause audio when closing the player manually
+    if (isPlaying) {
+      pauseAudio();
+    }
     if (onClose) {
       onClose();
     }

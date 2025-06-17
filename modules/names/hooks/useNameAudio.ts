@@ -34,12 +34,26 @@ export const useNameAudio = (): UseNameAudioReturn => {
     currentPosition: number; // Real-time position tracking
   } | null>(null);
 
-  // Initialize audio pro
+  // Initialize audio pro and get current state
   useEffect(() => {
+    console.log('🎵 Initializing AudioPro...');
     AudioPro.configure({
       contentType: AudioProContentType.SPEECH,
       showNextPrevControls: false,
     });
+
+    // Get current audio state on mount
+    try {
+      const currentState = AudioPro.getState();
+      console.log('🎵 Current AudioPro state on mount:', currentState);
+      const isCurrentlyPlaying = currentState === 'PLAYING';
+      const isCurrentlyLoading = currentState === 'LOADING';
+      console.log('🎵 Setting initial state - isPlaying:', isCurrentlyPlaying, 'isLoading:', isCurrentlyLoading);
+      setIsPlaying(isCurrentlyPlaying);
+      setIsLoading(isCurrentlyLoading);
+    } catch (err: any) {
+      console.log('🎵 Could not get AudioPro state:', err);
+    }
 
     const subscription = AudioPro.addEventListener((event) => {
       switch (event.type) {
@@ -47,7 +61,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
           const newIsPlaying = event.payload?.state === 'PLAYING';
           const newIsLoading = event.payload?.state === 'LOADING';
           
-          console.log('Audio state changed:', event.payload?.state);
+          console.log('🎵 Audio state changed:', event.payload?.state, 'isPlaying:', newIsPlaying);
           
           setIsPlaying(newIsPlaying);
           setIsLoading(newIsLoading);
@@ -80,7 +94,7 @@ export const useNameAudio = (): UseNameAudioReturn => {
 
     return () => {
       subscription.remove();
-      AudioPro.clear();
+      // Note: Don't call AudioPro.clear() here as it would stop audio for all components
     };
   }, []);
 

@@ -60,10 +60,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   // Get current name data to access the audio URL
   const { data: namesData, isLoading: namesLoading } = useAll99Names();
   
+  // Debug logging for button state
+  useEffect(() => {
+    console.log('🟢 AudioPlayer state update:', { isPlaying, isLoading, namesLoading });
+  }, [isPlaying, isLoading, namesLoading]);
+  
   // Initialize with the first name when component mounts
   useEffect(() => {
-    if (namesData && namesData.length > 0 && !isPlaying && !isLoading) {
-      // Set the first name as the current audio
+    if (namesData && namesData.length > 0) {
+      // Set the first name as the current audio (don't depend on isPlaying state)
       setHomeAudioNameId(namesData[0].number);
     }
   }, [namesData]);

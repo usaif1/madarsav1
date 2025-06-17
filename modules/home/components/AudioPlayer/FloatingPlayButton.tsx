@@ -37,38 +37,65 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
   // Get names data to access the first name's audio
   const { data: namesData, isLoading: namesLoading } = useAll99Names();
   
+  // Debug logging for button state
+  useEffect(() => {
+    console.log('🔵 FloatingPlayButton state update:', { isPlaying, isLoading, namesLoading });
+  }, [isPlaying, isLoading, namesLoading]);
+  
   // Initialize with the first name when component mounts
   useEffect(() => {
     if (namesData && namesData.length > 0) {
+      // Set the first name as the current audio (don't depend on isPlaying state)
       setHomeAudioNameId(namesData[0].number);
     }
   }, [namesData]);
+
+  // Auto-show player if audio is already playing when component mounts
+  useEffect(() => {
+    if (isPlaying && !isLoading) {
+      console.log('🔵 Audio is already playing on mount, showing player...');
+      setShowPlayer(true);
+    }
+  }, [isPlaying, isLoading]);
+
+  // Show/hide player based on audio state changes
+  useEffect(() => {
+    if (isPlaying && !isLoading) {
+      console.log('🔵 Audio started playing, showing player...');
+      setShowPlayer(true);
+    } else if (!isPlaying && !isLoading) {
+      console.log('🔵 Audio stopped playing, hiding player...');
+      setShowPlayer(false);
+    }
+  }, [isPlaying, isLoading]);
 
   const handlePress = async () => {
     if (onPress) {
       onPress();
     }
     
-    if (isPlaying) {
-      // If playing, show the player
-      setShowPlayer(true);
-    } else {
-      // If not playing, start playing and show player
-      if (namesData && namesData.length > 0) {
-        const firstName = namesData[0];
-        if (firstName && firstName.audioLink) {
-          if (position > 0) {
-            await resumeAudio();
-          } else {
-            await playAudioFromUrl(firstName.audioLink);
-          }
-          setShowPlayer(true);
+    // Always show the player when pressed
+    setShowPlayer(true);
+    
+    // If not playing, start/resume audio
+    if (!isPlaying && namesData && namesData.length > 0) {
+      const firstName = namesData[0];
+      if (firstName && firstName.audioLink) {
+        if (position > 0) {
+          await resumeAudio();
+        } else {
+          await playAudioFromUrl(firstName.audioLink);
         }
       }
     }
   };
 
   const handleClosePlayer = () => {
+    // Only allow closing if audio is not playing, or pause audio when closing
+    if (isPlaying) {
+      // Pause the audio when closing the player
+      pauseAudio();
+    }
     setShowPlayer(false);
   };
 
@@ -78,8 +105,8 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
 
   return (
     <>
-      {/* Floating Button - Hide when player is open */}
-      {!showPlayer && (
+      {/* Floating Button - Show only when audio is not playing and player is not open */}
+      {!showPlayer && !isPlaying && (
         <TouchableOpacity 
           style={styles.floatingButton} 
           onPress={handlePress}
@@ -88,15 +115,13 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
         >
           {(isLoading || namesLoading) ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : isPlaying ? (
-            <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={18} height={18} />
           ) : (
             <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={18} height={18} />
           )}
         </TouchableOpacity>
       )}
 
-      {/* Modal for NameAudioPlayer */}
+      {/* Modal for NameAudioPlayer - Show when audio is playing or when manually opened */}
       <Modal
         isVisible={showPlayer}
         backdropOpacity={0}
