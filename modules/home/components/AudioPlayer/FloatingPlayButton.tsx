@@ -3,7 +3,7 @@ import {View, StyleSheet, TouchableOpacity, ActivityIndicator} from 'react-nativ
 import {scale, verticalScale} from '@/theme/responsive';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
-import { useNameAudio } from '@/modules/names/hooks/useNameAudio';
+import { useSharedAudio } from '@/modules/names/hooks/useSharedAudio';
 import { useGlobalStore } from '@/globalStore';
 import { useAll99Names } from '@/modules/names/hooks/use99Names';
 import Modal from 'react-native-modal';
@@ -19,7 +19,7 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
   const [showPlayer, setShowPlayer] = useState<boolean>(false);
   const [manuallyClosedRef, setManuallyClosedRef] = useState<boolean>(false);
   
-  // Get audio functionality from the hook
+  // Get audio functionality from the shared hook
   const { 
     isPlaying, 
     isLoading, 
@@ -27,7 +27,7 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
     pauseAudio, 
     resumeAudio,
     position
-  } = useNameAudio();
+  } = useSharedAudio();
   
   // Get global state
   const { 
@@ -73,20 +73,27 @@ const FloatingPlayButton: React.FC<FloatingPlayButtonProps> = ({
       onPress();
     }
     
-    // Always show the player when pressed and clear manual close flag
-    setShowPlayer(true);
-    setManuallyClosedRef(false);
+    console.log('🔵 FloatingPlayButton pressed - isPlaying:', isPlaying);
     
-    // If not playing, start/resume audio
-    if (!isPlaying && namesData && namesData.length > 0) {
-      const firstName = namesData[0];
-      if (firstName && firstName.audioLink) {
-        if (position > 0) {
-          console.log('🔵 Resuming audio from position:', position);
-          await resumeAudio();
-        } else {
-          console.log('🔵 Starting fresh audio');
-          await playAudioFromUrl(firstName.audioLink);
+    if (isPlaying) {
+      // If playing, pause the audio
+      console.log('🔵 Pausing audio from FloatingPlayButton');
+      pauseAudio();
+    } else {
+      // If not playing, start/resume audio and show player
+      setShowPlayer(true);
+      setManuallyClosedRef(false);
+      
+      if (namesData && namesData.length > 0) {
+        const firstName = namesData[0];
+        if (firstName && firstName.audioLink) {
+          if (position > 0) {
+            console.log('🔵 Resuming audio from position:', position);
+            await resumeAudio();
+          } else {
+            console.log('🔵 Starting fresh audio');
+            await playAudioFromUrl(firstName.audioLink);
+          }
         }
       }
     }

@@ -4,7 +4,7 @@ import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Medium, CaptionMedium} from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
-import { useNameAudio } from '@/modules/names/hooks/useNameAudio';
+import { useSharedAudio } from '@/modules/names/hooks/useSharedAudio';
 import { useGlobalStore } from '@/globalStore';
 import { useAll99Names } from '@/modules/names/hooks/use99Names';
 
@@ -19,7 +19,7 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
   onPlayPause,
   onClose,
 }) => {
-  // Get audio functionality from the hook
+  // Get audio functionality from the shared hook
   const { 
     isPlaying, 
     isLoading, 
@@ -32,7 +32,7 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
     resumeAudio,
     stopAudio,
     seekTo
-  } = useNameAudio();
+  } = useSharedAudio();
   
   // Get and set global state
   const { 
@@ -88,12 +88,15 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
   
   const handlePlayPause = async () => {
     try {
-      console.log('🟡 NameAudioPlayer handlePlayPause called - isPlaying:', isPlaying);
+      console.log('🟡 NameAudioPlayer handlePlayPause called - isPlaying:', isPlaying, 'isLoading:', isLoading);
       
+      // Simple pause/play logic
       if (isPlaying) {
-        console.log('🟡 Pausing audio from NameAudioPlayer');
+        console.log('🟡 About to call pauseAudio() from NameAudioPlayer');
         pauseAudio();
+        console.log('🟡 pauseAudio() call completed');
       } else {
+        console.log('🟡 About to start/resume audio from NameAudioPlayer');
         // Find the current name data to get the audio URL
         if (namesData && namesData.length > 0) {
           // Always use the first name (Asma-ul-husna) for this player
@@ -108,16 +111,17 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
               await playAudioFromUrl(firstName.audioLink);
             }
           } else {
-            console.error('Audio URL not found for first name');
+            console.error('🟡 Audio URL not found for first name');
           }
         }
       }
       
       if (onPlayPause) {
+        console.log('🟡 Calling onPlayPause callback');
         onPlayPause();
       }
     } catch (error) {
-      console.error('Error in handlePlayPause:', error);
+      console.error('🟡 Error in handlePlayPause:', error);
     }
   };
 
@@ -188,9 +192,15 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
       <TouchableOpacity 
         style={[styles.playPauseButton, { zIndex: 1000 }]} 
         onPress={() => {
-          console.log('🟡 TouchableOpacity pressed in NameAudioPlayer');
-          handlePlayPause();
-        }} 
+          console.log('🟡 TouchableOpacity pressed in NameAudioPlayer - isLoading:', isLoading, 'isPlaying:', isPlaying);
+          if (!isLoading) {
+            handlePlayPause();
+          } else {
+            console.log('🟡 Button disabled due to loading state');
+          }
+        }}
+        onPressIn={() => console.log('🟡 TouchableOpacity onPressIn')}
+        onPressOut={() => console.log('🟡 TouchableOpacity onPressOut')}
         disabled={isLoading}
         activeOpacity={0.7}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}

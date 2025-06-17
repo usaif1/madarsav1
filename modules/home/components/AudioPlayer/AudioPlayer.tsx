@@ -4,7 +4,7 @@ import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Medium, CaptionMedium, Title3Bold} from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
-import { useNameAudio } from '@/modules/names/hooks/useNameAudio';
+import { useSharedAudio } from '@/modules/names/hooks/useSharedAudio';
 import { useGlobalStore } from '@/globalStore';
 import { useAll99Names } from '@/modules/names/hooks/use99Names';
 import { useNavigation } from '@react-navigation/native';
@@ -20,7 +20,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 }) => {
   const navigation = useNavigation();
   
-  // Get audio functionality from the hook
+  // Get audio functionality from the shared hook
   const { 
     isPlaying, 
     isLoading, 
@@ -33,7 +33,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     resumeAudio,
     stopAudio,
     seekTo
-  } = useNameAudio();
+  } = useSharedAudio();
   
   // Get and set global state
   const { 

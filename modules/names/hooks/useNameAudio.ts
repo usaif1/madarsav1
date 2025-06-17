@@ -149,14 +149,17 @@ export const useNameAudio = (): UseNameAudioReturn => {
   }, [getAudioUrl, playAudioFromUrl]);
 
   const pauseAudio = useCallback(() => {
+    console.log('🎵 pauseAudio called - isPlaying:', isPlaying, 'hasCurrentAudio:', !!currentAudioRef.current);
+    
     if (isPlaying && currentAudioRef.current) {
       // Store current position before pausing
       currentAudioRef.current.lastPosition = currentAudioRef.current.currentPosition;
-      console.log('Pausing audio at position:', currentAudioRef.current.lastPosition);
+      console.log('🎵 Pausing audio at position:', currentAudioRef.current.lastPosition);
       AudioPro.pause();
+      console.log('🎵 AudioPro.pause() called');
       // Position will be updated in the STATE_CHANGED event handler
     } else {
-      console.log('Cannot pause:', { isPlaying, hasCurrentAudio: !!currentAudioRef.current });
+      console.log('🎵 Cannot pause:', { isPlaying, hasCurrentAudio: !!currentAudioRef.current });
     }
   }, [isPlaying]);
 
