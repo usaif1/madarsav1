@@ -19,6 +19,7 @@ interface IslamicEvent {
   daysLeft: number;
   isToday?: boolean;
   isPast?: boolean;
+  fullDate?: Date; // Add full date for precise matching
 }
 
 interface EventsListProps {
@@ -37,6 +38,7 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
   const currentDisplayMonth = displayMonth !== undefined ? displayMonth : selectedDate.getMonth();
   
   console.log('🎯 EventsList - Display Year:', currentDisplayYear);
+  console.log('📅 Selected Date:', selectedDate.toDateString());
   console.log('📅 Using same API as CustomCalendar for perfect consistency');
   
   // Call useHijriCalendar for all 12 months of the display year
@@ -127,7 +129,8 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
               title: holiday,
               islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
               daysLeft: daysLeft,
-              isPast: isPast
+              isPast: isPast,
+              fullDate: holidayDate, // Store full date for precise matching
             };
             
             // Avoid duplicates (same holiday on same date)
@@ -168,6 +171,23 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
     ...monthlyData.map(month => month.data)
   ]);
 
+  // Find events that match the selected date
+  const selectedDateEvents = useMemo(() => {
+    const selectedDateString = selectedDate.toDateString();
+    
+    const matchingEvents = events.filter(event => {
+      if (!event.fullDate) return false;
+      return event.fullDate.toDateString() === selectedDateString;
+    });
+    
+    console.log(`📅 Selected Date Events: Found ${matchingEvents.length} events for ${selectedDateString}`);
+    matchingEvents.forEach(event => {
+      console.log(`   - ${event.title} (${event.date})`);
+    });
+    
+    return matchingEvents;
+  }, [events, selectedDate]);
+
   // Find the first event that belongs to the current display month
   const firstCurrentMonthEventIndex = useMemo(() => {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -180,20 +200,60 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
     });
   }, [events, currentDisplayMonth]);
 
-  // Auto-scroll to the first event of the current month
+  // Find the index of the first event matching the selected date
+  const selectedDateEventIndex = useMemo(() => {
+    if (selectedDateEvents.length === 0) return -1;
+    
+    // Find the index of the first matching event in the full events array
+    const firstSelectedEvent = selectedDateEvents[0];
+    const index = events.findIndex(event => event.id === firstSelectedEvent.id);
+    
+    console.log(`📍 Selected Date Event Index: ${index} for event "${firstSelectedEvent.title}"`);
+    return index;
+  }, [events, selectedDateEvents]);
+
+  // Auto-scroll logic: Priority order
+  // 1. If selected date has events, scroll to that event
+  // 2. Otherwise, scroll to first event of current month
   useEffect(() => {
-    if (events.length > 0 && firstCurrentMonthEventIndex !== -1 && flatListRef.current) {
+    if (events.length === 0 || !flatListRef.current) return;
+    
+    let targetIndex = -1;
+    let scrollReason = '';
+    
+    // Priority 1: Scroll to selected date event if it exists
+    if (selectedDateEventIndex !== -1) {
+      targetIndex = selectedDateEventIndex;
+      scrollReason = `selected date event (${selectedDateEvents[0]?.title})`;
+    }
+    // Priority 2: Scroll to first event of current month
+    else if (firstCurrentMonthEventIndex !== -1) {
+      targetIndex = firstCurrentMonthEventIndex;
+      scrollReason = 'first event of current month';
+    }
+    
+    if (targetIndex !== -1) {
+      console.log(`🔄 Auto-scrolling to index ${targetIndex} - ${scrollReason}`);
+      
       const timeoutId = setTimeout(() => {
         flatListRef.current?.scrollToIndex({
-          index: firstCurrentMonthEventIndex,
+          index: targetIndex,
           animated: true,
-          viewPosition: 0.1,
+          viewPosition: 0.1, // Show the item near the top of the list
         });
       }, 100);
 
       return () => clearTimeout(timeoutId);
+    } else {
+      console.log('🔄 No auto-scroll target found');
     }
-  }, [events, firstCurrentMonthEventIndex, currentDisplayMonth]);
+  }, [
+    events, 
+    selectedDateEventIndex, 
+    firstCurrentMonthEventIndex, 
+    currentDisplayMonth,
+    selectedDateEvents
+  ]);
   
   const styles = StyleSheet.create({
     titleWrapper: {
@@ -226,6 +286,11 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       borderBottomColor: colors.primary.primary100,
       padding: scale(16), 
     },
+    selectedEventItem: {
+      backgroundColor: colors.primary.primary50, // Highlight selected date events
+      borderLeftWidth: 4,
+      borderLeftColor: colors.primary.primary600,
+    },
     dateContainer: {
       width: scale(38),
       height: scale(38),
@@ -233,6 +298,9 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.primary.primary50,
+    },
+    selectedDateContainer: {
+      backgroundColor: colors.primary.primary600, // Highlight selected date events
     },
     eventContent: {
       flex: 1,
@@ -285,11 +353,31 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
         const isToday = item.daysLeft === 0;
         const opacity = item.isPast ? 0.5 : 1.0;
         
+        // Check if this event matches the selected date
+        const isSelectedDateEvent = selectedDateEvents.some(selectedEvent => selectedEvent.id === item.id);
+        
         return (
-          <View style={[styles.eventItem, { opacity }]}>
-            <View style={styles.dateContainer}>
-              <Body1Title2Bold style={{fontSize: scale(14)}} color="primary">{item.date.split(' ')[0]}</Body1Title2Bold>
-              <Body2Medium style={{fontSize: scale(10)}} color="primary">{item.date.split(' ')[1]}</Body2Medium>
+          <View style={[
+            styles.eventItem, 
+            { opacity },
+            isSelectedDateEvent && styles.selectedEventItem
+          ]}>
+            <View style={[
+              styles.dateContainer,
+              isSelectedDateEvent && styles.selectedDateContainer
+            ]}>
+              <Body1Title2Bold 
+                style={{fontSize: scale(14)}} 
+                color={isSelectedDateEvent ? "white" : "primary"}
+              >
+                {item.date.split(' ')[0]}
+              </Body1Title2Bold>
+              <Body2Medium 
+                style={{fontSize: scale(10)}} 
+                color={isSelectedDateEvent ? "white" : "primary"}
+              >
+                {item.date.split(' ')[1]}
+              </Body2Medium>
             </View>
             
             <View style={styles.eventContent}>
