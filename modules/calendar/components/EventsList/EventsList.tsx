@@ -7,11 +7,8 @@ import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale, verticalScale } from '@/theme/responsive';
 
-// Import only the required Hijri Calendar API hooks
-import { 
-  useHijriHolidaysByYear, 
-  useCurrentIslamicYear
-} from '../../hooks/useHijriCalendar';
+// Import the same Hijri Calendar API hook used by CustomCalendar for consistency
+import { useHijriCalendar } from '../../hooks/useHijriCalendar';
 import { formatDate } from '../../utils/dateUtils';
 
 interface IslamicEvent {
@@ -40,113 +37,110 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
   const currentDisplayMonth = displayMonth !== undefined ? displayMonth : selectedDate.getMonth();
   
   console.log('🎯 EventsList - Display Year:', currentDisplayYear);
+  console.log('📅 Using same API as CustomCalendar for perfect consistency');
   
-  // Get current Islamic year (only for calculating display year)
-  const { data: currentIslamicYearData, isLoading: isYearLoading } = useCurrentIslamicYear();
+  // Call useHijriCalendar for all 12 months of the display year
+  // This ensures perfect consistency with CustomCalendar dots
+  const month1 = useHijriCalendar(1, currentDisplayYear);
+  const month2 = useHijriCalendar(2, currentDisplayYear);
+  const month3 = useHijriCalendar(3, currentDisplayYear);
+  const month4 = useHijriCalendar(4, currentDisplayYear);
+  const month5 = useHijriCalendar(5, currentDisplayYear);
+  const month6 = useHijriCalendar(6, currentDisplayYear);
+  const month7 = useHijriCalendar(7, currentDisplayYear);
+  const month8 = useHijriCalendar(8, currentDisplayYear);
+  const month9 = useHijriCalendar(9, currentDisplayYear);
+  const month10 = useHijriCalendar(10, currentDisplayYear);
+  const month11 = useHijriCalendar(11, currentDisplayYear);
+  const month12 = useHijriCalendar(12, currentDisplayYear);
   
-  // Get current Islamic year for calculations
-  const currentIslamicYear = currentIslamicYearData?.data 
-    ? (typeof currentIslamicYearData.data === 'number' 
-      ? currentIslamicYearData.data 
-      : parseInt((currentIslamicYearData.data as any)?.hijri?.year || '1445'))
-    : 1445;
+  // Collect all month data and loading states
+  const monthlyData = [
+    { data: month1.data, isLoading: month1.isLoading, error: month1.error, month: 1 },
+    { data: month2.data, isLoading: month2.isLoading, error: month2.error, month: 2 },
+    { data: month3.data, isLoading: month3.isLoading, error: month3.error, month: 3 },
+    { data: month4.data, isLoading: month4.isLoading, error: month4.error, month: 4 },
+    { data: month5.data, isLoading: month5.isLoading, error: month5.error, month: 5 },
+    { data: month6.data, isLoading: month6.isLoading, error: month6.error, month: 6 },
+    { data: month7.data, isLoading: month7.isLoading, error: month7.error, month: 7 },
+    { data: month8.data, isLoading: month8.isLoading, error: month8.error, month: 8 },
+    { data: month9.data, isLoading: month9.isLoading, error: month9.error, month: 9 },
+    { data: month10.data, isLoading: month10.isLoading, error: month10.error, month: 10 },
+    { data: month11.data, isLoading: month11.isLoading, error: month11.error, month: 11 },
+    { data: month12.data, isLoading: month12.isLoading, error: month12.error, month: 12 },
+  ];
   
-  // Calculate Islamic year for the display year
-  const calculateIslamicYearForGregorianYear = (gregorianYear: number): number => {
-    // Islamic year is about 622 years behind Gregorian with correction factor
-    const approximateIslamicYear = Math.floor((gregorianYear - 622) * 1.030684);
-    return Math.max(approximateIslamicYear, 1);
-  };
+  // Check if any month is still loading
+  const isLoading = monthlyData.some(month => month.isLoading);
   
-  // Always use current Islamic year for current year, calculate for others
-  const displayIslamicYear = currentDisplayYear === new Date().getFullYear() 
-    ? currentIslamicYear
-    : calculateIslamicYearForGregorianYear(currentDisplayYear);
-    
-  // To get a complete Gregorian year, we need TWO consecutive Islamic years
-  const primaryIslamicYear = displayIslamicYear;
-  const secondaryIslamicYear = displayIslamicYear + 1;
-  
-  console.log('🗓️ Using Islamic Years for events:', {
-    displayYear: currentDisplayYear,
-    primary: primaryIslamicYear,
-    secondary: secondaryIslamicYear
-  });
-  
-  // ONLY fetch the 2 APIs we actually need for events
-  const { data: yearHolidaysData, isLoading: isYearHolidaysLoading } = 
-    useHijriHolidaysByYear(primaryIslamicYear);
-    
-  const { data: secondaryYearHolidaysData, isLoading: isSecondaryYearHolidaysLoading } = 
-    useHijriHolidaysByYear(secondaryIslamicYear);
-  
-  // Process the events data - REMOVED dependency on selectedDate since events are year-wide
+  // Process the events data from all 12 months - same as CustomCalendar processing
   const events = useMemo(() => {
-    console.log('🎯 === EVENTS ARRAY CREATION (Year-based) ===');
+    console.log('🎯 === EVENTS ARRAY CREATION (12-Month Hijri Calendar API) ===');
     console.log('🗓️ Display Year:', currentDisplayYear);
-    console.log('🗓️ Islamic Years:', { primary: primaryIslamicYear, secondary: secondaryIslamicYear });
+    console.log('📊 Using same useHijriCalendar API as CustomCalendar for perfect consistency');
     
     const eventsArray: IslamicEvent[] = [];
     const today = new Date();
     
-    // Helper function to process holiday data from either API response
-    const processHolidayData = (holidayData: any, yearLabel: string) => {
-      if (holidayData?.data && Array.isArray(holidayData.data)) {
-        console.log(`✅ Processing ${holidayData.data.length} days from ${yearLabel} Holidays`);
-        
-        holidayData.data.forEach((dayData: any, index: number) => {
-          if (!dayData || !dayData.gregorian || !dayData.hijri) {
-            return;
-          }
-          
-          const gregorianDate = dayData.gregorian;
-          const hijriDate = dayData.hijri;
-          
-          // Check if this day has any holidays
-          if (hijriDate.holidays && hijriDate.holidays.length > 0) {
-            // Use API's actual date - no hardcoded assumptions
-            const apiYear = parseInt(gregorianDate.year);
-            const apiMonth = gregorianDate.month.number - 1; // Convert to 0-based month
-            const apiDay = parseInt(gregorianDate.day);
-            
-            const holidayDate = new Date(apiYear, apiMonth, apiDay);
-            
-            // FILTER: Only include events within the current display year
-            if (apiYear !== currentDisplayYear) {
-              return; // Skip events not in the current display year
-            }
-            
-            // Calculate days left relative to TODAY for consistent behavior
-            const daysLeft = Math.ceil((holidayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            const isPast = daysLeft < 0;
-            
-            // Add each holiday for this day
-            hijriDate.holidays.forEach((holiday: string, holidayIndex: number) => {
-              const eventItem: IslamicEvent = {
-                id: `${yearLabel.toLowerCase()}-holiday-${index}-${holidayIndex}`,
-                date: `${gregorianDate.day} ${gregorianDate.month.en.substring(0, 3)}`,
-                title: holiday,
-                islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
-                daysLeft: daysLeft,
-                isPast: isPast
-              };
-              
-              // Avoid duplicates
-              if (!eventsArray.some(e => e.title === holiday && e.date === eventItem.date)) {
-                console.log(`➕ Adding ${yearLabel} Holiday Event:`, eventItem.title);
-                eventsArray.push(eventItem);
-              }
-            });
-          }
-        });
-      } else {
-        console.log(`❌ ${yearLabel} Holidays API returned no valid data`);
+    // Process each month's data
+    monthlyData.forEach(({ data: hijriCalendarData, month }) => {
+      if (!hijriCalendarData?.data || !Array.isArray(hijriCalendarData.data)) {
+        console.log(`⚠️ Month ${month}: No valid data`);
+        return;
       }
-    };
-    
-    // Process both Islamic years
-    processHolidayData(yearHolidaysData, 'Primary');
-    processHolidayData(secondaryYearHolidaysData, 'Secondary');
+      
+      console.log(`✅ Processing Month ${month}: ${hijriCalendarData.data.length} days`);
+      
+      // Process each day in the month - exactly like CustomCalendar
+      hijriCalendarData.data.forEach((dayData, index) => {
+        if (!dayData || !dayData.gregorian || !dayData.hijri) {
+          return;
+        }
+        
+        const gregorianDate = dayData.gregorian;
+        const hijriDate = dayData.hijri;
+        
+        // Check if this day has any holidays - same logic as CustomCalendar
+        if (hijriDate.holidays && hijriDate.holidays.length > 0) {
+          console.log(`🎉 Month ${month}, Day ${index}: Found holidays for ${gregorianDate.day}/${gregorianDate.month.number}:`, hijriDate.holidays);
+          
+          // Parse the gregorian date from the API response - same as CustomCalendar
+          const holidayDate = new Date(
+            `${gregorianDate.year}-${gregorianDate.month.number
+              .toString()
+              .padStart(2, '0')}-${gregorianDate.day
+              .toString()
+              .padStart(2, '0')}`
+          );
+          
+          console.log(`📅 Holiday Date: ${holidayDate.toDateString()}`);
+          
+          // Calculate days left relative to TODAY for consistent behavior
+          const daysLeft = Math.ceil((holidayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          const isPast = daysLeft < 0;
+          
+          // Add each holiday for this day
+          hijriDate.holidays.forEach((holiday: string, holidayIndex: number) => {
+            const eventItem: IslamicEvent = {
+              id: `month-${month}-day-${index}-holiday-${holidayIndex}`,
+              date: `${gregorianDate.day} ${gregorianDate.month.en.substring(0, 3)}`,
+              title: holiday,
+              islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
+              daysLeft: daysLeft,
+              isPast: isPast
+            };
+            
+            // Avoid duplicates (same holiday on same date)
+            if (!eventsArray.some(e => e.title === holiday && e.date === eventItem.date)) {
+              console.log(`➕ Adding Month ${month} Holiday Event:`, eventItem.title);
+              eventsArray.push(eventItem);
+            } else {
+              console.log(`🔄 Skipping duplicate event:`, holiday);
+            }
+          });
+        }
+      });
+    });
     
     // Sort events chronologically within the display year
     eventsArray.sort((a, b) => {
@@ -164,16 +158,14 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       return dateA.getTime() - dateB.getTime();
     });
     
-    console.log('🎯 Final Events Array:', eventsArray.length, 'events for year', currentDisplayYear);
+    console.log('🎯 Final Events Array (from 12-month Hijri Calendar API):', eventsArray.length, 'events for year', currentDisplayYear);
+    console.log('✅ Events will exactly match CustomCalendar dots since using same API');
     
     return eventsArray;
   }, [
-    // REMOVED selectedDate dependency - only depend on year-related data
+    // Depend on all 12 months of data - only changes when year changes
     currentDisplayYear,
-    primaryIslamicYear,
-    secondaryIslamicYear,
-    yearHolidaysData,
-    secondaryYearHolidaysData
+    ...monthlyData.map(month => month.data)
   ]);
 
   // Find the first event that belongs to the current display month
@@ -202,9 +194,6 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       return () => clearTimeout(timeoutId);
     }
   }, [events, firstCurrentMonthEventIndex, currentDisplayMonth]);
-  
-  // Show loading state - only for the 2 APIs we actually use
-  const isLoading = isYearLoading || isYearHolidaysLoading || isSecondaryYearHolidaysLoading;
   
   const styles = StyleSheet.create({
     titleWrapper: {
@@ -271,6 +260,9 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary.primary600} />
+        <Body2Medium color="sub-heading" style={{ marginTop: scale(16) }}>
+          Loading events for {currentDisplayYear}...
+        </Body2Medium>
       </View>
     );
   }
