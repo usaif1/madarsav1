@@ -77,7 +77,9 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
         
         // Call success callback
         console.log('🖼️ Step 10: Calling success callback with file URL:', response.fileLink);
-        onImageUploaded?.(response.fileLink);
+        if (onImageUploaded) {
+          onImageUploaded(response.fileLink);
+        }
         
         Alert.alert('Success', 'Profile image updated successfully!');
         

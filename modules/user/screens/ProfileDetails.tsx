@@ -408,7 +408,7 @@ const ProfileDetails: React.FC = () => {
         <Avatar 
           imageUrl={userDetails?.profileImage || user?.photoUrl || ''}
           userId={userDetails?.userId || user?.id || ''}
-          onImageUploaded={handleImageSelection}
+          onImageUploaded={handleProfileImageUpdate}
         />
         <Divider height={24} />
 

@@ -129,70 +129,43 @@ export const testFormDataSubmission = async (userId: string): Promise<boolean> =
 };
 
 /**
- * Upload file to S3 using the Madrasa API with native fetch (bypassing axios issues)
+ * Upload file to S3 using native fetch with proper FormData handling
  * @param userId - User ID for the upload
- * @param file - FormData containing the file and metadata
+ * @param formData - FormData containing the file and metadata
  * @returns Promise<FileUploadResponse> - Upload response with file details
  */
-export const uploadFile = async (userId: string, file: FormData): Promise<FileUploadResponse> => {
+export const uploadFile = async (userId: string, formData: FormData): Promise<FileUploadResponse> => {
   console.log('🚀 === STARTING FILE UPLOAD PROCESS (FETCH API) ===');
-  console.log('📤 Step 1: Upload initiated for userId:', userId);
-  console.log('📤 Step 2: API Endpoint:', MADRASA_API_ENDPOINTS.UPLOAD_FILE);
-  console.log('📤 Step 3: Full URL:', `${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`);
+  console.log('📤 Upload initiated for userId:', userId);
+  console.log('📤 API Endpoint:', `${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`);
   
   try {
-    // Log FormData details
-    logFormData(file, 'uploadFile');
-    
-    console.log('📤 Step 4: Getting access token...');
-    
-    // Get access token directly from token service
+    // Get access token
     const accessToken = await tokenService.getAccessToken();
     if (!accessToken) {
       throw new Error('No access token available. Please log in again.');
     }
     
-    console.log('📤 Step 5: Preparing fetch request with proper headers...');
+    console.log('📤 Preparing fetch request with FormData...');
     
     // Use native fetch API which handles FormData properly in React Native
-    const fetchOptions = {
+    const response = await fetch(`${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
-        // IMPORTANT: Do NOT set Content-Type for FormData - let fetch handle it
-        // fetch will automatically set: Content-Type: multipart/form-data; boundary=xyz
+        // Note: Do NOT set Content-Type for FormData - let fetch set it with proper boundary
       },
-      body: file, // FormData body
-    };
-    
-    console.log('📤 Step 6: Fetch options prepared:', {
-      method: fetchOptions.method,
-      hasAuth: !!fetchOptions.headers.Authorization,
-      hasFormDataBody: file instanceof FormData,
-      headers: fetchOptions.headers
+      body: formData,
     });
     
-    // Log equivalent CURL command
-    logCurlEquivalent(
-      `${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`,
-      file,
-      fetchOptions.headers
-    );
-    
-    console.log('📤 Step 7: Making fetch request...');
-    
-    const response = await fetch(`${MADRASA_API_URL}${MADRASA_API_ENDPOINTS.UPLOAD_FILE}`, fetchOptions);
-    
-    console.log('📤 Step 8: Fetch response received:', {
+    console.log('📤 Fetch response received:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries())
     });
     
     if (!response.ok) {
-      // Handle HTTP error responses
       let errorData;
       try {
         errorData = await response.json();
@@ -204,102 +177,58 @@ export const uploadFile = async (userId: string, file: FormData): Promise<FileUp
       
       switch (response.status) {
         case 400:
-          throw new Error(errorData?.message || 'Invalid file format or missing required fields. Please check the file and try again.');
+          throw new Error(errorData?.message || 'Invalid file format or missing required fields.');
         case 401:
           throw new Error('Authentication failed. Please log in again.');
         case 403:
           throw new Error('You do not have permission to upload files.');
-        case 404:
-          throw new Error('Upload endpoint not found. Please contact support.');
         case 413:
           throw new Error('File is too large. Please choose a smaller image (max 10MB).');
         case 415:
           throw new Error('Unsupported file type. Please use JPG, PNG, or GIF format.');
-        case 429:
-          throw new Error('Too many upload attempts. Please wait a moment before trying again.');
-        case 500:
-          throw new Error('Server error occurred. Please try again later.');
         default:
-          throw new Error(errorData?.message || `Upload failed with status ${response.status}. Please try again.`);
+          throw new Error(errorData?.message || `Upload failed with status ${response.status}.`);
       }
     }
     
     const responseData = await response.json();
     
     console.log('✅ === FILE UPLOAD SUCCESSFUL ===');
-    console.log('✅ Step 9: Response data:', responseData);
+    console.log('✅ Response data:', responseData);
     
     return responseData;
     
   } catch (error: any) {
     console.error('❌ === FILE UPLOAD FAILED ===');
-    console.error('❌ Step X: Error details:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      headers: error.response?.headers,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        timeout: error.config?.timeout,
-        headers: error.config?.headers
-      },
-      code: error.code,
-      stack: error.stack
-    });
+    console.error('❌ Error details:', error);
 
-    // Enhanced error handling with specific messages
-    if (error.response) {
-      // Server responded with error status
-      const { status, data } = error.response;
-      console.error('❌ Server Error Response:', { status, data });
-      
-      switch (status) {
-        case 400:
-          throw new Error(data?.message || 'Invalid file format or missing required fields. Please check the file and try again.');
-        case 401:
-          throw new Error('Authentication failed. Please log in again.');
-        case 403:
-          throw new Error('You do not have permission to upload files.');
-        case 404:
-          throw new Error('Upload endpoint not found. Please contact support.');
-        case 413:
-          throw new Error('File is too large. Please choose a smaller image (max 10MB).');
-        case 415:
-          throw new Error('Unsupported file type. Please use JPG, PNG, or GIF format.');
-        case 429:
-          throw new Error('Too many upload attempts. Please wait a moment before trying again.');
-        case 500:
-          throw new Error('Server error occurred. Please try again later.');
-        default:
-          throw new Error(data?.message || `Upload failed with status ${status}. Please try again.`);
-      }
-    } else if (error.request) {
-      // Network error - no response received
-      console.error('❌ Network Error - No Response:', error.request);
-      if (error.code === 'ECONNABORTED') {
-        throw new Error('Upload timeout. Please check your internet connection and try again.');
-      }
+    // Handle specific error types
+    if (error.name === 'TypeError' || error.message.includes('Network')) {
       throw new Error('Network error. Please check your internet connection and try again.');
+    } else if (error.message.includes('timeout')) {
+      throw new Error('Upload timeout. Please check your internet connection and try again.');
     } else {
-      // Error in request preparation
-      console.error('❌ Request Setup Error:', error.message);
-      throw new Error('Failed to prepare upload request. Please try again.');
+      throw new Error(error.message || 'Failed to upload image. Please try again.');
     }
   }
 };
 
 /**
- * Prepare image file for upload by creating proper FormData
+ * Prepare image file for upload by creating proper FormData with actual File object
  * @param imageFile - Image file object with uri, type, and fileName
  * @param userId - User ID for the upload
  * @returns Promise<FormData> - Prepared FormData for upload
  */
 export const prepareImageForUpload = async (imageFile: ImageFile, userId: string): Promise<FormData> => {
   console.log('🔧 === PREPARING IMAGE FOR UPLOAD ===');
-  console.log('🔧 Step 1: Input validation...');
-  
+  console.log('🔧 Input details:', {
+    imageUri: imageFile.uri,
+    imageType: imageFile.type,
+    imageFileName: imageFile.fileName,
+    userId: userId,
+    platform: Platform.OS
+  });
+
   if (!imageFile?.uri) {
     throw new Error('Image file URI is required');
   }
@@ -308,37 +237,30 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
     throw new Error('User ID is required');
   }
 
-  console.log('🔧 Step 2: Input details:', {
-    imageUri: imageFile.uri,
-    imageType: imageFile.type,
-    imageFileName: imageFile.fileName,
-    userId: userId,
-    platform: Platform.OS
-  });
-
-  const formData = new FormData();
-  
   try {
-    console.log('🔧 Step 3: Adding required API fields...');
+    const formData = new FormData();
     
-    // Add required API fields as per documentation
+    // Add required API fields as strings (not objects)
     formData.append('fileRequestType', 'PUBLIC_PROFILE_PHOTO');
-    formData.append('userId', userId);
-    
-    console.log('🔧 Step 4: Added fields - fileRequestType: PUBLIC_PROFILE_PHOTO, userId:', userId);
+    formData.append('userId', userId.toString());
     
     // Determine file details
     const fileName = imageFile.fileName || 
                     imageFile.uri.split('/').pop() || 
                     `profile_${Date.now()}.jpg`;
     
-    console.log('🔧 Step 5: Determined fileName:', fileName);
+    const fileExtension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
+    const mimeType = imageFile.type || getMimeTypeFromExtension(fileExtension);
     
-    // Handle platform-specific file preparation
+    console.log('🔧 File processing details:', {
+      fileName,
+      mimeType,
+      fileExtension,
+      platform: Platform.OS
+    });
+    
     if (Platform.OS === 'ios' || Platform.OS === 'android') {
-      console.log('🔧 Step 6: Processing for mobile platform - converting to binary...');
-      
-      // Mobile platform - convert file to binary
+      // Mobile platform - create proper file object
       let fileUri = imageFile.uri;
       
       // Ensure proper file:// prefix for Android
@@ -346,106 +268,34 @@ export const prepareImageForUpload = async (imageFile: ImageFile, userId: string
         fileUri = `file://${fileUri}`;
       }
 
-      // Determine MIME type
-      const fileExtension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
-      const mimeType = imageFile.type || getMimeTypeFromExtension(fileExtension);
+      // For React Native, append as an object that looks like a File
+      const fileObject = {
+        uri: fileUri,
+        type: mimeType,
+        name: fileName,
+      };
       
-      console.log('🔧 Step 7: File processing details:', {
-        originalUri: imageFile.uri,
-        processedUri: fileUri,
-        fileName: fileName,
-        mimeType: mimeType,
-        fileExtension: fileExtension,
-        platform: Platform.OS
-      });
+      // Append the file object directly (React Native FormData handles this)
+      (formData as any).append('file', fileObject);
       
-      try {
-        console.log('🔧 Step 8: Fetching file content and converting to binary...');
-        
-        // Fetch the file content
-        const response = await fetch(fileUri);
-        console.log('🔧 Step 8b: Fetch response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
+      console.log('✅ Mobile file object appended to FormData:', fileObject);
+      
+          } else {
+        // Web platform - handle File/Blob objects
+        if (imageFile instanceof File || imageFile instanceof Blob) {
+          (formData as any).append('file', imageFile, fileName);
+          console.log('✅ Web file appended to FormData');
+        } else {
+          throw new Error('Invalid file format for web platform');
         }
-        
-        // Get blob directly from response (React Native friendly)
-        const binaryBlob = await response.blob();
-        console.log('🔧 Step 9: File converted to binary blob:', {
-          size: binaryBlob.size,
-          type: binaryBlob.type,
-          constructor: binaryBlob.constructor.name
-        });
-        
-        // Create a new blob with correct MIME type if needed
-        const finalBlob = binaryBlob.type ? binaryBlob : new Blob([binaryBlob as any]);
-        console.log('🔧 Step 10: Final binary blob prepared:', {
-          size: finalBlob.size,
-          type: finalBlob.type,
-          constructor: finalBlob.constructor.name
-        });
-        
-        // Append the binary blob to FormData (React Native FormData.append supports 3 parameters)
-        (formData as any).append('file', finalBlob, fileName);
-        console.log('✅ Step 11: Binary file appended to FormData successfully');
-        
-        // Log exactly what we are sending
-        console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
-        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_PHOTO');
-        console.log('📤 Field 2 - userId:', userId);
-        console.log('📤 Field 3 - file:', {
-          data: `Binary Blob (${finalBlob.size} bytes)`,
-          type: finalBlob.type,
-          name: fileName,
-          format: 'Binary Blob from fetch response',
-          constructor: finalBlob.constructor.name
-        });
-        console.log('📤 === END OF WHAT WE ARE SENDING ===');
-        
-      } catch (fetchError: any) {
-        console.error('❌ Error fetching/processing file:', fetchError);
-        throw new Error(`Failed to process image file: ${fetchError.message}`);
       }
-      
-    } else {
-      console.log('🔧 Step 6: Processing for web platform...');
-      
-      // Web platform - handle File/Blob objects as binary
-      if (imageFile instanceof File || imageFile instanceof Blob) {
-        // Use the file/blob directly for web platform
-        const finalBlob = imageFile;
-        
-        (formData as any).append('file', finalBlob, fileName);
-        console.log('✅ Step 7: Web binary file appended to FormData');
-        
-        // Log exactly what we are sending
-        console.log('📤 === THIS IS WHAT WE ARE SENDING: ===');
-        console.log('📤 Field 1 - fileRequestType:', 'PUBLIC_PROFILE_PHOTO');
-        console.log('📤 Field 2 - userId:', userId);
-        console.log('📤 Field 3 - file:', {
-          data: `Binary Blob (${finalBlob.size} bytes)`,
-          type: finalBlob.type,
-          name: fileName,
-          format: 'Direct File/Blob'
-        });
-        console.log('📤 === END OF WHAT WE ARE SENDING ===');
-      } else {
-        throw new Error('Invalid file format for web platform');
-      }
-    }
 
-    // Log final FormData state
-    console.log('🔧 Step 12: FormData preparation completed:', {
-      fileRequestType: 'PUBLIC_PROFILE_PHOTO',
-      userId,
-      fileName,
-      hasFile: true,
-      platform: Platform.OS,
-      format: 'Binary Blob'
-    });
-
-    logFormData(formData, 'prepareImageForUpload - final');
+    console.log('🔧 FormData preparation completed with fields:');
+    console.log('  - fileRequestType: PUBLIC_PROFILE_PHOTO');
+    console.log('  - userId:', userId);
+    console.log('  - file: [File object]');
+    console.log('  - fileName:', fileName);
+    console.log('  - mimeType:', mimeType);
 
     console.log('✅ === IMAGE PREPARATION SUCCESSFUL ===');
     return formData;
