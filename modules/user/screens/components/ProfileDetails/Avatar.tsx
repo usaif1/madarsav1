@@ -126,7 +126,7 @@ const Avatar = ({imageUrl, userId, onImageUploaded}: AvatarProps) => {
               cache: FastImage.cacheControl.immutable,
             }
         }
-        resizeMode={FastImage.resizeMode.contain}
+        resizeMode={FastImage.resizeMode.cover}
         style={[styles.avatar, {width: 100, height: 100}]}
       />
       <Pressable 
