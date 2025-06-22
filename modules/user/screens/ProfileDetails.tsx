@@ -16,6 +16,7 @@ import {useAuthStore} from '@/modules/auth/store/authStore';
 import {useUserDetails, useUpdateUserDetails} from '../hooks/useUserProfile';
 import { UserDetails, UserUpdateDTO } from '../services/userService';
 import { ImagePickerHelper } from '../utils/imagePickerHelper';
+import { uploadFile, prepareImageForUpload, validateImageFile } from '../services/imageUploadService';
 
 const styles = StyleSheet.create({
   container: {
@@ -148,6 +149,11 @@ const ProfileDetails: React.FC = () => {
   const [datePickerDate, setDatePickerDate] = useState(new Date());
   const [focusedInput, setFocusedInput] = useState<string>('');
 
+  // NEW: Local image state management
+  const [selectedImageUri, setSelectedImageUri] = useState<string>('');
+  const [selectedImageFile, setSelectedImageFile] = useState<any>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+
   // State to store layout positions for scrolling
   const [genderRadioY, setGenderRadioY] = useState(0);
   const [dobInputY, setDobInputY] = useState(0);
@@ -178,6 +184,9 @@ const ProfileDetails: React.FC = () => {
       }
       
       setHasChanges(false); // Reset changes flag when new data is loaded
+      // Reset local image state when userDetails loads
+      setSelectedImageUri('');
+      setSelectedImageFile(null);
     } else if (user) {
       // Fallback to auth store data if API data not available yet
       const nameParts = user.name?.split(' ') || ['', ''];
@@ -197,19 +206,21 @@ const ProfileDetails: React.FC = () => {
     }
   }, [userDetails, user]);
   
-  // Check if form has changes
+  // Check if form has changes (including image changes)
   useEffect(() => {
     if (userDetails) {
-      const hasNameChanges = 
-        firstName !== userDetails.firstName || 
-        lastName !== userDetails.lastName ||
+      const hasFieldChanges = 
+        firstName !== (userDetails.firstName || '') || 
+        lastName !== (userDetails.lastName || '') ||
         phone !== (userDetails.phone?.toString() || '') ||
-        dob !== userDetails.dob ||
-        gender !== userDetails.gender;
+        dob !== (userDetails.dob || '') ||
+        gender !== (userDetails.gender || '');
       
-      setHasChanges(hasNameChanges);
+      const hasImageChanges = !!selectedImageUri;
+      
+      setHasChanges(hasFieldChanges || hasImageChanges);
     }
-  }, [firstName, lastName, phone, dob, gender, userDetails]);
+  }, [firstName, lastName, phone, dob, gender, selectedImageUri, userDetails]);
   
   // Validate form
   const validateForm = (): boolean => {
@@ -273,63 +284,78 @@ const ProfileDetails: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
   
-  // Handle save changes
-  const handleSaveChanges = () => {
+  // Handle save changes with optional image upload
+  const handleSaveChanges = async () => {
     if (!validateForm()) {
       return;
     }
 
-    const updateData: UserUpdateDTO = {
-      userId: userDetails?.userId || '',
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      phone: phone ? parseInt(phone, 10) : undefined,
-      dob: dob || undefined,
-      gender: (gender || undefined) as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
-    };
-
-    updateUser(updateData, {
-      onSuccess: () => {
-        Alert.alert('Success', 'Profile updated successfully');
-      },
-      onError: (error: Error) => {
-        Alert.alert('Error', error.message);
-      },
-    });
-  };
-
-  // Handle profile image update
-  const handleProfileImageUpdate = async (fileUrl: string) => {
-    if (!userDetails?.userId) {
-      Alert.alert('Error', 'User ID not found');
-      return;
-    }
-
     try {
-      updateUser({
-        userId: userDetails.userId,
-        firstName: userDetails.firstName,
-        lastName: userDetails.lastName,
-        phone: userDetails.phone || undefined,
-        dob: userDetails.dob,
-        gender: userDetails.gender as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
-        profileImage: fileUrl,
-      }, {
+      setIsImageUploading(true);
+      
+      let profileImageUrl = userDetails?.profileImage; // Keep existing image by default
+      
+      // Upload image first if there's a new image selected
+      if (selectedImageFile && selectedImageUri) {
+        console.log('🖼️ Uploading new profile image before saving profile...');
+        
+        // Validate the selected image
+        const imageFile = {
+          uri: selectedImageFile.uri,
+          type: selectedImageFile.type,
+          fileName: selectedImageFile.name
+        };
+        
+        if (!validateImageFile(imageFile)) {
+          Alert.alert('Error', 'Invalid image format. Please select a JPG, PNG, GIF, or WebP image.');
+          return;
+        }
+        
+        // Prepare form data
+        const formData = await prepareImageForUpload(imageFile, userDetails?.userId || '');
+        
+        // Upload image
+        const uploadResponse = await uploadFile(userDetails?.userId || '', formData);
+        profileImageUrl = uploadResponse.fileLink;
+        
+        console.log('✅ Image uploaded successfully:', profileImageUrl);
+      }
+
+      // Update profile with all data including new image URL
+      const updateData: UserUpdateDTO = {
+        userId: userDetails?.userId || '',
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone ? parseInt(phone, 10) : undefined,
+        dob: dob || undefined,
+        gender: (gender || undefined) as 'MALE' | 'FEMALE' | 'OTHER' | undefined,
+        profileImage: profileImageUrl, // Include the image URL (new or existing)
+      };
+
+      updateUser(updateData, {
         onSuccess: () => {
-          Alert.alert('Success', 'Profile image updated successfully');
+          Alert.alert('Success', 'Profile updated successfully');
+          // Clear local image state after successful save
+          setSelectedImageUri('');
+          setSelectedImageFile(null);
         },
         onError: (error: Error) => {
           Alert.alert('Error', error.message);
         },
       });
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update profile image');
+      console.error('❌ Save changes failed:', error);
+      Alert.alert('Error', error.message || 'Failed to save changes');
+    } finally {
+      setIsImageUploading(false);
     }
   };
 
-  // Handle image selection with permissions
-  const handleImageSelection = async () => {
+  // Handle image selection (LOCAL ONLY - no immediate upload)
+  const handleImageSelection = async (imageUrl: string) => {
     try {
+      console.log('🖼️ Image selected locally:', imageUrl);
+      
       // Show image picker options
       const selectedImage = await ImagePickerHelper.showImagePickerOptions();
       
@@ -337,12 +363,34 @@ const ProfileDetails: React.FC = () => {
         return;
       }
 
-      // Update profile with selected image
-      handleProfileImageUpdate(selectedImage.uri);
+      console.log('🖼️ Image selected from picker:', selectedImage);
+      
+      // Store image locally - no upload yet
+      setSelectedImageUri(selectedImage.uri);
+      setSelectedImageFile(selectedImage);
+      
+      console.log('✅ Image stored locally, will upload when user saves changes');
     } catch (error: any) {
-      console.error('Image selection error:', error);
+      console.error('❌ Image selection error:', error);
       Alert.alert('Error', error.message || 'Failed to select image');
     }
+  };
+
+  // Get the image URL to display (priority: local selected image > API image > default)
+  const getDisplayImageUrl = (): string => {
+    if (selectedImageUri) {
+      return selectedImageUri; // Show locally selected image
+    }
+    
+    if (userDetails?.profileImage) {
+      return userDetails.profileImage; // Show API image
+    }
+    
+    if (user?.photoUrl) {
+      return user.photoUrl; // Fallback to auth store image
+    }
+    
+    return ''; // Will show default blank image
   };
 
   // Radio button component
@@ -406,9 +454,10 @@ const ProfileDetails: React.FC = () => {
         enableAutomaticScroll={true}
         extraScrollHeight={100}>
         <Avatar 
-          imageUrl={userDetails?.profileImage || user?.photoUrl || ''}
+          imageUrl={getDisplayImageUrl()}
           userId={userDetails?.userId || user?.id || ''}
-          onImageUploaded={handleProfileImageUpdate}
+          onImageUploaded={handleImageSelection}
+          isUploading={isImageUploading}
         />
         <Divider height={24} />
 
@@ -590,8 +639,8 @@ const ProfileDetails: React.FC = () => {
           <Pressable 
             style={[styles.submitBtn, hasChanges ? styles.submitBtnActive : {}]}
             onPress={handleSaveChanges}
-            disabled={!hasChanges || isUpdating}>
-            {isUpdating ? (
+            disabled={!hasChanges || isUpdating || isImageUploading}>
+            {(isUpdating || isImageUploading) ? (
               <ActivityIndicator size="small" color="#8A57DC" />
             ) : (
               <Body1Title2Bold color={hasChanges ? "primary" : "sub-heading"}>
