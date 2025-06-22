@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import FastImage from 'react-native-fast-image';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 interface QiblaIndicatorProps {
   angle: number; // Angle in degrees where to position the indicator
@@ -12,29 +13,45 @@ const QiblaIndicator: React.FC<QiblaIndicatorProps> = ({ angle, compassRadius })
   // We need to convert angle to radians for Math.cos and Math.sin
   const radians = (angle * Math.PI) / 180;
   
-  // Calculate the position for the indicator
+  // The compass frame is 280x280, so its radius is 140
+  // The frame is positioned at (10, 10) within the 300x300 wrapper
+  // So the center of the frame is at (150, 150) relative to the wrapper
+  const actualCompassRadius = 140; // Half of 280px frame size
+  const compassCenterX = 210; // 10 + 140 (frame position + frame radius)
+  const compassCenterY = 230; // 10 + 140 (frame position + frame radius)
+  
+  // Calculate position on the circumference of the actual compass frame
+  const posX = actualCompassRadius * Math.sin(radians);
+  const posY = -actualCompassRadius * Math.cos(radians);
+  
   // The indicator should be positioned on the edge of the compass
   // We need to adjust for the indicator size (48px) to center it on the edge
   const indicatorSize = 48;
   const halfIndicatorSize = indicatorSize / 2;
   
-  // Calculate position from center of compass
-  const posX = compassRadius * Math.sin(radians);
-  const posY = -compassRadius * Math.cos(radians);
-  
   // Adjust to position the center of the indicator on the edge
   const centerX = posX - halfIndicatorSize;
   const centerY = posY - halfIndicatorSize;
   
-  console.log('Qibla Indicator Position:', { angle, posX, posY, centerX, centerY });
+  console.log('Qibla Indicator Position:', { 
+    angle, 
+    actualCompassRadius,
+    compassCenterX, 
+    compassCenterY,
+    posX, 
+    posY, 
+    centerX, 
+    centerY 
+  });
 
   return (
     <View
       style={[
         styles.container,
         {
-          left: compassRadius, // Position relative to compass center
-          top: compassRadius,  // Position relative to compass center
+          // Position relative to the actual center of the compass frame
+          left: compassCenterX,
+          top: compassCenterY,
           transform: [
             { translateX: centerX },
             { translateY: centerY },
@@ -43,7 +60,7 @@ const QiblaIndicator: React.FC<QiblaIndicatorProps> = ({ angle, compassRadius })
       ]}
     >
       <FastImage
-        source={require('@/assets/compass/Kaaba.png')}
+        source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_KAABA) }}
         resizeMode={FastImage.resizeMode.cover}
         style={styles.image}
       />

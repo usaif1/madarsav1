@@ -5,17 +5,14 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Regular, Body1Title2Bold, Body2Medium, Body2Bold, H4Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
 import { ShadowColors } from '@/theme/shadows';
-import FajrIcon from '@/assets/home/fajr.svg';
-import DhuhrIcon from '@/assets/home/dhuhr.svg';
-import AsrIcon from '@/assets/home/asr.svg';
-import MaghribIcon from '@/assets/home/maghrib.svg';
-import IshaIcon from '@/assets/home/isha.svg';
-import { Image } from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { CdnSvg } from '@/components/CdnSvg';
 import { usePrayerTimes, PrayerType } from '../../hooks/usePrayerTimes';
 import { useThemeStore } from '@/globalStore';
 
@@ -23,23 +20,25 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(339);
 const CARD_HEIGHT = verticalScale(279);
 
-// Map prayer types to their icons
-const prayerIcons: Record<string, React.FC<any>> = {
-  fajr: FajrIcon,
-  dhuhr: DhuhrIcon,
-  asr: AsrIcon,
-  maghrib: MaghribIcon,
-  isha: IshaIcon,
+const BASE_CDN_URL = 'https://cdn.madrasaapp.com/assets/home/';
+
+// Map prayer types to their CDN icon paths
+const prayerIcons: Record<string, string> = {
+  fajr: '/assets/home/fajr.svg',
+  dhuhr: '/assets/home/dhuhr.svg',
+  asr: '/assets/home/asr.svg',
+  maghrib: '/assets/home/maghrib.svg',
+  isha: '/assets/home/isha.svg',
 };
 
 // Get gradient colors based on prayer type
 const getGradientColors = (prayer: PrayerType): string[] => {
   switch (prayer) {
     case 'fajr':
-    case 'dhuhr':
       return ['#E0F2FE', '#36BFFA']; // Day time gradient
+    case 'dhuhr':
     case 'asr':
-      return ['#DC6803', '#FFFAEB']; // Afternoon gradient
+      return ['#FFFAEB', '#DC6803']; // Afternoon gradient
     case 'maghrib':
     case 'isha':
       return ['#411B7F', '#0B0515']; // Night time gradient
@@ -108,7 +107,20 @@ interface DayPrayerTimeProps {}
 
 const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
   const { colors } = useThemeStore();
-  const { prayerTimes, currentPrayer, nextPrayer, timeLeft, dayName, isLoading, error } = usePrayerTimes();
+  const { 
+    prayerTimes, 
+    currentPrayer, 
+    nextPrayer, 
+    timeLeft, 
+    dayName, 
+    isLoading, 
+    error,
+    usingFallback,
+    fallbackSource,
+    refreshLocation
+  } = usePrayerTimes();
+  
+  // The hook now provides fallback location information
   // If loading, show loading indicator
   if (isLoading) {
     return (
@@ -121,10 +133,20 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
 
   // If error, show error message
   if (error) {
+    console.log('❌ DayPrayerTime error:', error);
     return (
       <View style={[styles.container, styles.errorContainer]}>
         <Text style={styles.errorText}>Error loading prayer times</Text>
         <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : String(error)}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => {
+            console.log('🔄 Retry button pressed, refreshing location...');
+            refreshLocation();
+          }}
+        >
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -142,16 +164,38 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
   const nextPrayerTime = prayerTimes[nextPrayer]?.time || '';
   
   // Create array of all prayer times for display
-  const allPrayerTimes = Object.keys(prayerTimes).map(key => ({
-    key,
-    name: prayerTimes[key]?.name || '',
-    time: prayerTimes[key]?.time || '',
-    icon: prayerIcons[key],
-    isCurrent: key === currentPrayer,
-  }));
+  const allPrayerTimes = Object.keys(prayerTimes).map(key => {
+    // Remove AM/PM from time display
+    let timeDisplay = prayerTimes[key]?.time || '';
+    timeDisplay = timeDisplay.replace(/\s(AM|PM)$/i, '');
+    
+    return {
+      key,
+      name: prayerTimes[key]?.name || '',
+      time: timeDisplay,
+      icon: prayerIcons[key],
+      isCurrent: key === currentPrayer,
+    };
+  });
 
   return (
     <View style={styles.container}>
+      {usingFallback && (
+        <TouchableOpacity 
+          style={styles.fallbackBanner}
+          onPress={refreshLocation}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.fallbackText}>
+            {fallbackSource?.includes('custom_') 
+              ? `Using ${fallbackSource.replace('custom_', '')} as location reference` 
+              : fallbackSource === 'ip_address'
+                ? 'Using estimated location from IP address'
+                : 'Using estimated location'}
+          </Text>
+          <Text style={styles.fallbackSubtext}>Tap to use precise location</Text>
+        </TouchableOpacity>
+      )}
       <LinearGradient
         colors={gradientColors}
         start={gradientDirection.start}
@@ -166,16 +210,23 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
               <View style={styles.iconNameContainer}>
                 <View style={{flexDirection:'row',width:'100%',justifyContent:'space-between'}}>
                   <View style={{flexDirection: 'row'}}>
-                {NextPrayerIcon && <NextPrayerIcon width={scale(24)} height={scale(24)} fill="white" />}
-                <H4Bold color="white" style={styles.prayerTitle}>{nextPrayerName}</H4Bold>
+                    <CdnSvg
+                      path={prayerIcons[nextPrayer]}
+                      width={24}
+                      height={24}
+                      fill="white"
+                    />
+                    <H4Bold color="white" style={styles.prayerTitle}>{nextPrayerName}</H4Bold>
+                  </View>
+                  {/* Day Pill */}
+                  <View style={styles.dayPill}>
+                    <Body2Bold color="white">{dayName}</Body2Bold>
+                  </View>
                 </View>
-                {/* Day Pill */}
-              <View style={styles.dayPill}>
-                <Body2Bold color="white">{dayName}</Body2Bold>
-              </View></View>
                 <View style={{flexDirection: 'row'}}>
-            {/* Time Left */}
-            <Body2Medium color="white" style={styles.timeLeft}>{timeLeft}</Body2Medium></View>
+                  {/* Time Left */}
+                  <Body2Medium color="white" style={styles.timeLeft}>{timeLeft}</Body2Medium>
+                </View>
               </View>
             </View>
           </View>
@@ -191,11 +242,12 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
                 prayer.isCurrent && styles.currentPrayerItem
               ]}>
               {/* Prayer Icon */}
-              <prayer.icon 
-                width={scale(24)} 
-                height={scale(24)} 
-                fill="white" 
-                style={prayer.isCurrent ? styles.currentIcon : styles.icon} 
+              <CdnSvg
+                path={prayerIcons[prayer.key]}
+                width={24}
+                height={24}
+                fill="white"
+                style={prayer.isCurrent ? styles.currentIcon : styles.icon}
               />
               
               {/* Prayer Name */}
@@ -225,10 +277,10 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
         
         {/* Arc with Ball Indicator */}
         <View style={styles.arcContainer}>
-          <Image 
-            source={require('@/assets/home/arc.png')} 
+          <FastImage 
+            source={{ uri: `${BASE_CDN_URL}arc.png` }} 
             style={styles.arcImage} 
-            resizeMode="contain"
+            resizeMode={FastImage.resizeMode.contain}
           />
           <View style={[styles.ball, { left: ballPosition.left, top: ballPosition.top }]} />
         </View>
@@ -248,6 +300,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: ShadowColors['border-light'],
     paddingBottom: 0,
+    position: 'relative',
   },
   loadingContainer: {
     justifyContent: 'center',
@@ -275,6 +328,41 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
     color: '#737373',
     textAlign: 'center',
+    marginBottom: scale(12),
+  },
+  retryButton: {
+    backgroundColor: '#8A57DC',
+    paddingVertical: scale(8),
+    paddingHorizontal: scale(16),
+    borderRadius: scale(20),
+    marginTop: scale(8),
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: scale(14),
+    fontWeight: '600',
+  },
+  fallbackBanner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(251, 191, 36, 0.9)',
+    paddingVertical: scale(6),
+    zIndex: 10,
+  },
+  fallbackText: {
+    fontSize: scale(12),
+    color: '#78350F',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  fallbackSubtext: {
+    fontSize: scale(10),
+    color: '#78350F',
+    textAlign: 'center',
+    fontWeight: '400',
+    marginTop: scale(2),
   },
   gradientContainer: {
     flex: 1,
@@ -304,7 +392,7 @@ const styles = StyleSheet.create({
     marginLeft: scale(4), // Align with the prayer name (24px icon + 8px gap + 12px margin)
   },
   dayPill: {
-    width: scale(75),
+    maxWidth: scale(100),
     paddingVertical: scale(2),
     paddingHorizontal: scale(10),
     borderRadius: scale(60),

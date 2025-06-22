@@ -60,6 +60,19 @@ export interface CalendarResponse {
   data: Array<{
     hijri: HijriDate;
     gregorian: GregorianDate;
+    timings?: {
+      Fajr: string;
+      Sunrise: string;
+      Dhuhr: string;
+      Asr: string;
+      Sunset: string;
+      Maghrib: string;
+      Isha: string;
+      Imsak: string;
+      Midnight: string;
+      Firstthird?: string;
+      Lastthird?: string;
+    };
   }>;
 }
 
@@ -357,6 +370,41 @@ export const getHijriHolidaysByYear = async (
     return response.data;
   } catch (error) {
     console.error('Error fetching Hijri holidays by year:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get Ramadan calendar for a specific year
+ * @param year Gregorian year
+ * @param latitude User's latitude
+ * @param longitude User's longitude
+ * @param method Calendar calculation method (default: HJCoSA)
+ * @returns Promise with Ramadan calendar data including prayer times
+ */
+export const getRamadanCalendar = async (
+  year: number,
+  latitude: number,
+  longitude: number,
+  method: string = 'HJCoSA'
+): Promise<CalendarResponse> => {
+  try {
+    // Ramadan is the 9th month in the Hijri calendar
+    const response = await aladhanClient.get(
+      `${API_ENDPOINTS.RAMADAN_CALENDAR}/${year}`,
+      {
+        params: {
+          latitude,
+          longitude,
+          calendarMethod: method,
+        },
+      }
+    );
+    
+    console.log('Ramadan calendar response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching Ramadan calendar:', error);
     throw error;
   }
 };

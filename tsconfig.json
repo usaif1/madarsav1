@@ -3,7 +3,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "typeRoots": ["./types"]
   },
   "extends": "@react-native/typescript-config/tsconfig.json"
 }

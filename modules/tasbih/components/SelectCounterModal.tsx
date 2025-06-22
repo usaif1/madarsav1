@@ -5,8 +5,8 @@ import {
   Title3Bold,
   Body1Title2Medium,
 } from '@/components/Typography/Typography';
-import Pencil from '@/assets/tasbih/pencil.svg';
-import PencilViolet from '@/assets/tasbih/pencilViolet.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import {useThemeStore} from '@/globalStore';
 import {scale, verticalScale} from '@/theme/responsive';
 
@@ -115,15 +115,16 @@ const SelectCounterModal: React.FC<SelectCounterModalProps> = ({
                     {customValue}
                   </Body1Title2Medium>
                 ) : null}
-                {customValue ? (
-                  <PencilViolet
-                    width={24}
-                    height={24}
-                    style={styles.pencilIcon}
-                  />
-                ) : (
-                  <Pencil width={24} height={24} style={styles.pencilIcon} />
-                )}
+                <CdnSvg
+                  path={
+                    customValue
+                      ? DUA_ASSETS.TASBIH_PENCIL_VIOLET
+                      : DUA_ASSETS.TASBIH_PENCIL
+                  }
+                  width={24}
+                  height={24}
+                  style={styles.pencilIcon}
+                />
               </View>
               <View
                 style={{

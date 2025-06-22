@@ -1,55 +1,60 @@
-// dependencies
+// App.tsx
 import * as React from 'react';
 import 'react-native-url-polyfill/auto';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NavigationContainer } from '@react-navigation/native';
 
 // navigators
-import SplashNavigation from './modules/splash/navigation/splash.navigation';
-import ParentNavigation from '@/navigator/ParentNavigation';
+import RootNavigation from '@/navigator/RootNavigation';
 
 // store
-import {useGlobalStore} from './globalStore';
-import {StatusBar} from 'react-native';
+import { useGlobalStore } from './globalStore';
+import { StatusBar } from 'react-native';
+
+// error handling
+import { ErrorBoundary, ErrorToast, OfflineDetector } from '@/modules/error';
 
 if (__DEV__) {
   require("./ReactotronConfig");
 }
 
-// Create a client
+
+// Create a client with error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      refetchOnWindowFocus: false, // Less relevant for mobile
-      // cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+      refetchOnWindowFocus: false,
+      // // Handle errors globally
+      // onError: (error) => {
+      //   console.error('Query error:', error);
+      // },
+    },
+    mutations: {
+      // Handle errors globally
+      onError: (error) => {
+        console.error('Mutation error:', error);
+      },
     },
   },
 });
 
 export default function App() {
-  const {onboarded} = useGlobalStore();
-
-  if (!onboarded) {
-    return (
-      <QueryClientProvider client={queryClient}>
-          <StatusBar
-            barStyle={'light-content'}
-            backgroundColor={'transparent'}
-            translucent
-          />
-          <SplashNavigation />
-      </QueryClientProvider>
-    );
-  }
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar
-          barStyle={'light-content'}
-          backgroundColor={'transparent'}
-          translucent
-        />
-        <ParentNavigation />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <NavigationContainer>
+          <OfflineDetector>
+            <StatusBar
+              barStyle={'light-content'}
+              backgroundColor={'#411B7F'}
+              translucent
+            />
+            <ErrorToast />
+            <RootNavigation />
+          </OfflineDetector>
+        </NavigationContainer>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

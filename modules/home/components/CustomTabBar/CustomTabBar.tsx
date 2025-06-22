@@ -4,20 +4,21 @@ import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {scale, verticalScale} from '@/theme/responsive';
 import {ColorPrimary} from '@/theme/lightColors';
 
-// Import SVG icons
-import HomeSelectedIcon from '@/assets/home/home-selected.svg';
-import HomeIcon from '@/assets/home/home.svg';
-import MaktabSelectedIcon from '@/assets/home/maktab-selected.svg'; // Using the same icon for now, will be replaced with maktab-selected.svg when available
-import MaktabIcon from '@/assets/home/maktab.svg';
-import AlQuranSelectedIcon from '@/assets/home/al-quran-selected.svg'; // Using the same icon for now, will be replaced with al-quran-selected.svg when available
-import AlQuranIcon from '@/assets/home/al-quran.svg';
+// components
 import { Body2Medium, Body2Bold } from '@/components';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({
   state,
   descriptors,
   navigation,
 }) => {
+  // Function to show a coming soon message for unavailable features
+  const handleComingSoonFeature = (routeName: string) => {
+    console.log(`${routeName} feature is coming soon!`);
+    // You could add a toast message here in the future
+  };
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
@@ -32,6 +33,24 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
         const isFocused = state.index === index;
 
         const onPress = () => {
+          console.log(route.name);
+          // For Quran tab, prevent navigation and show coming soon message
+          if (route.name === 'al-quran') {
+            // Emit the event but prevent default navigation
+            // const event = navigation.emit({
+            //   type: 'tabPress',
+            //   target: route.key,
+            //   canPreventDefault: true,
+            // });
+            
+            // Show coming soon message
+            handleComingSoonFeature('Quran');
+            
+            // Don't navigate
+            return;
+          }
+          
+          // For other tabs, proceed with normal navigation
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,
@@ -45,23 +64,41 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
 
         // Determine which icon to show based on route name and focus state
         const getIcon = () => {
+          const iconProps = {
+            width: 24,
+            height: 24,
+            fill: isFocused ? '#8A57DC' : '#A3A3A3',
+          };
+
           switch (route.name) {
             case 'home':
-              return isFocused 
-                ? <HomeSelectedIcon width={24} height={24} fill="#8A57DC" />
-                : <HomeIcon width={24} height={24} fill="#A3A3A3" />;
+              return (
+                <CdnSvg 
+                  path={isFocused ? DUA_ASSETS.TAB_HOME_SELECTED : DUA_ASSETS.TAB_HOME} 
+                  {...iconProps} 
+                />
+              );
             case 'maktab':
-              return isFocused 
-                ? <MaktabSelectedIcon width={24} height={24} fill="#8A57DC" />
-                : <MaktabIcon width={24} height={24} fill="#A3A3A3" />;
+              return (
+                <CdnSvg 
+                  path={isFocused ? DUA_ASSETS.TAB_MAKTAB_SELECTED : DUA_ASSETS.TAB_MAKTAB} 
+                  {...iconProps} 
+                />
+              );
             case 'al-quran':
-              return isFocused 
-                ? <AlQuranSelectedIcon width={24} height={24} fill="#8A57DC" />
-                : <AlQuranIcon width={24} height={24} fill="#A3A3A3" />;
+              return (
+                <CdnSvg 
+                  path={isFocused ? DUA_ASSETS.TAB_QURAN_SELECTED : DUA_ASSETS.TAB_QURAN} 
+                  {...iconProps} 
+                />
+              );
             default:
-              return isFocused 
-                ? <HomeSelectedIcon width={24} height={24} fill="#8A57DC" />
-                : <HomeIcon width={24} height={24} fill="#A3A3A3" />;
+              return (
+                <CdnSvg 
+                  path={isFocused ? DUA_ASSETS.TAB_HOME_SELECTED : DUA_ASSETS.TAB_HOME} 
+                  {...iconProps} 
+                />
+              );
           }
         };
 

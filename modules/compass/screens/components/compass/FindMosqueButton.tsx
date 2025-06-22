@@ -2,15 +2,16 @@
 import {Pressable, StyleSheet, View} from 'react-native';
 import React from 'react';
 
-// assets
-import Mosque from '@/assets/compass/mosque.svg';
+// components
 import {Body1Title2Bold} from '@/components';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 const FindMosqueButton: React.FC = () => {
   return (
     <View style={styles.container}>
       <Pressable style={styles.btn}>
-        <Mosque />
+        <CdnSvg path={DUA_ASSETS.COMPASS_MOSQUE} width={24} height={24} />
         <Body1Title2Bold color="white">Find Mosque Near Me</Body1Title2Bold>
       </Pressable>
     </View>

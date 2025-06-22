@@ -3,19 +3,20 @@ import React from 'react';
 import {View, TouchableOpacity, StyleSheet, ActivityIndicator} from 'react-native';
 
 // components
-import NextSalahIcon from '@/assets/compass/next_salah_icon.svg';
 import {Body2Bold, Body2Medium, Title3Bold} from '@/components';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import {useThemeStore} from '@/globalStore';
 
 // hooks
 import {useNextPrayer, formatPrayerTime, getNextPrayerName} from '@/api/hooks/usePrayerTimes';
-import {useLocation} from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 
 const NextSalah: React.FC = () => {
   const {colors} = useThemeStore();
 
   // Get user location
-  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocation();
+  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocationData();
 
   // Get next prayer time
   const {
@@ -44,7 +45,7 @@ const NextSalah: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {NextSalahIcon && <NextSalahIcon />}
+      <CdnSvg path={DUA_ASSETS.COMPASS_NEXT_SALAH} width={42} height={42} />
 
       <View style={styles.textBlock}>
         {isLoading ? (
@@ -54,14 +55,14 @@ const NextSalah: React.FC = () => {
         ) : (
           <>
             <Title3Bold>{nextPrayerName || 'Next Prayer'}</Title3Bold>
-            <Body2Medium color="sub-heading">{timeRemaining || 'Loading...'}</Body2Medium>
+            <Body2Medium style={{fontSize: 12,marginTop: 2}} color="sub-heading">{timeRemaining || 'Loading...'}</Body2Medium>
           </>
         )}
       </View>
 
       <TouchableOpacity
         style={[styles.pill, {backgroundColor: colors.warning.warning600}]}>
-        <Body2Bold color="white">Next Salah</Body2Bold>
+        <Body2Bold style={{fontSize: 12}} color="white">Next Salah</Body2Bold>
       </TouchableOpacity>
     </View>
   );
@@ -74,7 +75,7 @@ export default NextSalah;
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: '#F9F6FF', // light grey row bg
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -97,9 +98,11 @@ const styles = StyleSheet.create({
 
   /* ---- pill button ---- */
   pill: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
     borderRadius: 20,
+    height: 21,
+    width: 81,
     backgroundColor: '#B67A19', // brown‑orange from screenshot
   },
   pillText: {

@@ -8,12 +8,12 @@ import {
   Modal,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import {scale, verticalScale} from '@/theme/responsive';
 import {Body1Title2Bold, Body1Title2Medium, Body2Medium} from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
-import DownArrow from '@/assets/home/down-arrow.svg';
-import NoEvents from '@/assets/home/no-events.svg';
+import { CdnSvg } from '@/components/CdnSvg';
 import { ShadowColors } from '@/theme/shadows';
 import { useThemeStore } from '@/globalStore';
 
@@ -75,7 +75,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
   const currentIslamicYear = currentIslamicYearData?.data 
     ? (typeof currentIslamicYearData.data === 'number' 
       ? currentIslamicYearData.data 
-      : parseInt(currentIslamicYearData.data?.hijri?.year || '1445'))
+      : parseInt(String(currentIslamicYearData.data) || '1445'))
     : 1445;
   
   // Get Hijri holidays for the current Islamic year
@@ -215,11 +215,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
   // Show loading state
   if (isLoading) {
     return (
-      <TouchableOpacity 
-        style={styles.container}
-        onPress={onViewCalendarPress}
-        activeOpacity={0.9}
-      >
+      <View style={styles.container}>
         <LinearGradient
           colors={['#FDA29B', '#8A57DC']}
           start={{x: 0, y: 0}}
@@ -234,7 +230,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
               onPress={() => setShowMonthPicker(true)}
             >
               <Body1Title2Medium color="white">{selectedMonth}</Body1Title2Medium>
-              <DownArrow width={scale(12)} height={scale(12)} fill="#FFFFFF" />
+              <CdnSvg path="/assets/home/down-arrow.svg" width={scale(12)} height={scale(12)} fill="#FFFFFF" />
             </TouchableOpacity>
           </View>
           
@@ -284,16 +280,23 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
             </View>
           </TouchableWithoutFeedback>
         </Modal>
-      </TouchableOpacity>
+
+        {/* Footer - View Calendar */}
+        <TouchableOpacity
+          style={styles.viewCalendarContainer}
+          onPress={onViewCalendarPress}
+          activeOpacity={0.8}>
+          <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
+          <View style={styles.arrowContainer}>
+            <Text style={styles.arrowText}>›</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     );
   }
   
   return (
-    <TouchableOpacity 
-      style={styles.container}
-      onPress={onViewCalendarPress}
-      activeOpacity={0.9}
-    >
+    <View style={styles.container}>
       <LinearGradient
         colors={['#FDA29B', '#8A57DC']}
         start={{x: 0, y: 0}}
@@ -308,7 +311,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
             onPress={() => setShowMonthPicker(true)}
           >
             <Body1Title2Medium color="white">{selectedMonth}</Body1Title2Medium>
-            <DownArrow width={scale(12)} height={scale(12)} fill="#FFFFFF" />
+            <CdnSvg path="/assets/home/down-arrow.svg" width={scale(12)} height={scale(12)} fill="#FFFFFF" />
           </TouchableOpacity>
         </View>
         
@@ -320,12 +323,13 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
               keyExtractor={item => item.id}
               renderItem={renderEventItem}
               contentContainerStyle={styles.eventsList}
-              scrollEnabled={events.length > 3}
               showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+              style={styles.scrollableList}
             />
           ) : (
             <View style={styles.noEventsContainer}>
-              <NoEvents width={scale(60)} height={scale(60)} />
+              <CdnSvg path="/assets/home/no-events.svg" width={scale(60)} height={scale(60)} />
               <Body1Title2Medium style={styles.noEventsText}>
                 Zero islamic events{'\n'}this month
               </Body1Title2Medium>
@@ -372,14 +376,25 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </TouchableOpacity>
+
+      {/* Footer - View Calendar */}
+      <TouchableOpacity
+        style={styles.viewCalendarContainer}
+        onPress={onViewCalendarPress}
+        activeOpacity={0.8}>
+        <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
+        <View style={styles.arrowContainer}>
+          <Text style={styles.arrowText}>›</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     width: scale(339),
-    height: verticalScale(230),
+    height: verticalScale(268), // Increased height to accommodate footer (230 + 38)
     borderRadius: scale(8),
     alignSelf: 'center',
     marginBottom: verticalScale(16),
@@ -420,9 +435,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: scale(8),
     borderTopWidth: 0.5,
     borderTopColor: '#E5E5E5',
+    height: verticalScale(190), // Fixed height for content (footer will be outside this)
   },
   eventsList: {
     paddingVertical: scale(8),
+    flexGrow: 1,
   },
   eventItem: {
     flexDirection: 'row',
@@ -518,10 +535,15 @@ const styles = StyleSheet.create({
     color: '#737373', // Tokens-Sub-heading
   },
   noEventsContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     gap: scale(16),
+    paddingHorizontal: scale(16),
   },
   noEventsText: {
     fontSize: scale(14),
@@ -530,7 +552,11 @@ const styles = StyleSheet.create({
     color: '#919091',
   },
   loadingContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -568,6 +594,35 @@ const styles = StyleSheet.create({
   selectedMonthItemText: {
     color: '#8A57DC',
     fontFamily: 'Geist-Bold',
+  },
+  scrollableList: {
+    flex: 1,
+  },
+  viewCalendarContainer: {
+    width: scale(339),
+    height: verticalScale(38),
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: scale(14),
+    gap: scale(4),
+    backgroundColor: '#F9F6FF', // Primitives-Primary-50
+    borderTopWidth: 1, // Primitives/Regular
+    borderTopColor: '#E5E5E5',
+  },
+  arrowContainer: {
+    width: scale(18),
+    height: scale(18),
+    borderRadius: scale(9),
+    backgroundColor: '#8A57DC', // Primitives-Primary-500
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  arrowText: {
+    color: '#FFFFFF',
+    fontSize: scale(14),
+    lineHeight: scale(14),
+    textAlign: 'center',
   },
 });
 

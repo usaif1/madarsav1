@@ -4,6 +4,9 @@ import {Platform} from 'react-native';
 
 // screens
 import {Duas} from '../screens';
+import DuaDetail from '../screens/DuaDetail';
+import DuaContent from '../screens/DuaContent';
+import SavedDuas from '../screens/SavedDuas';
 
 // components
 import {Header, ShareButton} from '@/components';
@@ -19,8 +22,26 @@ const DuaNavigator = createNativeStackNavigator({
       screen: Duas,
       options: {
         header: () => (
-          <Header title="Duas" RightButton={() => <ShareButton />} />
+          <Header title="Duas"/>
         ),
+      },
+    },
+    DuaDetail: {
+      screen: DuaDetail,
+      options: {
+        headerShown: false,
+      },
+    },
+    DuaContent: {
+      screen: DuaContent,
+      options: {
+        headerShown: false,
+      },
+    },
+    SavedDuas: {
+      screen: SavedDuas,
+      options: {
+        headerShown: false,
       },
     },
   },

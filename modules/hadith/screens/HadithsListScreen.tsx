@@ -9,8 +9,8 @@ import HadithCard from '../components/HadithCard';
 import HadithListItem from '../components/HadithListItem';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
 import HadithImageFooter from '../components/HadithImageFooter';
-import MoreHadithsLeftIllustration from '@/assets/hadith/MoreHadithsLeftIllustration.svg';
-import MoreHadithsRightIllustration from '@/assets/hadith/MoreHadithsRightIllustration.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { useCollections } from '../hooks/useHadith';
 import { Collection } from '../services/hadithService';
 
@@ -260,11 +260,11 @@ const HadithsListScreen: React.FC = () => {
             {listHadiths.length > 0 && (
               <View style={styles.moreHadithContainer}>
                 <View style={styles.leftIllustration}>
-                  <MoreHadithsLeftIllustration />
+                  <CdnSvg path={DUA_ASSETS.HADITH_MORE_LEFT} width={24} height={24} />
                 </View>
                 <Body1Title2Bold style={styles.moreText}>More Hadith</Body1Title2Bold>
                 <View style={styles.rightIllustration}>
-                  <MoreHadithsRightIllustration />
+                  <CdnSvg path={DUA_ASSETS.HADITH_MORE_RIGHT} width={24} height={24} />
                 </View>
               </View>
             )}

@@ -1,237 +1,491 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Text } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator, PanResponder, Animated, Share as ReactNativeShare } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
+import { AudioPro } from 'react-native-audio-pro';
 
-// components & data
+// Components & Data
 import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
-import Share from '@/assets/share-light.svg';
-import RightTriangle from '@/assets/right-triangle.svg';
-import Close from '@/assets/close.svg';
-import Pause from '@/assets/home/pause.svg';
-// Audio playback
-import Sound from 'react-native-sound';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
-// Enable playback in silent mode
-Sound.setCategory('Playback');
+// Custom Hook
+import { useNameAudio } from '../../../hooks/useNameAudio'; // Adjust path as needed
+import { useAll99Names, Name99Data } from '../../../hooks/use99Names';
 
-// local data
-import {allNames} from '../../../data/allNames';
-
-// store
-import { useThemeStore } from '@/globalStore';
+// Store
+import { useThemeStore, useGlobalStore } from '@/globalStore';
 import { ColorPrimary } from '@/theme/lightColors';
 
-// Define the Name interface based on our local data
-interface Name {
-  id: number;
-  classicalArabic: string;
-  ipa: string;
-  translation: string;
-  reference: string;
-  gTypeb: string;
-}
+// Audio Components
+import FloatingPlayButton from '@/modules/home/components/AudioPlayer/FloatingPlayButton';
+import { verticalScale } from '@/theme/responsive';
 
 const width = Dimensions.get('screen').width;
-const CARD_SIZE = Math.min(width, 375);
+const CARD_SIZE = Math.min(width,);
 
 interface NamesListProps {
   searchQuery?: string;
 }
 
+const Close = () => {
+  return (
+    <CdnSvg path={DUA_ASSETS.NAMES_CLOSE} width={24} height={24} />
+  )
+}
+
+// Create a completely separate audio hook for the modal
+const useModalAudio = () => {
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentAudioRef, setCurrentAudioRef] = useState<any>(null);
+  
+  const playAudioFromUrl = useCallback(async (audioUrl: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const trackId = `modal-${Date.now()}`;
+      const track = {
+        id: trackId,
+        url: audioUrl,
+        title: 'Modal Name Audio',
+        artist: '',
+        artwork: 'test',
+      };
+
+      setCurrentAudioRef({ url: audioUrl, id: trackId });
+      
+      console.log('🎭 Modal: Playing separate modal audio:', audioUrl);
+      await AudioPro.play(track);
+      setIsPlaying(true);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('🎭 Modal: Error playing modal audio:', err);
+      setError('Failed to play audio');
+      setIsLoading(false);
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const pauseAudio = useCallback(() => {
+    if (isPlaying) {
+      console.log('🎭 Modal: Pausing modal audio');
+      AudioPro.pause();
+      setIsPlaying(false);
+    }
+  }, [isPlaying]);
+
+  const stopAudio = useCallback(() => {
+    console.log('🎭 Modal: Stopping modal audio');
+    AudioPro.stop();
+    setIsPlaying(false);
+    setCurrentAudioRef(null);
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return {
+    isPlaying,
+    isLoading,
+    error,
+    playAudioFromUrl,
+    pauseAudio,
+    stopAudio,
+    clearError,
+  };
+};
+
+/**
+ * Main component for displaying list of Islamic names
+ * Features: Search, Modal view, Audio playback
+ */
 const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const { colors } = useThemeStore();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   
+  // Fetch names from API
+  const { data: namesData, isLoading, error: namesError } = useAll99Names();
+  
+  // Modal state
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  // Use ref for immediate updates during swipe navigation
+  const currentItemIndexRef = useRef<number>(0);
+  // Keep state for UI rendering, but use ref for logic
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
   
-  // Audio playback state
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [isAudioLoading, setIsAudioLoading] = useState<boolean>(false);
-  const [audioError, setAudioError] = useState<string | null>(null);
-  const [audioPlayer, setAudioPlayer] = useState<Sound | null>(null);
-  
-  // Clean up audio when component unmounts
-  useEffect(() => {
-    return () => {
-      if (audioPlayer) {
-        audioPlayer.stop();
-        audioPlayer.release();
-      }
-    };
-  }, [audioPlayer]);
-  
-  // Handle audio playback
-  const handleAudioPlayback = () => {
-    if (isPlaying && audioPlayer) {
-      // Stop audio if playing
-      audioPlayer.pause();
-      setIsPlaying(false);
-    } else {
-      // Play audio for the selected name
-      playAudio(allNames[currentItemIndex].id);
+  // Sync the state and ref
+  const updateCurrentIndex = (newIndex: number) => {
+    currentItemIndexRef.current = newIndex;
+    setCurrentItemIndex(newIndex);
+    // Pause audio if playing when index changes due to swipe
+    if (modalAudioIsPlaying) {
+      modalPauseAudio();
     }
   };
   
-  // Play audio function
-  const playAudio = (nameNumber: number) => {
-    // Format the number with leading zeros (e.g., 1 -> "01")
-    const formattedNumber = nameNumber.toString().padStart(2, '0');
-    const audioUrl = `https://99names.app/audio/${formattedNumber}.mp3`;
+  // Animation values for swipe
+  const pan = useRef(new Animated.ValueXY()).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+  
+  // Separate audio hook for modal only
+  const { 
+    isPlaying: modalAudioIsPlaying, 
+    isLoading: modalAudioIsLoading, 
+    error: modalAudioError, 
+    playAudioFromUrl: modalPlayAudioFromUrl,
+    pauseAudio: modalPauseAudio, 
+    stopAudio: modalStopAudio,
+    clearError: modalClearError
+  } = useModalAudio();
+
+  /**
+   * Filter names based on search query with multiple criteria
+   */
+  const filteredNames = React.useMemo(() => {
+    if (!namesData || !Array.isArray(namesData)) return [];
     
-    console.log(`Loading audio for name #${nameNumber}: ${audioUrl}`);
+    if (searchQuery.trim() === '') return namesData;
     
-    // Stop any currently playing audio
-    if (audioPlayer) {
-      audioPlayer.stop();
-      audioPlayer.release();
+    const searchLower = searchQuery.toLowerCase().trim();
+    
+    return namesData.filter(name => {
+      return (
+        name.englishName.toLowerCase().includes(searchLower) || 
+        name.englishTranslation.toLowerCase().includes(searchLower) ||
+        name.arabicName.includes(searchLower) ||
+        name.number.toString().includes(searchLower) // Allow searching by number
+      );
+    });
+  }, [searchQuery, namesData]);
+
+  // Debug modal visibility and data
+  useEffect(() => {
+    console.log('🔍 Modal visibility changed:', isVisible);
+    console.log('🔍 Current item index:', currentItemIndex);
+    console.log('🔍 Filtered names length:', filteredNames.length);
+    if (isVisible && filteredNames.length > 0) {
+      console.log('🔍 Current item data:', JSON.stringify(filteredNames[currentItemIndex], null, 2));
     }
-    
-    setIsAudioLoading(true);
-    setAudioError(null);
-    
+  }, [isVisible, currentItemIndex, filteredNames]);
+  
+  // Cleanup when component unmounts - pause any playing audio
+  useEffect(() => {
+    return () => {
+      if (modalAudioIsPlaying) {
+        console.log('🔍 Component unmounting - pausing modal audio');
+        modalPauseAudio();
+      }
+    };
+  }, [modalAudioIsPlaying, modalPauseAudio]);
+
+  /**
+   * Handle audio playback with error handling
+   */
+  const handleAudioPlayback = () => {
     try {
-      // Create a new Sound instance
-      // For remote URLs, the second parameter should be empty string
-      const newSound = new Sound(audioUrl, '', (error) => {
-        setIsAudioLoading(false);
-        
-        if (error) {
-          console.error('Failed to load the sound', error);
-          setAudioError(`Failed to load the sound: ${error.message}`);
-          return;
+      if (modalAudioIsPlaying) {
+        modalPauseAudio();
+      } else {
+        // Clear any previous errors
+        if (modalAudioError) {
+          modalClearError();
         }
         
-        console.log('Sound loaded successfully');
-        setAudioPlayer(newSound);
-        setIsPlaying(true);
-        
-        // Play the sound
-        newSound.play((success) => {
-          console.log('Sound playback finished', success);
-          if (!success) {
-            setAudioError('Playback failed due to audio decoding errors');
-          }
-          setIsPlaying(false);
-        });
-      });
-    } catch (err) {
-      console.error('Error creating Sound object', err);
-      setIsAudioLoading(false);
-      setAudioError(`Error initializing audio: ${err instanceof Error ? err.message : String(err)}`);
+        // Get the current name from filtered results
+        const currentName = filteredNames[currentItemIndex];
+        if (currentName && currentName.audioLink) {
+          // Use the direct audio URL from the API
+          modalPlayAudioFromUrl(currentName.audioLink);
+        } else {
+          Alert.alert('Error', 'Unable to find audio for the selected name.');
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleAudioPlayback:', error);
+      Alert.alert('Audio Error', 'Failed to play audio. Please try again.');
     }
   };
 
-  // Filter names based on search query
-  const filteredNames = searchQuery.trim() === '' 
-    ? allNames 
-    : allNames.filter(name => {
-        const searchLower = searchQuery.toLowerCase();
-        return (
-          name.ipa.toLowerCase().includes(searchLower) || 
-          name.translation.toLowerCase().includes(searchLower) ||
-          name.classicalArabic.includes(searchLower)
-        );
+  /**
+   * Handle modal close with cleanup
+   */
+  const handleCloseModal = () => {
+    setIsVisible(false);
+    // Stop modal audio when closing modal (this will restore shared audio state)
+    if (modalAudioIsPlaying) {
+      console.log('🎭 Modal: Closing modal and stopping modal audio');
+      modalStopAudio();
+    }
+    // Reset animation values
+    pan.setValue({ x: 0, y: 0 });
+    opacity.setValue(1);
+  };
+  
+  
+  /**
+   * Pan responder for swipe gestures
+   */
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow horizontal movement
+        pan.x.setValue(gestureState.dx);
+        
+        // Fade out as we swipe
+        const absX = Math.abs(gestureState.dx);
+        const maxDistance = 200; // Max swipe distance
+        const newOpacity = Math.max(0.4, 1 - (absX / maxDistance) * 0.6);
+        opacity.setValue(newOpacity);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const { dx, vx } = gestureState;
+        const isSwipeRight = dx > 100 || vx > 0.3;
+        const isSwipeLeft = dx < -100 || vx < -0.3;
+
+        const currentIdx = currentItemIndexRef.current;
+        const canGoNext = currentIdx < filteredNames.length - 1;
+        const canGoPrev = currentIdx > 0;
+
+        if (isSwipeLeft && canGoNext) {
+          Animated.parallel([
+            Animated.timing(pan.x, { toValue: -CARD_SIZE, duration: 200, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+          ]).start(() => {
+            const newIndex = currentItemIndexRef.current + 1;
+            // Prepare the animated view for the *new* item *before* state update
+            pan.x.setValue(CARD_SIZE); // Position new card off-screen to the right
+            opacity.setValue(0);       // Make it invisible
+            
+            updateCurrentIndex(newIndex); // Now update state, new data renders into hidden/off-screen view
+            
+            // Wrap the "animate in" with requestAnimationFrame
+            requestAnimationFrame(() => {
+              Animated.parallel([
+                Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+                Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+              ]).start();
+            });
+          });
+        } else if (isSwipeRight && canGoPrev) {
+          Animated.parallel([
+            Animated.timing(pan.x, { toValue: CARD_SIZE, duration: 200, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+          ]).start(() => {
+            const newIndex = currentItemIndexRef.current - 1;
+            // Prepare the animated view for the *new* item *before* state update
+            pan.x.setValue(-CARD_SIZE); // Position new card off-screen to the left
+            opacity.setValue(0);        // Make it invisible
+
+            updateCurrentIndex(newIndex); // Now update state
+
+            // Wrap the "animate in" with requestAnimationFrame
+            requestAnimationFrame(() => {
+              Animated.parallel([
+                Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 7, tension: 40 }),
+                Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 7, tension: 40 }),
+              ]).start();
+            });
+          });
+        } else {
+          // Not enough swipe, return to center
+          Animated.parallel([
+            Animated.spring(pan.x, { toValue: 0, useNativeDriver: true, friction: 5 }),
+            Animated.spring(opacity, { toValue: 1, useNativeDriver: true, friction: 5 }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
+
+  /**
+   * Show error alert for audio issues
+   */
+  useEffect(() => {
+    if (modalAudioError) {
+      Alert.alert(
+        'Audio Error',
+        modalAudioError,
+        [
+          { text: 'OK', onPress: modalClearError }
+        ]
+      );
+    }
+  }, [modalAudioError, modalClearError]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={ColorPrimary.primary500} />
+        <Text style={styles.loadingText}>Loading 99 Names...</Text>
+      </View>
+    );
+  }
+
+  const handleShare = async () => {
+    const currentName = filteredNames[currentItemIndexRef.current];
+    if (!currentName) return;
+    // App store links
+    const appStoreLink = 'https://apps.apple.com/app/madarsaapp';
+    const playStoreLink = 'https://play.google.com/store/apps/details?id=com.madarsaapp';
+
+    try {
+      const message =
+      `${currentName.englishName} - One of the 99 Names of Allah\n\n` +
+      `Arabic: ${currentName.arabicName}\n` +
+      `English: ${currentName.englishName}\n` +
+      `Meaning: ${currentName.englishTranslation}\n\n` +
+      `Download Madarsa App to learn more:\n` +
+      `App Store: ${appStoreLink}\n` +
+      `Play Store: ${playStoreLink}`;
+
+      console.log('🔍 Sharing name image:', currentName.imageLink);
+      await ReactNativeShare.share({
+        title: `${currentName.englishName} - 99 Names of Allah`,
+        message: message,
+        url: currentName.imageLink, // Share the image URL along with the message
       });
+    } catch (error) {
+      Alert.alert('Error', 'Could not share at this time.');
+      console.error('Share error:', error);
+    }
+  };
+
+  // Show error state
+  if (namesError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading names</Text>
+        <Text style={styles.errorSubtext}>{namesError.message}</Text>
+      </View>
+    );
+  }
 
   return (
     <>
       <FlatList
         data={filteredNames}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item) => `name-${item.id}`}
         renderItem={({ index, item }) => (
           <NameCard
             index={index}
             item={item}
-            setIsVisible={setIsVisible}
-            setCurrentItemIndex={setCurrentItemIndex}
+            onPress={() => {
+              console.log('🔍 Opening modal for item:', index, item.englishName);
+              // Update both ref and state
+              currentItemIndexRef.current = index;
+              setCurrentItemIndex(index);
+              setIsVisible(true);
+              console.log('🔍 Modal should now be visible');
+            }}
           />
         )}
-        ListEmptyComponent={searchQuery.trim() !== '' ? (
+        ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No names found matching "{searchQuery}"</Text>
+            <Text style={styles.emptyText}>
+              {searchQuery ? 'No names found matching your search.' : 'No names available.'}
+            </Text>
           </View>
-        ) : null}
+        }
       />
+
+      {/* Floating Play Button */}
+      <FloatingPlayButton />
+
+      {/* Modal view for detailed name */}
       <Modal
         isVisible={isVisible}
+        useNativeDriver
+        hideModalContentWhileAnimating
         backdropOpacity={0.9}
         style={stylesModal.modal}
-        backdropColor="#171717">
+        backdropColor="#171717"
+        onBackdropPress={handleCloseModal}
+        onBackButtonPress={handleCloseModal}
+        animationIn="fadeIn"
+        animationOut="fadeOut"
+      >
         <View style={stylesModal.card}>
+          {/* Close button - Fixed position */}
           <Pressable
-            style={{ position: 'absolute', top: 70, left: 10 }}
-            onPress={() => setIsVisible(false)}>
+            style={stylesModal.closeButton}
+            onPress={handleCloseModal}
+            accessibilityLabel="Close modal"
+            accessibilityRole="button"
+          >
             <Close />
           </Pressable>
 
-          <View
-            style={{
-              position: 'absolute',
-              top: 70,
-              backgroundColor: colors.secondary.neutral600,
-              paddingHorizontal: 12,
-              borderRadius: 100,
-              paddingVertical: 3,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
+          {/* Counter badge - Fixed position */}
+          <View style={[stylesModal.counterBadge, { backgroundColor: colors.secondary.neutral600 }]}>
             <Body1Title2Bold color="white">
               {currentItemIndex + 1}/99
             </Body1Title2Bold>
           </View>
 
-          <View style={stylesModal.imageContainer}>
+          {/* Swipeable Image Container */}
+          <Animated.View 
+            style={[
+              stylesModal.imageContainer,
+              {
+                transform: [{ translateX: pan.x }],
+                opacity: opacity,
+              }
+            ]}
+            {...panResponder.panHandlers}>
+            {/* Use the image from API instead of local asset */}
             <FastImage
-              source={require('@/assets/names/name-modal-image.jpg')}
+              source={{ uri: filteredNames[currentItemIndex]?.imageLink }}
               style={stylesModal.image}
               resizeMode={FastImage.resizeMode.cover}
             />
-            
-            {/* Dynamic Text Overlay */}
-            <View style={stylesModal.textOverlay}>
-              <Text style={stylesModal.arabicText}>
-                {filteredNames[currentItemIndex].classicalArabic}
-              </Text>
-              <Text style={stylesModal.nameText}>
-                {filteredNames[currentItemIndex].ipa}
-              </Text>
-              <Text style={stylesModal.meaningText}>
-                {filteredNames[currentItemIndex].translation}
-              </Text>
-            </View>
-          </View>
+          </Animated.View>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Fixed position */}
           <View style={stylesModal.actions}>
             <Pressable
-              onPress={() => setIsVisible(false)}
-              style={[
-                stylesModal.btn,
-                { backgroundColor: colors.secondary.neutral600 },
-              ]}>
-              <Close />
+              onPress={handleCloseModal}
+              style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
+              accessibilityRole="button"
+            >
+              <CdnSvg path={DUA_ASSETS.NAMES_CLOSE} width={24} height={24} />
               <Body1Title2Bold color="white">Close</Body1Title2Bold>
             </Pressable>
 
             <Pressable 
-              style={[stylesModal.btn, { backgroundColor: '#8A57DC' }]}
+              style={[
+                stylesModal.btn, 
+                { 
+                  backgroundColor: modalAudioIsLoading ? '#666' : '#8A57DC',
+                  opacity: modalAudioIsLoading ? 0.7 : 1
+                }
+              ]}
               onPress={handleAudioPlayback}
+              disabled={modalAudioIsLoading}
+              accessibilityLabel={modalAudioIsPlaying ? "Pause audio" : "Play audio"}
+              accessibilityRole="button"
             >
-              {isPlaying ? <Pause /> : <RightTriangle />}
+              {modalAudioIsPlaying ? (
+                <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={24} height={24} />
+              ) : (
+                <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={24} height={24} />
+              )}
               <Body1Title2Bold color="white">
-                {isAudioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Listen'}
+                {modalAudioIsLoading ? 'Loading...' : modalAudioIsPlaying ? 'Pause' : 'Listen'}
               </Body1Title2Bold>
-              {audioError && <Text style={styles.audioErrorText}>Error playing audio</Text>}
             </Pressable>
 
             <Pressable
-              style={[
-                stylesModal.btn,
-                { backgroundColor: colors.secondary.neutral600 },
-              ]}>
-              <Share />
+              style={[stylesModal.btn, { backgroundColor: colors.secondary.neutral600 }]}
+              accessibilityLabel="Share"
+              accessibilityRole="button"
+              onPress={handleShare} 
+            >
+              <CdnSvg path={DUA_ASSETS.NAMES_SHARE} width={24} height={24} />
               <Body1Title2Bold color="white">Share</Body1Title2Bold>
             </Pressable>
           </View>
@@ -241,44 +495,49 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   );
 };
 
+/**
+ * Individual name card component
+ */
 interface NameCardProps {
-  item: Name;
-  setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  item: Name99Data;
   index: number;
-  setCurrentItemIndex: React.Dispatch<React.SetStateAction<number>>;
+  onPress: () => void;
 }
 
-const NameCard: React.FC<NameCardProps> = ({
-  item,
-  index,
-  setIsVisible,
-  setCurrentItemIndex,
-}) => {
+const NameCard: React.FC<NameCardProps> = ({ item, index, onPress }) => {
   return (
     <Pressable
-      onPress={() => {
-        setCurrentItemIndex(index);
-        setIsVisible(true);
-      }}
-      style={[styles.item, { borderTopWidth: index === 0 ? 1 : 0 }]}>
+      onPress={onPress}
+      style={[styles.item, { borderTopWidth: index === 0 ? 1 : 0 }]}
+      accessibilityLabel={`${item.englishName}, ${item.englishTranslation}`}
+      accessibilityRole="button"
+    >
       {/* Background image with text overlay */}
       <View style={styles.avatarContainer}>
         <FastImage
-          source={require('@/assets/names/name-image.jpg')}
+          source={{ uri: item?.imageLink }}
           style={styles.avatar}
           resizeMode={FastImage.resizeMode.cover}
         />
         
-        {/* Arabic text overlay */}
-        <Text style={styles.avatarArabicText}>{item.classicalArabic}</Text>
-        <Text style={styles.avatarEnglishText}>{item.ipa}</Text>
-        <Text style={styles.avatarTranslationText}>{item.translation}</Text>
+        {/* Text overlays */}
+        {/* <Text style={styles.avatarArabicText}>{item.arabicName}</Text>
+        <Text style={styles.avatarEnglishText}>{item.englishName}</Text>
+        <Text style={styles.avatarTranslationText} numberOfLines={2}>
+          {item.englishTranslation}
+        </Text> */}
       </View>
 
       {/* Name & meaning */}
       <View style={styles.textContainer}>
-        <Title3Bold style={{fontSize: 17}}>{item.ipa}</Title3Bold>
-        <Body2Medium style={{fontSize: 12,maxWidth: '80%'}} color="sub-heading">{item.translation}</Body2Medium>
+        <Title3Bold style={styles.nameTitle}>{item.englishName}</Title3Bold>
+        <Body2Medium 
+          style={styles.meaningSubtitle} 
+          color="sub-heading"
+          numberOfLines={2}
+        >
+          {item.englishTranslation}
+        </Body2Medium>
       </View>
 
       {/* Index badge */}
@@ -291,6 +550,7 @@ const NameCard: React.FC<NameCardProps> = ({
 
 export default NamesList;
 
+// Styles
 const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
@@ -300,6 +560,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 16,
+    minHeight: 92,
   },
   avatarContainer: {
     width: 60,
@@ -341,44 +602,19 @@ const styles = StyleSheet.create({
     fontSize: 2,
     fontWeight: 'bold',
     textAlign: 'center',
-    width: '60%',
+    width: 32,
   },
   textContainer: {
     flex: 1,
+    paddingRight: 8,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  nameTitle: {
+    fontSize: 17,
+    marginBottom: 4,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#737373',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#EF4444',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#8A57DC',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+  meaningSubtitle: {
+    fontSize: 12,
+    maxWidth: '90%',
   },
   indexBadge: {
     width: 28,
@@ -388,38 +624,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  meaning: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 4,
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
-    height: 200,
+    minHeight: 200,
   },
   emptyText: {
     fontSize: 16,
     color: '#737373',
     textAlign: 'center',
   },
-  audioErrorText: {
-    color: '#FF4D4F', 
-    fontSize: 10, 
-    marginTop: 2,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    minHeight: 300,
+    backgroundColor: '#FFFFFF',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: ColorPrimary.primary700,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    minHeight: 300,
+    backgroundColor: '#FFF8F8',
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#E53935',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: '#737373',
+    textAlign: 'center',
+    maxWidth: '80%',
   },
 });
 
 const stylesModal = StyleSheet.create({
   modal: {
-    margin: 0, // use the whole screen
+    margin: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -428,6 +685,23 @@ const stylesModal = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: verticalScale(60),
+    left: 10,
+    zIndex: 1,
+    padding: 8, // Larger touch area
+  },
+  counterBadge: {
+    position: 'absolute',
+    top: 70,
+    paddingHorizontal: 12,
+    borderRadius: 100,
+    paddingVertical: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
   },
   imageContainer: {
     width: CARD_SIZE,
@@ -438,7 +712,7 @@ const stylesModal = StyleSheet.create({
   },
   image: {
     width: CARD_SIZE,
-    height: CARD_SIZE, // square
+    height: CARD_SIZE,
     borderRadius: 12,
   },
   textOverlay: {
@@ -473,21 +747,49 @@ const stylesModal = StyleSheet.create({
     marginTop: 4,
     lineHeight: 14,
   },
-  /* ---------- actions row ---------- */
+  descriptionContainer: {
+    width: CARD_SIZE,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 16,
+    marginBottom: 70, // Space for action buttons
+  },
+  descriptionText: {
+    color: ColorPrimary.primary700,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
   actions: {
     position: 'absolute',
     bottom: 30,
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 24,
-    gap: 12, // RN ‑‑gap support 0.72+
+    gap: 12,
+    zIndex: 10,
+  },
+  swipeIndicator: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    top: 140,
+  },
+  swipeLeft: {
+    left: 10,
+  },
+  swipeRight: {
+    right: 10,
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 32,
-    columnGap: 2,
+    columnGap: 8,
+    minHeight: 44, // Better touch target
   },
 });

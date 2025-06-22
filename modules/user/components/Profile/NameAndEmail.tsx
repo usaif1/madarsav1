@@ -1,15 +1,17 @@
 import {Pressable, StyleSheet, View} from 'react-native';
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
-
+import FastImage from 'react-native-fast-image';
 // components
 import {Divider} from '@/components';
 import {Body1Title2Bold, Body1Title2Medium, H2Bold, H5Bold} from '@/components';
 import {useThemeStore} from '@/globalStore';
 import {useNavigation} from '@react-navigation/native';
+import { useAuthStore } from '@/modules/auth/store/authStore';
 
 const NameAndEmail = () => {
   const {shadows} = useThemeStore();
+  const {user} = useAuthStore();
 
   return (
     <View
@@ -35,22 +37,26 @@ const NameAndEmail = () => {
 export default NameAndEmail;
 
 const Avatar = () => {
+  const {user} = useAuthStore();
+
   return (
     <LinearGradient colors={['#FFFFFF', '#F2DEFF']} style={{borderRadius: 100}}>
       <View style={styles.avatar}>
-        <H2Bold color="primary">MA</H2Bold>
+        {user?.photoUrl || user?.photo ? <FastImage source={{uri: user?.photoUrl || user?.photo}} style={{width: 100, height: 100, borderRadius: 100}} /> : <H2Bold color="primary">{user?.name?.split(' ').map((name: string) => name[0]).join('')}</H2Bold>}
       </View>
     </LinearGradient>
   );
 };
 
 const NameEmail = () => {
+  const {user} = useAuthStore();
+
   return (
     <View style={{alignItems: 'center'}}>
-      <H5Bold>Mohammad Arbaz</H5Bold>
+      <H5Bold>{user?.name}</H5Bold>
       <Divider height={2} />
       <Body1Title2Medium color="sub-heading">
-        arbazkhan78@gmail.com
+        {user?.email}
       </Body1Title2Medium>
     </View>
   );

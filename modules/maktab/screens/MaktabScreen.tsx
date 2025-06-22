@@ -4,9 +4,9 @@ import { Body1Title2Medium, Body1Title2Bold, Divider } from '@/components';
 import { scale } from '@/theme/responsive';
 import LinearGradient from 'react-native-linear-gradient';
 import { ColorPrimary } from '@/theme/lightColors';
-
-// Import assets
-import MaktabTopDesign from '@/assets/maktab/maktab-top-design.svg';
+import FastImage from 'react-native-fast-image';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 const MaktabScreen: React.FC = () => {
   return (
@@ -14,7 +14,7 @@ const MaktabScreen: React.FC = () => {
       {/* Top header with background image */}
       <View style={styles.headerContainer}>
         <ImageBackground 
-          source={require('@/assets/maktab/maktab-header-image.png')} 
+          source={{ uri: getCdnUrl(DUA_ASSETS.MAKTAB_HEADER) }}
           style={styles.headerImage}
           imageStyle={{ opacity: 0.2 }}
         >
@@ -27,14 +27,20 @@ const MaktabScreen: React.FC = () => {
           />
           
           {/* Shadow overlay */}
-          <Image
-            source={require('@/assets/maktab/maktab-header-image-shadow.png')}
+          <FastImage
+            source={{ uri: getCdnUrl(DUA_ASSETS.MAKTAB_HEADER_SHADOW) }}
             style={styles.headerShadow}
+            resizeMode={FastImage.resizeMode.cover}
           />
           
           {/* SVG Top Design - centered and larger */}
           <View style={styles.topDesignContainer}>
-            <MaktabTopDesign width={scale(300)} height={scale(150)} style={styles.topDesign} />
+            <CdnSvg 
+              path={DUA_ASSETS.MAKTAB_TOP_DESIGN} 
+              width={scale(280)} 
+              height={scale(150)} 
+              style={styles.topDesign} 
+            />
           </View>
         
           {/* Circle with calendar icon */}
@@ -45,10 +51,10 @@ const MaktabScreen: React.FC = () => {
               end={{ x: 1, y: 1 }}
               style={styles.circle}
             >
-              <Image 
-                source={require('@/assets/maktab/maktab-calendar.png')} 
+              <FastImage 
+                source={{ uri: getCdnUrl(DUA_ASSETS.MAKTAB_CALENDAR) }}
                 style={styles.calendarIcon} 
-                resizeMode="contain"
+                resizeMode={FastImage.resizeMode.contain}
               />
             </LinearGradient>
           </View>
@@ -59,10 +65,10 @@ const MaktabScreen: React.FC = () => {
       <Divider height={scale(4)} />
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
           {/* Salam Image */}
-        <Image 
-          source={require('@/assets/maktab/maktab-salam.png')} 
+        <FastImage 
+          source={{ uri: getCdnUrl(DUA_ASSETS.MAKTAB_SALAM) }}
           style={styles.salamImage} 
-          resizeMode="contain"
+          resizeMode={FastImage.resizeMode.contain}
         />
         
         {/* Spacing */}
@@ -173,7 +179,7 @@ const styles = StyleSheet.create({
   topDesign: {
     position: 'absolute',
     top: -scale(75),
-    left: '50%',
+    left: '45%',
     transform: [{ translateX: -scale(150) }],
   },
   circleContainer: {

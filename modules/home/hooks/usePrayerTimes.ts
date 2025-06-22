@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useCalendarPrayerTimes, formatPrayerTime } from '@/modules/calendar/hooks/useCalendarPrayerTimes';
 import { PrayerTiming } from '@/api/services/prayerTimesService';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 
 // Prayer time types
 export type PrayerType = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -16,14 +17,50 @@ export interface PrayerTimeData {
 
 export const usePrayerTimes = () => {
   const today = new Date();
-  const { data, isLoading, error } = useCalendarPrayerTimes(today);
+  
+  // Get location data with fallback support
+  const { 
+    latitude, 
+    longitude, 
+    loading: locationLoading, 
+    error: locationError,
+    usingFallback,
+    fallbackSource,
+    refreshLocation: refreshLocationData
+  } = useLocationData();
+  
+  // Get prayer times data
+  const { 
+    data, 
+    isLoading: prayerTimesLoading, 
+    error: prayerTimesError,
+    refetch
+  } = useCalendarPrayerTimes(today);
+  
   const [currentPrayer, setCurrentPrayer] = useState<PrayerType>('fajr');
   const [nextPrayer, setNextPrayer] = useState<PrayerType>('fajr');
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [dayName, setDayName] = useState<string>('');
   const [prayerTimes, setPrayerTimes] = useState<Record<string, PrayerTimeData>>({});
   
-  // Update time left every second
+  // Combine loading and error states
+  const isLoading = locationLoading || prayerTimesLoading;
+  const error = locationError || prayerTimesError;
+  
+  // Update prayer times when location or data changes
+  useEffect(() => {
+    console.log('🌍 Location changed in usePrayerTimes:', { latitude, longitude, usingFallback, fallbackSource });
+    
+    // If we have coordinates (either from GPS or IP), refetch prayer times
+    if (latitude && longitude) {
+      console.log('🔄 Refetching prayer times with coordinates:', { latitude, longitude });
+      refetch();
+    } else {
+      console.log('⚠️ No coordinates available for prayer times');
+    }
+  }, [latitude, longitude, usingFallback, fallbackSource, refetch]);
+
+  // Process prayer times data and update time left
   useEffect(() => {
     if (!data || !data.data || !data.data.timings) return;
     
@@ -121,7 +158,18 @@ export const usePrayerTimes = () => {
       const currentSecond = now.getSeconds();
       const currentTimeInMinutes = currentHour * 60 + currentMinute + currentSecond / 60;
       
-      const timeLeftInMinutes = nextPrayerTime - currentTimeInMinutes;
+      let timeLeftInMinutes = nextPrayerTime - currentTimeInMinutes;
+      
+      // Handle edge case: if time left is negative, it means we're crossing midnight
+      // This can happen when the next prayer is Fajr of the next day
+      if (timeLeftInMinutes < 0 && nextPrayer === 'fajr') {
+        // Add 24 hours (1440 minutes) to get correct time until tomorrow's Fajr
+        timeLeftInMinutes += 24 * 60;
+      }
+      
+      // Ensure we never show negative time
+      timeLeftInMinutes = Math.max(0, timeLeftInMinutes);
+      
       const hours = Math.floor(timeLeftInMinutes / 60);
       const minutes = Math.floor(timeLeftInMinutes % 60);
       const seconds = Math.floor((timeLeftInMinutes * 60) % 60);
@@ -133,6 +181,12 @@ export const usePrayerTimes = () => {
     return () => clearInterval(interval);
   }, [data]);
   
+  // Function to refresh location and prayer times
+  const refreshLocation = () => {
+    refreshLocationData();
+    refetch();
+  };
+  
   return {
     prayerTimes,
     currentPrayer,
@@ -140,7 +194,10 @@ export const usePrayerTimes = () => {
     timeLeft,
     dayName,
     isLoading,
-    error
+    error,
+    usingFallback,
+    fallbackSource,
+    refreshLocation
   };
 };
 

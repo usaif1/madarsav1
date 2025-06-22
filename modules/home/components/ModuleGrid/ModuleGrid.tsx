@@ -4,12 +4,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Image,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Bold } from '@/components/Typography/Typography';
 import { ShadowColors } from '@/theme/shadows';
 
 // Get screen dimensions for responsive layout
@@ -17,42 +16,49 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = scale(163.5); // Width of each card
 const CARD_HEIGHT = scale(184); // Height of each card
 const CARD_GAP = scale(12); // Gap between cards in the same row
+const BASE_CDN_URL = 'https://cdn.madrasaapp.com/assets/home/';
 
 interface ModuleItem {
   id: string;
-  image: any;
+  image: string;
   route: string;
 }
 
 const modules: ModuleItem[] = [
   {
     id: 'quran',
-    image: require('@/assets/home/quran-card.png'),
+    image: `${BASE_CDN_URL}quran-card.png`,
     route: 'quran',
   },
   {
-    id: 'maktab',
-    image: require('@/assets/home/maktab-card.png'),
-    route: 'maktab',
+    id: 'dua',
+    image: `${BASE_CDN_URL}dua-card.png`,
+    // image:require('@/assets/DuaHome.png'),
+    route: 'dua',
   },
+  // {
+  //   id: 'maktab',
+  //   image: `${BASE_CDN_URL}maktab-card.png`,
+  //   route: 'maktab',
+  // },
   {
     id: 'qiblah',
-    image: require('@/assets/home/qiblah-card.png'),
+    image: `${BASE_CDN_URL}qiblah-card.png`,
     route: 'compass',
   },
   {
     id: 'tasbih',
-    image: require('@/assets/home/tasbih-card.png'),
+    image: `${BASE_CDN_URL}tasbih-card.png`,
     route: 'tasbih',
   },
   {
     id: 'hadith',
-    image: require('@/assets/home/hadith-card.png'),
+    image: `${BASE_CDN_URL}hadith-card.png`,
     route: 'hadith',
   },
   {
     id: 'zakat',
-    image: require('@/assets/home/zakat-card.png'),
+    image: `${BASE_CDN_URL}zakat-card.png`,
     route: 'zakat',
   },
 ];
@@ -86,13 +92,16 @@ const ModuleGrid: React.FC = () => {
         break;
       case 'quran':
         // Redirect Quran to 99names for now
-        navigation.navigate('names');
+        // navigation.navigate('names');
         break;
       case 'tasbih':
         navigation.navigate('tasbih');
         break;
       case 'compass':
         navigation.navigate('compass');
+        break;
+      case 'dua':
+        navigation.navigate('dua');
         break;
       default:
         // Do nothing for modules not yet created
@@ -111,10 +120,10 @@ const ModuleGrid: React.FC = () => {
             activeOpacity={0.8}
             style={styles.cardContainer}
           >
-            <Image 
-              source={module.image} 
-              style={styles.cardImage} 
-              resizeMode="cover"
+            <FastImage 
+              source={{ uri: module.image }} 
+              style={styles.cardImage}
+              resizeMode={FastImage.resizeMode.cover}
             />
           </TouchableOpacity>
         ))}

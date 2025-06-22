@@ -1,12 +1,11 @@
 // DuaCard.tsx
 import React from 'react';
-import { View, StyleSheet, Text, Pressable, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, Text, Pressable, useWindowDimensions, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Body1Title2Bold, Body1Title2Medium } from '@/components';
 import { useThemeStore } from '@/globalStore';
-import ArrowLeft from '@/assets/profile/arrowleft.svg';
-import ArrowRight from '@/assets/profile/arrowright.svg';
-import Hamburger from '@/assets/profile/hamburger.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale } from '@/theme/responsive';
 
 interface DuaCardProps {
@@ -34,37 +33,53 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
       >
         {/* Arabic Text */}
         <View style={styles.arabicWrap}>
-          <Body1Title2Medium
-            color="accent-yellow-900"
-            style={[styles.arabic]}>{arabic}</Body1Title2Medium>
-        </View>
+          <View style={[styles.transBg]}> 
+            <ScrollView 
+              contentContainerStyle={styles.scrollContentContainer}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+            >
+              <Body1Title2Medium
+                color="accent-yellow-900"
+                style={[styles.arabic]}>{arabic}</Body1Title2Medium>
+            </ScrollView>
+          </View></View>
+
         {/* First Divider */}
         <View style={styles.dashedLine} />
         {/* Transliteration with Navigation Controls */}
         <View style={styles.transRowWrap}>
           <View style={[styles.transBg]}> 
-            <Body1Title2Medium
-              color="yellow-800"
-              style={[styles.transliteration]}
-              numberOfLines={3}
-              ellipsizeMode="tail"
+            <ScrollView 
+              contentContainerStyle={styles.scrollContentContainer}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
             >
-              {transliteration}
-            </Body1Title2Medium>
+              <Body1Title2Medium
+                color="yellow-800"
+                style={[styles.transliteration]}
+              >
+                {transliteration}
+              </Body1Title2Medium>
+            </ScrollView>
           </View>
         </View>
         {/* Second Divider */}
         <View style={styles.dashedLine} />
-        {/* Translation inside card, with truncation and background */}
+        {/* Translation inside card, with scrollable content */}
         <View style={[styles.translationBg]}> 
-          <Body1Title2Medium
-            color="yellow-800"
-            style={[styles.translation]}
-            numberOfLines={3}
-            ellipsizeMode="tail"
+          <ScrollView 
+            contentContainerStyle={styles.scrollContentContainer}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
           >
-            {translation}
-          </Body1Title2Medium>
+            <Body1Title2Medium
+              color="yellow-800"
+              style={[styles.translation]}
+            >
+              {translation}
+            </Body1Title2Medium>
+          </ScrollView>
         </View>
       </LinearGradient>
       {/* Navigation buttons positioned at the middle of the card's sides */}
@@ -74,7 +89,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         hitSlop={8} 
         accessibilityLabel="Previous dua"
       >
-        <ArrowLeft width={16} height={16} />
+        <CdnSvg path={DUA_ASSETS.ARROW_LEFT_DUA_CARD} width={12} height={12} />
       </Pressable>
       <Pressable 
         onPress={onNext} 
@@ -82,7 +97,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         hitSlop={8} 
         accessibilityLabel="Next dua"
       >
-        <ArrowRight width={16} height={16} />
+        <CdnSvg path={DUA_ASSETS.ARROW_RIGHT_DUA_CARD} width={12} height={12} />
       </Pressable>
       {/* Change Dua Button positioned at bottom center - Fixed onPress handler */}
       <Pressable 
@@ -90,7 +105,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         onPress={onChangeDua} 
         accessibilityLabel="Change dua"
       >
-        <Hamburger width={18} height={18} style={{ marginRight: 4 }} />
+        <CdnSvg path={DUA_ASSETS.HAMBURGER_ICON} width={18} height={18} style={{ marginRight: 4 }} />
         <Body1Title2Bold color="white">Change dua</Body1Title2Bold>
       </Pressable>
     </View>
@@ -105,7 +120,7 @@ const getStyles = (colors:any) => StyleSheet.create({
     alignSelf: 'center',
   },
   card: {
-    height: scale(280),
+    height: scale(320),
     borderRadius: scale(16),
     paddingTop: scale(20),
     paddingRight: scale(24),
@@ -120,12 +135,16 @@ const getStyles = (colors:any) => StyleSheet.create({
   },
   arabicWrap: {
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: scale(8),
+    height: scale(70),
   },
   arabic: {
     fontSize: scale(20),
     fontWeight: '700',
     textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     lineHeight: scale(28),
   },
   dashedLine: {
@@ -151,10 +170,19 @@ const getStyles = (colors:any) => StyleSheet.create({
     paddingVertical: scale(2),
     alignSelf: 'stretch',
     minWidth: '60%',
+    height: scale(60),
+  },
+  scrollContentContainer: {
+    minHeight: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: scale(4),
   },
   transliteration: {
     fontSize: scale(14),
     textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   translationBg: {
     borderRadius: scale(8),
@@ -163,13 +191,13 @@ const getStyles = (colors:any) => StyleSheet.create({
     alignSelf: 'stretch',
     marginTop: scale(8),
     marginBottom: scale(8),
-    minHeight: scale(44),
-    maxHeight: scale(48),
-    justifyContent: 'center',
+    height: scale(70),
   },
   translation: {
     fontSize: scale(14),
     textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     lineHeight: scale(22),
   },
   arrowBtn: {

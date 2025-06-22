@@ -7,13 +7,9 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { H5Bold, Body1Title2Medium, Body1Title2Bold, Body1Title2Regular, CaptionMedium } from '@/components/Typography/Typography';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import HadithImageFooter from '../components/HadithImageFooter';
-import HadithChaptersLeftHeading from '@/assets/hadith/HadithChaptersLeftHeading.svg';
-import HadithChaptersRightHeading from '@/assets/hadith/HadithChaptersRightHeading.svg';
-import BismillahCalligraphy from '@/assets/hadith/BismillahCalligraphy.svg';
-import Bookmark from '@/assets/hadith/bookmark.svg';
-import ShareAlt from '@/assets/hadith/share_alt.svg';
-import DashedLine from '@/assets/hadith/dashedLine.svg';
 import { useChapters, useHadiths } from '../hooks/useHadith';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
@@ -60,7 +56,7 @@ const ChapterHeader = ({ chapter, index }: { chapter: any, index: number }) => {
     >
       <Body1Title2Medium color="yellow-800" style={styles.chapterNumber}>({index + 1}) Chapter: {chapter.title}</Body1Title2Medium>
       <View style={styles.dividerContainer}>
-        <DashedLine />
+        <CdnSvg path={DUA_ASSETS.HADITH_DASHED_LINE} width={scale(300)} height={1} />
       </View>
       <Body1Title2Medium color="accent-yellow-900" style={styles.chapterArabic}>{chapter.arabic}</Body1Title2Medium>
     </LinearGradient>
@@ -83,10 +79,10 @@ const HadithItem = ({ hadith }: { hadith: any }) => {
         <Body1Title2Regular style={styles.referenceText}>{hadith.reference}</Body1Title2Regular>
         <View style={styles.actionsContainer}>
           <TouchableOpacity style={styles.actionButton}>
-            <Bookmark />
+            <CdnSvg path={DUA_ASSETS.HADITH_BOOKMARK} width={24} height={24} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
-            <ShareAlt />
+            <CdnSvg path={DUA_ASSETS.HADITH_SHARE} width={24} height={24} />
           </TouchableOpacity>
         </View>
       </View>
@@ -105,22 +101,64 @@ const ChapterSection = ({ chapter, index }: { chapter: any, index: number }) => 
   );
 };
 
-// Define interfaces for API data
+// Import the Chapter type from the service
+import type { Chapter as ServiceChapter, Hadith as ServiceHadith } from '../services/hadithService';
+
+// Define our local Chapter interface
 interface Chapter {
   id: string;
   chapterId: string;
   title: string;
   arabic: string;
   hadiths: Hadith[];
+  bookNumber?: string;
+  chapterNumber?: string;
+  chapterEnglish?: string;
+  chapterArabic?: string;
+  chapter?: Array<{
+    lang: string;
+    chapterNumber: string;
+    chapterTitle: string;
+    intro: string | null;
+    ending: string | null;
+  }>;
+  // Add index signature to allow dynamic properties
+  [key: string]: any;
 }
 
 interface Hadith {
   id: string;
-  hadithNumber: string;
+  hadithNumber?: string;
   arabic: string;
-  translation: string;
-  narrator: string;
-  reference: string;
+  translation?: string;
+  narrator?: string;
+  reference?: string;
+  collection?: string;
+  bookNumber?: string;
+  chapterId?: string;
+  hadith?: Array<{
+    lang: string;
+    chapterNumber: string;
+    chapterTitle: string;
+    urn: number;
+    body: string;
+    grades?: Array<{
+      graded_by: string;
+      grade: string;
+    }>;
+  }>;
+}
+
+// Type guard to check if an object is a valid Chapter
+function isValidChapter(chapter: any): chapter is Chapter {
+  return (
+    chapter &&
+    typeof chapter === 'object' &&
+    'id' in chapter &&
+    'title' in chapter &&
+    'arabic' in chapter &&
+    'hadiths' in chapter
+  );
 }
 
 const HadithChaptersScreen: React.FC = () => {
@@ -203,13 +241,13 @@ const HadithChaptersScreen: React.FC = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerContainer}>
           <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <HadithChaptersLeftHeading />
+            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <BismillahCalligraphy width={200} height={40} />
+            <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
           </View>
           <TouchableOpacity style={styles.headerButton}>
-            <HadithChaptersRightHeading />
+            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
           </TouchableOpacity>
         </View>
         <LoadingIndicator color={colors.primary.primary500} />
@@ -223,13 +261,13 @@ const HadithChaptersScreen: React.FC = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerContainer}>
           <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <HadithChaptersLeftHeading />
+            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <BismillahCalligraphy width={200} height={40} />
+            <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
           </View>
           <TouchableOpacity style={styles.headerButton}>
-            <HadithChaptersRightHeading />
+            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
           </TouchableOpacity>
         </View>
         <ErrorMessage 
@@ -240,20 +278,78 @@ const HadithChaptersScreen: React.FC = () => {
     );
   }
 
-  // If no chapters found, use fallback data or empty array
-  const displayChapters = processedChapters.length > 0 ? processedChapters : chaptersData?.data || [];
+  // Process and normalize chapters data
+  let displayChapters: Chapter[] = [];
+  
+  try {
+    if (processedChapters.length > 0) {
+      // Use processed chapters if available
+      displayChapters = processedChapters;
+    } else if (chaptersData?.data) {
+      const data = chaptersData.data;
+      let chapters: any[] = [];
+      
+      // Normalize data to array
+      if (Array.isArray(data)) {
+        chapters = data;
+      } else if (data && typeof data === 'object') {
+        chapters = [data];
+      }
+      
+      // Map and validate chapters
+      displayChapters = chapters
+        .map(chapter => {
+          // Extract chapter info from the service format
+          const chapterInfo = Array.isArray(chapter.chapter) ? chapter.chapter[0] : null;
+          
+          // Create a normalized chapter object with type assertion
+          const normalizedChapter = {
+            id: chapter.id || chapter.chapterId || '',
+            chapterId: chapter.chapterId || chapter.id || '',
+            title: chapter.title || chapterInfo?.chapterTitle || '',
+            arabic: chapter.arabic || '',
+            bookNumber: chapter.bookNumber,
+            chapterNumber: chapterInfo?.chapterNumber,
+            chapterEnglish: chapterInfo?.chapterTitle,
+            chapterArabic: '', // Will be populated if available
+            chapter: chapter.chapter,
+            hadiths: Array.isArray(chapter.hadiths) 
+              ? chapter.hadiths.map((h: any) => ({
+                  ...h,
+                  id: h.id || '',
+                  arabic: h.hadith?.[0]?.body || '',
+                  translation: h.translation || '',
+                  narrator: h.narrator || '',
+                  reference: h.reference || `${chapterInfo?.chapterNumber || ''}`,
+                  collection: h.collection,
+                  bookNumber: h.bookNumber,
+                  chapterId: h.chapterId,
+                  hadithNumber: h.hadithNumber
+                }))
+              : []
+          } as Chapter;
+          
+          return normalizedChapter;
+        })
+        .filter(isValidChapter); // Filter out invalid chapters
+    }
+  } catch (error) {
+    console.error('Error processing chapters data:', error);
+    // Return empty array in case of error to prevent crashes
+    displayChapters = [];
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
         <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-          <HadithChaptersLeftHeading />
+          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <BismillahCalligraphy width={200} height={40} />
+          <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
         </View>
         <TouchableOpacity style={styles.headerButton}>
-          <HadithChaptersRightHeading />
+          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
         </TouchableOpacity>
       </View>
       

@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchPrayerTimes } from '@/api/services/prayerTimesService';
-import { useLocation } from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
 import { formatDate } from '../utils/dateUtils';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Hook to fetch prayer times for a specific date using the AlAdhan API
@@ -9,17 +10,50 @@ import { formatDate } from '../utils/dateUtils';
  * @param method Prayer calculation method (defaults to 3 - Muslim World League)
  */
 export const useCalendarPrayerTimes = (date: Date, method: number = 3) => {
-  const { latitude, longitude, loading: locationLoading, error: locationError } = useLocation();
+  const { 
+    latitude, 
+    longitude, 
+    loading: locationLoading, 
+    error: locationError,
+    usingFallback,
+    fallbackSource
+  } = useLocationData();
+  
+  // Track retry attempts
+  const [retryAttempts, setRetryAttempts] = useState(0);
+  const [lastError, setLastError] = useState<Error | null>(null);
+  
+  // Track if component is mounted
+  const isMountedRef = useRef<boolean>(true);
   
   // Format date as DD-MM-YYYY for the API
   const formattedDate = formatDate(date);
   
-  console.log('useCalendarPrayerTimes: Params:', { 
-    date: formattedDate,
-    latitude, 
-    longitude, 
-    method 
-  });
+  // Only log when in development and component is mounted
+  useEffect(() => {
+    if (__DEV__ && isMountedRef.current) {
+      console.log('useCalendarPrayerTimes: Params:', { 
+        date: formattedDate,
+        latitude, 
+        longitude, 
+        method,
+        usingFallback,
+        fallbackSource
+      });
+    }
+  }, [formattedDate, latitude, longitude, method, usingFallback, fallbackSource]);
+  
+  // Fallback logic removed - using store-based location instead
+  useEffect(() => {
+    if (lastError && retryAttempts < 3 && isMountedRef.current) {
+      // Just retry with current location data from store
+      if (__DEV__) {
+        console.log(`Prayer times fetch failed. Retrying with store location data...`);
+      }
+      
+      setRetryAttempts(prev => prev + 1);
+    }
+  }, [lastError, retryAttempts]);
   
   const { 
     data, 
@@ -30,35 +64,73 @@ export const useCalendarPrayerTimes = (date: Date, method: number = 3) => {
     queryKey: ['prayerTimes', formattedDate, latitude, longitude, method],
     queryFn: async () => {
       if (!latitude || !longitude) {
+        setLastError(new Error('Location data is required to fetch prayer times'));
         throw new Error('Location data is required to fetch prayer times');
       }
       
-      console.log('useCalendarPrayerTimes: Fetching prayer times with params:', {
-        date: formattedDate,
-        latitude,
-        longitude,
-        method
-      });
+      if (__DEV__ && isMountedRef.current) {
+        console.log('useCalendarPrayerTimes: Fetching prayer times with params:', {
+          date: formattedDate,
+          latitude,
+          longitude,
+          method,
+          usingFallback: usingFallback ? 'yes' : 'no',
+          fallbackSource
+        });
+      }
       
       try {
         const response = await fetchPrayerTimes(latitude, longitude, formattedDate, method);
-        console.log('useCalendarPrayerTimes: API response received:', response);
+        if (__DEV__ && isMountedRef.current) {
+          console.log('useCalendarPrayerTimes: API response received');
+        }
+        
+        if (isMountedRef.current) {
+          setLastError(null); // Clear error state on success
+        }
         return response;
-      } catch (error) {
-        console.error('useCalendarPrayerTimes: Error fetching prayer times:', error);
-        throw error;
+      } catch (error: any) {
+        if (__DEV__ && isMountedRef.current) {
+          console.error('useCalendarPrayerTimes: Error fetching prayer times:', error);
+        }
+        
+        if (isMountedRef.current) {
+          setLastError(error);
+        }
+        
+        // Provide more user-friendly error message
+        if (error.message.includes('timeout') || error.message.includes('network')) {
+          throw new Error('Network timeout. Please check your internet connection.');
+        } else if (error.response && error.response.status === 400) {
+          throw new Error('Invalid parameters for prayer times. Using fallback data.');
+        } else {
+          throw error;
+        }
       }
     },
     enabled: !!latitude && !!longitude,
     staleTime: 1000 * 60 * 60, // Consider data fresh for 1 hour
     gcTime: 1000 * 60 * 60 * 24, // Keep in cache for 24 hours
+    retry: 2,                   // Retry failed requests twice
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
+  
+  // Set up mount/unmount handling
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
   
   return {
     data,
     isLoading: locationLoading || prayerTimesLoading,
     error: locationError || prayerTimesError,
     refetch,
+    usingFallback,
+    fallbackSource
   };
 };
 

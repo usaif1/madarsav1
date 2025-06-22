@@ -4,7 +4,8 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Medium } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
 import FastImage from 'react-native-fast-image';
-import SearchIcon from '@/assets/search.svg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { CdnSvg } from '@/components/CdnSvg';
 
 interface SearchInputProps {
   value: string;
@@ -22,9 +23,14 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const { colors } = useThemeStore();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container,{borderColor: value ? '#8A57DC' : '#E5E5E5'}]}>
       <View style={styles.iconContainer}>
-        <SearchIcon width={scale(16)} height={scale(16)} fill="#6B7280" />
+        <CdnSvg 
+          path={DUA_ASSETS.SEARCH}
+          width={scale(16)}
+          height={scale(16)}
+          fill="#6B7280"
+        />
       </View>
       <TextInput
         style={styles.input}

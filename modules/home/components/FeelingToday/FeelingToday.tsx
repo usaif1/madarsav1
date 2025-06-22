@@ -5,34 +5,37 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Image,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
 import { ShadowColors } from '@/theme/shadows';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = scale(339);
+const DEFAULT_CARD_WIDTH = scale(339);
+const DISABLED_CARD_WIDTH = scale(321);
 
 // Emoji data with day mapping
+const BASE_CDN_URL = 'https://cdn.madrasaapp.com/assets/home/';
+
 const emojiData = [
   {
     id: 'mon',
     day: 'Mon',
-    emoji: require('@/assets/home/face-with-thermometer.png'),
+    emoji: `${BASE_CDN_URL}face-with-thermometer.png`,
     selected: true,
   },
   {
     id: 'tue',
     day: 'Tue',
-    emoji: require('@/assets/home/smiling-face-with-halo.png'),
+    emoji: `${BASE_CDN_URL}smiling-face-with-halo.png`,
     selected: true,
   },
   {
     id: 'wed',
     day: 'Wed',
-    emoji: require('@/assets/home/hugging-face.png'),
+    emoji: `${BASE_CDN_URL}hugging-face.png`,
     selected: true,
   },
   {
@@ -64,14 +67,20 @@ const emojiData = [
 interface FeelingTodayProps {
   onExploreDuasPress?: () => void;
   onEmojiPress?: (day: string) => void;
+  disabled?: boolean;
 }
 
 const FeelingToday: React.FC<FeelingTodayProps> = ({
   onExploreDuasPress = () => console.log('Explore Duas pressed'),
   onEmojiPress = (day) => console.log(`Emoji for ${day} pressed`),
+  disabled = false,
 }) => {
+
+  const styles = getStyles(disabled);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
+
       {/* Header */}
       <LinearGradient
         colors={['#8A57DC', '#411B7F']}
@@ -88,12 +97,17 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
             key={item.id}
             style={styles.emojiDayContainer}
             onPress={() => onEmojiPress(item.day)}
+            disabled={disabled}
             activeOpacity={1.0}>
             {/* Emoji or Icon */}
             <View style={styles.emojiCircle}>
               {item.selected ? (
                 item.emoji ? (
-                  <Image source={item.emoji} style={styles.emojiImage} />
+                  <FastImage 
+                    source={{ uri: item.emoji }} 
+                    style={styles.emojiImage}
+                    resizeMode={FastImage.resizeMode.contain}
+                  />
                 ) : (
                   <View style={styles.plusContainer}>
                     <Text style={styles.plusText}>+</Text>
@@ -117,7 +131,7 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
 
       {/* Footer - Explore Duas */}
       <TouchableOpacity
-        style={styles.exploreDuasContainer}
+        style={[styles.exploreDuasContainer]}
         onPress={onExploreDuasPress}
         activeOpacity={1.0}>
         <Body1Title2Bold color="primary">Explore Dua's</Body1Title2Bold>
@@ -129,9 +143,9 @@ const FeelingToday: React.FC<FeelingTodayProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (disabled: boolean) => StyleSheet.create<any>({
   container: {
-    width: CARD_WIDTH,
+    width: disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(170),
     alignSelf: 'center',
     marginBottom: verticalScale(16),
@@ -146,7 +160,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   header: {
-    width: CARD_WIDTH,
+    width: disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(44),
     paddingTop: scale(8),
     paddingHorizontal: scale(16),
@@ -157,7 +171,7 @@ const styles = StyleSheet.create({
   emojiContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: scale(16),
+    paddingHorizontal: disabled ? scale(0) : scale(16),
     paddingVertical: scale(16),
     backgroundColor: '#FFFFFF',
   },
@@ -220,7 +234,7 @@ const styles = StyleSheet.create({
     color: '#A3A3A3', // Primitives-Neutral-400
   },
   exploreDuasContainer: {
-    width: CARD_WIDTH,
+    width: disabled ? DISABLED_CARD_WIDTH : DEFAULT_CARD_WIDTH,
     height: verticalScale(38),
     flexDirection: 'row',
     justifyContent: 'center',

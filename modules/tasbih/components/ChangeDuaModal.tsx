@@ -9,30 +9,35 @@ import {
   Dimensions,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import Bubble from '@/assets/tasbih/bubble.svg';
-import Close from '@/assets/tasbih/close.svg';
-import LeftFlowerChangeDua from '@/assets/tasbih/leftFlowerChangeDua.svg';
-import RightFlowerChangeDua from '@/assets/tasbih/rightFlowerChangeDua.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useThemeStore } from '@/globalStore';
 import { Body1Title2Bold, Body1Title2Medium, Body2Medium, H5Medium, Title3Bold } from '@/components/Typography/Typography';
 import { ShadowColors } from '@/theme/shadows';
 import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
+import { TasbihData } from '@/modules/dua/services/duaService';
 
 // Get screen dimensions for calculations
 const { height: screenHeight } = Dimensions.get('window');
 
+// We're using the TasbihData interface from duaService.ts
+// But we'll keep this for backward compatibility
 export interface Dua {
+  id: string | number;
+  title?: string;
   verses: {
     arabic: string;
     transliteration: string;
     translation: string;
   }[];
+  category?: string;
+  reference?: string;
 }
 
 interface ChangeDuaModalProps {
   visible: boolean;
-  duaList: Dua[];
+  duaList: (Dua | TasbihData)[];
   selectedIndex: number;
   onSelect: (index: number) => void;
   onClose: () => void;
@@ -48,24 +53,24 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   // Render individual dua item
   const { colors } = useThemeStore();
 
-  const renderDuaItem = ({ item, index }: { item: Dua; index: number }) => (
+  const renderDuaItem = ({ item, index }: { item: Dua | TasbihData; index: number }) => (
     <TouchableOpacity
       style={[styles.duaRow, { borderBottomColor: ShadowColors['border-light'] }]}
       onPress={() => onSelect(index)}
       activeOpacity={0.7}
     >
       <View style={styles.duaTextWrap}>
-        <View style={{flexDirection: 'row'}}><H5Medium color='heading' style={[styles.arabic]}>
-          {item.verses[0].arabic}
+        <View style={{flexDirection: 'row', paddingHorizontal: 16}}><H5Medium color='heading' style={[styles.arabic]} numberOfLines={1} ellipsizeMode="tail">
+          {item.verses && item.verses[0] ? item.verses[0].arabic : ''}
         </H5Medium>
       <View style={styles.bubbleWrap}>
-        <Bubble width={scale(26)} height={scale(26)} />
+        <CdnSvg path={DUA_ASSETS.TASBIH_BUBBLE} width={scale(26)} height={scale(26)} />
         <Body1Title2Bold style={[styles.bubbleNum, { color: ColorPrimary.primary600 }]}>
           {index + 1}
         </Body1Title2Bold>
       </View></View>
         <Body2Medium style={[styles.transliteration]}>
-          {item.verses[0].transliteration}
+          {item.verses && item.verses[0] ? item.verses[0].transliteration : ''}
         </Body2Medium>
         {/* <Body1Title2Medium style={[styles.translation, { color: ColorSecondary.neutral500 }]}>
           {item.verses[0].translation}
@@ -75,7 +80,10 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
   );
   
   // Extract a unique key for each item in the FlatList
-  const keyExtractor = (_: Dua, index: number) => `dua-${index}`;
+  const keyExtractor = (item: Dua | TasbihData, index: number) => `dua-${item.id || index}`;
+  
+  // Log the number of duas for debugging
+  console.log(`ChangeDuaModal: Rendering ${duaList.length} duas`);
   
   return (
     <Modal 
@@ -91,17 +99,17 @@ const ChangeDuaModal: React.FC<ChangeDuaModalProps> = ({
         <View style={[styles.header, { borderBottomColor: ShadowColors['border-light'] }]}>
           <Title3Bold style={styles.title}>Change dua</Title3Bold>
           <Pressable onPress={onClose} hitSlop={16}>
-            <Close width={scale(16)} height={scale(16)} />
+            <CdnSvg path={DUA_ASSETS.CLOSE_ICON} width={scale(16)} height={scale(16)} />
           </Pressable>
         </View>
         
         {/* Fixed tap row */}
         <View style={[styles.tapRow, { backgroundColor: ColorPrimary.primary50 }]}>
-          <LeftFlowerChangeDua width={scale(34)} height={scale(34)} />
+          <CdnSvg path={DUA_ASSETS.TASBIH_LEFT_FLOWER} width={scale(34)} height={scale(34)} />
           <Body1Title2Bold style={[styles.tapText, { color: ColorPrimary.primary500 }]}>
             Tap to change dua
           </Body1Title2Bold>
-          <RightFlowerChangeDua width={scale(34)} height={scale(34)} />
+          <CdnSvg path={DUA_ASSETS.TASBIH_RIGHT_FLOWER} width={scale(34)} height={scale(34)} />
         </View>
         
         {/* Scrollable content area */}
@@ -218,13 +226,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'right',
     marginBottom: 2,
+    paddingHorizontal: 24,
   },
   transliteration: {
-    fontSize: 13,
+    fontSize: 12,
     marginLeft: 12,
     alignSelf: 'flex-start',
     marginBottom: 1,
     marginTop: 8,
+    paddingHorizontal: 24,
+    color: '#525252',
   },
   translation: {
     fontSize: 13,

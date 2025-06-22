@@ -1,16 +1,51 @@
-import {StyleSheet, TextInput, View} from 'react-native';
+import {StyleSheet, TextInput, View, TouchableOpacity} from 'react-native';
 import React from 'react';
-import Search from '@/assets/search.svg'; // assuming it's an SVG icon via react-native-svg
+import { useDuaStore } from '@/modules/dua/store/duaStore';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
-const DuaSearchbar = () => {
+interface DuaSearchbarProps {
+  onSearchChange?: (text: string) => void;
+}
+
+const DuaSearchbar: React.FC<DuaSearchbarProps> = ({ onSearchChange }) => {
+  const [searchText, setSearchText] = React.useState('');
+  const [isFocused, setIsFocused] = React.useState(false);
+  
+  const handleSearchChange = (text: string) => {
+    setSearchText(text);
+    if (onSearchChange) {
+      onSearchChange(text);
+    }
+  };
+  
+  const clearSearch = () => {
+    setSearchText('');
+    if (onSearchChange) {
+      onSearchChange('');
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Search width={20} height={20} />
+    <View style={[
+      styles.container,
+      {borderColor: isFocused ? '#8A57DC' : '#D1D5DB'}, // 👈 dynamic border
+    ]}>
+      <CdnSvg path={DUA_ASSETS.SEARCH} width={20} height={20} />
       <TextInput
-        placeholder="Salam, dua khojein"
+        placeholder="Salam, search dua"
         placeholderTextColor="#737373"
         style={styles.input}
+        value={searchText}
+        onChangeText={handleSearchChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
+      {searchText.length > 0 && (
+        <TouchableOpacity onPress={clearSearch}>
+          <CdnSvg path={DUA_ASSETS.CLOSE} width={16} height={16} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -25,7 +60,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 999, // radius-xxxl for pill shape
-    borderWidth: 0.8,
+    borderWidth: 1,
     borderColor: '#D1D5DB', // assuming Primitives/Regular = gray-300
     paddingHorizontal: 16,
     paddingVertical: 8,

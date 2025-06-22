@@ -7,7 +7,7 @@ export default function HadithImageFooter() {
     return (
         <View style={styles.footerContainer}>
             <FastImage 
-                source={require('@/assets/hadith/BottomFooter.png')} 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/hadith/BottomFooter.png' }} 
                 style={styles.footerImage}
                 resizeMode={FastImage.resizeMode.contain}
             />

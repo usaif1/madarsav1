@@ -7,6 +7,8 @@ import { Body1Title2Bold, Body1Title2Medium } from '@/components';
 import { useThemeStore } from '@/globalStore';
 import { useWindowDimensions } from 'react-native';
 
+const CDN_BASE_URL = 'https://cdn.madrasaapp.com';
+
 const ProfileNotLoggedDetails: React.FC<{ onLoginPress?: () => void }> = ({ onLoginPress }) => {
   const { colors, shadows } = useThemeStore();
   const { width } = useWindowDimensions();
@@ -42,7 +44,11 @@ const ProfileNotLoggedDetails: React.FC<{ onLoginPress?: () => void }> = ({ onLo
       >
         <View style={styles.handwaveSvgWrap}>
           <FastImage
-            source={require('@/assets/profile/handwave.png')}
+            source={{ 
+              uri: `${CDN_BASE_URL}/assets/profile/handwave.png`,
+              priority: FastImage.priority.normal,
+              cache: FastImage.cacheControl.immutable,
+            }}
             resizeMode={FastImage.resizeMode.contain}
             style={{ width: 54, height: 54 }}
           />

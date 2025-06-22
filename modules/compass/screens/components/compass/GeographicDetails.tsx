@@ -1,4 +1,4 @@
-import {StyleSheet, View, ActivityIndicator, Text} from 'react-native';
+import {StyleSheet, View, Text, ActivityIndicator} from 'react-native';
 import React from 'react';
 
 // components
@@ -10,7 +10,8 @@ import FastImage from 'react-native-fast-image';
 
 // hooks
 import {useQiblaDirection} from '../../../hooks/useQibla';
-import {useLocation} from '@/api/hooks/useLocation';
+import { useLocationData } from '@/modules/location/hooks/useLocationData';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 // Calculate distance between two coordinates in KM
 const calculateDistance = (
@@ -39,16 +40,16 @@ const deg2rad = (deg: number) => {
 
 const GeographicDetails: React.FC = () => {
   const {colors} = useThemeStore();
-  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocation();
+  const {latitude, longitude, loading: locationLoading, error: locationError} = useLocationData();
   
   const {
     data: qiblaData,
     isLoading: qiblaLoading,
     error: qiblaError,
-  } = useQiblaDirection(latitude || undefined, longitude || undefined);
+  } = useQiblaDirection();
 
   const isLoading = locationLoading || qiblaLoading;
-  const error = locationError || (qiblaError ? qiblaError.message : null);
+  const error = locationError || (qiblaError ? (qiblaError instanceof Error ? qiblaError.message : String(qiblaError)) : null);
 
   // Calculate distance to Kaaba
   const distance = qiblaData && latitude && longitude
@@ -86,7 +87,7 @@ const GeographicDetails: React.FC = () => {
     <View style={styles.container}>
       <View style={[styles.metric, {backgroundColor: colors.accent.accent100}]}>
         <FastImage
-          source={require('@/assets/compass/Kaaba.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_KAABA) }}
           resizeMode={FastImage.resizeMode.cover}
           style={{width: 34, height: 28}}
         />
@@ -98,7 +99,7 @@ const GeographicDetails: React.FC = () => {
 
       <View style={[styles.metric, {backgroundColor: colors.accent.accent100}]}>
         <FastImage
-          source={require('@/assets/compass/compass_3d.png')}
+          source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_3D) }}
           resizeMode={FastImage.resizeMode.cover}
           style={{width: 34, height: 28}}
         />

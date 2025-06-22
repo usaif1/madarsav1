@@ -12,6 +12,7 @@ import {
   getSpecialDays,
   getIslamicMonths,
   getHijriHolidaysByYear,
+  getRamadanCalendar,
   DateConversionResponse,
   CalendarResponse,
   HijriHolidayResponse,
@@ -20,6 +21,7 @@ import {
   CurrentIslamicYearResponse
 } from '../services/hijriCalendarService';
 import { formatDate } from '../utils/dateUtils';
+import { useLocationData } from '../../location/hooks/useLocationData';
 
 /**
  * Hook to convert a Gregorian date to Hijri date
@@ -183,5 +185,24 @@ export const useHijriHolidaysByYear = (year: number, month?: number, method: str
     queryFn: () => getHijriHolidaysByYear(year, method),
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
     gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+  });
+};
+
+/**
+ * Hook to fetch Ramadan calendar data for a specific year
+ * Uses location from store automatically
+ * @param year Gregorian year
+ * @param method Calendar calculation method (default: HJCoSA)
+ * @returns Query result with Ramadan calendar data including prayer times
+ */
+export const useRamadanCalendar = (year: number, method: string = 'HJCoSA') => {
+  const { latitude, longitude } = useLocationData();
+  
+  return useQuery<CalendarResponse, Error>({
+    queryKey: ['ramadanCalendar', year, latitude, longitude, method],
+    queryFn: () => getRamadanCalendar(year, latitude!, longitude!, method),
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+    enabled: !!latitude && !!longitude, // Only fetch if latitude and longitude are provided
   });
 };

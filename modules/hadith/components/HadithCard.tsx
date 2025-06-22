@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Bold, CaptionMedium, Body1Title2Medium, CaptionBold } from '@/components/Typography/Typography';
-import FastImage from 'react-native-fast-image';
+import { Body1Title2Bold, CaptionMedium, CaptionBold } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 
 export interface HadithCardProps {
   hadith: {
@@ -23,7 +23,11 @@ const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Top portion with image */}
       <View style={styles.topPortion}>
-        <FastImage source={require('@/assets/hadith/BookImageBig.png')} style={styles.image} />
+        <Image 
+          source={{ uri: getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE) }} 
+          style={styles.image} 
+          resizeMode="contain"
+        />
       </View>
       
       {/* Bottom portion with text */}

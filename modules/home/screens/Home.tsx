@@ -1,17 +1,13 @@
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
-  Text,
-  FlatList,
   StyleSheet,
   Dimensions,
-  Pressable,
   StatusBar,
   ScrollView,
 } from 'react-native';
-import HomeHeader from '../components/HomeHeader';
 import Gallery from '../components/Gallery';
 import AudioPlayer from '../components/AudioPlayer';
 import IslamicEvents from '../components/IslamicEvents';
@@ -20,6 +16,10 @@ import FeelingToday from '../components/FeelingToday';
 import DayPrayerTime from '../components/DayPrayerTime';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 import { scale } from '@/theme/responsive';
+import { useAll99Names } from '@/modules/names/hooks/use99Names';
+import { useGlobalStore } from '@/globalStore';
+import { useAuthStore } from '@/modules/auth/store/authStore';
+import { useUserDetails } from '@/modules/user/hooks/useUserProfile';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 4; // 4 items per row
@@ -41,7 +41,26 @@ type RootStackParamList = {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const IslamicTools: React.FC = () => {
+  const { user } = useAuthStore();
+  
+  // Fetch user details - this will automatically update the auth store
+  useUserDetails(user?.id);
+
   const navigation = useNavigation<NavigationProp>();
+  
+  // Fetch 99 names data
+  const { data: namesData, isLoading: namesLoading } = useAll99Names();
+  
+  // Get global state for audio
+  const { setHomeAudioNameId } = useGlobalStore();
+  
+  // Initialize with the first name when data is loaded
+  useEffect(() => {
+    if (namesData && namesData.length > 0) {
+      // Set the first name as the current audio
+      setHomeAudioNameId(namesData[0].number);
+    }
+  }, [namesData]);
   
   const handleViewAllGallery = () => {
     console.log('View all gallery pressed');
@@ -50,12 +69,12 @@ const IslamicTools: React.FC = () => {
   
   const handlePlayPause = () => {
     console.log('Play/pause audio pressed');
-    // Handle audio playback
+    // Audio playback is now handled by the AudioPlayer component
   };
   
   const handleExploreDuas = () => {
-    console.log('Explore Duas pressed');
-    navigation.navigate('dua');
+    console.log('Explore Duas pressed for feelings module');
+    // navigation.navigate('dua');
   };
   
   const handleEmojiPress = (day: string) => {
@@ -63,10 +82,7 @@ const IslamicTools: React.FC = () => {
     // Handle emoji selection - no navigation needed
   };
   
-  const handleUserProfilePress = () => {
-    console.log('User profile pressed');
-    navigation.navigate('user');
-  };
+
   
   const handleViewCalendar = () => {
     console.log('Islamic events pressed');
@@ -78,8 +94,6 @@ const IslamicTools: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle={'light-content'} />
-      
-      {/* Custom Header - Handled in ParentNavigator */}
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
@@ -94,26 +108,23 @@ const IslamicTools: React.FC = () => {
         
         {/* Islamic Modules Grid */}
         <ModuleGrid />
-      
+        
+        {/* Audio Player Section */}
+        <AudioPlayer 
+          trackName="Asma-ul-husna"
+          onPlayPause={handlePlayPause}
+        />
+
         {/* Islamic Events Section */}
         <IslamicEvents 
           initialMonth={new Date().toLocaleString('en-US', { month: 'short' })} 
           onViewCalendarPress={handleViewCalendar}
         />
         
-        {/* Audio Player Section */}
-        <AudioPlayer 
-          trackName="Asma-ul-husna"
-          currentTime="0:20"
-          totalTime="3:12"
-          progress={0.1}
-          onPlayPause={handlePlayPause}
-        />
-        
         {/* Gallery Section */}
         <Gallery onViewAllPress={handleViewAllGallery} />
         
-        <View style={styles.emptySpace} />
+        {/* <View style={styles.emptySpace} /> */}
 
         {/* Footer */}
         <HadithImageFooter />

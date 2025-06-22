@@ -1,21 +1,14 @@
 // modules/calendar/components/EventsList/EventsList.tsx
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
 import { useThemeStore } from '@/globalStore';
-import { DotIcon } from '@/assets/calendar';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { scale, verticalScale } from '@/theme/responsive';
 
-// Import Hijri Calendar API hooks
-import { 
-  useNextHijriHoliday, 
-  useSpecialDays, 
-  useHijriHolidaysByYear, 
-  useCurrentIslamicYear,
-  useHijriHoliday,
-  useGregorianToHijri,
-  useHijriCalendar
-} from '../../hooks/useHijriCalendar';
+// Import the same Hijri Calendar API hook used by CustomCalendar for consistency
+import { useHijriCalendar } from '../../hooks/useHijriCalendar';
 import { formatDate } from '../../utils/dateUtils';
 
 interface IslamicEvent {
@@ -23,8 +16,10 @@ interface IslamicEvent {
   date: string;
   title: string;
   islamicDate: string;
-  daysLeft?: number | string;
+  daysLeft: number;
   isToday?: boolean;
+  isPast?: boolean;
+  fullDate?: Date; // Add full date for precise matching
 }
 
 interface EventsListProps {
@@ -35,345 +30,230 @@ interface EventsListProps {
 
 const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, displayYear }) => {
   const { colors } = useThemeStore();
+  const warningColor = String(colors.warning);
+  const flatListRef = useRef<FlatList>(null);
   
-  // Use the provided display month/year or default to the selected date
-  const currentDisplayMonth = displayMonth !== undefined ? displayMonth : selectedDate.getMonth();
+  // Use the provided display year or default to the selected date year
   const currentDisplayYear = displayYear !== undefined ? displayYear : selectedDate.getFullYear();
+  const currentDisplayMonth = displayMonth !== undefined ? displayMonth : selectedDate.getMonth();
   
-  // Format the selected date for API calls
-  const formattedSelectedDate = formatDate(selectedDate);
+  console.log('🎯 EventsList - Display Year:', currentDisplayYear);
+  console.log('📅 Selected Date:', selectedDate.toDateString());
+  console.log('📅 Using same API as CustomCalendar for perfect consistency');
   
-  // Get current Islamic year
-  const { data: currentIslamicYearData, isLoading: isYearLoading } = useCurrentIslamicYear();
+  // Call useHijriCalendar for all 12 months of the display year
+  // This ensures perfect consistency with CustomCalendar dots
+  const month1 = useHijriCalendar(1, currentDisplayYear);
+  const month2 = useHijriCalendar(2, currentDisplayYear);
+  const month3 = useHijriCalendar(3, currentDisplayYear);
+  const month4 = useHijriCalendar(4, currentDisplayYear);
+  const month5 = useHijriCalendar(5, currentDisplayYear);
+  const month6 = useHijriCalendar(6, currentDisplayYear);
+  const month7 = useHijriCalendar(7, currentDisplayYear);
+  const month8 = useHijriCalendar(8, currentDisplayYear);
+  const month9 = useHijriCalendar(9, currentDisplayYear);
+  const month10 = useHijriCalendar(10, currentDisplayYear);
+  const month11 = useHijriCalendar(11, currentDisplayYear);
+  const month12 = useHijriCalendar(12, currentDisplayYear);
   
-  // Get next Hijri holiday
-  const { data: nextHolidayData, isLoading: isNextHolidayLoading } = useNextHijriHoliday();
+  // Collect all month data and loading states
+  const monthlyData = [
+    { data: month1.data, isLoading: month1.isLoading, error: month1.error, month: 1 },
+    { data: month2.data, isLoading: month2.isLoading, error: month2.error, month: 2 },
+    { data: month3.data, isLoading: month3.isLoading, error: month3.error, month: 3 },
+    { data: month4.data, isLoading: month4.isLoading, error: month4.error, month: 4 },
+    { data: month5.data, isLoading: month5.isLoading, error: month5.error, month: 5 },
+    { data: month6.data, isLoading: month6.isLoading, error: month6.error, month: 6 },
+    { data: month7.data, isLoading: month7.isLoading, error: month7.error, month: 7 },
+    { data: month8.data, isLoading: month8.isLoading, error: month8.error, month: 8 },
+    { data: month9.data, isLoading: month9.isLoading, error: month9.error, month: 9 },
+    { data: month10.data, isLoading: month10.isLoading, error: month10.error, month: 10 },
+    { data: month11.data, isLoading: month11.isLoading, error: month11.error, month: 11 },
+    { data: month12.data, isLoading: month12.isLoading, error: month12.error, month: 12 },
+  ];
   
-  // Get special days
-  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays();
+  // Check if any month is still loading
+  const isLoading = monthlyData.some(month => month.isLoading);
   
-  // Get Hijri date for the selected date
-  const { data: selectedDateHijriData, isLoading: isSelectedDateHijriLoading } = useGregorianToHijri(selectedDate);
-  
-  // Get current Islamic year for holidays
-  const currentIslamicYear = currentIslamicYearData?.data 
-    ? (typeof currentIslamicYearData.data === 'number' 
-      ? currentIslamicYearData.data 
-      : parseInt(currentIslamicYearData.data.hijri?.year || '1445'))
-    : 1445;
-  
-  // Get Hijri holidays for the current Islamic year
-  const { data: holidaysData, isLoading: isHolidaysLoading } = useHijriHolidaysByYear(currentIslamicYear);
-  
-  // Get holiday for the selected date (if any)
-  const selectedHijriDay = selectedDateHijriData?.data?.hijri?.day 
-    ? parseInt(selectedDateHijriData.data.hijri.day) 
-    : null;
-  const selectedHijriMonth = selectedDateHijriData?.data?.hijri?.month?.number || null;
-  
-  const { data: selectedDayHolidayData, isLoading: isSelectedDayHolidayLoading } = 
-    useHijriHoliday(
-      selectedHijriDay || 1, 
-      selectedHijriMonth || 1
-    );
-  
-  // Get the Hijri calendar for the current display month
-  const { data: hijriCalendarData, isLoading: isHijriCalendarLoading } = 
-    useHijriCalendar(currentDisplayMonth + 1, currentDisplayYear);
-  
-  // Log API responses for debugging
-  useEffect(() => {
-    console.log('Current Islamic Year API response:', currentIslamicYearData);
-    console.log('Next Hijri Holiday API response:', nextHolidayData);
-    console.log('Special Days API response:', specialDaysData);
-    console.log('Hijri Holidays API response:', holidaysData);
-    console.log('Selected Date Hijri Data:', selectedDateHijriData);
-    console.log('Selected Day Holiday Data:', selectedDayHolidayData);
-    console.log('Hijri Calendar Data:', hijriCalendarData);
-  }, [
-    currentIslamicYearData, 
-    nextHolidayData, 
-    specialDaysData, 
-    holidaysData, 
-    selectedDateHijriData,
-    selectedDayHolidayData,
-    hijriCalendarData
-  ]);
-  
-  // Process the events data from the API
+  // Process the events data from all 12 months - same as CustomCalendar processing
   const events = useMemo(() => {
+    console.log('🎯 === EVENTS ARRAY CREATION (12-Month Hijri Calendar API) ===');
+    console.log('🗓️ Display Year:', currentDisplayYear);
+    console.log('📊 Using same useHijriCalendar API as CustomCalendar for perfect consistency');
+    
     const eventsArray: IslamicEvent[] = [];
     const today = new Date();
-    const todayString = formatDate(today);
     
-    // Track different types of events for sorting
-    const todayEvents: IslamicEvent[] = [];
-    const selectedDateEvents: IslamicEvent[] = [];
-    const upcomingHolidays: IslamicEvent[] = [];
-    const currentMonthEvents: IslamicEvent[] = [];
-    
-    // Check if selected date is today
-    const isSelectedDateToday = 
-      selectedDate.getDate() === today.getDate() &&
-      selectedDate.getMonth() === today.getMonth() &&
-      selectedDate.getFullYear() === today.getFullYear();
-    
-    // 1. Add today's Hijri date information
-    if (selectedDateHijriData?.data?.hijri) {
-      const hijriData = selectedDateHijriData.data.hijri;
-      const gregorianData = selectedDateHijriData.data.gregorian;
-      
-      const eventItem: IslamicEvent = {
-        id: 'current-hijri-date',
-        date: `${gregorianData.day} ${gregorianData.month.en.substring(0, 3)}`,
-        title: `Current Hijri Date`,
-        islamicDate: `${hijriData.day} ${hijriData.month.en}, ${hijriData.year} AH`,
-        isToday: isSelectedDateToday,
-        daysLeft: isSelectedDateToday ? 0 : undefined
-      };
-      
-      if (isSelectedDateToday) {
-        todayEvents.push(eventItem);
-      } else {
-        selectedDateEvents.push(eventItem);
+    // Process each month's data
+    monthlyData.forEach(({ data: hijriCalendarData, month }) => {
+      if (!hijriCalendarData?.data || !Array.isArray(hijriCalendarData.data)) {
+        console.log(`⚠️ Month ${month}: No valid data`);
+        return;
       }
-    }
-    
-    // 2. Add holiday for the selected date (if any)
-    if (selectedDayHolidayData?.data && Array.isArray(selectedDayHolidayData.data) && selectedDayHolidayData.data.length > 0) {
-      // If there are holidays on the selected date
-      selectedDayHolidayData.data.forEach((holiday, index) => {
-        if (selectedDateHijriData?.data?.hijri && selectedDateHijriData?.data?.gregorian) {
-          const hijriData = selectedDateHijriData.data.hijri;
-          const gregorianData = selectedDateHijriData.data.gregorian;
-          
-          const eventItem: IslamicEvent = {
-            id: `selected-day-holiday-${index}`,
-            date: `${gregorianData.day} ${gregorianData.month.en.substring(0, 3)}`,
-            title: holiday,
-            islamicDate: `${hijriData.day} ${hijriData.month.en}, ${hijriData.year} AH`,
-            isToday: isSelectedDateToday
-          };
-          
-          if (isSelectedDateToday) {
-            todayEvents.push(eventItem);
-          } else {
-            selectedDateEvents.push(eventItem);
-          }
-        }
-      });
-    }
-    
-    // 3. Add next upcoming holiday
-    if (nextHolidayData?.data?.hijri && nextHolidayData.data.gregorian) {
-      const hijriData = nextHolidayData.data.hijri;
-      const gregorianData = nextHolidayData.data.gregorian;
       
-      if (Array.isArray(hijriData.holidays) && hijriData.holidays.length > 0) {
-        // Calculate days left
-        const holidayDate = new Date(
-          parseInt(gregorianData.year),
-          gregorianData.month.number - 1,
-          parseInt(gregorianData.day)
-        );
-        
-        const daysLeft = Math.ceil((holidayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Only add if it's in the future
-        if (daysLeft > 0) {
-          upcomingHolidays.push({
-            id: 'next-holiday',
-            date: `${gregorianData.day} ${gregorianData.month.en.substring(0, 3)}`,
-            title: hijriData.holidays[0],
-            islamicDate: `${hijriData.day} ${hijriData.month.en}, ${hijriData.year} AH`,
-            daysLeft: daysLeft
-          });
-        }
-      }
-    }
-    
-    // 4. Use the same Hijri calendar data that's used to mark the calendar days
-    if (hijriCalendarData?.data && Array.isArray(hijriCalendarData.data)) {
-      // Process each day in the calendar
+      console.log(`✅ Processing Month ${month}: ${hijriCalendarData.data.length} days`);
+      
+      // Process each day in the month - exactly like CustomCalendar
       hijriCalendarData.data.forEach((dayData, index) => {
-        if (!dayData || !dayData.gregorian || !dayData.hijri) return;
+        if (!dayData || !dayData.gregorian || !dayData.hijri) {
+          return;
+        }
         
-        // Get the gregorian date
         const gregorianDate = dayData.gregorian;
         const hijriDate = dayData.hijri;
         
-        // Check if this day has any holidays
+        // Check if this day has any holidays - same logic as CustomCalendar
         if (hijriDate.holidays && hijriDate.holidays.length > 0) {
-          // Create a date object for this day
+          console.log(`🎉 Month ${month}, Day ${index}: Found holidays for ${gregorianDate.day}/${gregorianDate.month.number}:`, hijriDate.holidays);
+          
+          // Parse the gregorian date from the API response - same as CustomCalendar
           const holidayDate = new Date(
-            parseInt(gregorianDate.year),
-            gregorianDate.month.number - 1,
-            parseInt(gregorianDate.day)
+            `${gregorianDate.year}-${gregorianDate.month.number
+              .toString()
+              .padStart(2, '0')}-${gregorianDate.day
+              .toString()
+              .padStart(2, '0')}`
           );
           
-          // Calculate days left
+          console.log(`📅 Holiday Date: ${holidayDate.toDateString()}`);
+          
+          // Calculate days left relative to TODAY for consistent behavior
           const daysLeft = Math.ceil((holidayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
-          // Check if this is today or the selected date
-          const isHolidayToday = 
-            holidayDate.getDate() === today.getDate() &&
-            holidayDate.getMonth() === today.getMonth() &&
-            holidayDate.getFullYear() === today.getFullYear();
-          
-          const isHolidaySelectedDate = 
-            holidayDate.getDate() === selectedDate.getDate() &&
-            holidayDate.getMonth() === selectedDate.getMonth() &&
-            holidayDate.getFullYear() === selectedDate.getFullYear();
+          const isPast = daysLeft < 0;
           
           // Add each holiday for this day
-          hijriDate.holidays.forEach((holiday, holidayIndex) => {
+          hijriDate.holidays.forEach((holiday: string, holidayIndex: number) => {
             const eventItem: IslamicEvent = {
-              id: `calendar-holiday-${index}-${holidayIndex}`,
+              id: `month-${month}-day-${index}-holiday-${holidayIndex}`,
               date: `${gregorianDate.day} ${gregorianDate.month.en.substring(0, 3)}`,
               title: holiday,
               islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
-              daysLeft: daysLeft > 0 ? daysLeft : undefined,
-              isToday: isHolidayToday
+              daysLeft: daysLeft,
+              isPast: isPast,
+              fullDate: holidayDate, // Store full date for precise matching
             };
             
-            // Add to the appropriate category
-            if (isHolidayToday) {
-              // Avoid duplicates
-              if (!todayEvents.some(e => e.title === holiday && e.date === eventItem.date)) {
-                todayEvents.push(eventItem);
-              }
-            } else if (isHolidaySelectedDate) {
-              // Avoid duplicates
-              if (!selectedDateEvents.some(e => e.title === holiday && e.date === eventItem.date)) {
-                selectedDateEvents.push(eventItem);
-              }
+            // Avoid duplicates (same holiday on same date)
+            if (!eventsArray.some(e => e.title === holiday && e.date === eventItem.date)) {
+              console.log(`➕ Adding Month ${month} Holiday Event:`, eventItem.title);
+              eventsArray.push(eventItem);
             } else {
-              // Avoid duplicates
-              if (!currentMonthEvents.some(e => e.title === holiday && e.date === eventItem.date)) {
-                currentMonthEvents.push(eventItem);
-              }
+              console.log(`🔄 Skipping duplicate event:`, holiday);
             }
           });
         }
       });
-    }
-    
-    // 5. Add special days from the API that fall in the current month
-    if (specialDaysData?.data && Array.isArray(specialDaysData.data)) {
-      specialDaysData.data.forEach((specialDay, index) => {
-        if (!specialDay || !specialDay.name) return;
-        
-        const specialDayMonth = specialDay.month;
-        const specialDayDay = specialDay.day;
-        
-        // Only add if it's a special day in the current month
-        if (specialDayMonth === currentDisplayMonth + 1) {
-          // Create a date for this special day in the current year
-          const specialDayDate = new Date(currentDisplayYear, currentDisplayMonth, specialDayDay);
-          
-          const daysLeft = Math.ceil((specialDayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          const isSpecialDayToday = 
-            specialDayDate.getDate() === today.getDate() &&
-            specialDayDate.getMonth() === today.getMonth() &&
-            specialDayDate.getFullYear() === today.getFullYear();
-          
-          const isSpecialDaySelectedDate = 
-            specialDayDate.getDate() === selectedDate.getDate() &&
-            specialDayDate.getMonth() === selectedDate.getMonth() &&
-            specialDayDate.getFullYear() === selectedDate.getFullYear();
-          
-          const eventItem: IslamicEvent = {
-            id: `special-day-${index}`,
-            date: `${specialDayDay} ${new Date(0, specialDayMonth - 1).toLocaleString('en', { month: 'short' })}`,
-            title: specialDay.name,
-            islamicDate: 'Islamic Special Day',
-            daysLeft: daysLeft > 0 ? daysLeft : undefined,
-            isToday: isSpecialDayToday
-          };
-          
-          if (isSpecialDayToday) {
-            todayEvents.push(eventItem);
-          } else if (isSpecialDaySelectedDate) {
-            selectedDateEvents.push(eventItem);
-          } else {
-            currentMonthEvents.push(eventItem);
-          }
-        }
-      });
-    }
-    
-    // Sort each category
-    
-    // Sort today's events (if today is selected)
-    todayEvents.sort((a, b) => {
-      const aDay = parseInt(a.date.split(' ')[0]);
-      const bDay = parseInt(b.date.split(' ')[0]);
-      return aDay - bDay;
     });
     
-    // Sort selected date events
-    selectedDateEvents.sort((a, b) => {
-      const aDay = parseInt(a.date.split(' ')[0]);
-      const bDay = parseInt(b.date.split(' ')[0]);
-      return aDay - bDay;
+    // Sort events chronologically within the display year
+    eventsArray.sort((a, b) => {
+      const parseEventDate = (dateStr: string) => {
+        const [day, monthAbbr] = dateStr.split(' ');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = monthNames.indexOf(monthAbbr);
+        return new Date(currentDisplayYear, month, parseInt(day));
+      };
+      
+      const dateA = parseEventDate(a.date);
+      const dateB = parseEventDate(b.date);
+      
+      return dateA.getTime() - dateB.getTime();
     });
     
-    // Sort upcoming holidays by days left
-    upcomingHolidays.sort((a, b) => {
-      const aDaysLeft = typeof a.daysLeft === 'number' ? a.daysLeft : Infinity;
-      const bDaysLeft = typeof b.daysLeft === 'number' ? b.daysLeft : Infinity;
-      return aDaysLeft - bDaysLeft;
-    });
-    
-    // Sort current month events by date
-    currentMonthEvents.sort((a, b) => {
-      const aDay = parseInt(a.date.split(' ')[0]);
-      const bDay = parseInt(b.date.split(' ')[0]);
-      return aDay - bDay;
-    });
-    
-    // Combine all events in the desired order:
-    // 1. Today's events
-    // 2. Next upcoming holiday
-    // 3. Selected date events (if different from today)
-    // 4. Current month events
-    
-    // First add today's events
-    eventsArray.push(...todayEvents);
-    
-    // Then add the next upcoming holiday
-    eventsArray.push(...upcomingHolidays);
-    
-    // Then add selected date events (if not today)
-    if (!isSelectedDateToday) {
-      eventsArray.push(...selectedDateEvents);
-    }
-    
-    // Finally add all other current month events
-    eventsArray.push(...currentMonthEvents);
+    console.log('🎯 Final Events Array (from 12-month Hijri Calendar API):', eventsArray.length, 'events for year', currentDisplayYear);
+    console.log('✅ Events will exactly match CustomCalendar dots since using same API');
     
     return eventsArray;
   }, [
-    selectedDateHijriData, 
-    nextHolidayData, 
-    specialDaysData, 
-    holidaysData,
-    selectedDayHolidayData,
-    currentDisplayMonth,
+    // Depend on all 12 months of data - only changes when year changes
     currentDisplayYear,
-    selectedDate,
-    hijriCalendarData
+    ...monthlyData.map(month => month.data)
   ]);
-  
-  // Show loading state
-  const isLoading = 
-    isYearLoading || 
-    isNextHolidayLoading || 
-    isSpecialDaysLoading || 
-    isHolidaysLoading ||
-    isSelectedDateHijriLoading ||
-    isSelectedDayHolidayLoading ||
-    isHijriCalendarLoading;
+
+  // Find events that match the selected date
+  const selectedDateEvents = useMemo(() => {
+    const selectedDateString = selectedDate.toDateString();
+    
+    const matchingEvents = events.filter(event => {
+      if (!event.fullDate) return false;
+      return event.fullDate.toDateString() === selectedDateString;
+    });
+    
+    console.log(`📅 Selected Date Events: Found ${matchingEvents.length} events for ${selectedDateString}`);
+    matchingEvents.forEach(event => {
+      console.log(`   - ${event.title} (${event.date})`);
+    });
+    
+    return matchingEvents;
+  }, [events, selectedDate]);
+
+  // Find the first event that belongs to the current display month
+  const firstCurrentMonthEventIndex = useMemo(() => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonthAbbr = monthNames[currentDisplayMonth];
+    
+    return events.findIndex(event => {
+      const eventMonthAbbr = event.date.split(' ')[1];
+      return eventMonthAbbr === currentMonthAbbr;
+    });
+  }, [events, currentDisplayMonth]);
+
+  // Find the index of the first event matching the selected date
+  const selectedDateEventIndex = useMemo(() => {
+    if (selectedDateEvents.length === 0) return -1;
+    
+    // Find the index of the first matching event in the full events array
+    const firstSelectedEvent = selectedDateEvents[0];
+    const index = events.findIndex(event => event.id === firstSelectedEvent.id);
+    
+    console.log(`📍 Selected Date Event Index: ${index} for event "${firstSelectedEvent.title}"`);
+    return index;
+  }, [events, selectedDateEvents]);
+
+  // Auto-scroll logic: Priority order
+  // 1. If selected date has events, scroll to that event
+  // 2. Otherwise, scroll to first event of current month
+  useEffect(() => {
+    if (events.length === 0 || !flatListRef.current) return;
+    
+    let targetIndex = -1;
+    let scrollReason = '';
+    
+    // Priority 1: Scroll to selected date event if it exists
+    if (selectedDateEventIndex !== -1) {
+      targetIndex = selectedDateEventIndex;
+      scrollReason = `selected date event (${selectedDateEvents[0]?.title})`;
+    }
+    // Priority 2: Scroll to first event of current month
+    else if (firstCurrentMonthEventIndex !== -1) {
+      targetIndex = firstCurrentMonthEventIndex;
+      scrollReason = 'first event of current month';
+    }
+    
+    if (targetIndex !== -1) {
+      console.log(`🔄 Auto-scrolling to index ${targetIndex} - ${scrollReason}`);
+      
+      const timeoutId = setTimeout(() => {
+        flatListRef.current?.scrollToIndex({
+          index: targetIndex,
+          animated: true,
+          viewPosition: 0.1, // Show the item near the top of the list
+        });
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      console.log('🔄 No auto-scroll target found');
+    }
+  }, [
+    events, 
+    selectedDateEventIndex, 
+    firstCurrentMonthEventIndex, 
+    currentDisplayMonth,
+    selectedDateEvents
+  ]);
   
   const styles = StyleSheet.create({
     titleWrapper: {
@@ -406,6 +286,11 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       borderBottomColor: colors.primary.primary100,
       padding: scale(16), 
     },
+    selectedEventItem: {
+      backgroundColor: colors.primary.primary50, // Highlight selected date events
+      borderLeftWidth: 4,
+      borderLeftColor: colors.primary.primary600,
+    },
     dateContainer: {
       width: scale(38),
       height: scale(38),
@@ -413,6 +298,9 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.primary.primary50,
+    },
+    selectedDateContainer: {
+      backgroundColor: colors.primary.primary600, // Highlight selected date events
     },
     eventContent: {
       flex: 1,
@@ -436,55 +324,98 @@ const EventsList: React.FC<EventsListProps> = ({ selectedDate, displayMonth, dis
     },
   });
   
-  // Show empty state if no events
-  if (events.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Body2Medium color="sub-heading">No Islamic events found for this period</Body2Medium>
-      </View>
-    );
-  }
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary.primary600} />
+        <Body2Medium color="sub-heading" style={{ marginTop: scale(16) }}>
+          Loading events for {currentDisplayYear}...
+        </Body2Medium>
+      </View>
+    );
+  }
+  
+  // Show empty state if no events
+  if (events.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Body2Medium color="sub-heading">No Islamic events found for {currentDisplayYear}</Body2Medium>
       </View>
     );
   }
   
   return (
     <FlatList
+      ref={flatListRef}
       data={events}
       keyExtractor={item => item.id}
-      renderItem={({item}) => (
-        <View style={styles.eventItem}>
-          <View style={styles.dateContainer}>
-            <Body1Title2Bold style={{fontSize: scale(14)}} color="primary">{item.date.split(' ')[0]}</Body1Title2Bold>
-            <Body2Medium style={{fontSize: scale(10)}} color="primary">{item.date.split(' ')[1]}</Body2Medium>
-          </View>
-          
-          <View style={styles.eventContent}>
-            <View style={styles.titleContainer}>
-              <View style={styles.titleWrapper}>
-                <Body1Title2Bold numberOfLines={1} ellipsizeMode="tail">{item.title}</Body1Title2Bold>
-              </View>
-              {item.daysLeft !== undefined && (
+      renderItem={({item}) => {
+        const isToday = item.daysLeft === 0;
+        const opacity = item.isPast ? 0.5 : 1.0;
+        
+        // Check if this event matches the selected date
+        const isSelectedDateEvent = selectedDateEvents.some(selectedEvent => selectedEvent.id === item.id);
+        
+        return (
+          <View style={[
+            styles.eventItem, 
+            { opacity },
+            isSelectedDateEvent && styles.selectedEventItem
+          ]}>
+            <View style={[
+              styles.dateContainer,
+              isSelectedDateEvent && styles.selectedDateContainer
+            ]}>
+              <Body1Title2Bold 
+                style={{fontSize: scale(14)}} 
+                color={isSelectedDateEvent ? "white" : "primary"}
+              >
+                {item.date.split(' ')[0]}
+              </Body1Title2Bold>
+              <Body2Medium 
+                style={{fontSize: scale(10)}} 
+                color={isSelectedDateEvent ? "white" : "primary"}
+              >
+                {item.date.split(' ')[1]}
+              </Body2Medium>
+            </View>
+            
+            <View style={styles.eventContent}>
+              <View style={styles.titleContainer}>
+                <View style={styles.titleWrapper}>
+                  <Body1Title2Bold numberOfLines={1} ellipsizeMode="tail">{item.title}</Body1Title2Bold>
+                </View>
                 <View style={styles.daysLeft}>
-                  <DotIcon width={scale(10)} height={scale(10)} />
-                  {item.isToday ? (
+                  <CdnSvg 
+                    path={DUA_ASSETS.CALENDAR_DOT} 
+                    width={scale(10)} 
+                    height={scale(10)} 
+                    fill={warningColor} 
+                  />
+                  {isToday ? (
                     <Body2Medium style={{fontSize: scale(12)}} color="warning">Today</Body2Medium>
-                  ) : (
+                  ) : item.daysLeft > 0 ? (
                     <Body2Medium style={{fontSize: scale(12)}} color="warning">{item.daysLeft} days left</Body2Medium>
+                  ) : (
+                    <Body2Medium style={{fontSize: scale(12)}} color="warning">{Math.abs(item.daysLeft)} days ago</Body2Medium>
                   )}
                 </View>
-              )}
+              </View>
+              <Body2Medium style={{fontSize: scale(12)}} color="sub-heading">{item.islamicDate}</Body2Medium>
             </View>
-            <Body2Medium style={{fontSize: scale(12)}} color="sub-heading">{item.islamicDate}</Body2Medium>
           </View>
-        </View>
-      )}
+        );
+      }}
       contentContainerStyle={styles.list}
+      onScrollToIndexFailed={info => {
+        console.log('Scroll to index failed:', info);
+        if (info.averageItemLength && flatListRef.current) {
+          flatListRef.current.scrollToOffset({
+            offset: info.averageItemLength * info.index,
+            animated: true,
+          });
+        }
+      }}
     />
   );
 };

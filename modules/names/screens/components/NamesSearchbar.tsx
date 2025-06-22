@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {StyleSheet, TextInput, View} from 'react-native';
-import Search from '@/assets/search.svg';
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 interface NamesSearchbarProps {
   onSearch: (text: string) => void;
@@ -16,7 +17,7 @@ const NamesSearchbar: React.FC<NamesSearchbarProps> = ({ onSearch, searchQuery }
         styles.container,
         {borderColor: isFocused ? '#8A57DC' : '#D1D5DB'}, // 👈 dynamic border
       ]}>
-      {!isFocused ? <Search width={20} height={20} /> : null}
+      {!isFocused ? <CdnSvg path={DUA_ASSETS.NAMES_SEARCH} width={20} height={20} /> : null}
       <TextInput
         placeholder="Salam, Allah ke naam khojein"
         placeholderTextColor="#737373"

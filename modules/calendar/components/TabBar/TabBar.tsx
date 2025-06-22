@@ -40,7 +40,7 @@ const TabBar: React.FC<TabBarProps> = ({activeTab, onTabChange, onTodayPress, is
           activeColor={colors.primary.primary600}
         />
       </View>
-      <TodayPill isActive={isTodaySelected} onPress={onTodayPress} />
+      <TodayPill isActive={!isTodaySelected} onPress={onTodayPress} />
     </View>
   );
 };

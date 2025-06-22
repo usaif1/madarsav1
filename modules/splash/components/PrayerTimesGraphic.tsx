@@ -12,19 +12,15 @@ import {
   Divider,
 } from '@/components';
 
-// assets
-import Fajr from '@/assets/splash/fajr.svg';
-import Dhuhr from '@/assets/splash/dhuhr.svg';
-import Asr from '@/assets/splash/asr.svg';
-import Maghrib from '@/assets/splash/maghrib.svg';
-import Isha from '@/assets/splash/isha.svg';
+// components
+import { CdnSvg } from '@/components/CdnSvg';
 
 const prayerTimes = [
-  {name: 'Fajr', time: '5:51', icon: Fajr},
-  {name: 'Dhuhr', time: '12:27', icon: Dhuhr},
-  {name: 'Asr', time: '3:21', icon: Asr},
-  {name: 'Maghrib', time: '5:40', icon: Maghrib},
-  {name: 'Isha', time: '7:04', icon: Isha},
+  {name: 'Fajr', time: '5:51', icon: 'fajr'},
+  {name: 'Dhuhr', time: '12:27', icon: 'dhuhr'},
+  {name: 'Asr', time: '3:21', icon: 'asr'},
+  {name: 'Maghrib', time: '5:40', icon: 'maghrib'},
+  {name: 'Isha', time: '7:04', icon: 'isha'},
 ];
 
 const SplashScreenGraphic: React.FC = () => {
@@ -44,7 +40,7 @@ const SplashScreenGraphic: React.FC = () => {
               alignItems: 'center',
               opacity: prayer.name === 'Maghrib' ? 1 : 0.5,
             }}>
-            <prayer.icon />
+            <CdnSvg path={`/assets/splash/${prayer.icon}.svg`} width={24} height={24} />
             <Divider height={6} />
             {prayer.name !== 'Maghrib' ? (
               <Body1Title2Medium color="white">{prayer.name}</Body1Title2Medium>

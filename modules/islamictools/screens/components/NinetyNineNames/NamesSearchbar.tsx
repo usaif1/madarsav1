@@ -1,13 +1,14 @@
 import {StyleSheet, TextInput, View} from 'react-native';
 import React from 'react';
-import Search from '@/assets/search.svg'; // assuming it's an SVG icon via react-native-svg
+import { CdnSvg } from '@/components/CdnSvg';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 type Props = {};
 
 const NamesSearchbar = (props: Props) => {
   return (
     <View style={styles.container}>
-      <Search width={20} height={20} />
+      <CdnSvg path={DUA_ASSETS.SEARCH_ICON} width={20} height={20} />
       <TextInput
         placeholder="Salam, Allah ke naam khojein"
         placeholderTextColor="#737373"

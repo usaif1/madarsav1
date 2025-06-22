@@ -34,7 +34,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
   
   // The actual Hijri date will be passed via props from the parent component
   // This allows us to use the API data instead of calculating it directly
-  const hijriDate = marking?.hijriDate || { day: '•' };
+  console.log('marking', marking);
+  const hijriDate = marking?.hijriDate?.day;
   
   const isSelected = marking?.selected;
   const isDisabled = state === 'disabled';
@@ -96,7 +97,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, marking, state, onPress
           color={isSelected ? 'white' : !isSelected && isToday ? 'white' : 'sub-heading'}
           style={styles.hijriText}
         >
-          {hijriDate.day}
+          {hijriDate}
         </Body2Regular>
         {isMarked && (
           <View style={[styles.dotWrapper, { top: verticalScale(8), right: 4 }]}> 

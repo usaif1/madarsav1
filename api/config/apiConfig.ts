@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
   SPECIAL_DAYS: '/v1/specialDays',             // List of special days
   ISLAMIC_MONTHS: '/v1/islamicMonths',         // Islamic months
   HIJRI_HOLIDAYS_BY_YEAR: '/v1/islamicHolidaysByHijriYear', // Hijri holidays by year
+  RAMADAN_CALENDAR: '/v1/hijriCalendar/9', // Ramadan calendar (month 9)
   
   // Other endpoints will be added as needed
 };

@@ -4,7 +4,7 @@ import React, {useState} from 'react';
 
 // components
 import {NamesSearchbar} from './components';
-import {NamesList} from './components/AllNames';
+import NamesList from './components/AllNames/NamesList';
 import {Divider} from '@/components';
 
 const AllNames: React.FC = () => {

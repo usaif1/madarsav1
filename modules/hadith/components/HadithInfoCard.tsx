@@ -4,9 +4,8 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { Title3Bold, Body1Title2Medium, Body2Medium, CaptionBold, Body1Title2Bold } from '@/components/Typography/Typography';
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
-import { Svg, Path } from 'react-native-svg';
-import ArrowRightIcon from '@/assets/profile/arrowright.svg';
-import HadithInfoDecoration from '@/assets/hadith/HadithInfoDecoration.svg';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
+import { CdnSvg } from '@/components/CdnSvg';
 
 interface HadithInfoCardProps {
   title: string;
@@ -34,7 +33,11 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
     >
       {/* Background SVG Pattern */}
       <View style={styles.backgroundPattern}>
-        <HadithInfoDecoration />
+        <CdnSvg 
+          path={DUA_ASSETS.HADITH_TOP_ILLUSTRATION}
+          width={100}
+          height={127} // Fixed height to match container
+        />
       </View>
 
       {/* Content Container */}
@@ -42,7 +45,7 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
         {/* Image */}
         <View style={styles.imageContainer}>
           <FastImage 
-            source={image ? { uri: image } : require('@/assets/hadith/default-book.png')} 
+            source={image ? { uri: image } : { uri: getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE) }}
             style={styles.image}
             resizeMode={FastImage.resizeMode.cover}
           />
@@ -54,7 +57,11 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
           <View style={styles.titleRow}>
             <Body1Title2Bold style={styles.title} numberOfLines={1}>{title}</Body1Title2Bold>
             <View style={styles.arrowBtn}>
-              <ArrowRightIcon width={16} height={16} />
+              <CdnSvg 
+                path={DUA_ASSETS.ARROW_RIGHT_DUA_CARD}
+                width={16}
+                height={16}
+              />
             </View>
           </View>
 

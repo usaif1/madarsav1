@@ -6,13 +6,13 @@ import LinearGradient from 'react-native-linear-gradient';
 // components
 import {Body1Title2Bold, Divider, Title1Regular} from '@/components';
 
-// assets
-import DecliningDay from '@/assets/splash/decling_day.svg';
-import RightTriangle from '@/assets/right-triangle.svg';
+// components
+import { CdnSvg } from '@/components/CdnSvg';
+import { scale } from '@/theme/responsive';
 
 const {height} = Dimensions.get('window');
 
-const SplashScreen1: React.FC = () => {
+const DecliningDayGraphic: React.FC = () => {
   return (
     <LinearGradient
       colors={['#FFFFFF', '#F2DEFF']}
@@ -30,14 +30,14 @@ const SplashScreen1: React.FC = () => {
           borderColor: '#F5F5F5',
           height: height * 0.2,
         }}>
-        <View style={{alignItems: 'flex-end'}}>
-          <DecliningDay />
+        <View style={{justifyContent: 'flex-end',marginLeft: scale(10)}}>
+          <CdnSvg path="/assets/splash/decling_day.svg" width={scale(131)} height={scale(39)} />
           <Divider height={4} />
-          <Title1Regular>The Declining Day</Title1Regular>
+          <Title1Regular style={{fontSize: scale(15)}}>The Declining Day</Title1Regular>
         </View>
         <Divider height={34} />
         <Pressable style={[styles.button, {backgroundColor: '#8A57DC'}]}>
-          <RightTriangle />
+          <CdnSvg path="/assets/right-triangle.svg" width={10} height={10} />
           <Body1Title2Bold color="white">Continue</Body1Title2Bold>
         </Pressable>
       </View>
@@ -60,4 +60,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SplashScreen1;
+export default DecliningDayGraphic;

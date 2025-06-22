@@ -8,17 +8,21 @@ import {
   StyleProp,
   ViewStyle,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-snap-carousel';
 
 // components
 import {Body1Title2Regular, H4Bold} from '@/components';
 import {Divider} from '@/components';
 import PrayerTimesGraphic from './PrayerTimesGraphic';
+import FeelingToday from '@/modules/home/components/FeelingToday/FeelingToday';
+import SplashDuaCard from './SplashDuaCard';
 
 // store
 import {useThemeStore} from '@/globalStore';
 import DecliningDayGraphic from './DecliningDayGraphic';
 import PrayerBeads from './PrayerBeads';
+import { scale } from '@/theme/responsive';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -105,7 +109,7 @@ export default function App() {
 
     const animation = Animated.timing(currentAnim, {
       toValue: 1,
-      duration: 10000,
+      duration: 3000,
       useNativeDriver: false,
     });
 
@@ -124,6 +128,67 @@ export default function App() {
   const handleSnapToItem = (index: number) => setActiveIndex(index);
 
   const renderItem = ({item}: {item: Slide}) => {
+    // Render different graphics based on slide ID
+    const renderSlideGraphics = () => {
+      switch (item.id) {
+        case 1:
+          // First slide - Prayer Times, Declining Day, and Prayer Beads
+          return (
+            <View>
+              <PrayerTimesGraphic />
+              <Divider height={10} />
+              <View
+                style={{flexDirection: 'row', alignItems: 'flex-start', columnGap: 10}}>
+                <DecliningDayGraphic />
+                <PrayerBeads />
+              </View>
+            </View>
+          );
+        case 2:
+          // Second slide - Feelings and Dua Card Graphics
+          return (
+            <View style={styles.graphicsContainer}>
+              {/* <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/FeelingsGraphic.png' }} 
+                style={styles.feelingsImage} 
+                resizeMode={FastImage.resizeMode.cover}
+              />
+              <Divider height={9} />
+              <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DuaCardGraphic.png' }} 
+                style={styles.duaCardImage} 
+                resizeMode={FastImage.resizeMode.cover}
+              /> */}
+              <FeelingToday disabled={true} />
+              <SplashDuaCard />
+            </View>
+          );
+        case 3:
+          // Third slide - Deen and Duniya Graphics
+          return (
+            <View style={styles.graphicsContainer}>
+               <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/MaktabGraphic.png' }} 
+                style={styles.slideImage} 
+                resizeMode={FastImage.resizeMode.contain}
+              />
+              <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DeenGraphic2.png' }} 
+                style={[styles.slideImage, {marginTop: scale(-20)}]} 
+                resizeMode={FastImage.resizeMode.contain}
+              />
+              <FastImage 
+                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DuniyaGraphic2.png' }} 
+                style={[styles.slideImage, {marginTop: scale(-20)}]} 
+                resizeMode={FastImage.resizeMode.contain}
+              />
+            </View>
+          );
+        default:
+          return null;
+      }
+    };
+
     return (
       <View style={styles.slide}>
         <H4Bold>{item.content.title}</H4Bold>
@@ -132,15 +197,7 @@ export default function App() {
           {item.content.description}
         </Body1Title2Regular>
         <Divider height={33} />
-        <View>
-          <PrayerTimesGraphic />
-          <Divider height={10} />
-          <View
-            style={{flexDirection: 'row', alignItems: 'flex-start', columnGap: 10}}>
-            <DecliningDayGraphic />
-            <PrayerBeads />
-          </View>
-        </View>
+        {renderSlideGraphics()}
       </View>
     );
   };
@@ -178,6 +235,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   progressContainer: {
+    width: 375,
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 20,
@@ -200,7 +258,26 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     alignItems: 'center',
   },
-
+  graphicsContainer: {
+    maxWidth:scale(321),
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  slideImage: {
+    width: SCREEN_WIDTH - 54, // Account for horizontal padding
+    height: 150,
+  },
+  feelingsImage: {
+    width: scale(321),
+    height: scale(145),
+    borderRadius: 16,
+  },
+  duaCardImage: {
+    width: scale(321),
+    height: scale(186.97),
+    borderRadius: 13.7,
+  },
   daysContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

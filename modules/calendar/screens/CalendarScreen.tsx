@@ -7,30 +7,35 @@ import {CustomCalendar, TabBar, PrayerTimesList, FastingView, EventsList} from '
 import {Divider} from '@/components';
 import CalendarHeader from '../components/CalendarHeader/CalendarHeader';
 
-type TabType = 'salah' | 'fasting' | 'events';
+// hooks
+import { useMonthNavigation } from '../hooks/useMonthNavigation';
 
-// Month names for mapping
-const monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
+type TabType = 'salah' | 'fasting' | 'events';
 
 const CalendarScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState<TabType>('salah');
-  // Track month and year for CustomCalendar
-  const [calendarMonth, setCalendarMonth] = useState(selectedDate.getMonth()); // 0-based
-  const [calendarYear, setCalendarYear] = useState(selectedDate.getFullYear());
+  
+  // Use the month navigation hook
+  const {
+    currentMonth,
+    currentYear,
+    navigateToNext,
+    navigateToPrevious,
+    navigateToMonthYear,
+    navigateToToday,
+    getMonthName,
+    getYearString,
+  } = useMonthNavigation(selectedDate.getMonth(), selectedDate.getFullYear());
 
   // Handle Today button press
   const handleTodayPress = () => {
     const today = new Date();
     setSelectedDate(today);
-    setCalendarMonth(today.getMonth());
-    setCalendarYear(today.getFullYear());
+    navigateToToday();
   };
 
-  // When month/year changes, update selectedDate to first of month
+  // When month/year changes from header, update calendar navigation
   const handleMonthYearChange = (month: string, year: string) => {
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -38,21 +43,23 @@ const CalendarScreen: React.FC = () => {
     ];
     const monthIndex = monthNames.indexOf(month);
     const yearNum = parseInt(year, 10);
-    setCalendarMonth(monthIndex);
-    setCalendarYear(yearNum);
+    navigateToMonthYear(monthIndex, yearNum);
     // Set selectedDate to first day of the selected month/year
     setSelectedDate(new Date(yearNum, monthIndex, 1));
   };
 
-  // Handle calendar month change from the calendar component
-  const handleCalendarMonthChange = (month: number, year: number) => {
-    setCalendarMonth(month);
-    setCalendarYear(year);
+  // Handle calendar month change from swipe gestures
+  const handleCalendarMonthChange = (direction: 'next' | 'prev') => {
+    if (direction === 'next') {
+      navigateToNext();
+    } else {
+      navigateToPrevious();
+    }
   };
 
   // Get current month and year as strings for CalendarHeader
-  const currentMonthName = monthNames[calendarMonth];
-  const currentYearString = calendarYear.toString();
+  const currentMonthName = getMonthName();
+  const currentYearString = getYearString();
   
   // Check if the selected date is today
   const today = new Date();
@@ -68,12 +75,13 @@ const CalendarScreen: React.FC = () => {
         onMonthYearChange={handleMonthYearChange}
         currentMonth={currentMonthName}
         currentYear={currentYearString}
+        selectedDate={selectedDate}
       />
       <CustomCalendar 
         onDateSelect={setSelectedDate}
         selectedDate={selectedDate}
-        month={calendarMonth}
-        year={calendarYear}
+        month={currentMonth}
+        year={currentYear}
         onMonthChange={handleCalendarMonthChange}
       />
       <Divider color='#F5F5F5' height={10} />
@@ -89,8 +97,8 @@ const CalendarScreen: React.FC = () => {
       {activeTab === 'fasting' && <FastingView selectedDate={selectedDate} />}
       {activeTab === 'events' && <EventsList 
         selectedDate={selectedDate} 
-        displayMonth={calendarMonth} 
-        displayYear={calendarYear} 
+        displayMonth={currentMonth} 
+        displayYear={currentYear} 
       />}
       </View>
     </View>

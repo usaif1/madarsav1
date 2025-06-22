@@ -1,123 +1,270 @@
-import React, {useCallback, useRef} from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   Pressable,
-  PanResponder,
-  useWindowDimensions,
+  Text,
+  Platform,
+  UIManager,
+  AccessibilityInfo,
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
-import Svg, {Path} from 'react-native-svg';
-import svgPathProperties from 'svg-path-properties';
-import rosaryBead from '@/assets/tasbih/rosaryBead.png';
-import {Body1Title2Regular, H3Bold} from '@/components';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import LottieView from 'lottie-react-native';
 
-interface BeadsProps {
-  totalCount?: number; // 33 by default
-  currentCount?: number; // current index (0-based)
-  onAdvance?: () => void; // callback when bead moves
+// Haptic feedback options
+const hapticOptions = {
+  enableVibrateFallback: true,
+  ignoreAndroidSystemSettings: false,
+};
+import { Body1Title2Bold, Body1Title2Regular, Body1Title2Medium, H3Bold } from '@/components/Typography/Typography';
+import { TasbihData } from '@/modules/dua/services/duaService';
+import { scale } from '@/theme/responsive';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
+
+// Enable LayoutAnimation for Android with proper error handling
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  try {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  } catch (error) {
+    console.warn('Failed to enable LayoutAnimation on Android:', error);
+  }
 }
 
-const ITEM = 64; // bead img size
+interface BeadsProps {
+  /** Total number of verses in current dua */
+  totalVerses: number;
+  /** Current verse index (0-based) */
+  currentVerseIndex: number;
+  /** Callback when bead is advanced */
+  onAdvance: () => void;
+  /** Current total counter across all cycles */
+  totalCount?: number;
+  /** Optional accessibility label for the component */
+  accessibilityLabel?: string;
+  /** Whether the component is disabled */
+  disabled?: boolean;
+  /** Whether the bead is white */
+  isWhite?: boolean;
+  /** Tasbih data from API */
+  tasbihData?: TasbihData;
+  /** Current round number */
+  currentRound?: number;
+}
 
+/**
+ * Beads component that uses Lottie animation instead of the traditional beads UI
+ * 
+ * Features:
+ * - Lottie animation for tasbih
+ * - Preserves counting logic
+ * - Plays animation when tapped
+ * - Full accessibility support
+ */
 const Beads: React.FC<BeadsProps> = ({
-  totalCount = 33,
-  currentCount = 0,
+  totalVerses,
+  currentVerseIndex,
   onAdvance,
+  totalCount = 0,
+  accessibilityLabel,
+  disabled = false,
+  isWhite = false,
+  tasbihData,
+  currentRound = 1,
 }) => {
-  /* 1️⃣ build a curved path */
-  const {width} = useWindowDimensions();
-  const threadW = Math.min(width - 32, 380);
-  const pathD = `M0 90 Q ${threadW * 0.5} 0 ${threadW} 90`;
-  const path = svgPathProperties(pathD); // function → helper object
-  const LEN = path.getTotalLength();
-
-  /* 2️⃣ shared progress 0-1 */
-  const progress = useSharedValue((currentCount % totalCount) / totalCount);
-
-  /* 3️⃣ map progress → (x,y) */
-  const beadStyle = useAnimatedStyle(() => {
-    const {x, y} = path.getPointAtLength(progress.value * LEN);
-    return {
-      transform: [{translateX: x - ITEM / 2}, {translateY: y - ITEM / 2}],
+  // Input validation
+  const sanitizedTotalVerses = Math.max(1, totalVerses);
+  const sanitizedCurrentIndex = Math.max(0, Math.min(currentVerseIndex, sanitizedTotalVerses - 1));
+  const sanitizedTotalCount = Math.max(0, totalCount);
+  
+  // Animation ref
+  const lottieRef = useRef<LottieView>(null);
+  
+  // Animation state
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  // Set up animation event listener
+  useEffect(() => {
+    // We'll rely on the timeout approach instead of trying to access private properties
+    // This is more reliable across different versions of lottie-react-native
+    return () => {
+      // Cleanup any pending timeouts when component unmounts
+      setIsAnimating(false);
     };
-  });
-
-  /* 4️⃣ advance handler */
-  const moveNext = useCallback(() => {
-    progress.value = withTiming((progress.value + 1 / totalCount) % 1, {
-      duration: 120,
-      easing: Easing.out(Easing.quad),
-    });
-    onAdvance?.();
-  }, [progress, totalCount, onAdvance]);
-
-  /* 5️⃣ swipe gesture */
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderRelease: (_, g) => {
-        if (g.dx > 40) moveNext();
-      },
-    }),
-  ).current;
-
+  }, []);
+  
+  // Use provided current round or calculate it
+  const displayRound = currentRound || Math.floor(sanitizedTotalCount / sanitizedTotalVerses) + 1;
+  
+  // Announce current tasbih name for accessibility when it changes
+  useEffect(() => {
+    if (tasbihData) {
+      AccessibilityInfo.announceForAccessibility(
+        `Selected tasbih: ${tasbihData.title}`
+      );
+    }
+  }, [tasbihData?.id]);
+  
+  /**
+   * Handle animation when bead is advanced
+   */
+  const handleBeadAdvance = () => {
+    if (isAnimating || disabled) return;
+    
+    try {
+      setIsAnimating(true);
+      
+      // Trigger haptic feedback when bead is tapped
+      ReactNativeHapticFeedback.trigger(
+        'impactMedium',
+        hapticOptions
+      );
+      
+      // Play the Lottie animation
+      if (lottieRef.current) {
+        // Reset and play the animation
+        lottieRef.current.reset();
+        lottieRef.current.play();
+        
+        // Reset animation state after a short delay
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 500); // Shorter timeout to ensure responsiveness
+      } else {
+        // If no animation ref, still allow counter to work
+        setIsAnimating(false);
+      }
+      
+      // Announce the current verse for accessibility
+      const currentVerse = tasbihData?.verses[sanitizedCurrentIndex];
+      AccessibilityInfo.announceForAccessibility(
+        currentVerse
+          ? `Advanced to verse ${sanitizedCurrentIndex + 2} of ${sanitizedTotalVerses}: ${currentVerse.transliteration}`
+          : `Advanced to verse ${sanitizedCurrentIndex + 2} of ${sanitizedTotalVerses}`
+      );
+      
+      // Call parent callback
+      onAdvance();
+    } catch (error) {
+      console.error('Error handling bead advance:', error);
+      setIsAnimating(false);
+    }
+  };
+  
   return (
-    <View style={styles.root} {...panResponder.panHandlers}>
-      {/* counter header */}
-      <View style={styles.counter}>
-        <H3Bold style={styles.curIdx}>{(currentCount % totalCount) + 1}</H3Bold>
-        <Body1Title2Regular style={styles.slash}>/</Body1Title2Regular>
-        <Body1Title2Regular style={styles.total}>
-          {totalCount}
-        </Body1Title2Regular>
+    <Pressable 
+      style={[styles.container, disabled && styles.disabledContainer]}
+      onPress={handleBeadAdvance}
+      disabled={disabled || isAnimating}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={
+        accessibilityLabel || 
+        (tasbihData
+          ? `Tasbih counter for ${tasbihData.title}. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. Tap to advance to next verse.`
+          : `Tasbih counter. Currently on verse ${sanitizedCurrentIndex + 1} of ${sanitizedTotalVerses}. Tap to advance to next verse.`)
+      }
+      accessibilityHint="Double tap to advance to the next verse"
+      accessibilityState={{
+        disabled: disabled || isAnimating,
+        busy: isAnimating,
+      }}
+    >
+      {/* Counter header - styled like the image */}
+      <View style={styles.counterHeader}>
+        <View style={styles.counterTextContainer}>
+          <H3Bold style={styles.currentIndex}>{sanitizedCurrentIndex}</H3Bold>
+          <Text style={styles.counterSeparator}>/</Text>
+          <Body1Title2Medium color="sub-heading" style={styles.totalVerses}>{sanitizedTotalVerses}</Body1Title2Medium>
+        </View>
+        <Text style={styles.roundText}>Round {displayRound}</Text>
       </View>
-
-      {/* thread curve */}
-      <Svg width={threadW} height={120}>
-        <Path d={pathD} stroke="#D0D0D0" strokeWidth={2} fill="none" />
-      </Svg>
-
-      {/* bead */}
-      <Pressable onPress={moveNext} style={StyleSheet.absoluteFill}>
-        <Animated.Image
-          source={rosaryBead}
-          resizeMode={FastImage.resizeMode.contain}
-          style={[styles.bead, beadStyle]}
+      
+      {/* Lottie animation container */}
+      <View style={styles.lottieContainer}>
+        <LottieView
+          ref={lottieRef}
+          source={{
+            uri: getCdnUrl(isWhite ? DUA_ASSETS.TASBIH_ANIMATION_WHITE : DUA_ASSETS.TASBIH_ANIMATION_BLACK)
+          }}
+          style={[styles.lottieAnimation, { transform: [{ rotate: '-20deg' }] }]}
+          loop={false}
+          autoPlay={false}
+          speed={1}
+          resizeMode="cover"
+          onAnimationFinish={() => setIsAnimating(false)}
+          onAnimationFailure={(error) => {
+            console.error('Animation failed to load:', error);
+            setIsAnimating(false);
+          }}
         />
-      </Pressable>
-
-      <Body1Title2Regular style={styles.hint}>
-        Tap or swipe to count
-      </Body1Title2Regular>
-    </View>
+      </View>
+      
+      {/* Bottom instruction text - like in the image */}
+      <Text style={styles.instructionText}>
+        {disabled ? 'Tasbih is disabled' : 'Click or swipe to count'}
+      </Text>
+    </Pressable>
   );
 };
 
-export default Beads;
-
-/* ---------- styles ---------- */
 const styles = StyleSheet.create({
-  root: {width: '100%', alignItems: 'center', paddingTop: 16},
-  bead: {
-    position: 'absolute',
-    width: ITEM,
-    height: ITEM,
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    marginTop: scale(-32),
+    padding: 16,
+    marginVertical: 16,
   },
-  counter: {
+  counterHeader: {
+    width: '100%',
+    alignItems: 'flex-start',
+  },
+  counterTextContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    alignSelf: 'flex-start',
-    marginLeft: 24,
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  curIdx: {fontSize: 36, color: '#8A57DC', fontWeight: '700'},
-  slash: {fontSize: 26, color: '#888', marginHorizontal: 2},
-  total: {fontSize: 26, color: '#888'},
-  hint: {marginTop: 20, color: '#666', fontSize: 16, textAlign: 'center'},
+  currentIndex: {
+    color: '#8A57DC', // Purple color
+    fontSize: 29,
+    lineHeight: 40,
+  },
+  counterSeparator: {
+    color: '#6B7280',
+    fontSize: 20,
+    marginHorizontal: 4,
+  },
+  totalVerses: {
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: '500',
+  },
+  roundText: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  lottieContainer: {
+    width: '100%',
+    height: 150,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  lottieAnimation: {
+    width: '100%',
+    height: '100%',
+  },
+  disabledContainer: {
+    opacity: 0.6,
+  },
+  instructionText: {
+    color: '#6B7280',
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });
+
+export default Beads;

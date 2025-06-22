@@ -1,15 +1,41 @@
 // dependencies
-import {Text, View} from 'react-native';
-import React from 'react';
+import {Text, View, TouchableOpacity, Share} from 'react-native';
+import React, {useState, useEffect, useCallback} from 'react';
 
-// assets
-import AthanIcon from '@/assets/profile/athan_icon.svg';
-import Notification from '@/assets/profile/notification.svg';
-import Share from '@/assets/profile/share.svg';
-import Rate from '@/assets/profile/rate.svg';
-import ChevronRight from '@/assets/chevron-right.svg';
+// components
 import {Switch} from '@/components';
+import { CdnSvg } from '@/components/CdnSvg';
+import { scale } from '@/theme/responsive';
+
+// store
 import {useThemeStore} from '@/globalStore';
+import {useAuthStore} from '@/modules/auth/store/authStore';
+import {useUserDetails, useUpdateUserNotifications} from '@/modules/user/hooks/useUserProfile';
+
+// Define icon components using CdnSvg
+const AthanIcon = () => (
+  <CdnSvg path="/assets/profile/athan_icon.svg" width={scale(20)} height={scale(20)} />
+);
+
+const NotificationIcon = () => (
+  <CdnSvg path="/assets/profile/notification.svg" width={scale(20)} height={scale(20)} />
+);
+
+const ShareIcon = () => (
+  <CdnSvg path="/assets/profile/invite_friends.svg" width={scale(20)} height={scale(20)} />
+);
+
+const RateIcon = () => (
+  <CdnSvg path="/assets/profile/rate.svg" width={scale(20)} height={scale(20)} />
+);
+
+const ChevronRightIcon = () => (
+  <CdnSvg path="/assets/chevron-right.svg" width={scale(12)} height={scale(12)} />
+);
+
+const SubscriptionIcon = () => (
+  <CdnSvg path="/assets/profile/subscription.svg" width={scale(20)} height={scale(20)} />
+);
 
 const actionList = [
   {
@@ -23,35 +49,103 @@ const actionList = [
     id: 'push-notification',
     label: 'Push Notification',
     toggle: true,
-    iconLeft: Notification,
+    iconLeft: NotificationIcon,
     iconRight: null,
   },
   {
     id: 'invite-friends',
     label: 'Invite friends',
     toggle: false,
-    iconLeft: Share,
-    iconRight: ChevronRight,
+    iconLeft: ShareIcon,
+    iconRight: ChevronRightIcon,
   },
   {
     id: 'rate-app',
     label: 'Rate the app',
     toggle: false,
-    iconLeft: Rate,
-    iconRight: ChevronRight,
+    iconLeft: RateIcon,
+    iconRight: ChevronRightIcon,
+  },
+  {
+    id: 'subscription',
+    label: 'Subscription',
+    toggle: false,
+    iconLeft: SubscriptionIcon,
+    iconRight: ChevronRightIcon,
   },
 ];
 
 // Accepts prop to hide notification items when not logged in
 const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boolean }) => {
   const {shadows} = useThemeStore();
+  const {user} = useAuthStore();
+  const [athanNotification, setAthanNotification] = useState(false);
+  const [pushNotification, setPushNotification] = useState(false);
+  
+  // Get user details to initialize notification settings
+  const {data: userDetails, isLoading} = useUserDetails(user?.id);
+  
+  // Mutation for updating notification settings
+  const updateNotificationsMutation = useUpdateUserNotifications();
+  
+  // Initialize notification states from user details
+  useEffect(() => {
+    if (userDetails) {
+      setAthanNotification(userDetails.athanNotification);
+      setPushNotification(userDetails.pushNotification);
+    }
+  }, [userDetails]);
+  
+  // Handle toggle for athan notification
+  const handleAthanToggle = (value: boolean) => {
+    if (!user?.id) return;
+    
+    setAthanNotification(value);
+    updateNotificationsMutation.mutate({
+      userId: user.id,
+      athanNotification: value,
+      pushNotification: pushNotification,
+    });
+  };
+
+  // Handle toggle for push notification
+  const handlePushToggle = (value: boolean) => {
+    if (!user?.id) return;
+    
+    setPushNotification(value);
+    updateNotificationsMutation.mutate({
+      userId: user.id,
+      athanNotification: athanNotification,
+      pushNotification: value,
+    });
+  };
 
   // Filter out notification items if not logged in
   const filteredList = profileNotLoggedIn
     ? actionList.filter(
-        item => item.id !== 'athan-notification' && item.id !== 'push-notification'
+        item => item.id !== 'athan-notification' && item.id !== 'push-notification' && item.id !== 'subscription'
       )
     : actionList;
+
+  // Function to handle direct OS share
+  const handleDirectShare = async () => {
+    try {
+      await Share.share({
+        message: 'Check out this amazing Islamic app called Madrasa! Download here: https://madrasa-app.com/download',
+        title: 'Madrasa App',
+      });
+    } catch (error) {
+      // console.error('Error sharing app:', error);
+    }
+  };
+    
+  // Handle action item press
+  const handleActionItemPress = (id: string) => {
+    if (id === 'invite-friends') {
+      handleDirectShare();
+    }
+    // Add other action handlers here as needed
+  };
 
   return (
     <View style={[{padding: 20, backgroundColor: '#FFFFFF'}, shadows.sm1]}>
@@ -65,15 +159,34 @@ const ActionList = ({ profileNotLoggedIn = false }: { profileNotLoggedIn?: boole
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <TouchableOpacity 
+                onPress={() => handleActionItemPress(actionItem.id)} 
+                style={{flexDirection: 'row', alignItems: 'center'}}
+              >
                 <actionItem.iconLeft />
-
-                {/* Title 1 */}
                 <Text style={{fontWeight: '400', fontSize: 17, marginLeft: 12}}>
                   {actionItem.label}
                 </Text>
-              </View>
-              {actionItem?.iconRight ? <actionItem.iconRight /> : <Switch />}
+              </TouchableOpacity>
+              {actionItem?.iconRight ? (
+                <TouchableOpacity onPress={() => handleActionItemPress(actionItem.id)}>
+                  <actionItem.iconRight />
+                </TouchableOpacity>
+              ) : (
+                actionItem.id === 'athan-notification' ? (
+                  <Switch 
+                    value={athanNotification} 
+                    onValueChange={handleAthanToggle}
+                    disabled={isLoading}
+                  />
+                ) : actionItem.id === 'push-notification' ? (
+                  <Switch 
+                    value={pushNotification} 
+                    onValueChange={handlePushToggle}
+                    disabled={isLoading}
+                  />
+                ) : null
+              )}
             </View>
           );
         })}
