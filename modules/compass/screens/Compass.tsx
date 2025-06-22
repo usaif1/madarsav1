@@ -74,13 +74,15 @@ const CustomCompass: React.FC<CustomCompassProps> = ({ rotate }) => {
   return (
     <View style={styles.compassWrapper}>
       {/*  Rotating Frame */}
-      <Animated.View style={[styles.compassFrame, {transform: [{rotate}]}]}>
-        <FastImage 
+      {/* <Animated.View style={[styles.compassFrame, {transform: [{rotate}]}]}> */}
+      <View style={[styles.compassFrame]}>
+              <FastImage 
           source={{ uri: getCdnUrl(DUA_ASSETS.COMPASS_FRAME) }} 
           style={styles.compassFrameImage}
           resizeMode={FastImage.resizeMode.contain}
         />
-      </Animated.View>
+      </View>
+      {/* </Animated.View> */}
       
       {/* Fixed Center */}
       <View style={styles.compassCenter}>
