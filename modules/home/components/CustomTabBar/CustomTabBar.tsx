@@ -35,20 +35,20 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
         const onPress = () => {
           console.log(route.name);
           // For Quran tab, prevent navigation and show coming soon message
-          if (route.name === 'al-quran') {
-            // Emit the event but prevent default navigation
-            // const event = navigation.emit({
-            //   type: 'tabPress',
-            //   target: route.key,
-            //   canPreventDefault: true,
-            // });
+          // if (route.name === 'al-quran') {
+          //   // Emit the event but prevent default navigation
+          //   const event = navigation.emit({
+          //     type: 'tabPress',
+          //     target: route.key,
+          //     canPreventDefault: true,
+          //   });
             
-            // Show coming soon message
-            handleComingSoonFeature('Quran');
+          //   // Show coming soon message
+          //   // handleComingSoonFeature('Quran');
             
-            // Don't navigate
-            return;
-          }
+          //   // Don't navigate
+          //   return;
+          // }
           
           // For other tabs, proceed with normal navigation
           const event = navigation.emit({
