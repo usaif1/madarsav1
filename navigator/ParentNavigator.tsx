@@ -60,10 +60,6 @@ const ParentNavigator = () => {
       <Stack.Screen 
         name="home" 
         component={HomeNavigator}
-        options={{
-          headerShown: true,
-          header: () => <HomeHeader userName="Mohammad Arbaaz" locationText="Get accurate namaz time" notificationCount={1} />
-        }}
       />
       <Stack.Screen 
         name="names" 

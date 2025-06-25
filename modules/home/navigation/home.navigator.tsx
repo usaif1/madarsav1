@@ -7,9 +7,11 @@ import {View, Text} from 'react-native';
 // screens
 import {Home} from '../screens';
 import MaktabScreen from '@/modules/maktab/screens/MaktabScreen';
-import {AllNames} from '@/modules/names/screens';
+import QuranNavigator from '@/modules/quran/navigation/quran.navigator';
 // components
 import CustomTabBar from '../components/CustomTabBar';
+import HomeHeader from '../components/HomeHeader';
+import QuranHeader from '@/modules/quran/components/QuranHeader';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,6 +29,8 @@ const HomeNavigator = () => {
         component={Home} 
         options={{
           tabBarLabel: 'Home',
+          headerShown: true,
+          header: () => <HomeHeader locationText="Get accurate namaz time" notificationCount={1} />,
         }}
       />
       <Tab.Screen 
@@ -34,30 +38,18 @@ const HomeNavigator = () => {
         component={MaktabScreen} 
         options={{
           tabBarLabel: 'Maktab',
+          headerShown: true,
+          header: () => <HomeHeader locationText="Get accurate namaz time" notificationCount={1} />,
         }}
-        listeners={({navigation}) => ({
-          tabPress: (e) => {
-            // Prevent default action
-            e.preventDefault();
-            // Navigate to the maktab module
-            navigation.navigate('maktab');
-          },
-        })}
       />
       <Tab.Screen 
         name="al-quran" 
-        component={AllNames} 
+        component={QuranNavigator} 
         options={{
           tabBarLabel: 'Al-Quran',
+          headerShown: true,
+          header: () => <QuranHeader />,
         }}
-        listeners={({navigation}) => ({
-          tabPress: (e) => {
-            // Prevent default action
-            e.preventDefault();
-            // Navigate to the quran module
-            navigation.navigate('quran');
-          },
-        })}
       />
     </Tab.Navigator>
   );
