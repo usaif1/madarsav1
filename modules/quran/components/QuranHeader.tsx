@@ -62,7 +62,7 @@ const QuranHeader: React.FC = () => {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: ColorPrimary.primary700,
+    backgroundColor: ColorPrimary.primary800,
     paddingBottom: scale(12),
   },
   headerContent: {

@@ -39,14 +39,14 @@ const QuranNavigator = () => {
         <Tab.Navigator
           initialRouteName="Surah"
           screenOptions={{
-            tabBarActiveTintColor: ColorPrimary.primary500,
-            tabBarInactiveTintColor: '#737373',
+            tabBarActiveTintColor: 'white',
+            tabBarInactiveTintColor: '#F9F6FF',
             tabBarStyle: styles.tabBar,
             tabBarIndicatorStyle: styles.indicator,
             tabBarLabelStyle: styles.tabLabel,
             // Ensure we're using the correct pager implementation
             lazy: true,
-            lazyPlaceholder: () => <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />,
+            lazyPlaceholder: () => <View style={{ flex: 1, backgroundColor: '#411B7F' }} />,
           }}
         >
           <Tab.Screen 
@@ -73,17 +73,16 @@ const QuranNavigator = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   tabBar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: ColorPrimary.primary800,
     elevation: 0,
     shadowOpacity: 0,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
   indicator: {
-    backgroundColor: ColorPrimary.primary500,
+    backgroundColor: ColorPrimary.primary400,
     height: 3,
   },
   tabLabel: {
