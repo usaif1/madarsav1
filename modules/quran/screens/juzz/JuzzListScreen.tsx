@@ -133,12 +133,6 @@ const JuzzListScreen: React.FC = () => {
           placeholder="Salam, juzz khojein"
           style={styles.searchInput}
         />
-        <TouchableOpacity 
-          style={styles.settingsButton}
-          onPress={handleSettingsPress}
-        >
-          <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={20} height={20} />
-        </TouchableOpacity>
       </View>
       
       {/* Juzz list */}
