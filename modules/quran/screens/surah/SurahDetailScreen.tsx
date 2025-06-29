@@ -11,6 +11,7 @@ import BackButton from '@/components/BackButton/BackButton';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import SurahHeader from '../../components/SurahHeader/SurahHeader';
+import SurahAudioPlayer from '../../components/SurahAudioPlayer/SurahAudioPlayer';
 import FastImage from 'react-native-fast-image';
 
 // Define the type for a word
@@ -102,8 +103,8 @@ const SurahDetailScreen: React.FC = () => {
   const route = useRoute<SurahRouteProp | SavedSurahRouteProp>();
   const navigation = useNavigation();
   const { surahId, surahName } = route.params;
-  const [isPlaying, setIsPlaying] = useState(false);
   const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
@@ -165,14 +166,13 @@ const SurahDetailScreen: React.FC = () => {
 
   // Handle play
   const handlePlay = (verse: Verse) => {
-    // Implement play functionality
-    console.log('Play verse:', verse.id);
+    // Show the audio player when play is pressed
+    setShowAudioPlayer(true);
   };
 
-  // Toggle play/pause
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    // Add audio playback logic here
+  // Toggle audio player visibility
+  const toggleAudioPlayer = () => {
+    setShowAudioPlayer(!showAudioPlayer);
   };
 
   // Render word boxes
@@ -300,7 +300,10 @@ const SurahDetailScreen: React.FC = () => {
       {/* Verses */}
       <ScrollView 
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: showAudioPlayer ? scale(120) : scale(80) }
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {SAMPLE_VERSES.map((verse, index) => renderVerse(verse, index))}
@@ -309,30 +312,21 @@ const SurahDetailScreen: React.FC = () => {
       {/* Floating play button */}
       <TouchableOpacity 
         style={styles.floatingButton}
-        onPress={togglePlayPause}
+        onPress={toggleAudioPlayer}
         activeOpacity={0.8}
       >
         <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={36} height={36} fill="#FFFFFF" />
       </TouchableOpacity>
       
-      {/* Audio player (visible when playing) */}
-      {isPlaying && (
-        <View style={styles.audioPlayer}>
-          <View style={styles.audioPlayerContent}>
-            <Body2Bold style={styles.audioTitle}>Al-Fatiha</Body2Bold>
-            <Body2Medium style={styles.audioTime}>0:20 / 3:12</Body2Medium>
-            <View style={styles.audioControls}>
-              <TouchableOpacity>
-                <Body2Medium>Previous</Body2Medium>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={togglePlayPause}>
-                <Body2Medium>Pause</Body2Medium>
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Body2Medium>Next</Body2Medium>
-              </TouchableOpacity>
-            </View>
-          </View>
+      {/* Surah Audio Player */}
+      {showAudioPlayer && (
+        <View style={styles.audioPlayerContainer}>
+          <SurahAudioPlayer
+            surahId={surahId}
+            surahName={surahName}
+            verses={SAMPLE_VERSES}
+            onClose={() => setShowAudioPlayer(false)}
+          />
         </View>
       )}
     </View>
@@ -486,33 +480,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  audioPlayer: {
+  audioPlayerContainer: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: scale(60),
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(8),
-  },
-  audioPlayerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    bottom: scale(80),
+    left: '50%',
+    transform: [{ translateX: -scale(187.5) }],
     alignItems: 'center',
-  },
-  audioTitle: {
-    flex: 1,
-  },
-  audioTime: {
-    color: '#737373',
-    marginRight: scale(12),
-  },
-  audioControls: {
-    flexDirection: 'row',
-    gap: scale(16),
   },
 });
 

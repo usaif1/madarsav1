@@ -140,4 +140,6 @@ export const DUA_ASSETS = {
   QURAN_JUZZ_ICON: '/assets/quran/juzz-icon.svg',
   QURAN_AYAHS_ICON: '/assets/quran/ayahs-icon.svg',
   SURAH_PLAY_ICON: '/assets/quran/surah_play.svg',
+  QURAN_PLAY_PREVIOUS_ICON: '/assets/quran/play_previous.svg',
+  QURAN_PLAY_NEXT_ICON: '/assets/quran/play_next.svg',
 };
