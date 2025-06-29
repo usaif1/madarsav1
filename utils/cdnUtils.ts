@@ -128,6 +128,7 @@ export const DUA_ASSETS = {
   // Quran Icons
   QURAN_CLOSE_ICON: '/assets/close.svg',
   QURAN_SETTINGS_ICON: '/assets/quran/settings.svg',
+  QURAN_SETTINGS_FILL_ICON: '/assets/quran/settings-fill.svg',
   QURAN_PLAY_ICON: '/assets/hadith/Play.svg',
   QURAN_PLAY_WHITE_ICON: '/assets/quran/play_white.svg',
   QURAN_BOOKMARK_ICON: '/assets/hadith/bookmark.svg',

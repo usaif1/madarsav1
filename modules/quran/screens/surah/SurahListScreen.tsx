@@ -64,6 +64,11 @@ const SurahListScreen: React.FC = () => {
     });
   };
 
+  // Navigate to Quran settings screen
+  const handleSettingsPress = () => {
+    navigation.navigate('quranSettings');
+  };
+
   // Render a surah item
   const renderSurahItem = ({ item, index }: { item: SurahItem; index: number }) => (
     <TouchableOpacity 
@@ -123,6 +128,16 @@ const SurahListScreen: React.FC = () => {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Floating Settings Button */}
+      <TouchableOpacity 
+        style={styles.floatingSettingsButton}
+        onPress={handleSettingsPress}
+        activeOpacity={0.8}
+      >
+        <CdnSvg path={DUA_ASSETS.QURAN_SETTINGS_FILL_ICON} width={16} height={16} fill="#FFFFFF" />
+        <Body2Bold style={styles.settingsButtonText}>Settings</Body2Bold>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -203,6 +218,36 @@ const styles = StyleSheet.create({
     width: '30%', // This would be dynamic based on reading progress
     backgroundColor: '#8A57DC',
     borderRadius: 10,
+  },
+  floatingSettingsButton: {
+    position: 'absolute',
+    bottom: scale(30),
+    right: scale(16),
+    width: 105,
+    height: 40,
+    backgroundColor: '#171717',
+    borderRadius: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: scale(12),
+    paddingVertical: scale(10),
+    gap: scale(8),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  settingsButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 14 * 1.45,
+    fontFamily: 'Geist-Bold',
   },
 });
 
