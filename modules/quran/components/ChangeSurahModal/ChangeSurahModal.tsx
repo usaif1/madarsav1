@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SurahStackParamList } from '../../navigation/surah.navigator';
+import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import Modal from 'react-native-modal';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
+import { Body2Medium, Body2Bold, Title3Bold } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 
@@ -30,13 +28,22 @@ const SURAHS: SurahItem[] = [
   { id: 10, name: 'Yunus', ayahCount: 109 },
 ];
 
-type ChangeSurahScreenRouteProp = RouteProp<SurahStackParamList, 'changeSurah'>;
-type ChangeSurahScreenNavigationProp = NativeStackNavigationProp<SurahStackParamList, 'changeSurah'>;
+// Get screen dimensions for calculations
+const { height: screenHeight } = Dimensions.get('window');
 
-const ChangeSurahScreen: React.FC = () => {
-  const route = useRoute<ChangeSurahScreenRouteProp>();
-  const navigation = useNavigation<ChangeSurahScreenNavigationProp>();
-  const { currentSurahId } = route.params;
+interface ChangeSurahModalProps {
+  visible: boolean;
+  currentSurahId: number;
+  onSelect: (surahId: number, surahName: string) => void;
+  onClose: () => void;
+}
+
+const ChangeSurahModal: React.FC<ChangeSurahModalProps> = ({
+  visible,
+  currentSurahId,
+  onSelect,
+  onClose,
+}) => {
   const [selectedSurahId, setSelectedSurahId] = useState(currentSurahId);
 
   // Handle surah selection
@@ -46,13 +53,9 @@ const ChangeSurahScreen: React.FC = () => {
 
   // Handle confirm button press
   const handleConfirm = () => {
-    // Navigate back to surah detail with the selected surah
     const selectedSurah = SURAHS.find(surah => surah.id === selectedSurahId);
     if (selectedSurah) {
-      navigation.navigate('surahDetail', {
-        surahId: selectedSurah.id,
-        surahName: selectedSurah.name
-      });
+      onSelect(selectedSurah.id, selectedSurah.name);
     }
   };
 
@@ -75,66 +78,97 @@ const ChangeSurahScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <H5Bold>Change Surah</H5Bold>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <CdnSvg path={DUA_ASSETS.CLOSE_ICON} width={24} height={24} />
+    <Modal 
+      isVisible={visible} 
+      onBackdropPress={onClose}
+      backdropOpacity={0.5}
+      style={styles.modal}
+      useNativeDriverForBackdrop={true}
+      avoidKeyboard={true}
+    >
+      <View style={styles.sheet}>
+        {/* Fixed header */}
+        <View style={styles.header}>
+          <Title3Bold style={styles.title}>Change Surah</Title3Bold>
+          <TouchableOpacity onPress={onClose} hitSlop={16}>
+            <CdnSvg path={DUA_ASSETS.CLOSE_ICON} width={scale(16)} height={scale(16)} />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Scrollable surah list */}
+        <View style={styles.listContainer}>
+          <FlatList
+            data={SURAHS}
+            renderItem={renderSurahItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={true}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={true}
+          />
+        </View>
+        
+        {/* Confirm button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={styles.confirmButton}
+            onPress={handleConfirm}
+            activeOpacity={0.8}
+          >
+            <Body2Bold style={styles.confirmButtonText}>Confirm</Body2Bold>
           </TouchableOpacity>
         </View>
       </View>
-      
-      {/* Surah list */}
-      <FlatList
-        data={SURAHS}
-        renderItem={renderSurahItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
-      
-      {/* Confirm button */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={styles.confirmButton}
-          onPress={handleConfirm}
-          activeOpacity={0.8}
-        >
-          <Body2Bold style={styles.confirmButtonText}>Confirm</Body2Bold>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+  modal: {
+    margin: 0,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingTop: 8,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
+    height: Math.min(verticalScale(600), screenHeight * 0.8),
+    maxHeight: '80%',
+    overflow: 'hidden',
   },
   header: {
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#222',
   },
   listContainer: {
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(12),
+    flex: 1,
+    overflow: 'hidden',
+  },
+  listContent: {
+    paddingBottom: 32,
   },
   surahItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: scale(12),
-    paddingHorizontal: scale(8),
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
@@ -168,4 +202,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChangeSurahScreen;
+export default ChangeSurahModal; 

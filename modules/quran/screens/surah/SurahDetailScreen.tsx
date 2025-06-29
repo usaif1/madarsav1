@@ -10,6 +10,7 @@ import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typograp
 import BackButton from '@/components/BackButton/BackButton';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
+import SurahHeader from '../../components/SurahHeader/SurahHeader';
 
 // Define the type for a verse
 type Verse = {  
@@ -70,39 +71,38 @@ const SurahDetailScreen: React.FC = () => {
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
 
+  // Handle surah change from header
+  const handleSurahChange = (newSurahId: number, newSurahName: string) => {
+    if (!isSavedStack) {
+      // Navigate to the new surah
+      (navigation as unknown as SurahNavigationProp).navigate('surahDetail', {
+        surahId: newSurahId,
+        surahName: newSurahName
+      });
+    }
+  };
+
+  // Handle settings change from header
+  const handleSettingsChange = (settings: any) => {
+    // Apply settings logic here
+    console.log('Settings applied:', settings);
+  };
+
   // Handle tafseer press
   const handleTafseerPress = (verse: Verse) => {
     if (isSavedStack) {
       // If in saved stack, we need to cast the navigation
-      (navigation as SavedSurahNavigationProp).navigate('savedAyahDetail', {
+      (navigation as unknown as SavedSurahNavigationProp).navigate('savedAyahDetail', {
         ayahId: verse.id,
         surahName,
         verseNumber: verse.id
       });
     } else {
       // If in regular surah stack
-      (navigation as SurahNavigationProp).navigate('tafseer', {
+      (navigation as unknown as SurahNavigationProp).navigate('tafseer', {
         surahId,
         ayahId: verse.id,
         verse: verse.arabic,
-      });
-    }
-  };
-
-  // Handle settings press
-  const handleSettingsPress = () => {
-    if (!isSavedStack) {
-      (navigation as SurahNavigationProp).navigate('quranSettings');
-    }
-  };
-
-  // Handle change surah press
-  const handleChangeSurahPress = () => {
-    if (isSavedStack) {
-      navigation.goBack();
-    } else {
-      (navigation as SurahNavigationProp).navigate('changeSurah', {
-        currentSurahId: surahId,
       });
     }
   };
@@ -151,29 +151,14 @@ const SurahDetailScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <BackButton onPress={() => navigation.goBack()} />
-          <H5Bold>{surahName}</H5Bold>
-        </View>
-        <TouchableOpacity onPress={handleSettingsPress}>
-          <CdnSvg path={DUA_ASSETS.QURAN_SETTINGS_ICON} width={24} height={24} />
-        </TouchableOpacity>
-      </View>
-      
-      {/* Surah info */}
-      <View style={styles.surahInfoContainer}>
-        <View style={styles.surahInfo}>
-          <Body2Bold>{surahName}</Body2Bold>
-          <Body2Medium style={styles.surahSubtitle}>Meccan • 7 Ayyahs</Body2Medium>
-        </View>
-        <TouchableOpacity 
-          style={styles.changeSurahButton}
-          onPress={handleChangeSurahPress}
-        >
-          <Body2Medium style={styles.changeSurahText}>Change Surah</Body2Medium>
-        </TouchableOpacity>
-      </View>
+      <SurahHeader
+        onBack={() => navigation.goBack()}
+        surahName={surahName}
+        surahInfo="Meccan • 7 Ayyahs"
+        currentSurahId={surahId}
+        onSurahChange={handleSurahChange}
+        onSettingsChange={handleSettingsChange}
+      />
       
       {/* Verses */}
       <ScrollView 
@@ -221,45 +206,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scale(12),
-  },
-  surahInfoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  surahInfo: {
-    flex: 1,
-  },
-  surahSubtitle: {
-    color: '#737373',
-    marginTop: scale(4),
-  },
-  changeSurahButton: {
-    paddingHorizontal: scale(12),
-    paddingVertical: scale(6),
-    borderRadius: scale(4),
-    backgroundColor: '#F5F5F5',
-  },
-  changeSurahText: {
-    color: '#404040',
   },
   scrollView: {
     flex: 1,
