@@ -9,6 +9,7 @@ import { Body2Medium, Body2Bold, CaptionMedium } from '@/components/Typography/T
 import SearchInput from '@/modules/hadith/components/SearchInput';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
+import QuranSettingsModal from '../../components/QuranSettingsModal/QuranSettingsModal';
 
 // Define the type for a Surah item
 type SurahItem = {
@@ -40,6 +41,7 @@ const SurahListScreen: React.FC = () => {
   const navigation = useNavigation<SurahListScreenNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredSurahs, setFilteredSurahs] = useState(SURAHS);
+  const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
 
   // Handle search input change
   const handleSearch = (text: string) => {
@@ -64,9 +66,25 @@ const SurahListScreen: React.FC = () => {
     });
   };
 
-  // Navigate to Quran settings screen
+  // Open Quran settings modal
   const handleSettingsPress = () => {
-    navigation.navigate('quranSettings');
+    setSettingsModalVisible(true);
+  };
+
+  // Handle settings modal apply
+  const handleSettingsApply = (settings: {
+    selectedFont: number;
+    selectedQari: number;
+    transliterationEnabled: boolean;
+  }) => {
+    // Apply settings logic here
+    console.log('Settings applied:', settings);
+    setSettingsModalVisible(false);
+  };
+
+  // Handle settings modal close
+  const handleSettingsClose = () => {
+    setSettingsModalVisible(false);
   };
 
   // Render a surah item
@@ -138,6 +156,13 @@ const SurahListScreen: React.FC = () => {
         <CdnSvg path={DUA_ASSETS.QURAN_SETTINGS_FILL_ICON} width={16} height={16} fill="#FFFFFF" />
         <Body2Bold style={styles.settingsButtonText}>Settings</Body2Bold>
       </TouchableOpacity>
+
+      {/* Quran Settings Modal */}
+      <QuranSettingsModal
+        visible={isSettingsModalVisible}
+        onApply={handleSettingsApply}
+        onClose={handleSettingsClose}
+      />
     </View>
   );
 };

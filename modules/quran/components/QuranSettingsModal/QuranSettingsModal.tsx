@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Switch, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import Modal from 'react-native-modal';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, Title3Bold } from '@/components/Typography/Typography';
+import { Body2Medium,Body1Title2Medium, Body2Bold, Title3Bold, Body1Title2Bold } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 
 // Get screen dimensions for calculations
 const { height: screenHeight } = Dimensions.get('window');
+
+// Font preview texts for different fonts
+const FONT_PREVIEWS = {
+  1: '١ بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
+  2: '١ بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', // Different font style
+  3: '١ بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', // Different font style
+};
 
 interface QuranSettingsModalProps {
   visible: boolean;
@@ -39,9 +46,9 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
     setSelectedQari(qariId);
   };
 
-  // Toggle transliteration
-  const toggleTransliteration = () => {
-    setTransliterationEnabled(!transliterationEnabled);
+  // Handle transliteration selection
+  const handleTransliterationSelect = (enabled: boolean) => {
+    setTransliterationEnabled(enabled);
   };
 
   // Handle apply settings
@@ -53,6 +60,17 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
     };
     onApply(settings);
   };
+
+  // Get button style based on selection
+  const getButtonStyle = (isSelected: boolean) => [
+    styles.optionButton,
+    isSelected ? styles.selectedOption : styles.unselectedOption
+  ];
+
+  const getButtonTextStyle = (isSelected: boolean) => [
+    styles.optionText,
+    isSelected ? styles.selectedOptionText : styles.unselectedOptionText
+  ];
 
   return (
     <Modal 
@@ -68,7 +86,7 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
         <View style={styles.header}>
           <Title3Bold style={styles.title}>Quran settings</Title3Bold>
           <TouchableOpacity onPress={onClose} hitSlop={16}>
-            <CdnSvg path={DUA_ASSETS.CLOSE_ICON} width={scale(16)} height={scale(16)} />
+            <CdnSvg path={DUA_ASSETS.QURAN_CLOSE_ICON} width={scale(16)} height={scale(16)} />
           </TouchableOpacity>
         </View>
         
@@ -79,32 +97,35 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
             <Body2Bold style={styles.settingTitle}>Font</Body2Bold>
             <View style={styles.optionsRow}>
               <TouchableOpacity 
-                style={[styles.optionButton, selectedFont === 1 && styles.selectedOption]}
+                style={getButtonStyle(selectedFont === 1)}
                 onPress={() => handleFontSelect(1)}
               >
-                <Body2Medium style={[styles.optionText, selectedFont === 1 && styles.selectedOptionText]}>
+                <Body1Title2Medium style={getButtonTextStyle(selectedFont === 1)}>
                   Font 1
-                </Body2Medium>
+                </Body1Title2Medium>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.optionButton, selectedFont === 2 && styles.selectedOption]}
+                style={getButtonStyle(selectedFont === 2)}
                 onPress={() => handleFontSelect(2)}
               >
-                <Body2Medium style={[styles.optionText, selectedFont === 2 && styles.selectedOptionText]}>
+                <Body1Title2Medium style={getButtonTextStyle(selectedFont === 2)}>
                   Font 2
-                </Body2Medium>
+                </Body1Title2Medium>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.optionButton, selectedFont === 3 && styles.selectedOption]}
+                style={getButtonStyle(selectedFont === 3)}
                 onPress={() => handleFontSelect(3)}
               >
-                <Body2Medium style={[styles.optionText, selectedFont === 3 && styles.selectedOptionText]}>
+                <Body1Title2Medium style={getButtonTextStyle(selectedFont === 3)}>
                   Font 3
-                </Body2Medium>
+                </Body1Title2Medium>
               </TouchableOpacity>
             </View>
+            {/* Font preview */}
             <View style={styles.fontPreview}>
-              <Body2Bold style={styles.arabicPreview}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Body2Bold>
+              <Body1Title2Bold style={styles.arabicPreview}>
+                {FONT_PREVIEWS[selectedFont as keyof typeof FONT_PREVIEWS]}
+              </Body1Title2Bold>
             </View>
           </View>
           
@@ -113,35 +134,44 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
             <Body2Bold style={styles.settingTitle}>Reciter</Body2Bold>
             <View style={styles.optionsRow}>
               <TouchableOpacity 
-                style={[styles.optionButton, selectedQari === 1 && styles.selectedOption]}
+                style={getButtonStyle(selectedQari === 1)}
                 onPress={() => handleQariSelect(1)}
               >
-                <Body2Medium style={[styles.optionText, selectedQari === 1 && styles.selectedOptionText]}>
+                <Body2Medium style={getButtonTextStyle(selectedQari === 1)}>
                   Qari name 1
                 </Body2Medium>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.optionButton, selectedQari === 2 && styles.selectedOption]}
+                style={getButtonStyle(selectedQari === 2)}
                 onPress={() => handleQariSelect(2)}
               >
-                <Body2Medium style={[styles.optionText, selectedQari === 2 && styles.selectedOptionText]}>
+                <Body1Title2Medium style={getButtonTextStyle(selectedQari === 2)}>
                   Qari name 2
-                </Body2Medium>
+                </Body1Title2Medium>
               </TouchableOpacity>
             </View>
           </View>
           
-          {/* Transliteration toggle */}
+          {/* Transliteration selection */}
           <View style={styles.settingSection}>
-            <View style={styles.toggleRow}>
-              <Body2Bold style={styles.settingTitle}>Transliteration</Body2Bold>
-              <Switch
-                trackColor={{ false: '#E0E0E0', true: ColorPrimary.primary200 }}
-                thumbColor={transliterationEnabled ? ColorPrimary.primary500 : '#FFFFFF'}
-                ios_backgroundColor="#E0E0E0"
-                onValueChange={toggleTransliteration}
-                value={transliterationEnabled}
-              />
+            <Body2Bold style={styles.settingTitle}>Transliteration</Body2Bold>
+            <View style={styles.optionsRow}>
+              <TouchableOpacity 
+                style={getButtonStyle(transliterationEnabled === true)}
+                onPress={() => handleTransliterationSelect(true)}
+              >
+                <Body1Title2Medium style={getButtonTextStyle(transliterationEnabled === true)}>
+                  On
+                </Body1Title2Medium>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={getButtonStyle(transliterationEnabled === false)}
+                onPress={() => handleTransliterationSelect(false)}
+              >
+                <Body1Title2Medium style={getButtonTextStyle(transliterationEnabled === false)}>
+                  Off
+                </Body1Title2Medium>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -204,42 +234,53 @@ const styles = StyleSheet.create({
   },
   optionsRow: {
     flexDirection: 'row',
-    gap: scale(8),
+    gap: scale(4),
     marginBottom: scale(12),
   },
   optionButton: {
+    height: scale(32),
+    paddingVertical: scale(6),
     paddingHorizontal: scale(16),
-    paddingVertical: scale(8),
-    borderRadius: scale(20),
+    borderRadius: 60,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectedOption: {
-    backgroundColor: ColorPrimary.primary500,
-    borderColor: ColorPrimary.primary500,
+    backgroundColor: '#F9F6FF',
+    borderColor: '#8A57DC',
+  },
+  unselectedOption: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#F5F5F5',
   },
   optionText: {
-    color: '#404040',
+    fontSize: scale(14),
   },
   selectedOptionText: {
-    color: '#FFFFFF',
+    color: '#8A57DC',
+  },
+  unselectedOptionText: {
+    color: '#404040',
   },
   fontPreview: {
-    padding: scale(16),
-    backgroundColor: '#FAFAFA',
-    borderRadius: scale(8),
+    width: 335,
+    height: 63,
+    padding: scale(10),
+    paddingHorizontal: scale(16),
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
     alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
   arabicPreview: {
-    fontSize: scale(20),
-    lineHeight: scale(32),
+    fontSize: scale(18),
+    lineHeight: scale(28),
     textAlign: 'center',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    color: '#171717',
   },
   buttonContainer: {
     padding: scale(16),

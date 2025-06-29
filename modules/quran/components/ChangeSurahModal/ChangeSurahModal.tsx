@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import Modal from 'react-native-modal';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, Title3Bold } from '@/components/Typography/Typography';
+import { Body2Medium, Body2Bold, Title3Bold, Body1Title2Bold } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 
@@ -31,6 +31,8 @@ const SURAHS: SurahItem[] = [
 // Get screen dimensions for calculations
 const { height: screenHeight } = Dimensions.get('window');
 
+const ITEM_HEIGHT = 40;
+
 interface ChangeSurahModalProps {
   visible: boolean;
   currentSurahId: number;
@@ -45,10 +47,31 @@ const ChangeSurahModal: React.FC<ChangeSurahModalProps> = ({
   onClose,
 }) => {
   const [selectedSurahId, setSelectedSurahId] = useState(currentSurahId);
+  const surahRef = useRef<FlatList>(null);
 
-  // Handle surah selection
-  const handleSurahSelect = (surahId: number) => {
-    setSelectedSurahId(surahId);
+  const initialSurahIndex = SURAHS.findIndex(s => s.id === currentSurahId);
+
+  // Scroll to initial surah when modal opens
+  useEffect(() => {
+    if (visible) {
+      setTimeout(() => {
+        surahRef.current?.scrollToOffset({
+          offset: Math.max(0, initialSurahIndex - 2) * ITEM_HEIGHT,
+          animated: false,
+        });
+      }, 100);
+    }
+  }, [visible, initialSurahIndex]);
+
+  // Helper: get index from scroll offset
+  const indexFromOffset = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    return Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT) + 2;
+  };
+
+  // Update selected surah when user scrolls
+  const onSurahScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const idx = Math.min(Math.max(0, indexFromOffset(e)), SURAHS.length - 1);
+    setSelectedSurahId(SURAHS[idx].id);
   };
 
   // Handle confirm button press
@@ -59,21 +82,28 @@ const ChangeSurahModal: React.FC<ChangeSurahModalProps> = ({
     }
   };
 
-  // Render a surah item
+  // Render a surah item for the carousel
   const renderSurahItem = ({ item }: { item: SurahItem }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
         styles.surahItem,
         selectedSurahId === item.id && styles.selectedSurahItem
       ]}
-      onPress={() => handleSurahSelect(item.id)}
-      activeOpacity={0.7}
+      onPress={() => {
+        setSelectedSurahId(item.id);
+        const idx = SURAHS.findIndex(s => s.id === item.id);
+        surahRef.current?.scrollToOffset({
+          offset: Math.max(0, idx - 2) * ITEM_HEIGHT,
+          animated: true,
+        });
+      }}
     >
-      <View style={styles.surahItemLeft}>
-        <Body2Medium style={styles.surahNumber}>{item.id}</Body2Medium>
-        <Body2Medium>{item.name}</Body2Medium>
-      </View>
-      <Body2Medium style={styles.ayahCount}>{item.ayahCount}</Body2Medium>
+      <Body2Medium style={[styles.surahName, selectedSurahId === item.id && styles.selectedSurahName]}>
+        {item.name}
+      </Body2Medium>
+      <Body2Medium style={[styles.ayahCount, selectedSurahId === item.id && styles.selectedAyahCount]}>
+        {item.ayahCount}
+      </Body2Medium>
     </TouchableOpacity>
   );
 
@@ -95,19 +125,32 @@ const ChangeSurahModal: React.FC<ChangeSurahModalProps> = ({
           </TouchableOpacity>
         </View>
         
-        {/* Scrollable surah list */}
-        <View style={styles.listContainer}>
+        {/* Column headings */}
+        <View style={styles.columnHeadings}>
+          <Body1Title2Bold style={styles.columnTitle}>Surah</Body1Title2Bold>
+          <Body1Title2Bold style={styles.columnTitle}>Ayah</Body1Title2Bold>
+        </View>
+        
+        {/* Surah carousel */}
+        <View style={styles.carouselContainer}>
           <FlatList
+            ref={surahRef}
             data={SURAHS}
             renderItem={renderSurahItem}
             keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={true}
-            initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-            removeClippedSubviews={true}
+            snapToInterval={ITEM_HEIGHT}
+            decelerationRate="fast"
+            showsVerticalScrollIndicator={false}
+            onMomentumScrollEnd={onSurahScrollEnd}
+            getItemLayout={(_, i) => ({
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * i,
+              index: i,
+            })}
+            contentContainerStyle={styles.carouselContent}
           />
+          {/* Highlight box for selected item */}
+          <View style={styles.highlightBox} pointerEvents="none" />
         </View>
         
         {/* Confirm button */}
@@ -137,8 +180,8 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 0,
     paddingHorizontal: 0,
-    height: Math.min(verticalScale(600), screenHeight * 0.8),
-    maxHeight: '80%',
+    height: Math.min(verticalScale(400), screenHeight * 0.6),
+    maxHeight: '60%',
     overflow: 'hidden',
   },
   header: {
@@ -156,35 +199,70 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#222',
   },
-  listContainer: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  listContent: {
-    paddingBottom: 32,
-  },
-  surahItem: {
+  columnHeadings: {
+    width: 375,
+    height: 40,
+    backgroundColor: '#F9F6FF',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: scale(12),
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingVertical: scale(10),
+    paddingHorizontal: 18,
+    gap: scale(6),
+  },
+  columnTitle: {
+    color: '#171717',
+    fontWeight: '700',
+  },
+  carouselContainer: {
+    width: 375,
+    height: 165,
+    paddingHorizontal: 18,
+    paddingVertical: scale(8),
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  carouselContent: {
+    paddingVertical: ITEM_HEIGHT * 2, // Add padding for proper centering
+  },
+  surahItem: {
+    width: 339,
+    height: ITEM_HEIGHT,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: scale(10),
+    paddingHorizontal: 0,
+    borderRadius: 8,
   },
   selectedSurahItem: {
-    backgroundColor: ColorPrimary.primary50,
+    backgroundColor: '#F5F5F5',
   },
-  surahItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  surahName: {
+    color: '#171717',
   },
-  surahNumber: {
-    width: scale(30),
-    color: '#737373',
+  selectedSurahName: {
+    color: '#171717',
+    fontWeight: '600',
   },
   ayahCount: {
     color: '#737373',
+  },
+  selectedAyahCount: {
+    color: '#737373',
+    fontWeight: '600',
+  },
+  highlightBox: {
+    position: 'absolute',
+    top: (165 / 2) - (ITEM_HEIGHT / 2),
+    left: 18,
+    right: 18,
+    height: ITEM_HEIGHT,
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    zIndex: -1,
   },
   buttonContainer: {
     padding: scale(16),
