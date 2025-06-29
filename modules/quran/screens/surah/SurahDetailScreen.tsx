@@ -6,11 +6,19 @@ import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, H5Bold } from '@/components/Typography/Typography';
+import { Body2Medium, Body2Bold, Body1Title2Bold, Body1Title2Regular, H5Bold, H5Medium } from '@/components/Typography/Typography';
 import BackButton from '@/components/BackButton/BackButton';
 import { CdnSvg } from '@/components/CdnSvg';
-import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import SurahHeader from '../../components/SurahHeader/SurahHeader';
+import FastImage from 'react-native-fast-image';
+
+// Define the type for a word
+type Word = {
+  arabic: string;
+  transliteration: string;
+  translation: string;
+};
 
 // Define the type for a verse
 type Verse = {  
@@ -18,39 +26,67 @@ type Verse = {
   arabic: string;
   translation: string;
   transliteration: string;
+  words: Word[];
 };
 
-// Sample data for verses
+// Sample data for verses with word-by-word breakdown
 const SAMPLE_VERSES: Verse[] = [
   {
     id: 1,
     arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
     translation: 'In the Name of Allah—the Most Compassionate, Most Merciful.',
     transliteration: 'Bismillahir Rahmanir Raheem',
+    words: [
+      { arabic: 'بِسْمِ', transliteration: 'Bismi', translation: 'In the name' },
+      { arabic: 'اللَّهِ', transliteration: 'Allahi', translation: 'of Allah' },
+      { arabic: 'الرَّحْمَٰنِ', transliteration: 'Ar-Rahman', translation: 'the Most Gracious' },
+      { arabic: 'الرَّحِيمِ', transliteration: 'Ar-Raheem', translation: 'the Most Merciful' },
+    ],
   },
   {
     id: 2,
     arabic: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
     translation: 'All praise is for Allah—Lord of all worlds,',
     transliteration: 'Alhamdu lillahi rabbil alamin',
+    words: [
+      { arabic: 'الْحَمْدُ', transliteration: 'Al-hamdu', translation: 'All praises and thanks' },
+      { arabic: 'لِلَّهِ', transliteration: 'lillahi', translation: 'to Allah (be)' },
+      { arabic: 'رَبِّ', transliteration: 'rabbi', translation: 'the Lord' },
+      { arabic: 'الْعَالَمِينَ', transliteration: 'L-alamina', translation: 'of the universe' },
+    ],
   },
   {
     id: 3,
     arabic: 'الرَّحْمَٰنِ الرَّحِيمِ',
     translation: 'the Most Compassionate, Most Merciful,',
     transliteration: 'Ar-Rahman ar-Raheem',
+    words: [
+      { arabic: 'الرَّحْمَٰنِ', transliteration: 'Ar-Rahman', translation: 'the Most Compassionate' },
+      { arabic: 'الرَّحِيمِ', transliteration: 'Ar-Raheem', translation: 'Most Merciful' },
+    ],
   },
   {
     id: 4,
     arabic: 'مَالِكِ يَوْمِ الدِّينِ',
     translation: 'Master of the Day of Judgment.',
     transliteration: 'Maliki yawmid-din',
+    words: [
+      { arabic: 'مَالِكِ', transliteration: 'Maliki', translation: 'Master' },
+      { arabic: 'يَوْمِ', transliteration: 'yawmi', translation: 'of the Day' },
+      { arabic: 'الدِّينِ', transliteration: 'ad-din', translation: 'of Judgment' },
+    ],
   },
   {
     id: 5,
     arabic: 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ',
     translation: 'You ˹alone˺ we worship and You ˹alone˺ we ask for help.',
     transliteration: `Iyyaka na'budu wa iyyaka nasta'in`,
+    words: [
+      { arabic: 'إِيَّاكَ', transliteration: 'Iyyaka', translation: 'You (alone)' },
+      { arabic: 'نَعْبُدُ', transliteration: 'na\'budu', translation: 'we worship' },
+      { arabic: 'وَإِيَّاكَ', transliteration: 'wa iyyaka', translation: 'and You (alone)' },
+      { arabic: 'نَسْتَعِينُ', transliteration: 'nasta\'in', translation: 'we ask for help' },
+    ],
   },
 ];
 
@@ -67,6 +103,7 @@ const SurahDetailScreen: React.FC = () => {
   const navigation = useNavigation();
   const { surahId, surahName } = route.params;
   const [isPlaying, setIsPlaying] = useState(false);
+  const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
   
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
@@ -88,7 +125,7 @@ const SurahDetailScreen: React.FC = () => {
     console.log('Settings applied:', settings);
   };
 
-  // Handle tafseer press
+  // Handle tafseer press (read button)
   const handleTafseerPress = (verse: Verse) => {
     if (isSavedStack) {
       // If in saved stack, we need to cast the navigation
@@ -107,43 +144,143 @@ const SurahDetailScreen: React.FC = () => {
     }
   };
 
+  // Toggle bookmark
+  const toggleBookmark = (verseId: number) => {
+    setBookmarkedVerses(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(verseId)) {
+        newSet.delete(verseId);
+      } else {
+        newSet.add(verseId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle share
+  const handleShare = (verse: Verse) => {
+    // Implement share functionality
+    console.log('Share verse:', verse.id);
+  };
+
+  // Handle play
+  const handlePlay = (verse: Verse) => {
+    // Implement play functionality
+    console.log('Play verse:', verse.id);
+  };
+
   // Toggle play/pause
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
     // Add audio playback logic here
   };
 
-  // Render a verse item
-  const renderVerse = (verse: Verse) => (
-    <View key={verse.id} style={styles.verseContainer}>
-      {/* Verse number and controls */}
-      <View style={styles.verseHeader}>
-        <TouchableOpacity style={styles.verseNumberContainer}>
-          <Body2Medium style={styles.verseNumber}>{verse.id}</Body2Medium>
-        </TouchableOpacity>
-        <View style={styles.verseControls}>
-          <TouchableOpacity onPress={() => handleTafseerPress(verse)}>
-            <Body2Medium style={styles.tafseerButton}>Tafseer</Body2Medium>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Body2Medium style={styles.shareButton}>Share</Body2Medium>
-          </TouchableOpacity>
+  // Render word boxes
+  const renderWordBoxes = (words: Word[]) => (
+    <View style={styles.wordsContainer}>
+      {words.map((word, index) => (
+        <View key={index} style={styles.wordBox}>
+          <H5Medium style={styles.wordArabic}>{word.arabic}</H5Medium>
+          <Body2Medium style={styles.wordTransliteration}>{word.transliteration}</Body2Medium>
+          <Body2Bold style={styles.wordTranslation}>{word.translation}</Body2Bold>
         </View>
-      </View>
-      
-      {/* Arabic text */}
-      <View style={styles.arabicContainer}>
-        <Body2Bold style={styles.arabicText}>{verse.arabic}</Body2Bold>
-      </View>
-      
-      {/* Translation */}
-      <View style={styles.translationContainer}>
-        <Body2Medium style={styles.translationText}>{verse.translation}</Body2Medium>
-      </View>
-      
-      {/* Transliteration */}
-      <View style={styles.transliterationContainer}>
-        <Body2Medium style={styles.transliterationText}>{verse.transliteration}</Body2Medium>
+      ))}
+    </View>
+  );
+
+  // Render a verse item
+  const renderVerse = (verse: Verse, index: number) => (
+    <View key={verse.id} style={styles.verseCard}>
+      {/* Top graphic for first verse */}
+      {index === 0 && (
+        <View style={styles.graphicContainer}>
+          <FastImage 
+            source={{ uri: getCdnUrl(DUA_ASSETS.QURAN_SURAH_DETAIL_GRAPHIC) }} 
+            style={styles.graphicImage}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+        </View>
+      )}
+
+      {/* Verse content */}
+      <View style={styles.verseContent}>
+        {/* Top row with bubble index and word boxes */}
+        <View style={styles.topRow}>
+          {/* Bubble index */}
+          <View style={styles.bubbleContainer}>
+            <CdnSvg 
+              path={DUA_ASSETS.BUBBLE}
+              width={scale(26)}
+              height={scale(26)}
+            />
+            <Body1Title2Bold style={styles.bubbleNumber}>
+              {verse.id}
+            </Body1Title2Bold>
+          </View>
+          
+          {/* Word-by-word boxes */}
+          {renderWordBoxes(verse.words)}
+        </View>
+        
+        {/* Translation section */}
+        <View style={styles.translationSection}>
+          <Body1Title2Bold style={styles.translationTitle}>Translation</Body1Title2Bold>
+          <Body2Medium style={styles.translationText}>{verse.translation}</Body2Medium>
+        </View>
+        
+        {/* Bottom row */}
+        <View style={styles.bottomRow}>
+          {/* Left: Surah name and verse number */}
+          <View style={styles.referenceContainer}>
+            <Body1Title2Regular style={styles.referenceText}>{surahName}</Body1Title2Regular>
+            <View style={styles.dot} />
+            <Body1Title2Regular style={styles.referenceText}>{verse.id}</Body1Title2Regular>
+          </View>
+          
+          {/* Right: Action icons */}
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => handleTafseerPress(verse)}
+            >
+              <CdnSvg 
+                path={DUA_ASSETS.QURAN_OPEN_BOOK_ICON}
+                width={scale(20)}
+                height={scale(20)}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => toggleBookmark(verse.id)}
+            >
+              <CdnSvg 
+                path={bookmarkedVerses.has(verse.id) ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON}
+                width={scale(20)}
+                height={scale(20)}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => handleShare(verse)}
+            >
+              <CdnSvg 
+                path={DUA_ASSETS.SHARE_ALT}
+                width={scale(20)}
+                height={scale(20)}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => handlePlay(verse)}
+            >
+              <CdnSvg 
+                path={DUA_ASSETS.SURAH_PLAY_ICON}
+                width={scale(20)}
+                height={scale(20)}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -166,7 +303,7 @@ const SurahDetailScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {SAMPLE_VERSES.map(verse => renderVerse(verse))}
+        {SAMPLE_VERSES.map((verse, index) => renderVerse(verse, index))}
       </ScrollView>
       
       {/* Floating play button */}
@@ -205,72 +342,133 @@ const SurahDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: scale(16),
     paddingBottom: scale(80), // Extra padding for the floating button
   },
-  verseContainer: {
-    marginVertical: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    paddingBottom: scale(12),
-  },
-  verseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  graphicContainer: {
+    width: '100%',
+    height: verticalScale(121),
     alignItems: 'center',
-    marginBottom: scale(8),
-  },
-  verseNumberContainer: {
-    width: scale(28),
-    height: scale(28),
-    borderRadius: scale(14),
-    backgroundColor: ColorPrimary.primary100,
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  verseNumber: {
-    color: ColorPrimary.primary500,
+  graphicImage: {
+    width: '100%',
+    height: '100%',
   },
-  verseControls: {
+  verseCard: {
+    backgroundColor: '#FFFFFF',
+    marginVertical: scale(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  verseContent: {
+    padding: scale(16),
+    paddingHorizontal: scale(24),
+    gap: scale(16),
+  },
+  topRow: {
     flexDirection: 'row',
-    gap: scale(12),
+    alignItems: 'flex-start',
+    gap: scale(6),
   },
-  tafseerButton: {
-    color: ColorPrimary.primary500,
+  bubbleContainer: {
+    position: 'relative',
+    width: scale(26),
+    height: scale(26),
+    marginTop: scale(8),
   },
-  shareButton: {
-    color: '#737373',
+  bubbleNumber: {
+    position: 'absolute',
+    top: '50%',
+    left: '55%',
+    transform: [{ translateX: -3 }, { translateY: -8 }],
+    color: ColorPrimary.primary600,
+    fontSize: 12,
   },
-  arabicContainer: {
-    alignItems: 'flex-end',
-    marginBottom: scale(8),
+  wordsContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scale(10),
   },
-  arabicText: {
-    fontSize: scale(18),
-    lineHeight: scale(32),
+  wordBox: {
+    width: 72,
+    height: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: scale(2),
+    padding: scale(4),
+  },
+  wordArabic: {
+    fontSize: 20,
+    lineHeight: 20 * 1.4,
     textAlign: 'right',
     color: '#171717',
   },
-  translationContainer: {
-    marginBottom: scale(8),
+  wordTransliteration: {
+    fontSize: 10,
+    lineHeight: 10 * 1.4,
+    textAlign: 'center',
+    color: '#525252',
+    fontWeight: '400',
+  },
+  wordTranslation: {
+    fontSize: 10,
+    lineHeight: 10 * 1.4,
+    textAlign: 'center',
+    color: '#525252',
+    fontWeight: '600',
+  },
+  translationSection: {
+    gap: scale(4),
+  },
+  translationTitle: {
+    fontSize: 14,
+    lineHeight: 14 * 1.45,
+    color: '#0A0A0A',
+    fontWeight: '700',
   },
   translationText: {
+    fontSize: 12,
+    lineHeight: 12 * 1.4,
     color: '#404040',
-    lineHeight: scale(20),
   },
-  transliterationContainer: {
-    marginBottom: scale(8),
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  transliterationText: {
-    color: '#737373',
-    fontStyle: 'italic',
-    lineHeight: scale(20),
+  referenceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(6),
+  },
+  referenceText: {
+    fontSize: 14,
+    lineHeight: 14 * 1.45,
+    color: '#6B7280',
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    backgroundColor: '#D4D4D4',
+    borderRadius: 5,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   floatingButton: {
     position: 'absolute',

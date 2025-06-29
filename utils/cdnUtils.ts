@@ -134,7 +134,10 @@ export const DUA_ASSETS = {
   QURAN_BOOKMARK_ICON: '/assets/hadith/bookmark.svg',
   QURAN_BOOKMARK_FILL_ICON: '/assets/hadith/bookmarked.svg',
   QURAN_SHARE_ICON: '/assets/hadith/Share.svg',
+  QURAN_OPEN_BOOK_ICON: '/assets/quran/open_book.svg',
+  QURAN_SURAH_DETAIL_GRAPHIC: '/assets/quran/SurahDetailGraphic.png',
   QURAN_SURAH_ICON: '/assets/quran/surah-icon.svg',
   QURAN_JUZZ_ICON: '/assets/quran/juzz-icon.svg',
   QURAN_AYAHS_ICON: '/assets/quran/ayahs-icon.svg',
+  SURAH_PLAY_ICON: '/assets/quran/surah_play.svg',
 };
