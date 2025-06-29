@@ -146,7 +146,11 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
             <View style={styles.tafseerButtonsContainer}>
               <TouchableOpacity style={styles.tafseerButton}>
                 <Body2Medium style={styles.tafseerButtonText}>English</Body2Medium>
-                <Body2Medium style={styles.arrowText}>▼</Body2Medium>
+                <CdnSvg 
+                  path={DUA_ASSETS.SURAH_DOWN_ARROW} 
+                  width={scale(20)} 
+                  height={scale(20)} 
+                />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.tafseerButton}>
