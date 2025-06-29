@@ -190,7 +190,7 @@ const SurahDetailScreen: React.FC = () => {
         onPress={togglePlayPause}
         activeOpacity={0.8}
       >
-        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_ICON} width={24} height={24} fill="#FFFFFF" />
+        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={36} height={36} fill="#FFFFFF" />
       </TouchableOpacity>
       
       {/* Audio player (visible when playing) */}

@@ -40,7 +40,7 @@ const QuranHeader: React.FC = () => {
         >
           <FastImage
             source={{ 
-              uri: user?.photoUrl || getCdnUrl(DUA_ASSETS.DEFAULT_PROFILE_IMAGE),
+              uri: user?.photoUrl || user?.photo || getCdnUrl(DUA_ASSETS.DEFAULT_PROFILE_IMAGE),
               priority: FastImage.priority.normal,
             }}
             style={styles.userImage}
@@ -49,7 +49,7 @@ const QuranHeader: React.FC = () => {
           {/* Menu Icon positioned on the bottom right of the image */}
           <View style={styles.menuIconContainer}>
             <CdnSvg 
-              path={DUA_ASSETS.NAV_PROFILE_MENU}
+              path={DUA_ASSETS.HAMBURGER_ICON}
               width={scale(12)}
               height={scale(12)}
             />

@@ -80,13 +80,14 @@ const SurahListScreen: React.FC = () => {
       <View style={styles.surahDetails}>
         <View style={styles.surahNameRow}>
           <Body2Bold>{item.name}</Body2Bold>
+          <View style={{flexDirection:'row', alignItems:'center', gap:scale(10)}}>
           <Body2Bold style={styles.arabicName}>{item.arabicName}</Body2Bold>
+          <CdnSvg path={DUA_ASSETS.QURAN_BOOKMARK_ICON} width={16} height={16} /></View>
         </View>
         <View style={styles.surahInfoRow}>
           <CaptionMedium style={styles.surahInfo}>
             {item.type === 'meccan' ? 'Meccan' : 'Medinan'} • {item.ayahCount} Ayyahs
           </CaptionMedium>
-          <CdnSvg path={DUA_ASSETS.QURAN_BOOKMARK_ICON} width={16} height={16} />
         </View>
       </View>
     </TouchableOpacity>
@@ -137,8 +138,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   numberContainer: {
-    width: scale(32),
-    height: scale(32),
+    width: scale(30),
+    height: scale(30),
     borderRadius: scale(16),
     backgroundColor: ColorPrimary.primary100,
     justifyContent: 'center',
@@ -159,6 +160,8 @@ const styles = StyleSheet.create({
   },
   arabicName: {
     textAlign: 'right',
+    color: '#8A57DC',
+    fontSize: scale(16),
   },
   surahInfoRow: {
     flexDirection: 'row',
