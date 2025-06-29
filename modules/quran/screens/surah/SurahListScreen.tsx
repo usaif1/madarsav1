@@ -71,9 +71,16 @@ const SurahListScreen: React.FC = () => {
       onPress={() => handleSurahPress(item)}
       activeOpacity={0.7}
     >
-      {/* Surah number */}
+      {/* Surah number with star SVG */}
       <View style={styles.numberContainer}>
-        <Body2Bold style={styles.numberText}>{index + 1}</Body2Bold>
+        <CdnSvg 
+          path={DUA_ASSETS.QURAN_SURAH_INDEX_STAR} 
+          width={scale(30)} 
+          height={scale(30)} 
+        />
+        <View style={styles.numberTextContainer}>
+          <Body2Bold style={styles.numberText}>{index + 1}</Body2Bold>
+        </View>
       </View>
       
       {/* Surah details */}
@@ -88,6 +95,10 @@ const SurahListScreen: React.FC = () => {
           <CaptionMedium style={styles.surahInfo}>
             {item.type === 'meccan' ? 'Meccan' : 'Medinan'} • {item.ayahCount} Ayyahs
           </CaptionMedium>
+          {/* Progress bar */}
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarFilled} />
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -140,14 +151,23 @@ const styles = StyleSheet.create({
   numberContainer: {
     width: scale(30),
     height: scale(30),
-    borderRadius: scale(16),
-    backgroundColor: ColorPrimary.primary100,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: scale(12),
+    position: 'relative',
+  },
+  numberTextContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   numberText: {
     color: ColorPrimary.primary500,
+    fontSize: scale(12),
   },
   surahDetails: {
     flex: 1,
@@ -170,6 +190,19 @@ const styles = StyleSheet.create({
   },
   surahInfo: {
     color: '#737373',
+  },
+  progressBarContainer: {
+    width: 60,
+    height: 6,
+    backgroundColor: '#F0EAFB',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  progressBarFilled: {
+    height: '100%',
+    width: '30%', // This would be dynamic based on reading progress
+    backgroundColor: '#8A57DC',
+    borderRadius: 10,
   },
 });
 
