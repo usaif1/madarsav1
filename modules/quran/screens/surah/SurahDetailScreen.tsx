@@ -12,6 +12,7 @@ import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import SurahHeader from '../../components/SurahHeader/SurahHeader';
 import SurahAudioPlayer from '../../components/SurahAudioPlayer/SurahAudioPlayer';
+import TafseerModal from '../../components/TafseerModal/TafseerModal';
 import FastImage from 'react-native-fast-image';
 
 // Define the type for a word
@@ -105,6 +106,8 @@ const SurahDetailScreen: React.FC = () => {
   const { surahId, surahName } = route.params;
   const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [showTafseerModal, setShowTafseerModal] = useState(false);
+  const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
@@ -128,21 +131,8 @@ const SurahDetailScreen: React.FC = () => {
 
   // Handle tafseer press (read button)
   const handleTafseerPress = (verse: Verse) => {
-    if (isSavedStack) {
-      // If in saved stack, we need to cast the navigation
-      (navigation as unknown as SavedSurahNavigationProp).navigate('savedAyahDetail', {
-        ayahId: verse.id,
-        surahName,
-        verseNumber: verse.id
-      });
-    } else {
-      // If in regular surah stack
-      (navigation as unknown as SurahNavigationProp).navigate('tafseer', {
-        surahId,
-        ayahId: verse.id,
-        verse: verse.arabic,
-      });
-    }
+    setSelectedVerse(verse);
+    setShowTafseerModal(true);
   };
 
   // Toggle bookmark
@@ -328,6 +318,20 @@ const SurahDetailScreen: React.FC = () => {
             onClose={() => setShowAudioPlayer(false)}
           />
         </View>
+      )}
+      
+      {/* Tafseer Modal */}
+      {showTafseerModal && selectedVerse && (
+        <TafseerModal
+          visible={showTafseerModal}
+          onClose={() => setShowTafseerModal(false)}
+          surahId={surahId}
+          surahName={surahName}
+          ayahId={selectedVerse.id}
+          verse={selectedVerse.arabic}
+          words={selectedVerse.words}
+          translation={selectedVerse.translation}
+        />
       )}
     </View>
   );
