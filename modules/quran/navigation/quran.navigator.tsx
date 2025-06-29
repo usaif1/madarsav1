@@ -10,6 +10,9 @@ import SurahNavigator from './surah.navigator';
 import JuzzNavigator from './juzz.navigator';
 import SavedNavigator from './saved.navigator';
 
+// Import context hook
+import { useQuranNavigation } from '../context/QuranNavigationContext';
+
 // Create tab navigator
 const Tab = createMaterialTopTabNavigator();
 
@@ -20,6 +23,19 @@ const TabLabel = ({ focused, children }: { focused: boolean; children: string })
   </Text>
 );
 
+// Custom tab bar component that can be hidden
+const CustomTabBar = (props: any) => {
+  const { showTopTabs } = useQuranNavigation();
+  
+  if (!showTopTabs) {
+    return null;
+  }
+  
+  const { MaterialTopTabBar } = require('@react-navigation/material-top-tabs');
+  return <MaterialTopTabBar {...props} />;
+};
+
+// Main navigator without provider (provider is now at parent level)
 const QuranNavigator = () => {
   const isFocused = useIsFocused();
   const [isReady, setIsReady] = React.useState(false);
@@ -50,6 +66,7 @@ const QuranNavigator = () => {
             lazy: true,
             lazyPlaceholder: () => <View style={{ flex: 1, backgroundColor: '#411B7F' }} />,
           }}
+          tabBar={CustomTabBar}
         >
           <Tab.Screen 
             name="Surah" 

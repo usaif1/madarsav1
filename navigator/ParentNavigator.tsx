@@ -17,6 +17,9 @@ import HadithNavigator from '@/modules/hadith/navigation/hadith.navigator';
 import MaktabNavigator from '@/modules/maktab/navigation/maktab.navigator';
 import QuranNavigator from '@/modules/quran/navigation/quran.navigator';
 
+// Import global context
+import { QuranNavigationProvider } from '@/modules/quran/context/QuranNavigationContext';
+
 // auth guards
 import { createProtectedScreen, createFullyProtectedScreen } from '@/modules/auth/utils/routeGuards';
 import { createComponentForStaticNavigation } from '@react-navigation/native';
@@ -51,53 +54,55 @@ const HadithNavigatorComponent = createComponentForStaticNavigation(HadithNaviga
 // Define the navigator component
 const ParentNavigator = () => {
   return (
-    <Stack.Navigator
-      initialRouteName="home"
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen 
-        name="home" 
-        component={HomeNavigator}
-      />
-      <Stack.Screen 
-        name="names" 
-        component={NamesNavigatorComponent} 
-      />
-      <Stack.Screen 
-        name="user" 
-        component={UserNavigator}
-        options={{
-          title: 'Profile',
-          headerTitleAlign: 'center',
+    <QuranNavigationProvider>
+      <Stack.Navigator
+        initialRouteName="home"
+        screenOptions={{
+          headerShown: false,
         }}
-      />
-      <Stack.Screen 
-        name="compass" 
-        component={CompassNavigatorComponent} 
-      />
-      <Stack.Screen 
-        name="dua" 
-        component={DuaNavigatorComponent} 
-      />
-      <Stack.Screen 
-        name="calendar" 
-        component={CalendarNavigatorComponent} 
-      />
-      <Stack.Screen 
-        name="tasbih" 
-        component={TasbihNavigatorComponent} 
-      />
-      <Stack.Screen 
-        name="hadith" 
-        component={HadithNavigatorComponent} 
-      />
-      <Stack.Screen 
-        name="quran" 
-        component={QuranNavigator} 
-      />
-    </Stack.Navigator>
+      >
+        <Stack.Screen 
+          name="home" 
+          component={HomeNavigator}
+        />
+        <Stack.Screen 
+          name="names" 
+          component={NamesNavigatorComponent} 
+        />
+        <Stack.Screen 
+          name="user" 
+          component={UserNavigator}
+          options={{
+            title: 'Profile',
+            headerTitleAlign: 'center',
+          }}
+        />
+        <Stack.Screen 
+          name="compass" 
+          component={CompassNavigatorComponent} 
+        />
+        <Stack.Screen 
+          name="dua" 
+          component={DuaNavigatorComponent} 
+        />
+        <Stack.Screen 
+          name="calendar" 
+          component={CalendarNavigatorComponent} 
+        />
+        <Stack.Screen 
+          name="tasbih" 
+          component={TasbihNavigatorComponent} 
+        />
+        <Stack.Screen 
+          name="hadith" 
+          component={HadithNavigatorComponent} 
+        />
+        <Stack.Screen 
+          name="quran" 
+          component={QuranNavigator} 
+        />
+      </Stack.Navigator>
+    </QuranNavigationProvider>
   );
 };
 

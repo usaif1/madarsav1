@@ -18,13 +18,21 @@ const QuranHeader: React.FC = () => {
   // Handle user profile press - navigate to profile
   const handleUserProfilePress = () => {
     if (user) {
+      console.log('Navigating to profile with user:', user);
       // @ts-ignore - Fix navigation type
       navigation.navigate('user', { screen: 'profile' });
     } else {
+      console.log('No user, navigating to not logged in profile');
       // @ts-ignore - Fix navigation type
       navigation.navigate('user', { screen: 'profileNotLoggedIn' });
     }
   };
+
+  // Debug user profile image
+  const profileImageUri = user?.photoUrl || getCdnUrl(DUA_ASSETS.DEFAULT_PROFILE_IMAGE);
+  console.log('QuranHeader - User:', user);
+  console.log('QuranHeader - Profile Image URI:', profileImageUri);
+  console.log('QuranHeader - Hamburger Icon Path:', DUA_ASSETS.HAMBURGER_ICON);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top }]}>
@@ -40,11 +48,17 @@ const QuranHeader: React.FC = () => {
         >
           <FastImage
             source={{ 
-              uri: user?.photoUrl || user?.photo || getCdnUrl(DUA_ASSETS.DEFAULT_PROFILE_IMAGE),
+              uri: profileImageUri,
               priority: FastImage.priority.normal,
             }}
             style={styles.userImage}
             resizeMode={FastImage.resizeMode.cover}
+            onError={() => {
+              console.log('FastImage error loading profile image');
+            }}
+            onLoad={() => {
+              console.log('FastImage loaded successfully');
+            }}
           />
           {/* Menu Icon positioned on the bottom right of the image */}
           <View style={styles.menuIconContainer}>
@@ -52,6 +66,7 @@ const QuranHeader: React.FC = () => {
               path={DUA_ASSETS.HAMBURGER_ICON}
               width={scale(12)}
               height={scale(12)}
+              fill="#8A57DC"
             />
           </View>
         </TouchableOpacity>
@@ -80,17 +95,18 @@ const styles = StyleSheet.create({
   userImage: {
     width: scale(40),
     height: scale(40),
-    borderRadius: scale(24),
+    borderRadius: scale(20),
+    backgroundColor: '#E5E5E5', // Fallback background color
   },
   menuIconContainer: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: -2,
+    right: -2,
     width: scale(18),
     height: scale(18),
     borderRadius: scale(9),
-    borderWidth: 1,
-    borderColor: ColorPrimary.primary200,
+    borderWidth: 2,
+    borderColor: 'white',
     backgroundColor: '#F9F6FF',
     justifyContent: 'center',
     alignItems: 'center',

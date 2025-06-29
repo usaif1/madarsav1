@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
@@ -13,6 +13,8 @@ import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import SurahHeader from '../../components/SurahHeader/SurahHeader';
 import SurahAudioPlayer from '../../components/SurahAudioPlayer/SurahAudioPlayer';
 import TafseerModal from '../../components/TafseerModal/TafseerModal';
+import ChangeSurahModal from '../../components/ChangeSurahModal/ChangeSurahModal';
+import { useQuranNavigation } from '../../context/QuranNavigationContext';
 import FastImage from 'react-native-fast-image';
 
 // Define the type for a word
@@ -107,10 +109,22 @@ const SurahDetailScreen: React.FC = () => {
   const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [showTafseerModal, setShowTafseerModal] = useState(false);
+  const [showChangeSurahModal, setShowChangeSurahModal] = useState(false);
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
+  const { setTabsVisibility } = useQuranNavigation();
   
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
+
+  // Hide both top and bottom tabs when this screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      setTabsVisibility(false, false); // Hide both top and bottom tabs
+      return () => {
+        // Tabs will be shown again when returning to list screen
+      };
+    }, [setTabsVisibility])
+  );
 
   // Handle surah change from header
   const handleSurahChange = (newSurahId: number, newSurahName: string) => {

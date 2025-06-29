@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { JuzzStackParamList } from '../../navigation/juzz.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
@@ -10,6 +10,7 @@ import SearchInput from '@/modules/hadith/components/SearchInput';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import QuranSettingsModal from '../../components/QuranSettingsModal/QuranSettingsModal';
+import { useQuranNavigation } from '../../context/QuranNavigationContext';
 
 // Define the type for a Juzz item
 type JuzzItem = {
@@ -48,6 +49,17 @@ const JuzzListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredJuzz, setFilteredJuzz] = useState(JUZZ_LIST);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
+  const { setTabsVisibility } = useQuranNavigation();
+
+  // Show both top and bottom tabs when this screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      setTabsVisibility(true, true); // Show both top and bottom tabs
+      return () => {
+        // Keep tabs shown when leaving unless going to detail screen
+      };
+    }, [setTabsVisibility])
+  );
 
   // Handle search input change
   const handleSearch = (text: string) => {

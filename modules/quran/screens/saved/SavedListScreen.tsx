@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
@@ -9,6 +9,8 @@ import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typo
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { CdnSvg } from '@/components/CdnSvg';
+import { useQuranNavigation } from '../../context/QuranNavigationContext';
+import { useQuranStore } from '../../store/quranStore';
 
 // Define the type for a saved category
 type SavedCategory = {
@@ -24,30 +26,42 @@ type SavedListScreenNavigationProp = NativeStackNavigationProp<SavedStackParamLi
 
 const SavedListScreen: React.FC = () => {
   const navigation = useNavigation<SavedListScreenNavigationProp>();
+  const { setTabsVisibility } = useQuranNavigation();
+  const { getSavedSurahsCount, getSavedJuzzCount, getSavedAyahsCount } = useQuranStore();
 
-  // Sample data for saved categories
+  // Show both top and bottom tabs when this screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      setTabsVisibility(true, true); // Show both top and bottom tabs
+      return () => {
+        // Keep tabs shown when leaving unless going to detail screen
+      };
+    }, [setTabsVisibility])
+  );
+
+  // Dynamic data for saved categories based on actual counts
   const savedCategories: SavedCategory[] = [
     {
       id: 'surah',
       title: 'Surah',
-      description: 'Duas to read in morning',
-      count: 3,
+      description: 'Saved surahs for quick access',
+      count: getSavedSurahsCount(),
       icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
       color: '#F9E9FF',
     },
     {
       id: 'juzz',
       title: 'Juzz',
-      description: 'Duas to read in evening',
-      count: 1,
+      description: 'Saved juzz for continued reading',
+      count: getSavedJuzzCount(),
       icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
       color: '#E9E5FF',
     },
     {
       id: 'ayahs',
       title: 'Ayyahs',
-      description: 'Duas to read daily',
-      count: 43,
+      description: 'Saved verses for reflection',
+      count: getSavedAyahsCount(),
       icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
       color: '#EBF5FF',
     },
@@ -83,7 +97,9 @@ const SavedListScreen: React.FC = () => {
       <View style={styles.categoryDetails}>
         <View style={styles.categoryTitleRow}>
           <Body2Bold>{item.title}</Body2Bold>
-          <Body2Medium style={styles.categoryCount}>{item.count} Saved</Body2Medium>
+          <Body2Medium style={styles.categoryCount}>
+            {item.count} Saved
+          </Body2Medium>
         </View>
         <CaptionMedium style={styles.categoryDescription}>
           {item.description}

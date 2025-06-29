@@ -1,7 +1,7 @@
 // dependencies
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useNavigationState} from '@react-navigation/native';
 import {View, Text} from 'react-native';
 
 // screens
@@ -9,20 +9,23 @@ import {Home} from '../screens';
 import MaktabScreen from '@/modules/maktab/screens/MaktabScreen';
 import QuranNavigator from '@/modules/quran/navigation/quran.navigator';
 // components
-import CustomTabBar from '../components/CustomTabBar';
+import ConditionalTabBar from '../components/ConditionalTabBar';
 import HomeHeader from '../components/HomeHeader';
 import QuranHeader from '@/modules/quran/components/QuranHeader';
+import { useQuranNavigation } from '../../quran/context/QuranNavigationContext';
 
 const Tab = createBottomTabNavigator();
 
 const HomeNavigator = () => {
+  const { showTopTabs } = useQuranNavigation();
+
   return (
     <Tab.Navigator
       initialRouteName="home"
       screenOptions={{
         headerShown: false,
       }}
-      tabBar={props => <CustomTabBar {...props} />}
+      tabBar={props => <ConditionalTabBar {...props} />}
     >
       <Tab.Screen 
         name="home" 
@@ -47,7 +50,7 @@ const HomeNavigator = () => {
         component={QuranNavigator} 
         options={{
           tabBarLabel: 'Al-Quran',
-          headerShown: true,
+          headerShown: showTopTabs, // Conditionally show QuranHeader
           header: () => <QuranHeader />,
         }}
       />

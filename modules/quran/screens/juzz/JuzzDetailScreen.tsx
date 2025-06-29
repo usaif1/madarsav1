@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { JuzzStackParamList } from '../../navigation/juzz.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
@@ -12,6 +12,7 @@ import SurahHeader from '../../components/SurahHeader/SurahHeader';
 import SurahAudioPlayer from '../../components/SurahAudioPlayer/SurahAudioPlayer';
 import TafseerModal from '../../components/TafseerModal/TafseerModal';
 import ChangeJuzzModal from '../../components/ChangeJuzzModal/ChangeJuzzModal';
+import { useQuranNavigation } from '../../context/QuranNavigationContext';
 import FastImage from 'react-native-fast-image';
 
 // Define the type for a word
@@ -92,6 +93,17 @@ const JuzzDetailScreen: React.FC = () => {
   const [showTafseerModal, setShowTafseerModal] = useState(false);
   const [showChangeJuzzModal, setShowChangeJuzzModal] = useState(false);
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
+  const { setTabsVisibility } = useQuranNavigation();
+
+  // Hide both top and bottom tabs when this screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      setTabsVisibility(false, false); // Hide both top and bottom tabs
+      return () => {
+        // Tabs will be shown again when returning to list screen
+      };
+    }, [setTabsVisibility])
+  );
 
   // Handle juzz change from header
   const handleJuzzChange = (newJuzzId: number, newJuzzName: string) => {
