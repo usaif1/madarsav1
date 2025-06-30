@@ -174,9 +174,14 @@ const SurahDetailScreen: React.FC = () => {
     setShowAudioPlayer(true);
   };
 
-  // Toggle audio player visibility
-  const toggleAudioPlayer = () => {
-    setShowAudioPlayer(!showAudioPlayer);
+  // Handle floating play button press
+  const handleFloatingPlayPress = () => {
+    setShowAudioPlayer(true);
+  };
+
+  // Handle audio player close
+  const handleAudioPlayerClose = () => {
+    setShowAudioPlayer(false);
   };
 
   // Render word boxes
@@ -313,14 +318,16 @@ const SurahDetailScreen: React.FC = () => {
         {SAMPLE_VERSES.map((verse, index) => renderVerse(verse, index))}
       </ScrollView>
       
-      {/* Floating play button */}
-      <TouchableOpacity 
-        style={styles.floatingButton}
-        onPress={toggleAudioPlayer}
-        activeOpacity={0.8}
-      >
-        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={36} height={36} fill="#FFFFFF" />
-      </TouchableOpacity>
+      {/* Floating play button - only show when audio player is not visible */}
+      {!showAudioPlayer && (
+        <TouchableOpacity 
+          style={styles.floatingButton}
+          onPress={handleFloatingPlayPress}
+          activeOpacity={0.8}
+        >
+          <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={36} height={36} fill="#FFFFFF" />
+        </TouchableOpacity>
+      )}
       
       {/* Surah Audio Player */}
       {showAudioPlayer && (
@@ -329,7 +336,7 @@ const SurahDetailScreen: React.FC = () => {
             surahId={surahId}
             surahName={surahName}
             verses={SAMPLE_VERSES}
-            onClose={() => setShowAudioPlayer(false)}
+            onClose={handleAudioPlayerClose}
           />
         </View>
       )}
@@ -389,7 +396,6 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    alignSelf: 'flex-end',
     gap: scale(6),
   },
   bubbleContainer: {

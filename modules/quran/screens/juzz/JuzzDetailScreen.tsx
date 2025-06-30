@@ -150,9 +150,14 @@ const JuzzDetailScreen: React.FC = () => {
     setShowAudioPlayer(true);
   };
 
-  // Toggle audio player visibility
-  const toggleAudioPlayer = () => {
-    setShowAudioPlayer(!showAudioPlayer);
+  // Handle floating play button press
+  const handleFloatingPlayPress = () => {
+    setShowAudioPlayer(true);
+  };
+
+  // Handle audio player close
+  const handleAudioPlayerClose = () => {
+    setShowAudioPlayer(false);
   };
 
   // Render word boxes
@@ -273,7 +278,7 @@ const JuzzDetailScreen: React.FC = () => {
         surahName={juzzName}
         surahInfo="Al-Fatiha - Al-Baqarah • 141 Ayahs"
         currentSurahId={juzzId}
-        onSurahChange={() => setShowChangeJuzzModal(true)}
+        onDropdownPress={() => setShowChangeJuzzModal(true)}
         onSettingsChange={handleSettingsChange}
       />
       
@@ -289,14 +294,16 @@ const JuzzDetailScreen: React.FC = () => {
         {SAMPLE_VERSES.map((verse, index) => renderVerse(verse, index))}
       </ScrollView>
       
-      {/* Floating play button */}
-      <TouchableOpacity 
-        style={styles.floatingButton}
-        onPress={toggleAudioPlayer}
-        activeOpacity={0.8}
-      >
-        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={36} height={36} fill="#FFFFFF" />
-      </TouchableOpacity>
+      {/* Floating play button - only show when audio player is not visible */}
+      {!showAudioPlayer && (
+        <TouchableOpacity 
+          style={styles.floatingButton}
+          onPress={handleFloatingPlayPress}
+          activeOpacity={0.8}
+        >
+          <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={36} height={36} fill="#FFFFFF" />
+        </TouchableOpacity>
+      )}
       
       {/* Juzz Audio Player */}
       {showAudioPlayer && (
@@ -305,7 +312,7 @@ const JuzzDetailScreen: React.FC = () => {
             surahId={juzzId}
             surahName={juzzName}
             verses={SAMPLE_VERSES}
-            onClose={() => setShowAudioPlayer(false)}
+            onClose={handleAudioPlayerClose}
           />
         </View>
       )}
@@ -373,6 +380,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    justifyContent: 'flex-end',
     gap: scale(6),
   },
   bubbleContainer: {

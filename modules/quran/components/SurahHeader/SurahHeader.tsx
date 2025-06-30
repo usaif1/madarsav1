@@ -25,6 +25,7 @@ interface SurahHeaderProps {
   currentSurahId: number;
   onSurahChange?: (surahId: number, surahName: string) => void;
   onSettingsChange?: (settings: any) => void;
+  onDropdownPress?: () => void; // Optional custom dropdown handler
 }
 
 const SurahHeader: React.FC<SurahHeaderProps> = ({
@@ -34,6 +35,7 @@ const SurahHeader: React.FC<SurahHeaderProps> = ({
   currentSurahId,
   onSurahChange,
   onSettingsChange,
+  onDropdownPress,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, shadows } = useThemeStore();
@@ -43,6 +45,14 @@ const SurahHeader: React.FC<SurahHeaderProps> = ({
 
   const toggleChangeSurahModal = () => setChangeSurahModalVisible(!isChangeSurahModalVisible);
   const toggleSettingsModal = () => setSettingsModalVisible(!isSettingsModalVisible);
+
+  const handleDropdownPress = () => {
+    if (onDropdownPress) {
+      onDropdownPress();
+    } else {
+      toggleChangeSurahModal();
+    }
+  };
 
   const handleSurahChange = (surahId: number, surahName: string) => {
     setChangeSurahModalVisible(false);
@@ -81,7 +91,7 @@ const SurahHeader: React.FC<SurahHeaderProps> = ({
         </Pressable>
 
         {/* Center: Title with dropdown */}
-        <Pressable onPress={toggleChangeSurahModal} style={styles.titleContainer}>
+        <Pressable onPress={handleDropdownPress} style={styles.titleContainer}>
           <View style={styles.titleRow}>
             <Title3Bold color={textColor}>
               {surahName}
@@ -108,13 +118,15 @@ const SurahHeader: React.FC<SurahHeaderProps> = ({
         </Pressable>
       </View>
 
-      {/* Change Surah Modal */}
-      <ChangeSurahModal
-        visible={isChangeSurahModalVisible}
-        currentSurahId={currentSurahId}
-        onSelect={handleSurahChange}
-        onClose={toggleChangeSurahModal}
-      />
+      {/* Change Surah Modal - only show if no custom dropdown handler */}
+      {!onDropdownPress && (
+        <ChangeSurahModal
+          visible={isChangeSurahModalVisible}
+          currentSurahId={currentSurahId}
+          onSelect={handleSurahChange}
+          onClose={toggleChangeSurahModal}
+        />
+      )}
 
       {/* Quran Settings Modal */}
       <QuranSettingsModal

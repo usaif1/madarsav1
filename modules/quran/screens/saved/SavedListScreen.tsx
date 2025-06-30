@@ -2,6 +2,7 @@ import React from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import LinearGradient from 'react-native-linear-gradient';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
@@ -91,9 +92,14 @@ const SavedListScreen: React.FC = () => {
       onPress={() => handleCategoryPress(item)}
       activeOpacity={0.7}
     >
-      <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+      <LinearGradient
+        colors={['#FFFFFF', '#F2DEFF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.iconContainer}
+      >
         {item.icon}
-      </View>
+      </LinearGradient>
       <View style={styles.categoryDetails}>
         <View style={styles.categoryTitleRow}>
           <Body2Bold>{item.title}</Body2Bold>
