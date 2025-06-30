@@ -57,14 +57,14 @@ const SavedListScreen: React.FC = () => {
       icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
       color: '#E9E5FF',
     },
-    {
-      id: 'ayahs',
-      title: 'Ayyahs',
-      description: 'Saved verses for reflection',
-      count: getSavedAyahsCount(),
-      icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
-      color: '#EBF5FF',
-    },
+    // {
+    //   id: 'ayahs',
+    //   title: 'Ayyahs',
+    //   description: 'Saved verses for reflection',
+    //   count: getSavedAyahsCount(),
+    //   icon: <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={24} height={24} />,
+    //   color: '#EBF5FF',
+    // },
   ];
 
   // Handle category press
