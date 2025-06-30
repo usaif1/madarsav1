@@ -389,6 +389,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    alignSelf: 'flex-end',
     gap: scale(6),
   },
   bubbleContainer: {

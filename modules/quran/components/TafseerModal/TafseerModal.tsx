@@ -87,13 +87,21 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
             {/* Surah Selection Button */}
             <TouchableOpacity style={styles.surahButton}>
               <Body2Medium style={styles.surahButtonText}>{surahName}</Body2Medium>
-              <Body2Medium style={styles.arrowText}>▼</Body2Medium>
+              <CdnSvg 
+                  path={DUA_ASSETS.SURAH_DOWN_ARROW} 
+                  width={scale(20)} 
+                  height={scale(20)} 
+                />
             </TouchableOpacity>
 
             {/* Verse Selection Button */}
             <TouchableOpacity style={styles.verseButton}>
               <Body2Medium style={styles.verseButtonText}>Verse {ayahId}</Body2Medium>
-              <Body2Medium style={styles.arrowText}>▼</Body2Medium>
+              <CdnSvg 
+                  path={DUA_ASSETS.SURAH_DOWN_ARROW} 
+                  width={scale(20)} 
+                  height={scale(20)} 
+                />
             </TouchableOpacity>
           </View>
 
@@ -155,7 +163,11 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
 
               <TouchableOpacity style={styles.tafseerButton}>
                 <Body2Medium style={styles.tafseerButtonText}>Author name</Body2Medium>
-                <Body2Medium style={styles.arrowText}>▼</Body2Medium>
+                <CdnSvg 
+                  path={DUA_ASSETS.SURAH_DOWN_ARROW} 
+                  width={scale(20)} 
+                  height={scale(20)} 
+                />
               </TouchableOpacity>
             </View>
 
