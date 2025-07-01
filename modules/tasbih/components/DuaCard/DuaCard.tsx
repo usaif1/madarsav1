@@ -105,7 +105,7 @@ const DuaCard: React.FC<DuaCardProps> = ({ arabic, transliteration, translation,
         onPress={onChangeDua} 
         accessibilityLabel="Change dua"
       >
-        <CdnSvg path={DUA_ASSETS.HAMBURGER_ICON} width={18} height={18} style={{ marginRight: 4 }} />
+        <CdnSvg path={DUA_ASSETS.HAMBURGER_ICON_WHITE} width={18} height={18} style={{ marginRight: 4 }} />
         <Body1Title2Bold color="white">Change dua</Body1Title2Bold>
       </Pressable>
     </View>

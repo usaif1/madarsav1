@@ -29,10 +29,10 @@ const QuranHeader: React.FC = () => {
   };
 
   // Debug user profile image
-  const profileImageUri = user?.photoUrl || getCdnUrl(DUA_ASSETS.DEFAULT_PROFILE_IMAGE);
+  const profileImageUri = user?.photoUrl || 'https://cdn.madrasaapp.com/assets/home/blank-profile-picture.png';
   console.log('QuranHeader - User:', user);
   console.log('QuranHeader - Profile Image URI:', profileImageUri);
-  console.log('QuranHeader - Hamburger Icon Path:', DUA_ASSETS.HAMBURGER_ICON);
+  console.log('QuranHeader - Hamburger Icon Path:', DUA_ASSETS.HAMBURGER_ICON_WHITE);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top }]}>
@@ -63,10 +63,9 @@ const QuranHeader: React.FC = () => {
           {/* Menu Icon positioned on the bottom right of the image */}
           <View style={styles.menuIconContainer}>
             <CdnSvg 
-              path={DUA_ASSETS.HAMBURGER_ICON}
-              width={scale(12)}
-              height={scale(12)}
-              fill="#8A57DC"
+              path="/assets/home/nav-ptofile-menu.svg"
+              width={scale(10)}
+              height={scale(10)}
             />
           </View>
         </TouchableOpacity>

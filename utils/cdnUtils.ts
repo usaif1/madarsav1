@@ -28,7 +28,8 @@ export const DUA_ASSETS = {
   ARROW_LEFT: '/assets/arrow-left.svg',
   ARROW_LEFT_DUA_CARD: '/assets/profile/arrowleft.svg',
   ARROW_RIGHT_DUA_CARD: '/assets/profile/arrowright.svg',
-  HAMBURGER_ICON: '/assets/profile/hamburger.svg',
+  HAMBURGER_ICON_WHITE: '/assets/profile/hamburger.svg',
+  NAV_PROFILE_MENU: '/assets/home/nav-ptofile-menu.svg',
   QURAN_SURAH_INDEX_STAR: '/assets/quran/quran_surah_star.svg',
   
   // Tasbih assets

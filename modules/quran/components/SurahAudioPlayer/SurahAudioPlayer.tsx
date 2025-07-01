@@ -194,13 +194,12 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: scale(375), // Slightly wider to accommodate extra buttons
+    width: scale(360), // Slightly wider to accommodate extra buttons
     height: verticalScale(51),
     borderRadius: scale(45),
     paddingTop: verticalScale(6),
-    paddingRight: scale(12),
+    paddingHorizontal: scale(8),
     paddingBottom: verticalScale(6),
-    paddingLeft: scale(6),
     backgroundColor: '#16092A',
     flexDirection: 'row',
     alignItems: 'center',

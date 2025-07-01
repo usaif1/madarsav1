@@ -445,6 +445,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#525252',
     fontWeight: '600',
+    marginTop: scale(8),
   },
   translationSection: {
     gap: scale(4),
@@ -507,9 +508,9 @@ const styles = StyleSheet.create({
   },
   audioPlayerContainer: {
     position: 'absolute',
-    bottom: scale(80),
+    bottom: scale(40),
     left: '50%',
-    transform: [{ translateX: -scale(187.5) }],
+    transform: [{ translateX: -scale(180) }],
     alignItems: 'center',
   },
 });
