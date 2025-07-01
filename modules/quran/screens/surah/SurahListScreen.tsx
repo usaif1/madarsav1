@@ -12,6 +12,7 @@ import { DUA_ASSETS } from '@/utils/cdnUtils';
 import QuranSettingsModal from '../../components/QuranSettingsModal/QuranSettingsModal';
 import { useQuranNavigation } from '../../context/QuranNavigationContext';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
+import { useQuranStore } from '../../store/quranStore';
 
 // Define the type for a Surah item
 type SurahItem = {
@@ -45,6 +46,7 @@ const SurahListScreen: React.FC = () => {
   const [filteredSurahs, setFilteredSurahs] = useState(SURAHS);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const { setTabsVisibility } = useQuranNavigation();
+  const { saveSurah, removeSurah, isSurahSaved } = useQuranStore();
 
   // Show both top and bottom tabs when this screen is focused
   useFocusEffect(
@@ -100,6 +102,23 @@ const SurahListScreen: React.FC = () => {
     setSettingsModalVisible(false);
   };
 
+  // Handle bookmark toggle
+  const handleBookmarkToggle = (surah: SurahItem) => {
+    if (isSurahSaved(surah.id)) {
+      removeSurah(surah.id);
+    } else {
+      saveSurah({
+        id: surah.id,
+        name: surah.name,
+        arabicName: surah.arabicName,
+        translation: surah.translation,
+        type: surah.type,
+        ayahCount: surah.ayahCount,
+        progress: 0,
+      });
+    }
+  };
+
   // Render a surah item
   const renderSurahItem = ({ item, index }: { item: SurahItem; index: number }) => (
     <TouchableOpacity 
@@ -124,8 +143,15 @@ const SurahListScreen: React.FC = () => {
         <View style={styles.surahNameRow}>
           <Body2Bold>{item.name}</Body2Bold>
           <View style={{flexDirection:'row', alignItems:'center', gap:scale(10)}}>
-          <Body2Bold style={styles.arabicName}>{item.arabicName}</Body2Bold>
-          <CdnSvg path={DUA_ASSETS.QURAN_BOOKMARK_ICON} width={16} height={16} /></View>
+            <Body2Bold style={styles.arabicName}>{item.arabicName}</Body2Bold>
+            <TouchableOpacity onPress={() => handleBookmarkToggle(item)}>
+              <CdnSvg 
+                path={isSurahSaved(item.id) ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON} 
+                width={16} 
+                height={16} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.surahInfoRow}>
           <CaptionMedium style={styles.surahInfo}>

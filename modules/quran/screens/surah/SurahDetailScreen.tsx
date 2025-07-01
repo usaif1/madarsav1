@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SurahStackParamList } from '../../navigation/surah.navigator';
@@ -15,6 +15,7 @@ import SurahAudioPlayer from '../../components/SurahAudioPlayer/SurahAudioPlayer
 import TafseerModal from '../../components/TafseerModal/TafseerModal';
 import ChangeSurahModal from '../../components/ChangeSurahModal/ChangeSurahModal';
 import { useQuranNavigation } from '../../context/QuranNavigationContext';
+import { useQuranStore } from '../../store/quranStore';
 import FastImage from 'react-native-fast-image';
 
 // Define the type for a word
@@ -111,8 +112,21 @@ const SurahDetailScreen: React.FC = () => {
   const [showTafseerModal, setShowTafseerModal] = useState(false);
   const [showChangeSurahModal, setShowChangeSurahModal] = useState(false);
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
-  const { setTabsVisibility } = useQuranNavigation();
-  
+    const { setTabsVisibility } = useQuranNavigation();
+  const { saveAyah, removeAyah, isAyahSaved } = useQuranStore();
+
+  // Load saved ayahs on component mount
+  useEffect(() => {
+    const savedVerses = new Set<number>();
+    SAMPLE_VERSES.forEach(verse => {
+      const ayahId = `${surahId}-${verse.id}`;
+      if (isAyahSaved(ayahId)) {
+        savedVerses.add(verse.id);
+      }
+    });
+    setBookmarkedVerses(savedVerses);
+  }, [surahId, isAyahSaved]);
+
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
 
@@ -150,16 +164,31 @@ const SurahDetailScreen: React.FC = () => {
   };
 
   // Toggle bookmark
-  const toggleBookmark = (verseId: number) => {
-    setBookmarkedVerses(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(verseId)) {
-        newSet.delete(verseId);
-      } else {
-        newSet.add(verseId);
-      }
-      return newSet;
-    });
+  const toggleBookmark = (verse: Verse) => {
+    const ayahId = `${surahId}-${verse.id}`;
+    if (isAyahSaved(ayahId)) {
+      removeAyah(ayahId);
+      setBookmarkedVerses(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(verse.id);
+        return newSet;
+      });
+    } else {
+      saveAyah({
+        id: ayahId,
+        surahId: surahId,
+        surahName: surahName,
+        ayahNumber: verse.id,
+        arabic: verse.arabic,
+        translation: verse.translation,
+        transliteration: verse.transliteration,
+      });
+      setBookmarkedVerses(prev => {
+        const newSet = new Set(prev);
+        newSet.add(verse.id);
+        return newSet;
+      });
+    }
   };
 
   // Handle share
@@ -260,7 +289,7 @@ const SurahDetailScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
-              onPress={() => toggleBookmark(verse.id)}
+              onPress={() => toggleBookmark(verse)}
             >
               <CdnSvg 
                 path={bookmarkedVerses.has(verse.id) ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON}
@@ -331,13 +360,19 @@ const SurahDetailScreen: React.FC = () => {
       
       {/* Surah Audio Player */}
       {showAudioPlayer && (
-        <View style={styles.audioPlayerContainer}>
-          <SurahAudioPlayer
-            surahId={surahId}
-            surahName={surahName}
-            verses={SAMPLE_VERSES}
-            onClose={handleAudioPlayerClose}
+        <View style={styles.audioPlayerOverlay}>
+          <Pressable 
+            style={styles.audioPlayerBackdrop}
+            onPress={handleAudioPlayerClose}
           />
+          <View style={styles.audioPlayerWrapper}>
+            <SurahAudioPlayer
+              surahId={surahId}
+              surahName={surahName}
+              verses={SAMPLE_VERSES}
+              onClose={handleAudioPlayerClose}
+            />
+          </View>
         </View>
       )}
       
@@ -506,11 +541,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  audioPlayerOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'flex-end',
+  },
+  audioPlayerBackdrop: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  audioPlayerWrapper: {
+    paddingHorizontal: scale(16),
+    paddingBottom: scale(34),
+  },
   audioPlayerContainer: {
     position: 'absolute',
     bottom: scale(40),
     left: '50%',
-    transform: [{ translateX: -scale(180) }],
+    transform: [{ translateX: -scale(190) }],
     alignItems: 'center',
   },
 });

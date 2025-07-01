@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Dimensions } from 'react-native';
 import Modal from 'react-native-modal';
+
+// Get screen dimensions for calculations
+const { height: screenHeight } = Dimensions.get('window');
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body1Title2Bold, Body1Title2Medium } from '@/components/Typography/Typography';
@@ -14,12 +17,39 @@ interface ChangeJuzzModalProps {
   onJuzzChange: (juzzId: number, juzzName: string) => void;
 }
 
-// Sample data for Juzz
-const JUZZ_LIST = Array.from({ length: 30 }, (_, i) => ({
-  id: i + 1,
-  name: `Juzz ${i + 1}`,
-  ayahCount: Math.floor(Math.random() * 200) + 100, // Random ayah count for demo
-}));
+// Sample data for Juzz with proper names and ayah counts
+const JUZZ_LIST = [
+  { id: 1, name: 'Juzz 1', ayahCount: 148 },
+  { id: 2, name: 'Juzz 2', ayahCount: 111 },
+  { id: 3, name: 'Juzz 3', ayahCount: 126 },
+  { id: 4, name: 'Juzz 4', ayahCount: 132 },
+  { id: 5, name: 'Juzz 5', ayahCount: 124 },
+  { id: 6, name: 'Juzz 6', ayahCount: 110 },
+  { id: 7, name: 'Juzz 7', ayahCount: 149 },
+  { id: 8, name: 'Juzz 8', ayahCount: 142 },
+  { id: 9, name: 'Juzz 9', ayahCount: 159 },
+  { id: 10, name: 'Juzz 10', ayahCount: 129 },
+  { id: 11, name: 'Juzz 11', ayahCount: 123 },
+  { id: 12, name: 'Juzz 12', ayahCount: 111 },
+  { id: 13, name: 'Juzz 13', ayahCount: 108 },
+  { id: 14, name: 'Juzz 14', ayahCount: 107 },
+  { id: 15, name: 'Juzz 15', ayahCount: 128 },
+  { id: 16, name: 'Juzz 16', ayahCount: 118 },
+  { id: 17, name: 'Juzz 17', ayahCount: 117 },
+  { id: 18, name: 'Juzz 18', ayahCount: 101 },
+  { id: 19, name: 'Juzz 19', ayahCount: 113 },
+  { id: 20, name: 'Juzz 20', ayahCount: 114 },
+  { id: 21, name: 'Juzz 21', ayahCount: 112 },
+  { id: 22, name: 'Juzz 22', ayahCount: 118 },
+  { id: 23, name: 'Juzz 23', ayahCount: 134 },
+  { id: 24, name: 'Juzz 24', ayahCount: 137 },
+  { id: 25, name: 'Juzz 25', ayahCount: 99 },
+  { id: 26, name: 'Juzz 26', ayahCount: 159 },
+  { id: 27, name: 'Juzz 27', ayahCount: 170 },
+  { id: 28, name: 'Juzz 28', ayahCount: 137 },
+  { id: 29, name: 'Juzz 29', ayahCount: 180 },
+  { id: 30, name: 'Juzz 30', ayahCount: 564 },
+];
 
 // Sample ayah numbers (max ayahs for any given juzz)
 const AYAH_LIST = Array.from({ length: 300 }, (_, i) => i + 1);
@@ -224,8 +254,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: scale(20),
     borderTopRightRadius: scale(20),
-    paddingBottom: scale(34),
-    maxHeight: '70%',
+    paddingBottom: 0,
+    height: Math.min(verticalScale(600), screenHeight * 0.8),
+    maxHeight: '60%',
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
@@ -268,6 +300,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: 375,
     alignSelf: 'center',
+    overflow: 'hidden',
   },
   listColumn: {
     flex: 1,
@@ -296,7 +329,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     paddingHorizontal: scale(20),
-    paddingTop: scale(20),
+    paddingVertical: scale(16),
   },
   confirmButton: {
     backgroundColor: ColorPrimary.primary500,

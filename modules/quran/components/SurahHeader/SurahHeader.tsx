@@ -68,6 +68,22 @@ const SurahHeader: React.FC<SurahHeaderProps> = ({
     }
   };
 
+  const handleBackPress = () => {
+    // Close any open modals before navigating back
+    if (isChangeSurahModalVisible) {
+      setChangeSurahModalVisible(false);
+      return;
+    }
+    if (isSettingsModalVisible) {
+      setSettingsModalVisible(false);
+      return;
+    }
+    // If no modals are open, proceed with back navigation
+    if (onBack) {
+      onBack();
+    }
+  };
+
   // Use semantic color token for typography components
   const textColor = 'white';
 
@@ -84,7 +100,7 @@ const SurahHeader: React.FC<SurahHeaderProps> = ({
       <View style={styles.headerContent}>
         {/* Left: Back button */}
         <Pressable
-          onPress={onBack}
+          onPress={handleBackPress}
           hitSlop={10}
           style={styles.backButton}>
           <BackButton />

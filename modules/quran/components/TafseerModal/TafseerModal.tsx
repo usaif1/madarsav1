@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import Modal from 'react-native-modal';
+
+// Get screen dimensions for calculations
+const { height: screenHeight } = Dimensions.get('window');
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, Body1Title2Bold, Body1Title2Regular, H5Medium, CaptionMedium } from '@/components/Typography/Typography';
@@ -74,13 +78,15 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
   );
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
+    <Modal 
+      isVisible={visible} 
+      onBackdropPress={onClose}
+      backdropOpacity={0.5}
+      style={styles.modal}
+      useNativeDriverForBackdrop={true}
+      avoidKeyboard={true}
     >
-      <View style={styles.container}>
+      <View style={styles.sheet}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -181,9 +187,20 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  modal: {
+    margin: 0,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
     backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingTop: 8,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
+    height: Math.min(verticalScale(800), screenHeight * 0.9),
+    maxHeight: '90%',
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
@@ -243,7 +260,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: scale(16),
-    paddingBottom: scale(32),
+    paddingBottom: scale(20),
   },
   verseContent: {
     paddingVertical: scale(20),

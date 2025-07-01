@@ -1,69 +1,41 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, H5Bold, CaptionMedium } from '@/components/Typography/Typography';
-import BackButton from '@/components/BackButton/BackButton';
+import { Body2Medium, Body2Bold, CaptionMedium } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
+import CustomHeader from '@/components/Header/Header';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
-
-// Define the type for a saved verse
-type SavedVerse = {
-  id: number;
-  surahId: number;
-  surahName: string;
-  verseNumber: number;
-  arabic: string;
-  translation: string;
-  dateAdded: string;
-};
-
-// Sample data for saved verses
-const SAVED_VERSES: SavedVerse[] = [
-  {
-    id: 1,
-    surahId: 1,
-    surahName: 'Al-Fatiha',
-    verseNumber: 1,
-    arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-    translation: 'In the Name of Allah—the Most Compassionate, Most Merciful.',
-    dateAdded: '2025-05-20',
-  },
-  {
-    id: 2,
-    surahId: 2,
-    surahName: 'Al-Baqarah',
-    verseNumber: 255,
-    arabic: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ',
-    translation: 'Allah! There is no god ˹worthy of worship˺ except Him, the Ever-Living, the Sustainer of all.',
-    dateAdded: '2025-05-18',
-  },
-  {
-    id: 3,
-    surahId: 3,
-    surahName: 'Al-Imran',
-    verseNumber: 8,
-    arabic: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً ۚ إِنَّكَ أَنتَ الْوَهَّابُ',
-    translation: 'Our Lord! Do not let our hearts deviate after You have guided us. Grant us Your mercy. You are indeed the Giver of all bounties.',
-    dateAdded: '2025-05-15',
-  },
-];
+import { useQuranNavigation } from '../../context/QuranNavigationContext';
+import { useQuranStore, SavedAyah } from '../../store/quranStore';
 
 type SavedAyahsScreenNavigationProp = NativeStackNavigationProp<SavedStackParamList, 'savedAyahs'>;
 
 const SavedAyahsScreen: React.FC = () => {
   const navigation = useNavigation<SavedAyahsScreenNavigationProp>();
+  const { setTabsVisibility } = useQuranNavigation();
+  const { savedAyahs, removeAyah } = useQuranStore();
+
+  // Hide both tabs when this screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      setTabsVisibility(false, false); // Hide both top and bottom tabs
+      return () => {
+        // Tabs will be shown again when returning to list screen
+      };
+    }, [setTabsVisibility])
+  );
 
   // Handle verse press
-  const handleVersePress = (verse: SavedVerse) => {
+  const handleVersePress = (ayah: SavedAyah) => {
     navigation.navigate('savedAyahDetail', {
-      ayahId: verse.id,
-      surahName: verse.surahName,
-      verseNumber: verse.verseNumber
+      ayahId: parseInt(ayah.id.split('-')[1]), // Extract ayah number from id
+      surahName: ayah.surahName,
+      verseNumber: ayah.ayahNumber
     });
   };
 
@@ -73,13 +45,12 @@ const SavedAyahsScreen: React.FC = () => {
   };
 
   // Handle remove from saved
-  const handleRemoveFromSaved = (verseId: number) => {
-    // Remove from saved logic will be implemented later
-    console.log(`Remove verse ${verseId} from saved`);
+  const handleRemoveFromSaved = (ayahId: string) => {
+    removeAyah(ayahId);
   };
 
-  // Render a saved verse item
-  const renderSavedVerseItem = ({ item }: { item: SavedVerse }) => (
+  // Render a saved ayah item
+  const renderSavedAyahItem = ({ item }: { item: SavedAyah }) => (
     <TouchableOpacity 
       style={styles.verseItem}
       onPress={() => handleVersePress(item)}
@@ -88,13 +59,13 @@ const SavedAyahsScreen: React.FC = () => {
       <View style={styles.verseHeader}>
         <View style={styles.verseInfo}>
           <Body2Bold>{item.surahName}</Body2Bold>
-          <CaptionMedium style={styles.verseNumber}>Ayah {item.verseNumber}</CaptionMedium>
+          <CaptionMedium style={styles.verseNumber}>Ayah {item.ayahNumber}</CaptionMedium>
         </View>
         <TouchableOpacity 
           style={styles.bookmarkButton}
           onPress={() => handleRemoveFromSaved(item.id)}
         >
-          <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={20} height={20} fill= {ColorPrimary.primary500} />
+          <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={20} height={20} />
         </TouchableOpacity>
       </View>
       
@@ -106,14 +77,16 @@ const SavedAyahsScreen: React.FC = () => {
         <Body2Medium style={styles.translationText}>{item.translation}</Body2Medium>
       </View>
       
-      <CaptionMedium style={styles.dateAdded}>Saved on {item.dateAdded}</CaptionMedium>
+      <CaptionMedium style={styles.dateAdded}>
+        Saved on {new Date(item.savedAt).toLocaleDateString()}
+      </CaptionMedium>
     </TouchableOpacity>
   );
 
   // Render empty state
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <H5Bold style={styles.emptyTitle}>No saved verses yet</H5Bold>
+      <Body2Bold style={styles.emptyTitle}>No saved ayahs yet</Body2Bold>
       <Body2Medium style={styles.emptyText}>
         Bookmark your favorite verses to access them quickly here.
       </Body2Medium>
@@ -122,18 +95,17 @@ const SavedAyahsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <BackButton onPress={handleBackPress} />
-        <H5Bold style={styles.headerTitle}>Saved Ayahs</H5Bold>
-        <View style={styles.headerRight} />
-      </View>
+      {/* Custom Header */}
+      <CustomHeader
+        title="Saved Ayahs"
+        onBack={handleBackPress}
+      />
       
-      {/* Verse list */}
+      {/* Ayah list */}
       <FlatList
-        data={SAVED_VERSES}
-        renderItem={renderSavedVerseItem}
-        keyExtractor={(item) => item.id.toString()}
+        data={savedAyahs}
+        renderItem={renderSavedAyahItem}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}

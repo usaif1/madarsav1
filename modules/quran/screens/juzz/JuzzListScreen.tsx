@@ -12,6 +12,7 @@ import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import QuranSettingsModal from '../../components/QuranSettingsModal/QuranSettingsModal';
 import { useQuranNavigation } from '../../context/QuranNavigationContext';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
+import { useQuranStore } from '../../store/quranStore';
 
 // Define the type for a Juzz item
 type JuzzItem = {
@@ -51,6 +52,7 @@ const JuzzListScreen: React.FC = () => {
   const [filteredJuzz, setFilteredJuzz] = useState(JUZZ_LIST);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const { setTabsVisibility } = useQuranNavigation();
+  const { saveJuzz, removeJuzz, isJuzzSaved } = useQuranStore();
 
   // Show both top and bottom tabs when this screen is focused
   useFocusEffect(
@@ -107,9 +109,18 @@ const JuzzListScreen: React.FC = () => {
   };
 
   // Handle bookmark toggle
-  const handleBookmarkToggle = (juzzId: number) => {
-    // Toggle bookmark logic (will be implemented later)
-    console.log(`Toggle bookmark for juzz ${juzzId}`);
+  const handleBookmarkToggle = (juzz: JuzzItem) => {
+    if (isJuzzSaved(juzz.id)) {
+      removeJuzz(juzz.id);
+    } else {
+      saveJuzz({
+        id: juzz.id,
+        name: juzz.name,
+        surahRange: juzz.surahRange,
+        ayahCount: juzz.ayahCount,
+        progress: juzz.progress || 0,
+      });
+    }
   };
 
   // Render a juzz item
@@ -135,9 +146,9 @@ const JuzzListScreen: React.FC = () => {
       <View style={styles.juzzDetails}>
         <View style={styles.juzzNameRow}>
           <Body2Bold>{item.name}</Body2Bold>
-          <TouchableOpacity onPress={() => handleBookmarkToggle(item.id)}>
+          <TouchableOpacity onPress={() => handleBookmarkToggle(item)}>
             <CdnSvg 
-              path={item.bookmarked ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON}
+              path={isJuzzSaved(item.id) ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON}
               width={16} 
               height={16} 
             />
