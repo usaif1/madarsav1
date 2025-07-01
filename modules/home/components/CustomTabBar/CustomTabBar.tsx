@@ -56,7 +56,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
             target: route.key,
             canPreventDefault: true,
           });
-
+          
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name);
           }

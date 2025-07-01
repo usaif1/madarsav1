@@ -92,7 +92,7 @@ const ModuleGrid: React.FC = () => {
         break;
       case 'quran':
         // Redirect Quran to 99names for now
-        // navigation.navigate('names');
+        navigation.navigate('al-quran');
         break;
       case 'tasbih':
         navigation.navigate('tasbih');
