@@ -11,6 +11,7 @@ import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 import QuranSettingsModal from '../../components/QuranSettingsModal/QuranSettingsModal';
 import { useQuranNavigation } from '../../context/QuranNavigationContext';
+import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 
 // Define the type for a Surah item
 type SurahItem = {
@@ -175,6 +176,8 @@ const SurahListScreen: React.FC = () => {
         onApply={handleSettingsApply}
         onClose={handleSettingsClose}
       />
+
+      <HadithImageFooter />
     </View>
   );
 };
