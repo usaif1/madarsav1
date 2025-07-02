@@ -22,7 +22,7 @@ import SplashDuaCard from './SplashDuaCard';
 import {useThemeStore} from '@/globalStore';
 import DecliningDayGraphic from './DecliningDayGraphic';
 import PrayerBeads from './PrayerBeads';
-import { scale } from '@/theme/responsive';
+import {scale} from '@/theme/responsive';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -138,7 +138,11 @@ export default function App() {
               <PrayerTimesGraphic />
               <Divider height={10} />
               <View
-                style={{flexDirection: 'row', alignItems: 'flex-start', columnGap: 10}}>
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  columnGap: 10,
+                }}>
                 <DecliningDayGraphic />
                 <PrayerBeads />
               </View>
@@ -167,19 +171,25 @@ export default function App() {
           // Third slide - Deen and Duniya Graphics
           return (
             <View style={styles.graphicsContainer}>
-               <FastImage 
-                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/MaktabGraphic.png' }} 
-                style={styles.slideImage} 
+              <FastImage
+                source={{
+                  uri: 'https://cdn.madrasaapp.com/assets/splash/MaktabGraphic.png',
+                }}
+                style={styles.slideImage}
                 resizeMode={FastImage.resizeMode.contain}
               />
-              <FastImage 
-                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DeenGraphic2.png' }} 
-                style={[styles.slideImage, {marginTop: scale(-20)}]} 
+              <FastImage
+                source={{
+                  uri: 'https://cdn.madrasaapp.com/assets/splash/DeenGraphic2.png',
+                }}
+                style={[styles.slideImage, {marginTop: scale(-20)}]}
                 resizeMode={FastImage.resizeMode.contain}
               />
-              <FastImage 
-                source={{ uri: 'https://cdn.madrasaapp.com/assets/splash/DuniyaGraphic2.png' }} 
-                style={[styles.slideImage, {marginTop: scale(-20)}]} 
+              <FastImage
+                source={{
+                  uri: 'https://cdn.madrasaapp.com/assets/splash/DuniyaGraphic2.png',
+                }}
+                style={[styles.slideImage, {marginTop: scale(-20)}]}
                 resizeMode={FastImage.resizeMode.contain}
               />
             </View>
@@ -259,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   graphicsContainer: {
-    maxWidth:scale(321),
+    maxWidth: scale(321),
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
