@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   Dimensions,
   ActivityIndicator,
   TouchableOpacity,
+  AppState,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Regular, Body1Title2Bold, Body2Medium, Body2Bold, H4Bold, Body1Title2Medium } from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
@@ -119,6 +121,63 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
     fallbackSource,
     refreshLocation
   } = usePrayerTimes();
+  
+  // Refs to store current values for AppState listener
+  const lastRefreshDateRef = useRef<string>(new Date().toDateString());
+  const refreshLocationRef = useRef(refreshLocation);
+  
+  // Update ref when refreshLocation changes
+  useEffect(() => {
+    refreshLocationRef.current = refreshLocation;
+  }, [refreshLocation]);
+  
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('🔄 DayPrayerTime screen focused, checking if refresh needed...');
+      
+      const currentDate = new Date().toDateString();
+      const lastRefreshDate = lastRefreshDateRef.current;
+      
+      // Refresh if date has changed or if it's been more than 5 minutes since last focus
+      if (currentDate !== lastRefreshDate) {
+        console.log('📅 Date changed, refreshing prayer times...', { lastRefreshDate, currentDate });
+        refreshLocationRef.current();
+        lastRefreshDateRef.current = currentDate;
+      } else {
+        console.log('🔄 Same date, refreshing prayer times anyway for latest data...');
+        refreshLocationRef.current();
+      }
+    }, [])
+  );
+  
+  // Listen for app state changes (background/foreground)
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        console.log('📱 App came to foreground, checking if prayer times need refresh...');
+        
+        const currentDate = new Date().toDateString();
+        const lastRefreshDate = lastRefreshDateRef.current;
+        
+        // Always refresh when coming from background to ensure latest data
+        if (currentDate !== lastRefreshDate) {
+          console.log('📅 Date changed while app was in background, refreshing...', { lastRefreshDate, currentDate });
+          refreshLocationRef.current();
+          lastRefreshDateRef.current = currentDate;
+        } else {
+          console.log('🔄 Same date, but refreshing prayer times for latest data after background...');
+          refreshLocationRef.current();
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
   
   // The hook now provides fallback location information
   // If loading, show loading indicator

@@ -1,5 +1,5 @@
 // modules/home/hooks/usePrayerTimes.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCalendarPrayerTimes, formatPrayerTime } from '@/modules/calendar/hooks/useCalendarPrayerTimes';
 import { PrayerTiming } from '@/api/services/prayerTimesService';
 import { useLocationData } from '@/modules/location/hooks/useLocationData';
@@ -43,9 +43,36 @@ export const usePrayerTimes = () => {
   const [dayName, setDayName] = useState<string>('');
   const [prayerTimes, setPrayerTimes] = useState<Record<string, PrayerTimeData>>({});
   
+  // Track current date to detect date changes
+  const currentDateRef = useRef<string>(new Date().toDateString());
+  
   // Combine loading and error states
   const isLoading = locationLoading || prayerTimesLoading;
   const error = locationError || prayerTimesError;
+  
+  // Check for date changes and auto-refresh
+  useEffect(() => {
+    const checkDateChange = () => {
+      const newDate = new Date().toDateString();
+      const currentDate = currentDateRef.current;
+      
+      if (newDate !== currentDate) {
+        console.log('📅 Date changed in usePrayerTimes, refreshing...', { oldDate: currentDate, newDate });
+        currentDateRef.current = newDate;
+        
+        // Refresh prayer times for the new date
+        if (latitude && longitude) {
+          console.log('🔄 Auto-refreshing prayer times for new date...');
+          refetch();
+        }
+      }
+    };
+    
+    // Check for date change every minute
+    const dateCheckInterval = setInterval(checkDateChange, 60000);
+    
+    return () => clearInterval(dateCheckInterval);
+  }, [latitude, longitude, refetch]);
   
   // Update prayer times when location or data changes
   useEffect(() => {
