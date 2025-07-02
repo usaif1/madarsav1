@@ -337,7 +337,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
           activeOpacity={0.8}>
           <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
           <View style={styles.arrowContainer}>
-            <ChevronRight width={scale(8)} height={scale(8)} />
+            <ChevronRight width={scale(7)} height={scale(7)} />
           </View>
         </TouchableOpacity>
       </View>
@@ -441,7 +441,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
         activeOpacity={0.8}>
         <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
         <View style={styles.arrowContainer}>
-          <ChevronRight width={scale(8)} height={scale(8)} />
+          <ChevronRight width={scale(7)} height={scale(7)} />
         </View>
       </TouchableOpacity>
     </View>
