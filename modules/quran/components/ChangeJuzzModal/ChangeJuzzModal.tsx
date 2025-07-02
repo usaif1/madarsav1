@@ -6,7 +6,7 @@ import Modal from 'react-native-modal';
 const { height: screenHeight } = Dimensions.get('window');
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body1Title2Bold, Body1Title2Medium } from '@/components/Typography/Typography';
+import { Body1Title2Bold, Body1Title2Medium, Title3Bold } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 
@@ -51,8 +51,7 @@ const JUZZ_LIST = [
   { id: 30, name: 'Juzz 30', ayahCount: 564 },
 ];
 
-// Sample ayah numbers (max ayahs for any given juzz)
-const AYAH_LIST = Array.from({ length: 300 }, (_, i) => i + 1);
+const ITEM_HEIGHT = 40;
 
 const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
   visible,
@@ -61,43 +60,28 @@ const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
   onJuzzChange,
 }) => {
   const [selectedJuzzId, setSelectedJuzzId] = useState(currentJuzzId);
-  const [selectedAyahNumber, setSelectedAyahNumber] = useState(1);
   const juzzScrollRef = useRef<FlatList>(null);
-  const ayahScrollRef = useRef<FlatList>(null);
 
   useEffect(() => {
     if (visible) {
       setSelectedJuzzId(currentJuzzId);
-      setSelectedAyahNumber(1);
       
       // Scroll to current juzz position after a short delay
       setTimeout(() => {
-        const initialJuzzIndex = Math.max(0, currentJuzzId - 3);
-        juzzScrollRef.current?.scrollToIndex({
-          index: initialJuzzIndex,
-          animated: false,
-          viewPosition: 0.5,
-        });
+        const initialJuzzIndex = JUZZ_LIST.findIndex(j => j.id === currentJuzzId);
+        if (initialJuzzIndex >= 0) {
+          juzzScrollRef.current?.scrollToIndex({
+            index: initialJuzzIndex,
+            animated: false,
+            viewPosition: 0.5,
+          });
+        }
       }, 100);
     }
   }, [visible, currentJuzzId]);
 
   const handleJuzzSelect = (juzzId: number) => {
     setSelectedJuzzId(juzzId);
-    // Reset ayah to 1 when juzz changes
-    setSelectedAyahNumber(1);
-    
-    setTimeout(() => {
-      ayahScrollRef.current?.scrollToIndex({
-        index: 0,
-        animated: true,
-        viewPosition: 0.5,
-      });
-    }, 100);
-  };
-
-  const handleAyahSelect = (ayahNumber: number) => {
-    setSelectedAyahNumber(ayahNumber);
   };
 
   const handleConfirm = () => {
@@ -112,131 +96,92 @@ const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
     const isSelected = item.id === selectedJuzzId;
     return (
       <TouchableOpacity
-        style={[styles.listItem, isSelected && styles.selectedItem]}
+        style={[styles.juzzItem, isSelected && styles.selectedJuzzItem]}
         onPress={() => handleJuzzSelect(item.id)}
         activeOpacity={0.7}
       >
-        <Body1Title2Medium style={[
-          styles.itemText,
-          isSelected && styles.selectedItemText
-        ]}>
-          {item.name}
-        </Body1Title2Medium>
+        <View style={styles.juzzItemContent}>
+          {isSelected ? (
+            <Body1Title2Bold style={styles.selectedJuzzName}>
+              {item.name}
+            </Body1Title2Bold>
+          ) : (
+            <Body1Title2Medium style={styles.juzzName}>
+              {item.name}
+            </Body1Title2Medium>
+          )}
+          
+          {isSelected ? (
+            <Body1Title2Bold style={styles.selectedAyahCount}>
+              {item.ayahCount} Ayahs
+            </Body1Title2Bold>
+          ) : (
+            <Body1Title2Medium style={styles.ayahCount}>
+              {item.ayahCount} Ayahs
+            </Body1Title2Medium>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
-
-  const renderAyahItem = ({ item }: { item: number }) => {
-    const isSelected = item === selectedAyahNumber;
-    return (
-      <TouchableOpacity
-        style={[styles.listItem, isSelected && styles.selectedItem]}
-        onPress={() => handleAyahSelect(item)}
-        activeOpacity={0.7}
-      >
-        <Body1Title2Medium style={[
-          styles.itemText,
-          isSelected && styles.selectedItemText
-        ]}>
-          {item}
-        </Body1Title2Medium>
-      </TouchableOpacity>
-    );
-  };
-
-  const getItemLayout = (data: any, index: number) => ({
-    length: 40,
-    offset: 40 * index,
-    index,
-  });
 
   return (
-    <Modal
-      isVisible={visible}
+    <Modal 
+      isVisible={visible} 
       onBackdropPress={onClose}
-      onBackButtonPress={onClose}
-      style={styles.modal}
       backdropOpacity={0.5}
-      animationIn="slideInUp"
-      animationOut="slideOutDown"
-      useNativeDriverForBackdrop
-      hideModalContentWhileAnimating
+      style={styles.modal}
+      useNativeDriverForBackdrop={true}
+      avoidKeyboard={true}
     >
-      <View style={styles.modalContent}>
-        {/* Header */}
+      <View style={styles.sheet}>
+        {/* Fixed header */}
         <View style={styles.header}>
-          <Body1Title2Bold style={styles.headerTitle}>Change Juzz</Body1Title2Bold>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <CdnSvg 
-              path={DUA_ASSETS.CLOSE_ICON} 
-              width={24} 
-              height={24} 
-            />
+          <Title3Bold style={styles.title}>Change Juzz</Title3Bold>
+          <TouchableOpacity onPress={onClose} hitSlop={16}>
+            <CdnSvg path={DUA_ASSETS.CLOSE_ICON} width={scale(16)} height={scale(16)} />
           </TouchableOpacity>
         </View>
-
-        {/* Column Headers */}
-        <View style={styles.columnHeaders}>
-          <View style={styles.headerColumn}>
-            <Body1Title2Bold style={styles.columnHeaderText}>Juzz</Body1Title2Bold>
-          </View>
-          <View style={styles.headerColumn}>
-            <Body1Title2Bold style={styles.columnHeaderText}>Ayah</Body1Title2Bold>
-          </View>
+        
+        {/* Column headings */}
+        <View style={styles.columnHeadings}>
+          <Body1Title2Bold style={styles.columnTitle}>Juzz</Body1Title2Bold>
+          <Body1Title2Bold style={styles.columnTitle}>Ayahs</Body1Title2Bold>
         </View>
-
-        {/* Lists Container */}
-        <View style={styles.listsContainer}>
-          {/* Juzz List */}
-          <View style={styles.listColumn}>
-            <FlatList
-              ref={juzzScrollRef}
-              data={JUZZ_LIST}
-              renderItem={renderJuzzItem}
-              keyExtractor={(item) => item.id.toString()}
-              getItemLayout={getItemLayout}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
-              onScrollToIndexFailed={(info) => {
-                const wait = new Promise(resolve => setTimeout(resolve, 500));
-                wait.then(() => {
-                  juzzScrollRef.current?.scrollToIndex({ 
-                    index: info.index, 
-                    animated: true,
-                    viewPosition: 0.5,
-                  });
+        
+        {/* Juzz list */}
+        <View style={styles.listContainer}>
+          <FlatList
+            ref={juzzScrollRef}
+            data={JUZZ_LIST}
+            renderItem={renderJuzzItem}
+            keyExtractor={(item) => item.id.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            getItemLayout={(_, index) => ({
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * index,
+              index,
+            })}
+            onScrollToIndexFailed={(info) => {
+              setTimeout(() => {
+                juzzScrollRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: true,
+                  viewPosition: 0.5,
                 });
-              }}
-            />
-          </View>
-
-          {/* Ayah List */}
-          <View style={styles.listColumn}>
-            <FlatList
-              ref={ayahScrollRef}
-              data={AYAH_LIST}
-              renderItem={renderAyahItem}
-              keyExtractor={(item) => item.toString()}
-              getItemLayout={getItemLayout}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
-              onScrollToIndexFailed={(info) => {
-                const wait = new Promise(resolve => setTimeout(resolve, 500));
-                wait.then(() => {
-                  ayahScrollRef.current?.scrollToIndex({ 
-                    index: info.index, 
-                    animated: true,
-                    viewPosition: 0.5,
-                  });
-                });
-              }}
-            />
-          </View>
+              }, 100);
+            }}
+          />
         </View>
-
-        {/* Confirm Button */}
+        
+        {/* Confirm button */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
+          <TouchableOpacity 
+            style={styles.confirmButton}
+            onPress={handleConfirm}
+            activeOpacity={0.8}
+          >
             <Body1Title2Bold style={styles.confirmButtonText}>Confirm</Body1Title2Bold>
           </TouchableOpacity>
         </View>
@@ -247,101 +192,102 @@ const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
 
 const styles = StyleSheet.create({
   modal: {
-    justifyContent: 'flex-end',
     margin: 0,
+    justifyContent: 'flex-end',
   },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: scale(20),
-    borderTopRightRadius: scale(20),
+  sheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingTop: 8,
     paddingBottom: 0,
-    height: Math.min(verticalScale(600), screenHeight * 0.8),
-    maxHeight: '60%',
+    paddingHorizontal: 0,
+    height: Math.min(verticalScale(500), screenHeight * 0.7),
+    maxHeight: screenHeight * 0.4,
     overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: scale(20),
-    paddingVertical: scale(20),
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: '#F0F0F0',
   },
-  headerTitle: {
-    fontSize: 18,
-    lineHeight: 18 * 1.45,
-    color: '#0A0A0A',
+  title: {
+    fontSize: 20,
     fontWeight: '700',
+    color: '#222',
   },
-  closeButton: {
-    padding: scale(4),
-  },
-  columnHeaders: {
-    width: 375,
-    height: 40,
+  columnHeadings: {
     backgroundColor: '#F9F6FF',
     flexDirection: 'row',
-    alignSelf: 'center',
-  },
-  headerColumn: {
-    flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: scale(10),
+    paddingHorizontal: 18,
+    height: 40,
   },
-  columnHeaderText: {
-    fontSize: 14,
-    lineHeight: 14 * 1.45,
-    color: '#0A0A0A',
+  columnTitle: {
+    color: '#171717',
     fontWeight: '700',
+    fontSize: scale(14),
   },
-  listsContainer: {
-    flexDirection: 'row',
+  listContainer: {
     flex: 1,
-    width: 375,
-    alignSelf: 'center',
+    paddingHorizontal: 18,
     overflow: 'hidden',
   },
-  listColumn: {
-    flex: 1,
-  },
   listContent: {
-    paddingVertical: scale(10),
+    paddingVertical: scale(8),
   },
-  listItem: {
-    width: 339,
-    height: 40,
+  juzzItem: {
+    height: ITEM_HEIGHT,
     justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
+    paddingHorizontal: scale(10),
+    paddingVertical: scale(10),
+    borderRadius: 8,
   },
-  selectedItem: {
+  selectedJuzzItem: {
     backgroundColor: '#F5F5F5',
   },
-  itemText: {
-    fontSize: 14,
-    lineHeight: 14 * 1.45,
-    color: '#0A0A0A',
-    fontWeight: '500',
+  juzzItemContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  selectedItemText: {
-    fontWeight: '700',
+  juzzName: {
+    color: '#171717',
+    fontSize: scale(14),
+  },
+  selectedJuzzName: {
+    color: '#171717',
+    fontSize: scale(14),
+  },
+  ayahCount: {
+    color: '#737373',
+    fontSize: scale(14),
+  },
+  selectedAyahCount: {
+    color: '#737373',
+    fontSize: scale(14),
   },
   buttonContainer: {
-    paddingHorizontal: scale(20),
-    paddingVertical: scale(16),
+    padding: scale(16),
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   confirmButton: {
     backgroundColor: ColorPrimary.primary500,
-    borderRadius: scale(12),
-    paddingVertical: scale(16),
+    paddingVertical: scale(12),
+    borderRadius: scale(8),
     alignItems: 'center',
   },
   confirmButtonText: {
-    fontSize: 16,
-    lineHeight: 16 * 1.45,
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontSize: scale(14),
   },
 });
 
