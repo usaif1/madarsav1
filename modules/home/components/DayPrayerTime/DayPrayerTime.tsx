@@ -180,7 +180,7 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
 
   return (
     <View style={styles.container}>
-      {usingFallback && (
+      {/* {usingFallback && (
         <TouchableOpacity 
           style={styles.fallbackBanner}
           onPress={refreshLocation}
@@ -195,7 +195,7 @@ const DayPrayerTime: React.FC<DayPrayerTimeProps> = () => {
           </Text>
           <Text style={styles.fallbackSubtext}>Tap to use precise location</Text>
         </TouchableOpacity>
-      )}
+      )} */}
       <LinearGradient
         colors={gradientColors}
         start={gradientDirection.start}

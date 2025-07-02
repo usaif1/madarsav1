@@ -182,8 +182,8 @@ const DuaContent = () => {
           >
             <CdnSvg 
               path={item.bookmarked ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.BOOKMARK}
-              width={scale(24)}
-              height={scale(24)}
+              width={scale(16)}
+              height={scale(16)}
             />
           </TouchableOpacity>
           <TouchableOpacity 
@@ -192,8 +192,8 @@ const DuaContent = () => {
           >
             <CdnSvg 
               path={DUA_ASSETS.SHARE_ALT}
-              width={scale(24)}
-              height={scale(24)}
+              width={scale(16)}
+              height={scale(16)}
             />
           </TouchableOpacity>
         </View>
