@@ -1,53 +1,56 @@
 // modules/splash/screens/SplashScreen2.tsx
-import React, { useState, useEffect } from 'react';
-import { Pressable, StyleSheet, View, ActivityIndicator, Alert,StatusBar } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ParentStackParamList } from '@/navigator/ParentNavigator';
+import React, {useState, useEffect} from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  Alert,
+  StatusBar,
+} from 'react-native';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {ParentStackParamList} from '@/navigator/ParentNavigator';
 
 // assets
-import { CdnSvg } from '@/components/CdnSvg';
+import {CdnSvg} from '@/components/CdnSvg';
 
 // components
 import Carousel from '../components/Carousel';
-import { Body1Title2Bold, Body1Title2Medium, Divider } from '@/components';
+import {Body1Title2Bold, Body1Title2Medium, Divider} from '@/components';
 
 // store
-import { useThemeStore } from '@/globalStore';
-import { useGlobalStore } from '@/globalStore';
+import {useThemeStore} from '@/globalStore';
+import {useGlobalStore} from '@/globalStore';
 
 // auth
-import { useSocialAuth } from '@/modules/auth/hooks/useSocialAuth';
-import { scale } from '@/theme/responsive';
+import {useSocialAuth} from '@/modules/auth/hooks/useSocialAuth';
+import {scale} from '@/theme/responsive';
 
 const FacebookLogin = () => (
-  <CdnSvg 
-    path="/assets/splash/facebook_login.svg" 
-    width={24} 
-    height={24} 
-  />
+  <CdnSvg path="/assets/splash/facebook_login.svg" width={24} height={24} />
 );
 
 const GoogleLogin = () => (
-  <CdnSvg 
-    path="/assets/splash/google_login.svg" 
-    width={24} 
-    height={24} 
-  />
+  <CdnSvg path="/assets/splash/google_login.svg" width={24} height={24} />
 );
 
 const SplashPrimary: React.FC = () => {
-  const { colors } = useThemeStore();
-  const { setOnboarded } = useGlobalStore();
-  const { bottom } = useSafeAreaInsets();
-  const navigation = useNavigation<NativeStackNavigationProp<ParentStackParamList>>();
+  const {colors} = useThemeStore();
+  const {setOnboarded} = useGlobalStore();
+  const {bottom} = useSafeAreaInsets();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<ParentStackParamList>>();
 
   // Get social auth methods and loading state
-  const { isLoading, signInWithGoogle, loginWithFacebook, skipLogin } = useSocialAuth();
-  
+  const {isLoading, signInWithGoogle, loginWithFacebook, skipLogin} =
+    useSocialAuth();
+
   // Track which button is loading
-  const [loadingButton, setLoadingButton] = useState<'google' | 'facebook' | 'skip' | null>(null);
+  const [loadingButton, setLoadingButton] = useState<
+    'google' | 'facebook' | 'skip' | null
+  >(null);
 
   // Handle Google Sign-In
   const handleGoogleSignIn = async () => {
@@ -81,77 +84,78 @@ const SplashPrimary: React.FC = () => {
 
   return (
     <>
-    <StatusBar barStyle="dark-content" backgroundColor="black" />
-    
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: 27,
-          alignItems: 'center',
-        }}>
-        <View style={{ height: 33 }} />
-        <Carousel />
+      <StatusBar barStyle="dark-content" backgroundColor="black" />
 
-        <View style={{width: '100%', paddingBottom: scale(32), rowGap: scale(2)}}>
-          <Pressable
-            onPress={handleGoogleSignIn}
-            disabled={loadingButton !== null}
-            style={[
-              styles.btn,
-              { backgroundColor: colors.secondary.neutral950 },
-              loadingButton !== null && { opacity: 0.7 }
-            ]}>
-            {loadingButton === 'google' ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <>
-                <GoogleLogin />
-                <Body1Title2Bold color="white">
-                  Continue with Google
-                </Body1Title2Bold>
-              </>
-            )}
-          </Pressable>
-          <Divider height={8} />
-          <Pressable 
-            onPress={handleFacebookLogin}
-            disabled={loadingButton !== null}
-            style={[
-              styles.btn, 
-              { backgroundColor: '#F5F5F5' },
-              loadingButton !== null && { opacity: 0.7 }
-            ]}>
-            {loadingButton === 'facebook' ? (
-              <ActivityIndicator color="#000000" size="small" />
-            ) : (
-              <>
-                <FacebookLogin />
-                <Body1Title2Medium color="heading">
-                  Continue with Facebook
-                </Body1Title2Medium>
-              </>
-            )}
-          </Pressable>
-          <Divider height={16} />
-          <Pressable
-            onPress={handleSkipLogin}
-            disabled={loadingButton !== null}
-            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: loadingButton !== null ? 0.7 : 1
-            }}>
-            {loadingButton === 'skip' ? (
-              <ActivityIndicator color="#000000" size="small" />
-            ) : (
-              <Body1Title2Medium>Skip this Step</Body1Title2Medium>
-            )}
-          </Pressable>
+      <SafeAreaView style={{flex: 1, backgroundColor: '#FFFFFF'}}>
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 27,
+            alignItems: 'center',
+          }}>
+          <View style={{height: 33}} />
+          <Carousel />
+
+          <View
+            style={{width: '100%', paddingBottom: scale(22), rowGap: scale(2)}}>
+            <Pressable
+              onPress={handleGoogleSignIn}
+              disabled={loadingButton !== null}
+              style={[
+                styles.btn,
+                {backgroundColor: colors.secondary.neutral950},
+                loadingButton !== null && {opacity: 0.7},
+              ]}>
+              {loadingButton === 'google' ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <GoogleLogin />
+                  <Body1Title2Bold color="white">
+                    Continue with Google
+                  </Body1Title2Bold>
+                </>
+              )}
+            </Pressable>
+            <Divider height={8} />
+            <Pressable
+              onPress={handleFacebookLogin}
+              disabled={loadingButton !== null}
+              style={[
+                styles.btn,
+                {backgroundColor: '#F5F5F5'},
+                loadingButton !== null && {opacity: 0.7},
+              ]}>
+              {loadingButton === 'facebook' ? (
+                <ActivityIndicator color="#000000" size="small" />
+              ) : (
+                <>
+                  <FacebookLogin />
+                  <Body1Title2Medium color="heading">
+                    Continue with Facebook
+                  </Body1Title2Medium>
+                </>
+              )}
+            </Pressable>
+            <Divider height={16} />
+            <Pressable
+              onPress={handleSkipLogin}
+              disabled={loadingButton !== null}
+              hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: loadingButton !== null ? 0.7 : 1,
+              }}>
+              {loadingButton === 'skip' ? (
+                <ActivityIndicator color="#000000" size="small" />
+              ) : (
+                <Body1Title2Medium>Skip this Step</Body1Title2Medium>
+              )}
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
     </>
   );
 };
