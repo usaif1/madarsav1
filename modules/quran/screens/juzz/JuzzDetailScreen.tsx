@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   },
   verseCard: {
     backgroundColor: '#FFFFFF',
-    marginVertical: scale(8),
+    marginVertical: scale(4),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
