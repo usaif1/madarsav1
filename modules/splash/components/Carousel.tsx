@@ -196,7 +196,7 @@ export default function App() {
         <Body1Title2Regular color="sub-heading" style={{textAlign: 'center'}}>
           {item.content.description}
         </Body1Title2Regular>
-        <Divider height={24} />
+        <Divider height={22} />
         {renderSlideGraphics()}
       </View>
     );
