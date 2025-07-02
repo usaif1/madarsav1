@@ -1,54 +1,80 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator, Share, Image } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, {useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  Share,
+  Image,
+} from 'react-native';
+import {useRoute, useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 // Components
-import { Body1Title2Bold, Body1Title2Medium, Body1Title2Regular, Body2Medium, H5Medium, Divider } from '@/components';
-import { Header } from '@/components';
-import { scale, verticalScale } from '@/theme/responsive';
-import { CdnSvg } from '@/components/CdnSvg';
-import { ColorPrimary, ColorSecondary } from '@/theme/lightColors';
-import { useDuasBySubCategory, useAllDuas } from '@/modules/dua/hooks/useDuas';
-import { useDuaStore } from '../store/duaStore';
-import { useThemeStore } from '@/globalStore';
+import {
+  Body1Title2Bold,
+  Body1Title2Medium,
+  Body1Title2Regular,
+  Body2Medium,
+  H5Medium,
+  Divider,
+} from '@/components';
+import {Header} from '@/components';
+import {scale, verticalScale} from '@/theme/responsive';
+import {CdnSvg} from '@/components/CdnSvg';
+import {ColorPrimary, ColorSecondary} from '@/theme/lightColors';
+import {useDuasBySubCategory, useAllDuas} from '@/modules/dua/hooks/useDuas';
+import {useDuaStore} from '../store/duaStore';
+import {useThemeStore} from '@/globalStore';
 import FastImage from 'react-native-fast-image';
-import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
+import {DUA_ASSETS, getCdnUrl} from '@/utils/cdnUtils';
 
 // Fallback data for duas
 const fallbackDuas = [
   {
     id: '1',
-    arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلاً مُتَقَبَّلاً",
-    transliteration: "Allaahumma innee as'aluka ilman naafi'an, wa rizqan tayyiban, wa amalan mutaqabbalan",
-    translation: "O Allah, I ask You for knowledge that is of benefit, a good provision, and deeds that will be accepted.",
-    reference: "Ibn Majah • 925",
-    bookmarked: false
+    arabic:
+      'اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلاً مُتَقَبَّلاً',
+    transliteration:
+      "Allaahumma innee as'aluka ilman naafi'an, wa rizqan tayyiban, wa amalan mutaqabbalan",
+    translation:
+      'O Allah, I ask You for knowledge that is of benefit, a good provision, and deeds that will be accepted.',
+    reference: 'Ibn Majah • 925',
+    bookmarked: false,
   },
   {
     id: '2',
-    arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْجَنَّةَ وَأَعُوذُ بِكَ مِنَ النَّارِ",
-    transliteration: "Allaahummaa innee as'alukal-jannata wa a'oothu bika minan-naar",
-    translation: "O Allah, I ask You for Paradise and seek Your protection from the Fire.",
-    reference: "Abu Dawud • 792",
-    bookmarked: true
+    arabic:
+      'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْجَنَّةَ وَأَعُوذُ بِكَ مِنَ النَّارِ',
+    transliteration:
+      "Allaahummaa innee as'alukal-jannata wa a'oothu bika minan-naar",
+    translation:
+      'O Allah, I ask You for Paradise and seek Your protection from the Fire.',
+    reference: 'Abu Dawud • 792',
+    bookmarked: true,
   },
   {
     id: '3',
-    arabic: "سُبْحَانَ اللَّهِ ، وَالْحَمْدُ للَّهِ ، وَاللَّهُ أَكْبَرُ",
-    transliteration: "Subhaanallaahi, Walhamdu lillaahi, Wallaahu Akbar",
-    translation: "Glory is to Allah, praise is to Allah, Allah is the Most Great!",
-    reference: "Muslim 4 • 2091",
-    bookmarked: false
+    arabic: 'سُبْحَانَ اللَّهِ ، وَالْحَمْدُ للَّهِ ، وَاللَّهُ أَكْبَرُ',
+    transliteration: 'Subhaanallaahi, Walhamdu lillaahi, Wallaahu Akbar',
+    translation:
+      'Glory is to Allah, praise is to Allah, Allah is the Most Great!',
+    reference: 'Muslim 4 • 2091',
+    bookmarked: false,
   },
   {
     id: '4',
-    arabic: "لاَ إِلَهَ إِلاَّ أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ",
-    transliteration: "Laa ilaaha illaa Anta subhaanaka innee kuntu minadh-dhaalimeen",
-    translation: "There is none worthy of worship but You, glory is to You. Surely, I was among the wrongdoers.",
-    reference: "Surah Al-Anbiya • 87",
-    bookmarked: false
-  }
+    arabic:
+      'لاَ إِلَهَ إِلاَّ أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ',
+    transliteration:
+      'Laa ilaaha illaa Anta subhaanaka innee kuntu minadh-dhaalimeen',
+    translation:
+      'There is none worthy of worship but You, glory is to You. Surely, I was among the wrongdoers.',
+    reference: 'Surah Al-Anbiya • 87',
+    bookmarked: false,
+  },
 ];
 
 interface DuaProps {
@@ -69,51 +95,57 @@ interface DuaProps {
 const DuaContent = () => {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { title, id, category, subCategory, fromSaved } = route.params as { 
-    title: string; 
-    id: string; 
-    category: string; 
-    subCategory: string; 
-    fromSaved?: boolean 
+  const {title, id, category, subCategory, fromSaved} = route.params as {
+    title: string;
+    id: string;
+    category: string;
+    subCategory: string;
+    fromSaved?: boolean;
   };
-  const { colors } = useThemeStore();
-  
+  const {colors} = useThemeStore();
+
   // Access the dua store for bookmarking functionality
-  const { isDuaSaved, toggleSavedDua } = useDuaStore();
+  const {isDuaSaved, toggleSavedDua} = useDuaStore();
   // Fetch all duas to ensure the store is populated
-  const { isLoading: isLoadingAllDuas } = useAllDuas();
-  
+  const {isLoading: isLoadingAllDuas} = useAllDuas();
+
   // Get duas for this subcategory
   const duasInSubCategory = useDuasBySubCategory(category, subCategory);
-  
+
   // If no duas found, use fallback data
-  let duasData = duasInSubCategory.length > 0 ? duasInSubCategory : fallbackDuas;
-  
+  let duasData =
+    duasInSubCategory.length > 0 ? duasInSubCategory : fallbackDuas;
+
   // If coming from SavedDuas flow, filter to only show bookmarked duas
   if (fromSaved) {
-    duasData = duasData.filter(dua => isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : dua.id));
+    duasData = duasData.filter(dua =>
+      isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : dua.id),
+    );
   }
-  
+
   // Add bookmarked status to each dua
   const duas = duasData.map(dua => ({
     ...dua,
-    bookmarked: isDuaSaved(typeof dua.id === 'string' ? parseInt(dua.id) : Number(dua.id))
+    bookmarked: isDuaSaved(
+      typeof dua.id === 'string' ? parseInt(dua.id) : Number(dua.id),
+    ),
   })) as DuaProps[];
 
   const toggleBookmark = (id: string | number, duaCategory: string) => {
     const numericId = typeof id === 'string' ? parseInt(id) : id;
     toggleSavedDua(numericId, duaCategory, subCategory);
   };
-  
+
   // Share functionality
   const handleShare = async (dua: DuaProps) => {
     try {
       // App store links
       const appStoreLink = 'https://apps.apple.com/app/madarsaapp';
-      const playStoreLink = 'https://play.google.com/store/apps/details?id=com.madarsaapp';
-      
+      const playStoreLink =
+        'https://play.google.com/store/apps/details?id=com.madarsaapp';
+
       // Format the message with app links first, then dua content
-      const shareMessage = 
+      const shareMessage =
         `Download Madarsa App for more duas and Islamic content:\n` +
         `App Store: ${appStoreLink}\n` +
         `Play Store: ${playStoreLink}\n\n` +
@@ -123,7 +155,7 @@ const DuaContent = () => {
         `${dua.translation}\n\n` +
         `Reference: ${dua.reference}\n\n` +
         `Read more duas on the Madarsa App`;
-      
+
       await Share.share({
         message: shareMessage,
         title: 'Share Dua from Madarsa App',
@@ -133,15 +165,15 @@ const DuaContent = () => {
     }
   };
 
-  const renderDuaItem = ({ item, index }: { item: DuaProps; index: number }) => (
+  const renderDuaItem = ({item, index}: {item: DuaProps; index: number}) => (
     <View style={styles.duaContainer}>
       {/* Arabic text with bubble number */}
       <View style={styles.arabicRow}>
-        <H5Medium color='heading' style={styles.arabicText}>
+        <H5Medium color="heading" style={styles.arabicText}>
           {item.arabic}
         </H5Medium>
         <View style={styles.bubbleWrap}>
-          <CdnSvg 
+          <CdnSvg
             path={DUA_ASSETS.BUBBLE}
             width={scale(26)}
             height={scale(26)}
@@ -151,7 +183,7 @@ const DuaContent = () => {
           </Body1Title2Bold>
         </View>
       </View>
-      
+
       {/* Transliteration with purple line */}
       <View style={styles.transliterationContainer}>
         <View style={styles.purpleLine} />
@@ -159,38 +191,46 @@ const DuaContent = () => {
           {item.transliteration}
         </Body2Medium>
       </View>
-      
+
       {/* Translation section */}
       <View style={styles.translationContainer}>
-        <Body1Title2Bold style={styles.translationTitle}>Translation</Body1Title2Bold>
+        <Body1Title2Bold style={styles.translationTitle}>
+          Translation
+        </Body1Title2Bold>
         <Body1Title2Medium style={styles.translationText}>
           {item.translation}
         </Body1Title2Medium>
       </View>
-      
+
       {/* Footer with reference and actions */}
       <View style={styles.footerContainer}>
         <View style={styles.referenceContainer}>
-          <Body1Title2Regular style={styles.referenceText}>{item.reference}</Body1Title2Regular>
+          <Body1Title2Regular style={styles.referenceText}>
+            {item.reference}
+          </Body1Title2Regular>
           <View style={styles.dot}></View>
-          <Body1Title2Regular style={styles.referenceText}>{item.referenceVerse}</Body1Title2Regular>
+          <Body1Title2Regular style={styles.referenceText}>
+            {item.referenceVerse}
+          </Body1Title2Regular>
         </View>
         <View style={styles.actionsContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => toggleBookmark(item.id, item.category || category)}
-          >
-            <CdnSvg 
-              path={item.bookmarked ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.BOOKMARK}
+            onPress={() => toggleBookmark(item.id, item.category || category)}>
+            <CdnSvg
+              path={
+                item.bookmarked
+                  ? DUA_ASSETS.BOOKMARK_PRIMARY
+                  : DUA_ASSETS.BOOKMARK
+              }
               width={scale(16)}
               height={scale(16)}
             />
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => handleShare(item)}
-          >
-            <CdnSvg 
+            onPress={() => handleShare(item)}>
+            <CdnSvg
               path={DUA_ASSETS.SHARE_ALT}
               width={scale(16)}
               height={scale(16)}
@@ -218,16 +258,16 @@ const DuaContent = () => {
     <View style={styles.container}>
       <Header title={title} />
       <View style={styles.headerContainer}>
-            <FastImage 
-                source={{ uri: getCdnUrl(DUA_ASSETS.DUA_AYAH) }} 
-                style={styles.headerImage}
-                resizeMode={FastImage.resizeMode.contain}
-            />
-        </View>
+        <FastImage
+          source={{uri: getCdnUrl(DUA_ASSETS.DUA_AYAH)}}
+          style={styles.headerImage}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+      </View>
       <FlatList
         data={duas}
         renderItem={renderDuaItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         ItemSeparatorComponent={renderSeparator}
       />
@@ -240,8 +280,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFAFA',
   },
-  listContainer: {
-  },
+  listContainer: {},
   referenceContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
@@ -261,7 +300,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     rowGap: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
@@ -271,11 +310,11 @@ const styles = StyleSheet.create({
     height: verticalScale(121),
     alignItems: 'center',
     justifyContent: 'center',
-},
-headerImage: {
+  },
+  headerImage: {
     width: '100%',
     height: '100%',
-},
+  },
   arabicRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -296,11 +335,14 @@ headerImage: {
   },
   bubbleNum: {
     position: 'absolute',
-    top: '50%',
-    left: '55%',
-    transform: [{ translateX: -3 }, { translateY: -8 }],
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     color: ColorPrimary.primary600,
     fontSize: 12,
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
   transliterationContainer: {
     flexDirection: 'row',
@@ -319,8 +361,7 @@ headerImage: {
     lineHeight: 20,
     color: '#525252',
   },
-  translationContainer: {
-  },
+  translationContainer: {},
   translationTitle: {
     fontSize: 14,
     fontWeight: '600',
