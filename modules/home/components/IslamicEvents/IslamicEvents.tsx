@@ -10,26 +10,42 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import ChevronRight from '@/assets/chevron-right.svg';
+
 import {scale, verticalScale} from '@/theme/responsive';
-import {Body1Title2Bold, Body1Title2Medium, Body2Medium} from '@/components/Typography/Typography';
+import {
+  Body1Title2Bold,
+  Body1Title2Medium,
+  Body2Medium,
+} from '@/components/Typography/Typography';
 import LinearGradient from 'react-native-linear-gradient';
-import { CdnSvg } from '@/components/CdnSvg';
-import { ShadowColors } from '@/theme/shadows';
-import { useThemeStore } from '@/globalStore';
+import {CdnSvg} from '@/components/CdnSvg';
+import {ShadowColors} from '@/theme/shadows';
+import {useThemeStore} from '@/globalStore';
 
 // Import Hijri Calendar API hooks
-import { 
-  useNextHijriHoliday, 
-  useSpecialDays, 
-  useHijriHolidaysByYear, 
+import {
+  useNextHijriHoliday,
+  useSpecialDays,
+  useHijriHolidaysByYear,
   useCurrentIslamicYear,
-  useHijriCalendar
+  useHijriCalendar,
 } from '@/modules/calendar/hooks/useHijriCalendar';
 
 // Month data
 const MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 // Interface for Islamic events
@@ -53,110 +69,122 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
   initialMonth = MONTHS[new Date().getMonth()],
   onViewCalendarPress,
 }) => {
-  const { colors } = useThemeStore();
+  const {colors} = useThemeStore();
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
-  
+
   // Get current date
   const today = new Date();
-  const currentMonth = selectedMonth === MONTHS[today.getMonth()] ? today.getMonth() + 1 : MONTHS.indexOf(selectedMonth) + 1;
+  const currentMonth =
+    selectedMonth === MONTHS[today.getMonth()]
+      ? today.getMonth() + 1
+      : MONTHS.indexOf(selectedMonth) + 1;
   const currentYear = today.getFullYear();
-  
+
   // Get current Islamic year
-  const { data: currentIslamicYearData, isLoading: isYearLoading } = useCurrentIslamicYear();
-  
+  const {data: currentIslamicYearData, isLoading: isYearLoading} =
+    useCurrentIslamicYear();
+
   // Get next Hijri holiday
-  const { data: nextHolidayData, isLoading: isNextHolidayLoading } = useNextHijriHoliday();
-  
+  const {data: nextHolidayData, isLoading: isNextHolidayLoading} =
+    useNextHijriHoliday();
+
   // Get special days
-  const { data: specialDaysData, isLoading: isSpecialDaysLoading } = useSpecialDays();
-  
+  const {data: specialDaysData, isLoading: isSpecialDaysLoading} =
+    useSpecialDays();
+
   // Get current Islamic year for holidays
-  const currentIslamicYear = currentIslamicYearData?.data 
-    ? (typeof currentIslamicYearData.data === 'number' 
-      ? currentIslamicYearData.data 
-      : parseInt(String(currentIslamicYearData.data) || '1445'))
+  const currentIslamicYear = currentIslamicYearData?.data
+    ? typeof currentIslamicYearData.data === 'number'
+      ? currentIslamicYearData.data
+      : parseInt(String(currentIslamicYearData.data) || '1445')
     : 1445;
-  
+
   // Get Hijri holidays for the current Islamic year
-  const { data: holidaysData, isLoading: isHolidaysLoading } = useHijriHolidaysByYear(currentIslamicYear);
-  
+  const {data: holidaysData, isLoading: isHolidaysLoading} =
+    useHijriHolidaysByYear(currentIslamicYear);
+
   // Get the Hijri calendar for the current display month
-  const { data: hijriCalendarData, isLoading: isHijriCalendarLoading } = 
+  const {data: hijriCalendarData, isLoading: isHijriCalendarLoading} =
     useHijriCalendar(currentMonth, currentYear);
-  
+
   // Show loading state
-  const isLoading = 
-    isYearLoading || 
-    isNextHolidayLoading || 
-    isSpecialDaysLoading || 
+  const isLoading =
+    isYearLoading ||
+    isNextHolidayLoading ||
+    isSpecialDaysLoading ||
     isHolidaysLoading ||
     isHijriCalendarLoading;
-  
+
   // Process the events data from the API
   const events = useMemo(() => {
     if (isLoading || !hijriCalendarData) return [];
-    
+
     const eventsArray: IslamicEvent[] = [];
     const todayDate = new Date();
-    
+
     // Process the hijri calendar data to find events for the selected month
     if (hijriCalendarData?.data && Array.isArray(hijriCalendarData.data)) {
       // Process each day in the calendar
       hijriCalendarData.data.forEach((dayData: any, index) => {
         if (!dayData || !dayData.gregorian || !dayData.hijri) return;
-        
+
         // Get the gregorian date
         const gregorianDate = dayData.gregorian;
         const hijriDate = dayData.hijri;
-        
+
         // Check if this day has any holidays
         if (hijriDate.holidays && hijriDate.holidays.length > 0) {
           // Create a date object for this day
           const holidayDate = new Date(
             parseInt(gregorianDate.year),
             gregorianDate.month.number - 1,
-            parseInt(gregorianDate.day)
+            parseInt(gregorianDate.day),
           );
-          
+
           // Only include events for the selected month
           const eventMonth = MONTHS[holidayDate.getMonth()];
           if (eventMonth !== selectedMonth) return;
-          
+
           // Calculate days left
-          const daysLeft = Math.ceil((holidayDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
-          
+          const daysLeft = Math.ceil(
+            (holidayDate.getTime() - todayDate.getTime()) /
+              (1000 * 60 * 60 * 24),
+          );
+
           // Check if this is today or tomorrow
-          const isHolidayToday = 
+          const isHolidayToday =
             holidayDate.getDate() === todayDate.getDate() &&
             holidayDate.getMonth() === todayDate.getMonth() &&
             holidayDate.getFullYear() === todayDate.getFullYear();
-          
-          const isHolidayTomorrow = 
+
+          const isHolidayTomorrow =
             holidayDate.getDate() === todayDate.getDate() + 1 &&
             holidayDate.getMonth() === todayDate.getMonth() &&
             holidayDate.getFullYear() === todayDate.getFullYear();
-          
+
           // Add each holiday for this day
-          hijriDate.holidays.forEach((holiday: string, holidayIndex: number) => {
-            const eventItem: IslamicEvent = {
-              id: `calendar-holiday-${index}-${holidayIndex}`,
-              day: parseInt(gregorianDate.day),
-              month: eventMonth,
-              title: holiday,
-              islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
-              // Only include daysLeft if it's a future event
-              daysLeft: daysLeft > 0 ? daysLeft : undefined,
-              isToday: isHolidayToday,
-              isTomorrow: isHolidayTomorrow
-            };
-            
-            eventsArray.push(eventItem);
-          });
+          hijriDate.holidays.forEach(
+            (holiday: string, holidayIndex: number) => {
+              const eventItem: IslamicEvent = {
+                id: `calendar-holiday-${index}-${holidayIndex}`,
+                day: parseInt(gregorianDate.day),
+                month: eventMonth,
+                title: holiday,
+                islamicDate: `${hijriDate.day} ${hijriDate.month.en}, ${hijriDate.year} AH`,
+                // Only include daysLeft if it's a future event
+                daysLeft: daysLeft > 0 ? daysLeft : undefined,
+                isToday: isHolidayToday,
+                isTomorrow: isHolidayTomorrow,
+              };
+
+              eventsArray.push(eventItem);
+            },
+          );
         }
       });
     }
-    
+
     // Sort events by date
     eventsArray.sort((a, b) => {
       if (a.isToday && !b.isToday) return -1;
@@ -165,14 +193,10 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
       if (!a.isTomorrow && b.isTomorrow) return 1;
       return a.day - b.day;
     });
-    
+
     return eventsArray;
-  }, [
-    isLoading,
-    hijriCalendarData,
-    selectedMonth
-  ]);
-  
+  }, [isLoading, hijriCalendarData, selectedMonth]);
+
   const hasEvents = events.length > 0;
 
   const handleMonthSelect = (month: string) => {
@@ -186,28 +210,44 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
         <Text style={styles.dayText}>{item.day}</Text>
         <Text style={styles.monthText}>{item.month}</Text>
       </View>
-      
+
       <View style={styles.eventContent}>
         <View style={styles.titleContainer}>
-          <Body1Title2Medium style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">{item.title}</Body1Title2Medium>
-          {(item.daysLeft !== undefined) && (
+          <Body1Title2Medium
+            style={styles.eventTitle}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.title}
+          </Body1Title2Medium>
+          {item.daysLeft !== undefined && (
             <View style={styles.daysLeft}>
-              <View style={[styles.dotIcon, {
-                backgroundColor: item.isToday ? '#6E56CF' : // primary 500
-                  item.isTomorrow ? '#F79009' : // Primitives/Semantic-Warning/600
-                  '#F04438' // Primitives/Semantic-Error/600
-              }]} />
+              <View
+                style={[
+                  styles.dotIcon,
+                  {
+                    backgroundColor: item.isToday
+                      ? '#6E56CF' // primary 500
+                      : item.isTomorrow
+                      ? '#F79009' // Primitives/Semantic-Warning/600
+                      : '#F04438', // Primitives/Semantic-Error/600
+                  },
+                ]}
+              />
               {item.isToday ? (
                 <Body2Medium style={styles.todayText}>Today</Body2Medium>
               ) : item.isTomorrow ? (
                 <Body2Medium style={styles.tomorrowText}>Tomorrow</Body2Medium>
               ) : (
-                <Body2Medium style={styles.daysLeftText}>{item.daysLeft} days left</Body2Medium>
+                <Body2Medium style={styles.daysLeftText}>
+                  {item.daysLeft} days left
+                </Body2Medium>
               )}
             </View>
           )}
         </View>
-        <Body2Medium style={styles.islamicDateText}>{item.islamicDate}</Body2Medium>
+        <Body2Medium style={styles.islamicDateText}>
+          {item.islamicDate}
+        </Body2Medium>
       </View>
     </View>
   );
@@ -224,20 +264,29 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <Body1Title2Bold color="white">Islamic events</Body1Title2Bold>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.monthPill}
-              onPress={() => setShowMonthPicker(true)}
-            >
-              <Body1Title2Medium color="white">{selectedMonth}</Body1Title2Medium>
-              <CdnSvg path="/assets/home/down-arrow.svg" width={scale(12)} height={scale(12)} fill="#FFFFFF" />
+              onPress={() => setShowMonthPicker(true)}>
+              <Body1Title2Medium color="white">
+                {selectedMonth}
+              </Body1Title2Medium>
+              <CdnSvg
+                path="/assets/home/down-arrow.svg"
+                width={scale(12)}
+                height={scale(12)}
+                fill="#FFFFFF"
+              />
             </TouchableOpacity>
           </View>
-          
+
           {/* Content */}
           <View style={styles.contentContainer}>
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary.primary500} />
+              <ActivityIndicator
+                size="large"
+                color={colors.primary.primary500}
+              />
             </View>
           </View>
         </LinearGradient>
@@ -247,8 +296,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
           visible={showMonthPicker}
           transparent={true}
           animationType="fade"
-          onRequestClose={() => setShowMonthPicker(false)}
-        >
+          onRequestClose={() => setShowMonthPicker(false)}>
           <TouchableWithoutFeedback onPress={() => setShowMonthPicker(false)}>
             <View style={styles.modalOverlay}>
               <TouchableWithoutFeedback>
@@ -258,17 +306,18 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
                     keyExtractor={item => item}
                     numColumns={4}
                     renderItem={({item}) => (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={[
                           styles.monthItem,
-                          selectedMonth === item && styles.selectedMonthItem
+                          selectedMonth === item && styles.selectedMonthItem,
                         ]}
-                        onPress={() => handleMonthSelect(item)}
-                      >
-                        <Text style={[
-                          styles.monthItemText,
-                          selectedMonth === item && styles.selectedMonthItemText
-                        ]}>
+                        onPress={() => handleMonthSelect(item)}>
+                        <Text
+                          style={[
+                            styles.monthItemText,
+                            selectedMonth === item &&
+                              styles.selectedMonthItemText,
+                          ]}>
                           {item}
                         </Text>
                       </TouchableOpacity>
@@ -288,13 +337,13 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
           activeOpacity={0.8}>
           <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
           <View style={styles.arrowContainer}>
-            <Text style={styles.arrowText}>›</Text>
+            <ChevronRight width={scale(8)} height={scale(8)} />
           </View>
         </TouchableOpacity>
       </View>
     );
   }
-  
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -305,16 +354,20 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <Body1Title2Bold color="white">Islamic events</Body1Title2Bold>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.monthPill}
-            onPress={() => setShowMonthPicker(true)}
-          >
+            onPress={() => setShowMonthPicker(true)}>
             <Body1Title2Medium color="white">{selectedMonth}</Body1Title2Medium>
-            <CdnSvg path="/assets/home/down-arrow.svg" width={scale(12)} height={scale(12)} fill="#FFFFFF" />
+            <CdnSvg
+              path="/assets/home/down-arrow.svg"
+              width={scale(12)}
+              height={scale(12)}
+              fill="#FFFFFF"
+            />
           </TouchableOpacity>
         </View>
-        
+
         {/* Content */}
         <View style={styles.contentContainer}>
           {hasEvents ? (
@@ -329,7 +382,11 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
             />
           ) : (
             <View style={styles.noEventsContainer}>
-              <CdnSvg path="/assets/home/no-events.svg" width={scale(60)} height={scale(60)} />
+              <CdnSvg
+                path="/assets/home/no-events.svg"
+                width={scale(60)}
+                height={scale(60)}
+              />
               <Body1Title2Medium style={styles.noEventsText}>
                 Zero islamic events{'\n'}this month
               </Body1Title2Medium>
@@ -343,8 +400,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
         visible={showMonthPicker}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setShowMonthPicker(false)}
-      >
+        onRequestClose={() => setShowMonthPicker(false)}>
         <TouchableWithoutFeedback onPress={() => setShowMonthPicker(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
@@ -354,17 +410,18 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
                   keyExtractor={item => item}
                   numColumns={4}
                   renderItem={({item}) => (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={[
                         styles.monthItem,
-                        selectedMonth === item && styles.selectedMonthItem
+                        selectedMonth === item && styles.selectedMonthItem,
                       ]}
-                      onPress={() => handleMonthSelect(item)}
-                    >
-                      <Text style={[
-                        styles.monthItemText,
-                        selectedMonth === item && styles.selectedMonthItemText
-                      ]}>
+                      onPress={() => handleMonthSelect(item)}>
+                      <Text
+                        style={[
+                          styles.monthItemText,
+                          selectedMonth === item &&
+                            styles.selectedMonthItemText,
+                        ]}>
                         {item}
                       </Text>
                     </TouchableOpacity>
@@ -384,7 +441,7 @@ const IslamicEvents: React.FC<IslamicEventsProps> = ({
         activeOpacity={0.8}>
         <Body1Title2Bold color="primary">View Calendar</Body1Title2Bold>
         <View style={styles.arrowContainer}>
-          <Text style={styles.arrowText}>›</Text>
+          <ChevronRight width={scale(8)} height={scale(8)} />
         </View>
       </TouchableOpacity>
     </View>
