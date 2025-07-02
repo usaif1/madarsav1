@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium, Body2Bold, CaptionMedium } from '@/components/Typography/Typography';
+import { Body2Medium, Body2Bold, Body1Title2Bold, Body1Title2Regular, H5Medium } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 import CustomHeader from '@/components/Header/Header';
@@ -30,15 +30,6 @@ const SavedAyahsScreen: React.FC = () => {
     }, [setTabsVisibility])
   );
 
-  // Handle verse press
-  const handleVersePress = (ayah: SavedAyah) => {
-    navigation.navigate('savedAyahDetail', {
-      ayahId: parseInt(ayah.id.split('-')[1]), // Extract ayah number from id
-      surahName: ayah.surahName,
-      verseNumber: ayah.ayahNumber
-    });
-  };
-
   // Handle back button press
   const handleBackPress = () => {
     navigation.goBack();
@@ -49,38 +40,106 @@ const SavedAyahsScreen: React.FC = () => {
     removeAyah(ayahId);
   };
 
-  // Render a saved ayah item
+  // Handle share
+  const handleShare = (ayah: SavedAyah) => {
+    // Implement share functionality
+    console.log('Share ayah:', ayah.id);
+  };
+
+  // Handle play
+  const handlePlay = (ayah: SavedAyah) => {
+    // Implement play functionality
+    console.log('Play ayah:', ayah.id);
+  };
+
+  // Render word boxes from Arabic text (simplified version)
+  const renderSimplifiedArabic = (arabicText: string, ayahNumber: number) => (
+    <View style={styles.topRow}>
+      {/* Bubble index */}
+      <View style={styles.bubbleContainer}>
+        <CdnSvg 
+          path={DUA_ASSETS.BUBBLE}
+          width={scale(26)}
+          height={scale(26)}
+        />
+        <Body1Title2Bold style={styles.bubbleNumber}>
+          {ayahNumber}
+        </Body1Title2Bold>
+      </View>
+      
+      {/* Arabic text in a simplified layout */}
+      <View style={styles.arabicTextContainer}>
+        <H5Medium style={styles.arabicText}>{arabicText}</H5Medium>
+      </View>
+    </View>
+  );
+
+  // Render a saved ayah item with consistent UI
   const renderSavedAyahItem = ({ item }: { item: SavedAyah }) => (
-    <TouchableOpacity 
-      style={styles.verseItem}
-      onPress={() => handleVersePress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.verseHeader}>
-        <View style={styles.verseInfo}>
-          <Body2Bold>{item.surahName}</Body2Bold>
-          <CaptionMedium style={styles.verseNumber}>Ayah {item.ayahNumber}</CaptionMedium>
+    <View style={styles.verseCard}>
+      {/* Verse content */}
+      <View style={styles.verseContent}>
+        {/* Top row with bubble index and Arabic text */}
+        {renderSimplifiedArabic(item.arabic, item.ayahNumber)}
+        
+        {/* Translation section */}
+        <View style={styles.translationSection}>
+          <Body1Title2Bold style={styles.translationTitle}>Translation</Body1Title2Bold>
+          <Body2Medium style={styles.translationText}>{item.translation}</Body2Medium>
         </View>
-        <TouchableOpacity 
-          style={styles.bookmarkButton}
-          onPress={() => handleRemoveFromSaved(item.id)}
-        >
-          <CdnSvg path={DUA_ASSETS.BOOKMARK_PRIMARY} width={20} height={20} />
-        </TouchableOpacity>
+        
+        {/* Bottom row */}
+        <View style={styles.bottomRow}>
+          {/* Left: Surah name and verse number */}
+          <View style={styles.referenceContainer}>
+            <Body1Title2Regular style={styles.referenceText}>{item.surahName}</Body1Title2Regular>
+            <View style={styles.dot} />
+            <Body1Title2Regular style={styles.referenceText}>{item.ayahNumber}</Body1Title2Regular>
+          </View>
+          
+          {/* Right: Action icons */}
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => handleRemoveFromSaved(item.id)}
+            >
+              <CdnSvg 
+                path={DUA_ASSETS.BOOKMARK_PRIMARY}
+                width={scale(20)}
+                height={scale(20)}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => handleShare(item)}
+            >
+              <CdnSvg 
+                path={DUA_ASSETS.SHARE_ALT}
+                width={scale(20)}
+                height={scale(20)}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => handlePlay(item)}
+            >
+              <CdnSvg 
+                path={DUA_ASSETS.SURAH_PLAY_ICON}
+                width={scale(20)}
+                height={scale(20)}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* Date saved info */}
+        <View style={styles.dateSavedContainer}>
+          <Body2Medium style={styles.dateSavedText}>
+            Saved on {new Date(item.savedAt).toLocaleDateString()}
+          </Body2Medium>
+        </View>
       </View>
-      
-      <View style={styles.arabicContainer}>
-        <Body2Bold style={styles.arabicText}>{item.arabic}</Body2Bold>
-      </View>
-      
-      <View style={styles.translationContainer}>
-        <Body2Medium style={styles.translationText}>{item.translation}</Body2Medium>
-      </View>
-      
-      <CaptionMedium style={styles.dateAdded}>
-        Saved on {new Date(item.savedAt).toLocaleDateString()}
-      </CaptionMedium>
-    </TouchableOpacity>
+    </View>
   );
 
   // Render empty state
@@ -120,70 +179,108 @@ const SavedAyahsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerRight: {
-    width: scale(24), // Same width as back button for balanced layout
+    backgroundColor: '#FAFAFA',
   },
   listContainer: {
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(12),
+    paddingHorizontal: scale(0),
+    paddingVertical: scale(8),
     flexGrow: 1,
   },
-  verseItem: {
+  verseCard: {
+    backgroundColor: '#FFFFFF',
+    marginVertical: scale(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  verseContent: {
     padding: scale(16),
-    backgroundColor: '#FAFAFA',
-    borderRadius: scale(8),
-    marginBottom: scale(16),
+    paddingHorizontal: scale(24),
+    gap: scale(16),
   },
-  verseHeader: {
+  topRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: scale(12),
+    alignItems: 'flex-start',
+    gap: scale(6),
   },
-  verseInfo: {
+  bubbleContainer: {
+    position: 'relative',
+    width: scale(26),
+    height: scale(26),
+    marginTop: scale(8),
+  },
+  bubbleNumber: {
+    position: 'absolute',
+    top: '50%',
+    left: '55%',
+    transform: [{ translateX: -3 }, { translateY: -8 }],
+    color: ColorPrimary.primary600,
+    fontSize: 12,
+  },
+  arabicTextContainer: {
     flex: 1,
-  },
-  verseNumber: {
-    color: '#737373',
-    marginTop: scale(4),
-  },
-  bookmarkButton: {
-    padding: scale(4),
-  },
-  arabicContainer: {
-    marginBottom: scale(12),
+    alignItems: 'flex-end',
+    paddingTop: scale(8),
   },
   arabicText: {
-    fontSize: scale(18),
-    lineHeight: scale(32),
+    fontSize: 20,
+    lineHeight: 20 * 1.4,
     textAlign: 'right',
     color: '#171717',
   },
-  translationContainer: {
-    marginBottom: scale(12),
+  translationSection: {
+    gap: scale(4),
+  },
+  translationTitle: {
+    fontSize: 14,
+    lineHeight: 14 * 1.45,
+    color: '#0A0A0A',
+    fontWeight: '700',
   },
   translationText: {
+    fontSize: 12,
+    lineHeight: 12 * 1.4,
     color: '#404040',
-    lineHeight: scale(20),
   },
-  dateAdded: {
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  referenceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(6),
+  },
+  referenceText: {
+    fontSize: 14,
+    lineHeight: 14 * 1.45,
+    color: '#6B7280',
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    backgroundColor: '#D4D4D4',
+    borderRadius: 5,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  dateSavedContainer: {
+    alignItems: 'flex-end',
+    marginTop: scale(-8),
+  },
+  dateSavedText: {
+    fontSize: 12,
     color: '#737373',
-    textAlign: 'right',
+    fontStyle: 'italic',
   },
   emptyContainer: {
     flex: 1,

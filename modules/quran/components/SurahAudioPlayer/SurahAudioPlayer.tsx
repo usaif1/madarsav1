@@ -194,7 +194,7 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: scale(360), // Slightly wider to accommodate extra buttons
+    width: scale(350), // Reduced width to fit screen better
     height: verticalScale(51),
     borderRadius: scale(45),
     paddingTop: verticalScale(6),
@@ -203,7 +203,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#16092A',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(8), // Reduced gap to fit extra buttons
+    justifyContent: 'center', // Center content
+    gap: scale(8),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -212,6 +213,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    alignSelf: 'center', // Center the entire container
   },
   trackImageContainer: {
     width: scale(39),
@@ -236,7 +238,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   middleSection: {
-    width: scale(200), // Reduced width to make room for extra buttons
+    width: scale(180), // Adjusted width for better balance
     height: verticalScale(30),
     gap: scale(6),
     justifyContent: 'center',
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   trackName: {
-    fontSize: scale(14),
+    fontSize: scale(10),
     lineHeight: scale(16),
     color: '#FFFFFF',
     flex: 1,
@@ -287,7 +289,7 @@ const styles = StyleSheet.create({
   controlsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(8),
+    gap: scale(6), // Reduced gap for better fit
   },
   controlButton: {
     width: scale(24),
