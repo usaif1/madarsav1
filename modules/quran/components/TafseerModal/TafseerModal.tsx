@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
     paddingHorizontal: 0,
     height: Math.min(verticalScale(800), screenHeight * 0.9),
-    maxHeight: '90%',
+    maxHeight: screenHeight * 0.95,
     overflow: 'hidden',
   },
   header: {

@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
     paddingHorizontal: 0,
     height: Math.min(verticalScale(500), screenHeight * 0.7),
-    maxHeight: '40%',
+    maxHeight: screenHeight * 0.4,
     overflow: 'hidden',
   },
   header: {
