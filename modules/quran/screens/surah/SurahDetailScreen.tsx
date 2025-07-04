@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { GestureHandlerRootView, GestureDetector, Gesture, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
@@ -114,6 +115,17 @@ const SurahDetailScreen: React.FC = () => {
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
     const { setTabsVisibility } = useQuranNavigation();
   const { saveAyah, removeAyah, isAyahSaved } = useQuranStore();
+
+  // Create a gesture handler that prevents horizontal swipes
+  const gesture = Gesture.Pan()
+    .onBegin((event: PanGestureHandlerEventPayload) => {
+      // If the gesture is mostly horizontal, fail it
+      if (Math.abs(event.velocityX) > Math.abs(event.velocityY)) {
+        return false;
+      }
+      return true;
+    })
+    .enabled(true);
 
   // Load saved ayahs on component mount
   useEffect(() => {
@@ -328,72 +340,76 @@ const SurahDetailScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <SurahHeader
-        onBack={() => navigation.goBack()}
-        surahName={surahName}
-        surahInfo="Meccan • 7 Ayyahs"
-        currentSurahId={surahId}
-        onSurahChange={handleSurahChange}
-        onSettingsChange={handleSettingsChange}
-      />
-      
-      {/* Verses */}
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: showAudioPlayer ? scale(120) : scale(80) }
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        {SAMPLE_VERSES.map((verse, index) => renderVerse(verse, index))}
-      </ScrollView>
-      
-      {/* Floating play button - only show when audio player is not visible */}
-      {!showAudioPlayer && (
-        <TouchableOpacity 
-          style={styles.floatingButton}
-          onPress={handleFloatingPlayPress}
-          activeOpacity={0.8}
-        >
-          <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={20} height={20} fill="#FFFFFF" />
-        </TouchableOpacity>
-      )}
-      
-      {/* Surah Audio Player */}
-      {showAudioPlayer && (
-        <View style={styles.audioPlayerOverlay}>
-          <Pressable 
-            style={styles.audioPlayerBackdrop}
-            onPress={handleAudioPlayerClose}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureDetector gesture={gesture}>
+        <View style={styles.container}>
+          {/* Header */}
+          <SurahHeader
+            onBack={() => navigation.goBack()}
+            surahName={surahName}
+            surahInfo="Meccan • 7 Ayyahs"
+            currentSurahId={surahId}
+            onSurahChange={handleSurahChange}
+            onSettingsChange={handleSettingsChange}
           />
-          <View style={styles.audioPlayerWrapper}>
-            <SurahAudioPlayer
+          
+          {/* Verses */}
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: showAudioPlayer ? scale(120) : scale(80) }
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            {SAMPLE_VERSES.map((verse, index) => renderVerse(verse, index))}
+          </ScrollView>
+          
+          {/* Floating play button - only show when audio player is not visible */}
+          {!showAudioPlayer && (
+            <TouchableOpacity 
+              style={styles.floatingButton}
+              onPress={handleFloatingPlayPress}
+              activeOpacity={0.8}
+            >
+              <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={20} height={20} fill="#FFFFFF" />
+            </TouchableOpacity>
+          )}
+          
+          {/* Surah Audio Player */}
+          {showAudioPlayer && (
+            <View style={styles.audioPlayerOverlay}>
+              <Pressable 
+                style={styles.audioPlayerBackdrop}
+                onPress={handleAudioPlayerClose}
+              />
+              <View style={styles.audioPlayerWrapper}>
+                <SurahAudioPlayer
+                  surahId={surahId}
+                  surahName={surahName}
+                  verses={SAMPLE_VERSES}
+                  onClose={handleAudioPlayerClose}
+                />
+              </View>
+            </View>
+          )}
+          
+          {/* Tafseer Modal */}
+          {showTafseerModal && selectedVerse && (
+            <TafseerModal
+              visible={showTafseerModal}
+              onClose={() => setShowTafseerModal(false)}
               surahId={surahId}
               surahName={surahName}
-              verses={SAMPLE_VERSES}
-              onClose={handleAudioPlayerClose}
+              ayahId={selectedVerse.id}
+              verse={selectedVerse.arabic}
+              words={selectedVerse.words}
+              translation={selectedVerse.translation}
             />
-          </View>
+          )}
         </View>
-      )}
-      
-      {/* Tafseer Modal */}
-      {showTafseerModal && selectedVerse && (
-        <TafseerModal
-          visible={showTafseerModal}
-          onClose={() => setShowTafseerModal(false)}
-          surahId={surahId}
-          surahName={surahName}
-          ayahId={selectedVerse.id}
-          verse={selectedVerse.arabic}
-          words={selectedVerse.words}
-          translation={selectedVerse.translation}
-        />
-      )}
-    </View>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
 };
 

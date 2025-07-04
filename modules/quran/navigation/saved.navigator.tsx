@@ -36,9 +36,27 @@ const SavedNavigator = () => {
       <Stack.Screen name="savedSurahs" component={SavedSurahsScreen} />
       <Stack.Screen name="savedJuzz" component={SavedJuzzScreen} />
       <Stack.Screen name="savedAyahs" component={SavedAyahsScreen} />
-      <Stack.Screen name="savedSurahDetail" component={SurahDetailScreen} />
-      <Stack.Screen name="savedJuzzDetail" component={JuzzDetailScreen} />
-      <Stack.Screen name="savedAyahDetail" component={AyahDetailScreen} />
+      <Stack.Screen 
+        name="savedSurahDetail" 
+        component={SurahDetailScreen}
+        options={{
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen 
+        name="savedJuzzDetail" 
+        component={JuzzDetailScreen}
+        options={{
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen 
+        name="savedAyahDetail" 
+        component={AyahDetailScreen}
+        options={{
+          gestureEnabled: false
+        }}
+      />
     </Stack.Navigator>
   );
 };
