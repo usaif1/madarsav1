@@ -259,19 +259,23 @@ const JuzzDetailScreen: React.FC = () => {
             >
               <CdnSvg 
                 path={DUA_ASSETS.QURAN_OPEN_BOOK_ICON}
-                width={scale(20)}
-                height={scale(20)}
+                width={scale(16)}
+                height={scale(16)}
               />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={() => toggleBookmark(verse)}
             >
-              <CdnSvg 
-                path={bookmarkedVerses.has(verse.id) ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON}
+              {bookmarkedVerses.has(verse.id)  ? (<CdnSvg 
+                path={ DUA_ASSETS.BOOKMARK_PRIMARY}
                 width={scale(20)}
                 height={scale(20)}
-              />
+              />) : (<CdnSvg 
+              path={DUA_ASSETS.QURAN_BOOKMARK_ICON}
+              width={scale(16)}
+              height={scale(16)}
+            />)}
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
@@ -279,8 +283,8 @@ const JuzzDetailScreen: React.FC = () => {
             >
               <CdnSvg 
                 path={DUA_ASSETS.SHARE_ALT}
-                width={scale(20)}
-                height={scale(20)}
+                width={scale(16)}
+                height={scale(16)}
               />
             </TouchableOpacity>
             <TouchableOpacity 
@@ -289,8 +293,8 @@ const JuzzDetailScreen: React.FC = () => {
             >
               <CdnSvg 
                 path={DUA_ASSETS.SURAH_PLAY_ICON}
-                width={scale(20)}
-                height={scale(20)}
+                width={scale(16)}
+                height={scale(16)}
               />
             </TouchableOpacity>
           </View>
@@ -330,7 +334,7 @@ const JuzzDetailScreen: React.FC = () => {
           onPress={handleFloatingPlayPress}
           activeOpacity={0.8}
         >
-          <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={36} height={36} fill="#FFFFFF" />
+          <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={20} height={20} fill="#FFFFFF" />
         </TouchableOpacity>
       )}
       
@@ -390,7 +394,8 @@ const styles = StyleSheet.create({
   },
   graphicContainer: {
     width: '100%',
-    height: verticalScale(121),
+    height: verticalScale(80),
+    marginTop:-10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -400,7 +405,6 @@ const styles = StyleSheet.create({
   },
   verseCard: {
     backgroundColor: '#FFFFFF',
-    marginVertical: scale(4),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,

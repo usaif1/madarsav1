@@ -210,14 +210,10 @@ const NameAudioPlayer: React.FC<NameAudioPlayerProps> = ({
         ) : isPlaying ? (
           <View style={styles.iconContainer}>
             <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={12} height={12} />
-            {/* Fallback text if icon doesn't load */}
-            <Text style={styles.fallbackIcon}>⏸️</Text>
           </View>
         ) : (
           <View style={styles.iconContainer}>
             <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={12} height={12} />
-            {/* Fallback text if icon doesn't load */}
-            <Text style={styles.fallbackIcon}>▶️</Text>
           </View>
         )}
       </TouchableOpacity>

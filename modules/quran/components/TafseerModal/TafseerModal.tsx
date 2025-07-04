@@ -95,8 +95,8 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
               <Body2Medium style={styles.surahButtonText}>{surahName}</Body2Medium>
               <CdnSvg 
                   path={DUA_ASSETS.SURAH_DOWN_ARROW} 
-                  width={scale(20)} 
-                  height={scale(20)} 
+                  width={scale(10)} 
+                  height={scale(10)} 
                 />
             </TouchableOpacity>
 
@@ -105,8 +105,8 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
               <Body2Medium style={styles.verseButtonText}>Verse {ayahId}</Body2Medium>
               <CdnSvg 
                   path={DUA_ASSETS.SURAH_DOWN_ARROW} 
-                  width={scale(20)} 
-                  height={scale(20)} 
+                  width={scale(10)} 
+                  height={scale(10)} 
                 />
             </TouchableOpacity>
           </View>
@@ -162,8 +162,8 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
                 <Body2Medium style={styles.tafseerButtonText}>English</Body2Medium>
                 <CdnSvg 
                   path={DUA_ASSETS.SURAH_DOWN_ARROW} 
-                  width={scale(20)} 
-                  height={scale(20)} 
+                  width={scale(10)} 
+                  height={scale(10)} 
                 />
               </TouchableOpacity>
 
@@ -171,8 +171,8 @@ Muslims recite Bismillah before meals, before entering their homes, before begin
                 <Body2Medium style={styles.tafseerButtonText}>Author name</Body2Medium>
                 <CdnSvg 
                   path={DUA_ASSETS.SURAH_DOWN_ARROW} 
-                  width={scale(20)} 
-                  height={scale(20)} 
+                  width={scale(10)} 
+                  height={scale(10)} 
                 />
               </TouchableOpacity>
             </View>
@@ -198,9 +198,13 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 0,
     paddingHorizontal: 0,
+    width: '100%',
     height: Math.min(verticalScale(800), screenHeight * 0.9),
     maxHeight: screenHeight * 0.95,
-    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   header: {
     flexDirection: 'row',

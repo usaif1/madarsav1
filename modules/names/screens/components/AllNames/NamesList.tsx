@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator, PanResponder, Animated, Share as ReactNativeShare } from 'react-native';
+import { View, FlatList, StyleSheet, Pressable, Dimensions, Text, Alert, ActivityIndicator, PanResponder, Animated } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
 import { AudioPro } from 'react-native-audio-pro';
+import Share from 'react-native-share';
+import ViewShot from "react-native-view-shot";
 
 // Components & Data
 import { Body1Title2Bold, Body2Medium, Title3Bold } from '@/components';
@@ -129,6 +131,9 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   // Animation values for swipe
   const pan = useRef(new Animated.ValueXY()).current;
   const opacity = useRef(new Animated.Value(1)).current;
+  
+  // Reference for ViewShot
+  const viewShotRef = useRef<ViewShot | null>(null);
   
   // Separate audio hook for modal only
   const { 
@@ -329,11 +334,21 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
   const handleShare = async () => {
     const currentName = filteredNames[currentItemIndexRef.current];
     if (!currentName) return;
+    
     // App store links
     const appStoreLink = 'https://apps.apple.com/app/madarsaapp';
     const playStoreLink = 'https://play.google.com/store/apps/details?id=com.madarsaapp';
 
     try {
+      // First capture the screenshot
+      if (!viewShotRef.current) {
+        throw new Error('ViewShot ref not ready');
+      }
+      const uri = await viewShotRef.current.capture();
+      if (!uri) {
+        throw new Error('Failed to capture image');
+      }
+
       const message =
       `${currentName.englishName} - One of the 99 Names of Allah\n\n` +
       `Arabic: ${currentName.arabicName}\n` +
@@ -343,15 +358,25 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
       `App Store: ${appStoreLink}\n` +
       `Play Store: ${playStoreLink}`;
 
-      console.log('🔍 Sharing name image:', currentName.imageLink);
-      await ReactNativeShare.share({
+      console.log('🔍 Sharing captured image');
+      
+      // Share options for react-native-share
+      const shareOptions = {
         title: `${currentName.englishName} - 99 Names of Allah`,
         message: message,
-        url: currentName.imageLink, // Share the image URL along with the message
-      });
-    } catch (error) {
-      Alert.alert('Error', 'Could not share at this time.');
-      console.error('Share error:', error);
+        url: uri, // Use the captured image URI
+        type: 'image/jpeg',
+        failOnCancel: false,
+        showAppsToView: true,
+      };
+
+      await Share.open(shareOptions);
+    } catch (error: any) {
+      // Only show alert if it's not a user cancellation
+      if (error && error.message !== 'User did not share') {
+        Alert.alert('Error', 'Could not share at this time.');
+        console.error('Share error:', error);
+      }
     }
   };
 
@@ -428,22 +453,32 @@ const NamesList: React.FC<NamesListProps> = ({ searchQuery = '' }) => {
           </View>
 
           {/* Swipeable Image Container */}
-          <Animated.View 
-            style={[
-              stylesModal.imageContainer,
-              {
-                transform: [{ translateX: pan.x }],
-                opacity: opacity,
-              }
-            ]}
-            {...panResponder.panHandlers}>
-            {/* Use the image from API instead of local asset */}
-            <FastImage
-              source={{ uri: filteredNames[currentItemIndex]?.imageLink }}
-              style={stylesModal.image}
-              resizeMode={FastImage.resizeMode.cover}
-            />
-          </Animated.View>
+          <ViewShot
+            ref={viewShotRef}
+            options={{
+              format: "jpg",
+              quality: 0.9,
+              result: "data-uri"
+            }}
+          >
+            <Animated.View 
+              style={[
+                stylesModal.imageContainer,
+                {
+                  transform: [{ translateX: pan.x }],
+                  opacity: opacity,
+                  backgroundColor: 'white' // Ensure white background for the screenshot
+                }
+              ]}
+              {...panResponder.panHandlers}>
+              {/* Use the image from API instead of local asset */}
+              <FastImage
+                source={{ uri: filteredNames[currentItemIndex]?.imageLink }}
+                style={stylesModal.image}
+                resizeMode={FastImage.resizeMode.cover}
+              />
+            </Animated.View>
+          </ViewShot>
 
           {/* Action Buttons - Fixed position */}
           <View style={stylesModal.actions}>

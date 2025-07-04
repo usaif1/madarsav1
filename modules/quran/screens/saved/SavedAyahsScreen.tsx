@@ -105,8 +105,8 @@ const SavedAyahsScreen: React.FC = () => {
             >
               <CdnSvg 
                 path={DUA_ASSETS.BOOKMARK_PRIMARY}
-                width={scale(20)}
-                height={scale(20)}
+                width={scale(16)}
+                height={scale(16)}
               />
             </TouchableOpacity>
             <TouchableOpacity 
@@ -115,8 +115,8 @@ const SavedAyahsScreen: React.FC = () => {
             >
               <CdnSvg 
                 path={DUA_ASSETS.SHARE_ALT}
-                width={scale(20)}
-                height={scale(20)}
+                width={scale(16)}
+                height={scale(16)}
               />
             </TouchableOpacity>
             <TouchableOpacity 
@@ -125,8 +125,8 @@ const SavedAyahsScreen: React.FC = () => {
             >
               <CdnSvg 
                 path={DUA_ASSETS.SURAH_PLAY_ICON}
-                width={scale(20)}
-                height={scale(20)}
+                width={scale(16)}
+                height={scale(16)}
               />
             </TouchableOpacity>
           </View>
