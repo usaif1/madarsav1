@@ -147,11 +147,15 @@ const JuzzListScreen: React.FC = () => {
         <View style={styles.juzzNameRow}>
           <Body2Bold>{item.name}</Body2Bold>
           <TouchableOpacity onPress={() => handleBookmarkToggle(item)}>
-            <CdnSvg 
-              path={isJuzzSaved(item.id) ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON}
-              width={16} 
-              height={16} 
-            />
+            {isJuzzSaved(item.id) ? <CdnSvg 
+                path={DUA_ASSETS.BOOKMARK_PRIMARY} 
+                width={18} 
+                height={18} 
+              /> : <CdnSvg 
+                path={DUA_ASSETS.QURAN_BOOKMARK_ICON} 
+                width={16} 
+                height={16} 
+              />}
           </TouchableOpacity>
         </View>
         <View style={styles.juzzInfoRow}>

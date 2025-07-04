@@ -145,11 +145,15 @@ const SurahListScreen: React.FC = () => {
           <View style={{flexDirection:'row', alignItems:'center', gap:scale(10)}}>
             <Body2Bold style={styles.arabicName}>{item.arabicName}</Body2Bold>
             <TouchableOpacity onPress={() => handleBookmarkToggle(item)}>
-              <CdnSvg 
-                path={isSurahSaved(item.id) ? DUA_ASSETS.BOOKMARK_PRIMARY : DUA_ASSETS.QURAN_BOOKMARK_ICON} 
+             {isSurahSaved(item.id) ? <CdnSvg 
+                path={DUA_ASSETS.BOOKMARK_PRIMARY} 
+                width={18} 
+                height={18} 
+              /> : <CdnSvg 
+                path={DUA_ASSETS.QURAN_BOOKMARK_ICON} 
                 width={16} 
                 height={16} 
-              />
+              />}
             </TouchableOpacity>
           </View>
         </View>
