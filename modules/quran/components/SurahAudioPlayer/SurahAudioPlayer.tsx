@@ -153,8 +153,8 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
         >
           <CdnSvg 
             path={DUA_ASSETS.QURAN_PLAY_PREVIOUS_ICON} 
-            width={16} 
-            height={16} 
+            width={scale(12)} 
+            height={scale(12)} 
           />
         </TouchableOpacity>
 
@@ -183,8 +183,8 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
         >
           <CdnSvg 
             path={DUA_ASSETS.QURAN_PLAY_NEXT_ICON} 
-            width={16} 
-            height={16} 
+            width={scale(14)} 
+            height={scale(14)} 
           />
         </TouchableOpacity>
       </View>
