@@ -225,7 +225,6 @@ const styles = StyleSheet.create({
     paddingVertical: scale(12),
   },
   listContainer: {
-    paddingBottom: scale(20),
   },
   juzzItem: {
     flexDirection: 'row',
@@ -253,7 +252,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     color: ColorPrimary.primary500,
-    fontSize: scale(8),
+    fontSize: scale(6),
   },
   juzzDetails: {
     flex: 1,

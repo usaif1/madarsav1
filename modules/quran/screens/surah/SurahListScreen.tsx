@@ -224,7 +224,6 @@ const styles = StyleSheet.create({
   },
 
   listContainer: {
-    paddingBottom: scale(20),
   },
   surahItem: {
     flexDirection: 'row',
