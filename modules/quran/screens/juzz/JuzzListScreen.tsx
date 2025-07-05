@@ -225,15 +225,14 @@ const styles = StyleSheet.create({
     paddingVertical: scale(12),
   },
   listContainer: {
-    paddingHorizontal: scale(16),
     paddingBottom: scale(20),
   },
   juzzItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingVertical: scale(12),paddingHorizontal: scale(16),
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   numberContainer: {
     width: scale(30),
@@ -254,7 +253,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     color: ColorPrimary.primary500,
-    fontSize: scale(10),
+    fontSize: scale(8),
   },
   juzzDetails: {
     flex: 1,

@@ -142,18 +142,23 @@ const SavedListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
   listContainer: {
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(16),
     flexGrow: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: scale(16),
+    paddingHorizontal: scale(16),
     borderBottomWidth: 1,
+    backgroundColor: '#FFFFFF',
     borderBottomColor: '#F0F0F0',
   },
   iconContainer: {

@@ -224,15 +224,15 @@ const styles = StyleSheet.create({
   },
 
   listContainer: {
-    paddingHorizontal: scale(16),
     paddingBottom: scale(20),
   },
   surahItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingHorizontal: scale(16),
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   numberContainer: {
     width: scale(30),
