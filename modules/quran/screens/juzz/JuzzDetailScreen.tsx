@@ -334,7 +334,7 @@ const JuzzDetailScreen: React.FC = () => {
           onPress={handleFloatingPlayPress}
           activeOpacity={0.8}
         >
-          <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={20} height={20} fill="#FFFFFF" />
+                        <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={scale(14)} height={scale(16)} fill="#FFFFFF" />
         </TouchableOpacity>
       )}
       
@@ -517,10 +517,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: scale(20),
     right: scale(20),
-    width: scale(56),
-    height: scale(56),
+    width: scale(50),
+    height: scale(50),
     borderRadius: scale(28),
-    backgroundColor: ColorPrimary.primary500,
+    backgroundColor: '#8A57DC',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { GestureHandlerRootView, GestureDetector, Gesture, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { SurahStackParamList } from '../../navigation/surah.navigator';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
 import { scale, verticalScale } from '@/theme/responsive';
@@ -115,17 +114,6 @@ const SurahDetailScreen: React.FC = () => {
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
     const { setTabsVisibility } = useQuranNavigation();
   const { saveAyah, removeAyah, isAyahSaved } = useQuranStore();
-
-  // Create a gesture handler that prevents horizontal swipes
-  const gesture = Gesture.Pan()
-    .onBegin((event: PanGestureHandlerEventPayload) => {
-      // If the gesture is mostly horizontal, fail it
-      if (Math.abs(event.velocityX) > Math.abs(event.velocityY)) {
-        return false;
-      }
-      return true;
-    })
-    .enabled(true);
 
   // Load saved ayahs on component mount
   useEffect(() => {
@@ -340,8 +328,6 @@ const SurahDetailScreen: React.FC = () => {
   );
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <GestureDetector gesture={gesture}>
         <View style={styles.container}>
           {/* Header */}
           <SurahHeader
@@ -372,7 +358,7 @@ const SurahDetailScreen: React.FC = () => {
               onPress={handleFloatingPlayPress}
               activeOpacity={0.8}
             >
-              <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={20} height={20} fill="#FFFFFF" />
+              <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={scale(14)} height={scale(16)} fill="#FFFFFF" />
             </TouchableOpacity>
           )}
           
@@ -408,8 +394,6 @@ const SurahDetailScreen: React.FC = () => {
             />
           )}
         </View>
-      </GestureDetector>
-    </GestureHandlerRootView>
   );
 };
 
@@ -550,10 +534,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: scale(20),
     right: scale(20),
-    width: scale(56),
-    height: scale(56),
+    width: scale(50),
+    height: scale(50),
     borderRadius: scale(28),
-    backgroundColor: ColorPrimary.primary500,
+    backgroundColor: '#8A57DC',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,

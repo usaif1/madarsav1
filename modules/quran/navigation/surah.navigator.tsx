@@ -32,16 +32,12 @@ const SurahNavigator = () => {
       <Stack.Screen 
         name="surahDetail" 
         component={SurahDetailScreen}
-        options={{
-          gestureEnabled: false
-        }}
       />
       <Stack.Screen 
         name="tafseer" 
         component={TafseerScreen}
         options={{
           presentation: 'modal',
-          gestureEnabled: false
         }}
       />
       <Stack.Screen 

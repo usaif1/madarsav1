@@ -30,16 +30,12 @@ const JuzzNavigator = () => {
       <Stack.Screen 
         name="juzzDetail" 
         component={JuzzDetailScreen}
-        options={{
-          gestureEnabled: false
-        }}
       />
       <Stack.Screen 
         name="tafseer" 
         component={TafseerScreen}
         options={{
           presentation: 'modal',
-          gestureEnabled: false
         }}
       />
       <Stack.Screen 

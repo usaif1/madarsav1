@@ -39,23 +39,14 @@ const SavedNavigator = () => {
       <Stack.Screen 
         name="savedSurahDetail" 
         component={SurahDetailScreen}
-        options={{
-          gestureEnabled: false
-        }}
       />
       <Stack.Screen 
         name="savedJuzzDetail" 
         component={JuzzDetailScreen}
-        options={{
-          gestureEnabled: false
-        }}
       />
       <Stack.Screen 
         name="savedAyahDetail" 
         component={AyahDetailScreen}
-        options={{
-          gestureEnabled: false
-        }}
       />
     </Stack.Navigator>
   );
