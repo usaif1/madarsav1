@@ -97,8 +97,20 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     };
   }, []);
   
+  // Add local loading state to handle optimistic updates
+  const [localIsPlaying, setLocalIsPlaying] = useState(false);
+  
+  // Update local state when actual state changes
+  useEffect(() => {
+    setLocalIsPlaying(isPlaying);
+  }, [isPlaying]);
+  
   const handlePlayPause = async () => {
-    if (isPlaying) {
+    // Immediately update local state for optimistic UI
+    const newPlayingState = !localIsPlaying;
+    setLocalIsPlaying(newPlayingState);
+    
+    if (localIsPlaying) {
       pauseAudio();
     } else {
       // Find the current name data to get the audio URL
@@ -114,6 +126,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           }
         } else {
           console.error('Audio URL not found for name ID:', homeAudio.currentNameId);
+          // Revert local state if there's an error
+          setLocalIsPlaying(false);
         }
       }
     }
@@ -204,10 +218,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             </View>
 
             {/* Play/Pause Button - centered beside left section */}
-            <TouchableOpacity style={styles.playPauseButton} onPress={handlePlayPause} disabled={isLoading}>
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#000" />
-              ) : isPlaying ? (
+            <TouchableOpacity 
+              style={styles.playPauseButton} 
+              onPress={handlePlayPause} 
+              disabled={isLoading}>
+              {localIsPlaying ? (
                 <CdnSvg path={DUA_ASSETS.NAMES_PAUSE} width={14} height={14} />
               ) : (
                 <CdnSvg path={DUA_ASSETS.PLAY} width={14} height={14} />
