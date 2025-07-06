@@ -92,7 +92,7 @@ const QuranNavigator = () => {
         </Tab.Navigator>
       ) : (
         // Show a placeholder while the navigator is initializing
-        <View style={{ flex: 1, backgroundColor: '#411B7F' }} />
+        <View style={{ flex: 1, backgroundColor: 'white' }} />
       )}
     </View>
   );
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabBar: {
-    backgroundColor: ColorPrimary.primary800,
+    backgroundColor: '#411B7F',
     elevation: 0,
     shadowOpacity: 0,
     borderBottomWidth: 1,
