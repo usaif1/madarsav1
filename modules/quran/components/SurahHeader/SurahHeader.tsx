@@ -91,7 +91,7 @@ const SurahHeader: React.FC<SurahHeaderProps> = ({
     <View style={[
       styles.headerContainer, 
       { 
-        backgroundColor: colors.primary.primary800, 
+        backgroundColor: '#411B7F', 
         paddingTop: insets.top, 
         paddingBottom: verticalScale(12) 
       }, 
@@ -158,6 +158,7 @@ export default SurahHeader;
 
 const styles = StyleSheet.create({
   headerContainer: {
+    backgroundColor: '#411B7F',
     // backgroundColor and paddingTop/paddingBottom are set inline for theme and responsive
   },
   headerContent: {
