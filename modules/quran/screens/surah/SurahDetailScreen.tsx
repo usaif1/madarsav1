@@ -358,7 +358,7 @@ const SurahDetailScreen: React.FC = () => {
               onPress={handleFloatingPlayPress}
               activeOpacity={0.8}
             >
-              <CdnSvg path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={scale(14)} height={scale(16)} fill="#FFFFFF" />
+              <CdnSvg style={{marginLeft:scale(2)}} path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={scale(14)} height={scale(16)} fill="#FFFFFF" />
             </TouchableOpacity>
           )}
           
