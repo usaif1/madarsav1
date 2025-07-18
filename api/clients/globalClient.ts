@@ -41,7 +41,7 @@ const apiClients = {
 apiClients.SUNNAH.interceptors.request.use(
   (config) => {
     // Replace with your actual API key from Sunnah.com
-    config.headers['X-API-Key'] = 'SomeTemporaryKeyForDevelopment123';
+    config.headers['X-API-Key'] = '9iHLJib7vC2bF6lbU8op97hJJfkOu4tz9lVlhUmw';
     return config;
   },
   (error) => Promise.reject(error)

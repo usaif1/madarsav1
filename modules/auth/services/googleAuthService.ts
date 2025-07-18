@@ -7,12 +7,12 @@ import {
   import { useAuthStore, User } from '../store/authStore';
   import Config from 'react-native-config';
   import authService, { AuthenticateRequest } from './authService';
+  import tokenService from './tokenService';
   
   // Debug: Test environment variables at module load time
   console.log('🧪 MODULE LOAD TEST - GOOGLE_WEB_CLIENT_ID:', Config.GOOGLE_WEB_CLIENT_ID);
   console.log('🧪 MODULE LOAD TEST - Type:', typeof Config.GOOGLE_WEB_CLIENT_ID);
   console.log('🧪 MODULE LOAD TEST - Length:', Config.GOOGLE_WEB_CLIENT_ID?.length || 'N/A');
-  import tokenService from './tokenService';
   import { useErrorStore } from '@/modules/error/store/errorStore';
   import { ErrorType } from '@/api/utils/errorHandling';
   import { Platform } from 'react-native';
