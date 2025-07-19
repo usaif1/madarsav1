@@ -8,7 +8,7 @@ export interface SavedSurah {
   name: string;
   arabicName: string;
   translation: string;
-  type: 'meccan' | 'medinan';
+  type: 'makkah' | 'madinah';
   ayahCount: number;
   progress?: number;
   savedAt: string;
