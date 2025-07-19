@@ -9,7 +9,7 @@ import HadithListItem from '../components/HadithListItem';
 import { Body1Title2Bold } from '@/components/Typography/Typography';
 import HadithImageFooter from '../components/HadithImageFooter';
 import { CdnSvg } from '@/components/CdnSvg';
-import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
 import { useCollections } from '../hooks/useHadith';
 import { Collection } from '../services/hadithService';
 
@@ -207,22 +207,7 @@ const mapCollectionToHadith = (collection: Collection): Hadith => {
 
 // Helper function to get appropriate image for each collection
 const getHadithImage = (collectionName: string): string => {
-  // Map of collection names to image URLs
-  const imageMap: Record<string, string> = {
-    'bukhari': 'https://example.com/bukhari.jpg',
-    'muslim': 'https://example.com/muslim.jpg',
-    'abudawud': 'https://example.com/abudawud.jpg',
-    'tirmidhi': 'https://example.com/tirmidhi.jpg',
-    'nasai': 'https://example.com/nasai.jpg',
-    'ibnmajah': 'https://example.com/ibnmajah.jpg',
-    'malik': 'https://example.com/muwatta.jpg',
-    'ahmad': 'https://example.com/ahmad.jpg',
-    // Add more mappings as needed
-  };
-  
-  // Return the mapped image or a generic placeholder
-  return imageMap[collectionName.toLowerCase()] || 
-         `https://example.com/generic-hadith.jpg`;
+  return getCdnUrl(getHadithBookImagePath(collectionName));
 };
 
 const HadithsListScreen: React.FC = () => {

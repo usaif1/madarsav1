@@ -4,7 +4,7 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { Title3Bold, Body1Title2Medium, Body2Medium, CaptionBold, Body1Title2Bold } from '@/components/Typography/Typography';
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
-import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
 import { CdnSvg } from '@/components/CdnSvg';
 
 interface HadithInfoCardProps {
@@ -45,7 +45,9 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
         {/* Image */}
         <View style={styles.imageContainer}>
           <FastImage 
-            source={image ? { uri: image } : { uri: getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE) }}
+            source={image
+              ? { uri: image }
+              : { uri: getCdnUrl(getHadithBookImagePath(title)) }}
             style={styles.image}
             resizeMode={FastImage.resizeMode.cover}
           />

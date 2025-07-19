@@ -11,7 +11,7 @@ import HadithInfoCard from '../components/HadithInfoCard';
 import HadithImageFooter from '../components/HadithImageFooter';
 import SavedFooter from '../components/SavedFooter';
 import { useCollection, useBooks } from '../hooks/useHadith';
-import { DUA_ASSETS } from '@/utils/cdnUtils';
+import { getHadithBookImagePath } from '@/utils/cdnUtils';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
 
@@ -279,8 +279,8 @@ const HadithInfoScreen: React.FC = () => {
             years: extractYears(collectionIntro),
             // Extract highlight if available (contains roughly X hadith)
             highlight: extractHighlight(collectionIntro),
-            // Use default image
-            image: DUA_ASSETS.HADITH_BOOK_IMAGE,
+            // Use the new utility function to get the image path
+            image: getHadithBookImagePath(collectionTitle),
           };
           
           navigation.navigate('hadithDetail', {

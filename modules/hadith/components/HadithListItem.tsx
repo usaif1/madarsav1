@@ -4,8 +4,7 @@ import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, CaptionMedium, CaptionBold } from '@/components/Typography/Typography';
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
-import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
-import { CdnSvg } from '@/components/CdnSvg';
+import { getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
 
 export interface HadithListItemProps {
   hadith: {
@@ -27,7 +26,9 @@ const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
       {/* Left portion with image */}
       <View style={styles.leftPortion}>
         <FastImage 
-          source={hadith.image ? { uri: hadith.image } : { uri: getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE) }} 
+          source={hadith.image
+            ? { uri: hadith.image }
+            : { uri: getCdnUrl(getHadithBookImagePath(hadith.title)) }}
           style={styles.image} 
           resizeMode={FastImage.resizeMode.cover}
         />

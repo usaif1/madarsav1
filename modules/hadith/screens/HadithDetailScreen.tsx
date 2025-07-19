@@ -8,7 +8,7 @@ import FastImage from 'react-native-fast-image';
 import { Body2Medium, CaptionMedium, CaptionBold, H5Bold, Body1Title2Bold, Body1Title2Regular } from '@/components/Typography/Typography';
 import HadithImageFooter from '../components/HadithImageFooter';
 import LinearGradient from 'react-native-linear-gradient';
-import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
 import { CdnSvg } from '@/components/CdnSvg';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -60,7 +60,7 @@ const HadithDetailScreen: React.FC = () => {
           <View style={styles.bookCard}>
             {/* Book Image */}
             <FastImage 
-              source={{ uri: getCdnUrl(hadithDetail.image) }} 
+              source={{ uri: getCdnUrl(getHadithBookImagePath(hadithDetail.title)) }}
               style={styles.bookImage}
               resizeMode={FastImage.resizeMode.contain}
             />

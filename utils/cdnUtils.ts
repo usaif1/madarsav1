@@ -145,3 +145,39 @@ export const DUA_ASSETS = {
   QURAN_PLAY_NEXT_ICON: '/assets/quran/play_next.svg',
   SURAH_DOWN_ARROW: '/assets/quran/surah_down_arrow.svg',
 };
+
+/**
+ * Transforms a hadith book title into a valid image filename
+ * Examples:
+ * - "Sahih al-bukhari" becomes "sahihalbukhair"
+ * - "Sunan an-Nasa'i" becomes "sunanannasai"
+ * - "An-Nawawi's 40 Hadith" becomes "annawawis40hadith"
+ *
+ * @param bookTitle The title of the hadith book
+ * @returns The transformed filename without extension
+ */
+export const getHadithBookImageFilename = (bookTitle: string): string => {
+  if (!bookTitle) return '';
+  
+  // Convert to lowercase
+  let filename = bookTitle.toLowerCase();
+  
+  // Remove special characters (hyphens, apostrophes, etc.)
+  filename = filename.replace(/[-']/g, '');
+  
+  // Remove any other non-alphanumeric characters except numbers
+  filename = filename.replace(/[^a-z0-9]/g, '');
+  
+  return filename;
+};
+
+/**
+ * Gets the full CDN path for a hadith book image
+ *
+ * @param bookTitle The title of the hadith book
+ * @returns The full path to the book image on the CDN
+ */
+export const getHadithBookImagePath = (bookTitle: string): string => {
+  const filename = getHadithBookImageFilename(bookTitle);
+  return `/assets/hadith/${filename}.png`;
+};
