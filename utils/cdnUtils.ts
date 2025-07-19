@@ -96,20 +96,20 @@ export const DUA_ASSETS = {
   COMPASS_SHARE: '/assets/share-light.svg',
   
   // Hadith assets
-  HADITH_MORE_LEFT: '/assets/hadith/more-hadiths-left.svg',
-  HADITH_MORE_RIGHT: '/assets/hadith/more-hadiths-right.svg',
-  HADITH_CHAPTER_LEFT: '/assets/hadith/hadith-chapters-left-heading.svg',
-  HADITH_CHAPTER_RIGHT: '/assets/hadith/hadith-chapters-right-heading.svg',
-  HADITH_BISMILLAH: '/assets/hadith/bismillah-calligraphy.svg',
+  HADITH_MORE_LEFT: '/assets/hadith/MoreHadithsLeftIllustration.svg',
+  HADITH_MORE_RIGHT: '/assets/hadith/MoreHadithsRightIllustration.svg',
+  HADITH_CHAPTER_LEFT: '/assets/hadith/HadithChaptersLeftHeading.svg',
+  HADITH_CHAPTER_RIGHT: '/assets/hadith/HadithChaptersRightHeading.svg',
+  HADITH_BISMILLAH: '/assets/hadith/BismillahCalligraphy.svg',
   HADITH_BOOKMARK: '/assets/hadith/bookmark.svg',
   HADITH_SHARE: '/assets/hadith/share_alt.svg',
-  HADITH_DASHED_LINE: '/assets/hadith/dashed-line.svg',
+  HADITH_DASHED_LINE: '/assets/hadith/dashedLine.svg',
   HADITH_PLAY: '/assets/hadith/Play.svg',
   PLAY: '/assets/home/play.svg',
-  HADITH_TOP_ILLUSTRATION: '/assets/hadith/hadith-info-top-illustration.svg',
+  HADITH_TOP_ILLUSTRATION: '/assets/hadith/HadithInfoTopIllustration.svg',
+  HADITH_INFO_DECORATION: '/assets/hadith/HadithInfoDecoration.svg',
   HADITH_BOOK_IMAGE: '/assets/hadith/BookImageBig.png',
   CALENDAR_ICON: '/assets/profile/calendar_icon.svg',
-  NAV_PROFILE_MENU: '/assets/home/nav-profile-menu.svg',
   MARBLE_ICON: '/assets/splash/marble.png',
   
   // Tab Bar Icons

@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
     fontSize: scale(11.2),
     color: '#8A57DC',
     textAlign: 'center',
+    fontWeight: '900',
   },
   chapterTitleContainer: {
     flex: 1,
