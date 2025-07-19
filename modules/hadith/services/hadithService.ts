@@ -73,13 +73,14 @@ export interface PaginatedResponse<T> {
  */
 export const fetchCollections = async (limit = 50, page = 1): Promise<PaginatedResponse<Collection>> => {
   try {
-    console.log('Fetching hadith collections...');
+    console.log(`🔍 Fetching hadith collections with params: limit=${limit}, page=${page}`);
     const response = await apiClients.SUNNAH.get(`${API_ENDPOINTS.COLLECTIONS}`, {
       params: { limit, page }
     });
+    console.log(`✅ Hadith collections response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching hadith collections:', error);
+    console.error('❌ Error fetching hadith collections:', error);
     throw error;
   }
 };
@@ -90,11 +91,12 @@ export const fetchCollections = async (limit = 50, page = 1): Promise<PaginatedR
  */
 export const fetchCollectionByName = async (collectionName: string): Promise<Collection> => {
   try {
-    console.log(`Fetching collection: ${collectionName}`);
+    console.log(`🔍 Fetching collection: ${collectionName}`);
     const response = await apiClients.SUNNAH.get(`${API_ENDPOINTS.COLLECTIONS}/${collectionName}`);
+    console.log(`✅ Collection ${collectionName} response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching collection ${collectionName}:`, error);
+    console.error(`❌ Error fetching collection ${collectionName}:`, error);
     throw error;
   }
 };
@@ -111,14 +113,15 @@ export const fetchBooks = async (
   page = 1
 ): Promise<PaginatedResponse<Book>> => {
   try {
-    console.log(`Fetching books for collection: ${collectionName}`);
+    console.log(`🔍 Fetching books for collection: ${collectionName} with params: limit=${limit}, page=${page}`);
     const response = await apiClients.SUNNAH.get(
       `${API_ENDPOINTS.COLLECTIONS}/${collectionName}${API_ENDPOINTS.BOOKS}`,
       { params: { limit, page } }
     );
+    console.log(`✅ Books for collection ${collectionName} response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching books for collection ${collectionName}:`, error);
+    console.error(`❌ Error fetching books for collection ${collectionName}:`, error);
     throw error;
   }
 };
@@ -133,13 +136,14 @@ export const fetchBookByNumber = async (
   bookNumber: string
 ): Promise<Book> => {
   try {
-    console.log(`Fetching book ${bookNumber} from collection: ${collectionName}`);
+    console.log(`🔍 Fetching book ${bookNumber} from collection: ${collectionName}`);
     const response = await apiClients.SUNNAH.get(
       `${API_ENDPOINTS.COLLECTIONS}/${collectionName}${API_ENDPOINTS.BOOKS}/${bookNumber}`
     );
+    console.log(`✅ Book ${bookNumber} from collection ${collectionName} response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching book ${bookNumber} from collection ${collectionName}:`, error);
+    console.error(`❌ Error fetching book ${bookNumber} from collection ${collectionName}:`, error);
     throw error;
   }
 };
@@ -158,14 +162,15 @@ export const fetchChapters = async (
   page = 1
 ): Promise<PaginatedResponse<Chapter>> => {
   try {
-    console.log(`Fetching chapters for book ${bookNumber} from collection: ${collectionName}`);
+    console.log(`🔍 Fetching chapters for book ${bookNumber} from collection: ${collectionName} with params: limit=${limit}, page=${page}`);
     const response = await apiClients.SUNNAH.get(
       `${API_ENDPOINTS.COLLECTIONS}/${collectionName}${API_ENDPOINTS.BOOKS}/${bookNumber}${API_ENDPOINTS.CHAPTERS}`,
       { params: { limit, page } }
     );
+    console.log(`✅ Chapters for book ${bookNumber} from collection ${collectionName} response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching chapters for book ${bookNumber} from collection ${collectionName}:`, error);
+    console.error(`❌ Error fetching chapters for book ${bookNumber} from collection ${collectionName}:`, error);
     throw error;
   }
 };
@@ -182,13 +187,14 @@ export const fetchChapterById = async (
   chapterId: string
 ): Promise<Chapter> => {
   try {
-    console.log(`Fetching chapter ${chapterId} from book ${bookNumber} in collection: ${collectionName}`);
+    console.log(`🔍 Fetching chapter ${chapterId} from book ${bookNumber} in collection: ${collectionName}`);
     const response = await apiClients.SUNNAH.get(
       `${API_ENDPOINTS.COLLECTIONS}/${collectionName}${API_ENDPOINTS.BOOKS}/${bookNumber}${API_ENDPOINTS.CHAPTERS}/${chapterId}`
     );
+    console.log(`✅ Chapter ${chapterId} from book ${bookNumber} in collection ${collectionName} response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching chapter ${chapterId} from book ${bookNumber} in collection ${collectionName}:`, error);
+    console.error(`❌ Error fetching chapter ${chapterId} from book ${bookNumber} in collection ${collectionName}:`, error);
     throw error;
   }
 };
@@ -207,14 +213,15 @@ export const fetchHadithsFromBook = async (
   page = 1
 ): Promise<PaginatedResponse<Hadith>> => {
   try {
-    console.log(`Fetching hadiths from book ${bookNumber} in collection: ${collectionName}`);
+    console.log(`🔍 Fetching hadiths from book ${bookNumber} in collection: ${collectionName} with params: limit=${limit}, page=${page}`);
     const response = await apiClients.SUNNAH.get(
       `${API_ENDPOINTS.COLLECTIONS}/${collectionName}${API_ENDPOINTS.BOOKS}/${bookNumber}${API_ENDPOINTS.HADITHS}`,
       { params: { limit, page } }
     );
+    console.log(`✅ Hadiths from book ${bookNumber} in collection ${collectionName} response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching hadiths from book ${bookNumber} in collection ${collectionName}:`, error);
+    console.error(`❌ Error fetching hadiths from book ${bookNumber} in collection ${collectionName}:`, error);
     throw error;
   }
 };
@@ -229,13 +236,14 @@ export const fetchHadithByNumber = async (
   hadithNumber: string
 ): Promise<Hadith> => {
   try {
-    console.log(`Fetching hadith ${hadithNumber} from collection: ${collectionName}`);
+    console.log(`🔍 Fetching hadith ${hadithNumber} from collection: ${collectionName}`);
     const response = await apiClients.SUNNAH.get(
       `${API_ENDPOINTS.COLLECTIONS}/${collectionName}${API_ENDPOINTS.HADITHS}/${hadithNumber}`
     );
+    console.log(`✅ Hadith ${hadithNumber} from collection ${collectionName} response:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching hadith ${hadithNumber} from collection ${collectionName}:`, error);
+    console.error(`❌ Error fetching hadith ${hadithNumber} from collection ${collectionName}:`, error);
     throw error;
   }
 };
@@ -245,11 +253,12 @@ export const fetchHadithByNumber = async (
  */
 export const fetchRandomHadith = async (): Promise<Hadith> => {
   try {
-    console.log('Fetching a random hadith...');
+    console.log('🔍 Fetching a random hadith...');
     const response = await apiClients.SUNNAH.get(`${API_ENDPOINTS.HADITHS}/random`);
+    console.log('✅ Random hadith response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching random hadith:', error);
+    console.error('❌ Error fetching random hadith:', error);
     throw error;
   }
 };
