@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Bold, CaptionMedium, CaptionBold } from '@/components/Typography/Typography';
 import { useThemeStore } from '@/globalStore';
-import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
+import { DUA_ASSETS, getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
+import FastImage from 'react-native-fast-image';
 
 export interface HadithCardProps {
   hadith: {
@@ -17,16 +18,44 @@ export interface HadithCardProps {
 }
 
 const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
-  const {colors} = useThemeStore();
+  const { colors } = useThemeStore();
   const styles = getStyles(colors);
+  
+  /**
+   * Get the dynamic image URL based on hadith title
+   * Falls back to default hadith book image if the specific image fails to load
+   */
+  const getHadithImageUrl = (): string => {
+    // Generate dynamic path based on hadith title
+    const dynamicImagePath = getHadithBookImagePath(hadith.title);
+    return getCdnUrl(dynamicImagePath);
+  };
+
+  /**
+   * Fallback image URL for error cases
+   */
+  const getFallbackImageUrl = (): string => {
+    return getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE);
+  };
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Top portion with image */}
       <View style={styles.topPortion}>
-        <Image 
-          source={{ uri: getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE) }} 
+        <FastImage 
+          source={{ 
+            uri: getHadithImageUrl(),
+            priority: FastImage.priority.normal,
+          }}
           style={styles.image} 
-          resizeMode="contain"
+          resizeMode={FastImage.resizeMode.contain}
+          fallback={true} // Enable fallback for better error handling
+          onError={() => {
+            // Optional: Log error for debugging
+            console.log(`Failed to load image for hadith: ${hadith.title}`);
+          }}
+          // Fallback source in case the dynamic image fails
+          defaultSource={{ uri: getFallbackImageUrl() }}
         />
       </View>
       
