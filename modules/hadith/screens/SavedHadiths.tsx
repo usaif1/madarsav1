@@ -157,14 +157,14 @@ const SavedHadiths = () => {
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
        <View style={styles.headerContainer}>
-                <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-                  <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
+                <TouchableOpacity style={styles.headerButtonLeft} onPress={() => navigation.goBack()}>
+                  <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
                 </TouchableOpacity>
                 <View style={styles.headerCenter}>
                   <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
                 </View>
-                <TouchableOpacity style={styles.headerButton}>
-                  <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
+                <TouchableOpacity style={styles.headerButtonRight}>
+                  <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
                 </TouchableOpacity>
               </View>
       
@@ -308,11 +308,15 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
     flexDirection: 'row',
   },
-  headerButton: {
-    width: scale(76.15),
-    height: scale(40),
+  headerButtonLeft: {
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: scale(-32),
+  },
+  headerButtonRight: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: scale(-32),
   },
   headerCenter: {
     width: scale(200),

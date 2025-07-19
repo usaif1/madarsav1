@@ -187,17 +187,17 @@ const HadithChaptersScreen: React.FC = () => {
   if (isLoading && chapters.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-          </View>
-          <TouchableOpacity style={styles.headerButton}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
-          </TouchableOpacity>
-        </View>
+       <View style={styles.headerContainer}>
+                       <TouchableOpacity style={styles.headerButtonLeft} onPress={() => navigation.goBack()}>
+                         <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
+                       </TouchableOpacity>
+                       <View style={styles.headerCenter}>
+                         <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
+                       </View>
+                       <TouchableOpacity style={styles.headerButtonRight}>
+                         <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
+                       </TouchableOpacity>
+                     </View>
         <LoadingIndicator color={colors.primary.primary500} />
       </SafeAreaView>
     );
@@ -208,16 +208,16 @@ const HadithChaptersScreen: React.FC = () => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerContainer}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-          </View>
-          <TouchableOpacity style={styles.headerButton}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
-          </TouchableOpacity>
-        </View>
+                        <TouchableOpacity style={styles.headerButtonLeft} onPress={() => navigation.goBack()}>
+                          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
+                        </TouchableOpacity>
+                        <View style={styles.headerCenter}>
+                          <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
+                        </View>
+                        <TouchableOpacity style={styles.headerButtonRight}>
+                          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
+                        </TouchableOpacity>
+                      </View>
         <ErrorMessage 
           message={error.toString() || 'Failed to load hadith chapters'} 
           onRetry={refetch}
@@ -229,16 +229,16 @@ const HadithChaptersScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-        </View>
-        <TouchableOpacity style={styles.headerButton}>
-          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
-        </TouchableOpacity>
-      </View>
+                      <TouchableOpacity style={styles.headerButtonLeft} onPress={() => navigation.goBack()}>
+                        <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
+                      </TouchableOpacity>
+                      <View style={styles.headerCenter}>
+                        <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
+                      </View>
+                      <TouchableOpacity style={styles.headerButtonRight}>
+                        <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
+                      </TouchableOpacity>
+                    </View>
       
       {chapters && chapters.length > 0 ? (
         <FlatList
@@ -290,13 +290,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
     flexDirection: 'row',
-  },
-  headerButton: {
-    width: scale(76.15),
-    height: scale(152.07),
-    justifyContent: 'center',
-    alignItems: 'center',
-    opacity: 0.2,
   },
   headerCenter: {
     width: scale(200),
@@ -386,6 +379,16 @@ const styles = StyleSheet.create({
   loadingFooter: {
     paddingVertical: verticalScale(16),
     alignItems: 'center',
+  },
+  headerButtonLeft: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: scale(-32),
+  },
+  headerButtonRight: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: scale(-32),
   },
 });
 
