@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
-import FastImage from 'react-native-fast-image';
-import { Title3Bold, Body1Title2Medium, Body2Medium } from '@/components/Typography/Typography';
+import { Body1Title2Medium, Body2Medium } from '@/components/Typography/Typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SearchInput from '../components/SearchInput';
 import HadithInfoCard from '../components/HadithInfoCard';
@@ -46,6 +45,9 @@ interface Book {
     lang: string;
     name: string;
   }[];
+  hadithStartNumber: number;
+  hadithEndNumber: number;
+  numberOfHadith: number;
 }
 
 interface CollectionInfo {
@@ -67,19 +69,22 @@ const HadithInfoScreen: React.FC = () => {
   const route = useRoute();
   const { id } = route.params as { id: string };
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Fetch collection details and books
-  const { 
-    data: collectionData, 
-    isLoading: collectionLoading, 
-    error: collectionError 
+  const {
+    data: collectionData,
+    isLoading: collectionLoading,
+    error: collectionError
   } = useCollection(id);
   
-  const { 
-    data: booksData, 
-    isLoading: booksLoading, 
-    error: booksError 
-  } = useBooks(id);
+  const {
+    data: booksData,
+    isLoading: booksLoading,
+    error: booksError
+  } = useBooks(id, 10, page);
 
   // Log API responses for debugging
   useEffect(() => {
@@ -97,33 +102,42 @@ const HadithInfoScreen: React.FC = () => {
     }
   }, [collectionData, collectionError, booksData, booksError]);
 
+  // Update allBooks when new data is fetched
+  useEffect(() => {
+    if (booksData?.data) {
+      if (page === 1) {
+        setAllBooks(booksData.data);
+      } else {
+        setAllBooks(prev => [...prev, ...booksData.data]);
+      }
+      setIsLoadingMore(false);
+    }
+  }, [booksData, page]);
+
   // Prepare data for UI
   const collection: CollectionInfo = collectionData || {
     name: fallbackHadithInfo.id,
     hasBooks: true,
     hasChapters: true,
-    collection: [{ 
-      title: fallbackHadithInfo.title, 
-      shortIntro: fallbackHadithInfo.brief, 
-      lang: 'en' 
+    collection: [{
+      title: fallbackHadithInfo.title,
+      shortIntro: fallbackHadithInfo.brief,
+      lang: 'en'
     }],
     totalHadith: 0,
     totalAvailableHadith: 0
   };
-
-  const books: Book[] = booksData?.data || [];
   
   // Map books to chapters format for UI
-  const chapters = books.map(book => {
+  const chapters = allBooks.map(book => {
     // Get the book name from the first non-empty name in the book array
     const bookName = book.book.find(b => b.name && b.name.trim() !== '')?.name || `Book ${book.bookNumber}`;
     
-    // Since the API doesn't provide hadith range directly, we'll use book numbers as placeholders
-    // In a real implementation, you might want to fetch this data separately
+    // Use hadithStartNumber and hadithEndNumber for the range
     return {
       id: book.bookNumber,
       title: bookName,
-      range: `${book.bookNumber}` // Using book number as a placeholder for range
+      range: `${book.hadithStartNumber}-${book.hadithEndNumber}`
     };
   });
 
@@ -135,8 +149,39 @@ const HadithInfoScreen: React.FC = () => {
   // Get collection title and author
   const collectionTitle = collection.collection.find(c => c.lang === 'en')?.title || collection.name;
   const collectionIntro = collection.collection.find(c => c.lang === 'en')?.shortIntro || '';
-  const authorMatch = collectionIntro.match(/([^,]+)/);
-  const author = authorMatch ? authorMatch[0] : 'Unknown Author';
+  
+  // Extract first sentence for brief
+  const firstSentence = collectionIntro.split('.')[0] + (collectionIntro.includes('.') ? '.' : '');
+  
+  // Extract author using logic from HadithsListScreen
+  let author = 'Unknown Author';
+  const shortIntro = collectionIntro || '';
+  
+  // Try to extract author using "compiled by" pattern
+  const compiledByMatch = shortIntro.match(/compiled by ([^(]+)/i);
+  if (compiledByMatch && compiledByMatch[1]) {
+    author = compiledByMatch[1].trim();
+  } else {
+    // Fallback: Try to get first sentence
+    const firstSentenceMatch = shortIntro.split('.')[0] || '';
+    const words = firstSentenceMatch.split(/\s+/).filter(word => word.length > 0);
+    
+    if (words.length > 0) {
+      // Find the index of the first word with an opening bracket
+      const bracketIndex = words.findIndex(word => word.includes('('));
+      
+      if (bracketIndex > 0) {
+        // Use the first word and the word before the bracket
+        author = `${words[0]} ${words[bracketIndex - 1]}`;
+      } else if (words.length > 1 && words[0] === 'Imam') {
+        // If first word is just "Imam", include the second word too
+        author = `${words[0]} ${words[1]}`;
+      } else if (words.length > 0) {
+        // Just use the first word if no bracket found
+        author = words[0];
+      }
+    }
+  }
 
   // Show loading state
   if (collectionLoading || booksLoading) {
@@ -168,7 +213,7 @@ const HadithInfoScreen: React.FC = () => {
       <HadithInfoCard
         title={collectionTitle}
         author={author}
-        brief={collectionIntro || fallbackHadithInfo.brief}
+        brief={firstSentence || fallbackHadithInfo.brief}
         onPress={() => {
           navigation.navigate('hadithDetail', { id: collection.name, hadithTitle: collectionTitle });
         }}
@@ -178,33 +223,47 @@ const HadithInfoScreen: React.FC = () => {
       <FlatList
         data={filteredChapters}
         keyExtractor={item => item.id}
-        renderItem={({ item, index, separators }) => (
+        renderItem={({ item, index }) => (
           <TouchableOpacity
             style={[
-              styles.chapterRow, 
+              styles.chapterRow,
               index === filteredChapters.length - 1 && styles.lastChapterRow
             ]}
             onPress={() => {
-              navigation.navigate('hadithChapters', { 
-                hadithId: collection.name, 
-                chapterId: item.id, 
-                chapterTitle: item.title 
+              navigation.navigate('hadithChapters', {
+                hadithId: collection.name,
+                chapterId: item.id,
+                chapterTitle: item.title
               });
             }}
           >
             <View style={styles.indexContainer}>
               <Text style={styles.chapterIndex}>{index + 1}</Text>
             </View>
-            <View style={styles.chapterInfo}>
+            <View style={styles.chapterTitleContainer}>
               <Body1Title2Medium style={styles.chapterTitle}>{item.title}</Body1Title2Medium>
+            </View>
+            <View style={styles.chapterRangeContainer}>
               <Body2Medium color="sub-heading" style={styles.chapterRange}>{item.range}</Body2Medium>
             </View>
           </TouchableOpacity>
         )}
         style={styles.chapterList}
         contentContainerStyle={styles.listContentContainer}
+        onEndReached={() => {
+          if (booksData?.next && !isLoadingMore) {
+            setIsLoadingMore(true);
+            setPage(prev => prev + 1);
+          }
+        }}
+        onEndReachedThreshold={0.5}
         ListFooterComponent={
           <>
+            {isLoadingMore && (
+              <View style={styles.loadingFooter}>
+                <ActivityIndicator size="small" color="#8A57DC" />
+              </View>
+            )}
             <HadithImageFooter />
             <SavedFooter />
           </>
@@ -236,7 +295,6 @@ const styles = StyleSheet.create({
   },
   chapterRow: {
     flexDirection: 'row',
-    width: scale(300),
     alignItems: 'center',
     height: verticalScale(56),
     paddingHorizontal: scale(16),
@@ -260,19 +318,23 @@ const styles = StyleSheet.create({
     color: '#8A57DC',
     textAlign: 'center',
   },
-  chapterInfo: { 
-    flexDirection: 'row', 
-    alignItems: 'center',
+  chapterTitleContainer: {
+    flex: 1,
   },
-  chapterTitle: { 
+  chapterTitle: {
     fontSize: scale(14),
-    width: scale(256),
     color: '#171717',
   },
-  chapterRange: { 
+  chapterRangeContainer: {
+    marginLeft: scale(8),
+  },
+  chapterRange: {
     fontSize: scale(12),
     textAlign: 'right',
-    width: scale(56),
+  },
+  loadingFooter: {
+    paddingVertical: verticalScale(16),
+    alignItems: 'center',
   },
   emptyContainer: {
     padding: scale(20),
