@@ -135,13 +135,55 @@ const fallbackHadiths: Hadith[] = [
 // Map API collection to our Hadith interface
 const mapCollectionToHadith = (collection: Collection): Hadith => {
   // Find English collection data, fall back to first item or empty
-  const collectionData = collection.collection.find(c => c.lang === 'en') || 
-                         collection.collection[0] || 
+  const collectionData = collection.collection.find(c => c.lang === 'en') ||
+                         collection.collection[0] ||
                          { lang: 'en', title: collection.name, shortIntro: '' };
   
-  // Extract author from shortIntro if possible
-  const authorMatch = collectionData.shortIntro?.match(/([^,]+)/); // Get text before first comma
-  const author = authorMatch ? authorMatch[0] : 'Unknown Author';
+  // Extract author from shortIntro using "compiled by" pattern
+  let author = 'Unknown Author';
+  const shortIntro = collectionData.shortIntro || '';
+  
+  // Try to extract author using "compiled by" pattern
+  const compiledByMatch = shortIntro.match(/compiled by ([^(]+)/i);
+  if (compiledByMatch && compiledByMatch[1]) {
+    author = compiledByMatch[1].trim();
+  } else {
+    // Fallback: Try to get first word and last word before opening bracket
+    const firstSentenceMatch = shortIntro.split('.')[0] || '';
+    const words = firstSentenceMatch.split(/\s+/).filter(word => word.length > 0);
+    
+    if (words.length > 0) {
+      // Find the index of the first word with an opening bracket
+      const bracketIndex = words.findIndex(word => word.includes('('));
+      
+      if (bracketIndex > 0) {
+        // Use the first word and the word before the bracket
+        author = `${words[0]} ${words[bracketIndex - 1]}`;
+      } else if (words.length > 0) {
+        // Just use the first word if no bracket found
+        author = words[0];
+      }
+    }
+  }
+  
+  // Extract brief from shortIntro
+  let brief = `Contains ${collection.totalAvailableHadith} hadith${collection.hasBooks ? ' in multiple books' : ''}.`;
+  
+  // Try to extract brief using various patterns
+  const briefPatterns = [
+    /It contains over \d+ hadith[^.]+\./i,  // "It contains over X hadith..."
+    /Contains roughly \d+[^.]+\./i,         // "Contains roughly X..."
+    /Contains \d+[^.]+\./i                  // "Contains X..."
+  ];
+
+  // Try each pattern in order
+  for (const pattern of briefPatterns) {
+    const match = shortIntro.match(pattern);
+    if (match) {
+      brief = match[0];
+      break;  // Stop after first match
+    }
+  }
   
   // Create hadith object with proper data mapping
   return {
@@ -150,7 +192,7 @@ const mapCollectionToHadith = (collection: Collection): Hadith => {
     author: author,
     // Use a mapping for known collection images or generate a placeholder
     image: getHadithImage(collection.name),
-    brief: `Contains ${collection.totalAvailableHadith} hadith${collection.hasBooks ? ' in multiple books' : ''}.`
+    brief: brief
   };
 };
 
