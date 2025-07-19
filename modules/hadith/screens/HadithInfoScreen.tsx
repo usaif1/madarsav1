@@ -1,7 +1,7 @@
 // modules/hadith/screens/HadithInfoScreen.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Medium, Body2Medium } from '@/components/Typography/Typography';
@@ -11,6 +11,7 @@ import HadithInfoCard from '../components/HadithInfoCard';
 import HadithImageFooter from '../components/HadithImageFooter';
 import SavedFooter from '../components/SavedFooter';
 import { useCollection, useBooks } from '../hooks/useHadith';
+import { DUA_ASSETS } from '@/utils/cdnUtils';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
 
@@ -69,9 +70,7 @@ const HadithInfoScreen: React.FC = () => {
   const route = useRoute();
   const { id } = route.params as { id: string };
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
   const [allBooks, setAllBooks] = useState<Book[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Fetch collection details and books
   const {
@@ -84,7 +83,7 @@ const HadithInfoScreen: React.FC = () => {
     data: booksData,
     isLoading: booksLoading,
     error: booksError
-  } = useBooks(id, 10, page);
+  } = useBooks(id, 1000, 1); // Use limit 1000 to get all books at once
 
   // Log API responses for debugging
   useEffect(() => {
@@ -105,14 +104,9 @@ const HadithInfoScreen: React.FC = () => {
   // Update allBooks when new data is fetched
   useEffect(() => {
     if (booksData?.data) {
-      if (page === 1) {
-        setAllBooks(booksData.data);
-      } else {
-        setAllBooks(prev => [...prev, ...booksData.data]);
-      }
-      setIsLoadingMore(false);
+      setAllBooks(booksData.data);
     }
-  }, [booksData, page]);
+  }, [booksData]);
 
   // Prepare data for UI
   const collection: CollectionInfo = collectionData || {
@@ -183,6 +177,62 @@ const HadithInfoScreen: React.FC = () => {
     }
   }
 
+  // Helper functions to extract information from shortIntro
+  const extractTranslator = (text: string): string => {
+    if (!text) return 'Unknown Translator';
+    
+    // Check for "translation provided here by" or similar patterns
+    const translationByMatch = text.match(/translation provided here by ([^.]+)/i) ||
+                              text.match(/translated by ([^.]+)/i) ||
+                              text.match(/translation by ([^.]+)/i);
+    
+    if (translationByMatch && translationByMatch[1]) {
+      return translationByMatch[1].trim();
+    }
+    
+    // If no match found, try to get from the last sentence
+    const sentences = text.split('.');
+    const lastSentence = sentences[sentences.length - 2] || ''; // Use second-to-last to avoid empty string
+    
+    if (lastSentence.toLowerCase().includes('translation') || lastSentence.toLowerCase().includes('translator')) {
+      // Extract name after "by" if present
+      const byMatch = lastSentence.match(/by ([^.]+)$/i);
+      if (byMatch && byMatch[1]) {
+        return byMatch[1].trim();
+      }
+      return lastSentence.trim();
+    }
+    
+    return 'Unknown Translator';
+  };
+
+  const extractYears = (text: string): string => {
+    if (!text) return '';
+    
+    // Look for patterns like "202-275 AH" or similar year ranges
+    const yearsMatch = text.match(/(\d+[-–—]\d+\s*[A-Z]+)/i);
+    if (yearsMatch && yearsMatch[1]) {
+      return yearsMatch[1];
+    }
+    
+    return '';
+  };
+
+  const extractHighlight = (text: string): string => {
+    if (!text) return '';
+    
+    // Look for patterns like "contains roughly 7500 hadith" or similar
+    const highlightMatch = text.match(/contains roughly \d+[^.]+\./i) ||
+                          text.match(/contains \d+[^.]+\./i) ||
+                          text.match(/\d+ hadith[^.]+\./i);
+    
+    if (highlightMatch && highlightMatch[0]) {
+      return highlightMatch[0];
+    }
+    
+    return `Contains ${collection.totalAvailableHadith} hadith`;
+  };
+
   // Show loading state
   if (collectionLoading || booksLoading) {
     return <LoadingIndicator color={colors.primary.primary500} />;
@@ -215,7 +265,29 @@ const HadithInfoScreen: React.FC = () => {
         author={author}
         brief={firstSentence || fallbackHadithInfo.brief}
         onPress={() => {
-          navigation.navigate('hadithDetail', { id: collection.name, hadithTitle: collectionTitle });
+          // Create a hadith detail object with real data
+          const hadithDetail = {
+            id: collection.name,
+            title: collectionTitle,
+            author: author,
+            brief: collectionIntro || fallbackHadithInfo.brief,
+            // Extract translator from the last sentence if it contains "translation provided here by"
+            translator: extractTranslator(collectionIntro),
+            // Use shortIntro as authorBio
+            authorBio: collectionIntro || '',
+            // Extract years if available
+            years: extractYears(collectionIntro),
+            // Extract highlight if available (contains roughly X hadith)
+            highlight: extractHighlight(collectionIntro),
+            // Use default image
+            image: DUA_ASSETS.HADITH_BOOK_IMAGE,
+          };
+          
+          navigation.navigate('hadithDetail', {
+            id: collection.name,
+            hadithTitle: collectionTitle,
+            hadithDetail: hadithDetail
+          });
         }}
       />
 
@@ -250,20 +322,8 @@ const HadithInfoScreen: React.FC = () => {
         )}
         style={styles.chapterList}
         contentContainerStyle={styles.listContentContainer}
-        onEndReached={() => {
-          if (booksData?.next && !isLoadingMore) {
-            setIsLoadingMore(true);
-            setPage(prev => prev + 1);
-          }
-        }}
-        onEndReachedThreshold={0.5}
         ListFooterComponent={
           <>
-            {isLoadingMore && (
-              <View style={styles.loadingFooter}>
-                <ActivityIndicator size="small" color="#8A57DC" />
-              </View>
-            )}
             <HadithImageFooter />
             <SavedFooter />
           </>

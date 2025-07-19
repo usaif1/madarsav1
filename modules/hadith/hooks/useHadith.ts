@@ -70,7 +70,7 @@ export const useCollection = (
  */
 export const useBooks = (
   collectionName: string,
-  limit = 50,
+  limit = 1000, // Changed from default 50 to 1000 to get all books at once
   page = 1
 ) => {
   console.log(`🪝 useBooks hook called with collection: ${collectionName}, limit=${limit}, page=${page}`);
