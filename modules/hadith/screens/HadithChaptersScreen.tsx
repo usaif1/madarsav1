@@ -110,7 +110,7 @@ const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
       {/* Footer with reference and actions */}
       <View style={styles.footerContainer}>
         <Body1Title2Regular style={styles.referenceText}>
-          {chapter.collection} . {chapter.bookNumber}:{chapter.hadithNumber}
+          {chapter.collection} <View style={styles.dot}></View> {chapter.bookNumber}:{chapter.hadithNumber}
         </Body1Title2Regular>
         <View style={styles.actionsContainer}>
           <TouchableOpacity style={styles.actionButton}>
@@ -262,6 +262,12 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    backgroundColor: '#D4D4D4',
+    borderRadius: 5,
   },
   headerContainer: {
     width: scale(375),
