@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, ActivityIndicator, Text } from 'react-native';
-import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { useNavigation } from '@react-navigation/native';
 import HadithCard from '../components/HadithCard';
@@ -159,6 +158,9 @@ const mapCollectionToHadith = (collection: Collection): Hadith => {
       if (bracketIndex > 0) {
         // Use the first word and the word before the bracket
         author = `${words[0]} ${words[bracketIndex - 1]}`;
+      } else if (words.length > 1 && words[0] === 'Imam') {
+        // If first word is just "Imam", include the second word too
+        author = `${words[0]} ${words[1]}`;
       } else if (words.length > 0) {
         // Just use the first word if no bracket found
         author = words[0];
@@ -169,18 +171,25 @@ const mapCollectionToHadith = (collection: Collection): Hadith => {
   // Extract brief from shortIntro
   let brief = `Contains ${collection.totalAvailableHadith} hadith${collection.hasBooks ? ' in multiple books' : ''}.`;
   
-  // Try to extract brief using various patterns
+  // Try to extract brief using various patterns but ensure it starts with "Contains"
   const briefPatterns = [
-    /It contains over \d+ hadith[^.]+\./i,  // "It contains over X hadith..."
-    /Contains roughly \d+[^.]+\./i,         // "Contains roughly X..."
-    /Contains \d+[^.]+\./i                  // "Contains X..."
+    /\d+ hadith[^.]+\./i,         // "X hadith..."
+    /roughly \d+[^.]+\./i,        // "roughly X..."
+    /over \d+[^.]+\./i            // "over X..."
   ];
 
   // Try each pattern in order
   for (const pattern of briefPatterns) {
     const match = shortIntro.match(pattern);
     if (match) {
-      brief = match[0];
+      // Get the matched text
+      let matchText = match[0];
+      
+      // Remove any phrases like "it contains" or "contains" if they exist
+      matchText = matchText.replace(/^(it\s+contains|contains)\s+/i, '');
+      
+      // Ensure brief starts with "Contains" (capital C)
+      brief = `Contains ${matchText}`;
       break;  // Stop after first match
     }
   }
@@ -218,7 +227,6 @@ const getHadithImage = (collectionName: string): string => {
 
 const HadithsListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { colors } = useThemeStore();
   const [hadiths, setHadiths] = useState<Hadith[]>([]);
   
   // Fetch collections from API
