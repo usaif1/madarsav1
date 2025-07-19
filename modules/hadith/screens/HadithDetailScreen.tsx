@@ -50,8 +50,8 @@ const HadithDetailScreen: React.FC = () => {
       <View style={styles.topIllustrationContainer}>
             <CdnSvg 
               path={DUA_ASSETS.HADITH_TOP_ILLUSTRATION}
-              width={scale(375)}
-              height={verticalScale(200)}
+              width={scale(155)}
+              height={verticalScale(100)}
             />
           </View>
         <View style={styles.innerTopSection}>
@@ -101,7 +101,7 @@ const HadithDetailScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.shareBtn]}>
               <CdnSvg 
-                path={DUA_ASSETS.HADITH_SHARE}
+                path={DUA_ASSETS.QURAN_SHARE_ICON}
                 width={20}
                 height={20}
               />
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   topIllustrationContainer: {
     position: 'absolute',
-    top: 0,
+    top: scale(-16),
     left: 0,
     zIndex: 0,
   },
