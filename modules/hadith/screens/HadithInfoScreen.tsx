@@ -9,11 +9,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import SearchInput from '../components/SearchInput';
 import HadithInfoCard from '../components/HadithInfoCard';
 import HadithImageFooter from '../components/HadithImageFooter';
-import SavedFooter from '../components/SavedFooter';
 import { useCollection, useBooks } from '../hooks/useHadith';
-import { getHadithBookImagePath } from '@/utils/cdnUtils';
+import { getHadithBookImagePath, DUA_ASSETS } from '@/utils/cdnUtils';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
+import { CdnSvg } from '@/components/CdnSvg';
+import { useHadithStore } from '../store/hadithStore';
 
 // Fallback data in case API fails
 const fallbackHadithInfo = {
@@ -71,6 +72,7 @@ const HadithInfoScreen: React.FC = () => {
   const { id } = route.params as { id: string };
   const [search, setSearch] = useState('');
   const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const { isCollectionBookmarked } = useHadithStore();
 
   // Fetch collection details and books
   const {
@@ -183,8 +185,8 @@ const HadithInfoScreen: React.FC = () => {
     
     // Check for "translation provided here by" or similar patterns
     const translationByMatch = text.match(/translation provided here by ([^.]+)/i) ||
-                              text.match(/translated by ([^.]+)/i) ||
-                              text.match(/translation by ([^.]+)/i);
+                               text.match(/translated by ([^.]+)/i) ||
+                               text.match(/translation by ([^.]+)/i);
     
     if (translationByMatch && translationByMatch[1]) {
       return translationByMatch[1].trim();
@@ -223,14 +225,23 @@ const HadithInfoScreen: React.FC = () => {
     
     // Look for patterns like "contains roughly 7500 hadith" or similar
     const highlightMatch = text.match(/contains roughly \d+[^.]+\./i) ||
-                          text.match(/contains \d+[^.]+\./i) ||
-                          text.match(/\d+ hadith[^.]+\./i);
+                           text.match(/contains \d+[^.]+\./i) ||
+                           text.match(/\d+ hadith[^.]+\./i);
     
     if (highlightMatch && highlightMatch[0]) {
       return highlightMatch[0];
     }
     
     return `Contains ${collection.totalAvailableHadith} hadith`;
+  };
+
+  // Get the hadith collection ID for saving
+  const collectionId = collection?.name || id;
+  const isBookmarked = isCollectionBookmarked(collectionId);
+  
+  const handleSavedPress = () => {
+    // Navigate to saved hadiths screen
+    navigation.navigate('savedHadiths');
   };
 
   // Show loading state
@@ -325,7 +336,6 @@ const HadithInfoScreen: React.FC = () => {
         ListFooterComponent={
           <>
             <HadithImageFooter />
-            <SavedFooter />
           </>
         }
         ListEmptyComponent={
@@ -335,6 +345,22 @@ const HadithInfoScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       />
+      
+      {/* Floating Saved Button */}
+      <TouchableOpacity 
+        style={styles.savedButton} 
+        onPress={handleSavedPress}
+        activeOpacity={0.8}
+        accessibilityLabel="View saved hadiths"
+        accessibilityRole="button"
+      >
+        <CdnSvg 
+          path={DUA_ASSETS.BOOKMARK_WHITE}
+          width={scale(16)}
+          height={scale(16)}
+        />
+        <Body1Title2Medium color="white" style={{marginLeft: 8}}>Saved</Body1Title2Medium>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -401,6 +427,25 @@ const styles = StyleSheet.create({
     padding: scale(20),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  savedButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 16,
+    width: scale(89),
+    height: verticalScale(40),
+    borderRadius: 60,
+    backgroundColor: '#000000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    shadowColor: '#171717',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
 

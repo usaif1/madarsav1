@@ -8,6 +8,7 @@ import HadithsListScreen from '../screens/HadithsListScreen';
 import HadithInfoScreen from '../screens/HadithInfoScreen';
 import HadithDetailScreen from '../screens/HadithDetailScreen';
 import HadithChaptersScreen from '../screens/HadithChaptersScreen';
+import SavedHadiths from '../screens/SavedHadiths';
 
 import { BackButton, Header } from '@/components';
 
@@ -107,6 +108,15 @@ const HadithNavigator = createNativeStackNavigator({
           header: () => <Header title={truncatedTitle} />,
           headerTitleAlign: 'center',
         };
+      },
+    },
+    savedHadiths: {
+      screen: SavedHadiths,
+      options: {
+        title: 'Saved Hadiths',
+        headerShown: true,
+        headerTitleAlign: 'center',
+        header: () => <Header title="Saved Hadiths" />,
       },
     },
   },

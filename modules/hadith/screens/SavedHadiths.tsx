@@ -1,23 +1,16 @@
-// modules/hadith/screens/HadithChaptersScreen.tsx
-
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, useWindowDimensions } from 'react-native';
-import { useThemeStore } from '@/globalStore';
-import { useHadithStore } from '../store/hadithStore';
+import React, { useState } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, useWindowDimensions, SafeAreaView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import LinearGradient from 'react-native-linear-gradient';
+import FastImage from 'react-native-fast-image';
+import { useHadithStore } from '../store/hadithStore';
+import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
 import { CdnSvg } from '@/components/CdnSvg';
-import { DUA_ASSETS } from '@/utils/cdnUtils';
-import HadithImageFooter from '../components/HadithImageFooter';
-import LoadingIndicator from '@/components/LoadingIndicator';
-import ErrorMessage from '@/components/ErrorMessage';
+import { Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
+import LinearGradient from 'react-native-linear-gradient';
 import RenderHtml from 'react-native-render-html';
-import { useHadithChaptersWithPagination } from '../hooks/useHadithChaptersWithPagination';
-// Import only what we need from the service
 
-// Define interfaces for the new API response structure
+// Define interfaces for the hadith data
 interface HadithContent {
   lang: string;
   chapterNumber: string;
@@ -38,6 +31,7 @@ interface HadithChapter {
   hadith: HadithContent[];
 }
 
+// Chapter Header Component
 const ChapterHeader = ({ chapter }: { chapter: HadithChapter }) => {
   // Find English and Arabic content
   const englishContent = chapter.hadith.find(h => h.lang === 'en');
@@ -56,13 +50,17 @@ const ChapterHeader = ({ chapter }: { chapter: HadithChapter }) => {
       <View style={styles.dividerContainer}>
         <CdnSvg path={DUA_ASSETS.HADITH_DASHED_LINE} width={scale(300)} height={1} />
       </View>
-      <View style={styles.chapterArabicContainer}><Body1Title2Medium color="yellow-800" style={styles.chapterArabic}>
-        {arabicContent?.chapterTitle || ''} 
-      </Body1Title2Medium><Body1Title2Medium color="yellow-800">({chapter?.hadithNumber})</Body1Title2Medium></View>
+      <View style={styles.chapterArabicContainer}>
+        <Body1Title2Medium color="yellow-800" style={styles.chapterArabic}>
+          {arabicContent?.chapterTitle || ''} 
+        </Body1Title2Medium>
+        <Body1Title2Medium color="yellow-800">({chapter?.hadithNumber})</Body1Title2Medium>
+      </View>
     </LinearGradient>
   );
 };
 
+// Hadith Item Component
 const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
   const { width } = useWindowDimensions();
   const { isHadithSaved, toggleSavedHadith } = useHadithStore();
@@ -122,10 +120,10 @@ const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
         </Body1Title2Regular>
         <View style={styles.actionsContainer}>
           <TouchableOpacity style={styles.actionButton} onPress={handleBookmarkPress}>
-            <CdnSvg
-              path={isSaved ? DUA_ASSETS.QURAN_BOOKMARK_FILL_ICON : DUA_ASSETS.HADITH_BOOKMARK}
-              width={24}
-              height={24}
+            <CdnSvg 
+              path={isSaved ? DUA_ASSETS.QURAN_BOOKMARK_FILL_ICON : DUA_ASSETS.HADITH_BOOKMARK} 
+              width={24} 
+              height={24} 
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
@@ -137,6 +135,7 @@ const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
   );
 };
 
+// Chapter Section Component
 const ChapterSection = ({ chapter }: { chapter: HadithChapter }) => {
   return (
     <View style={styles.chapterSection}>
@@ -146,124 +145,41 @@ const ChapterSection = ({ chapter }: { chapter: HadithChapter }) => {
   );
 };
 
-const HadithChaptersScreen: React.FC = () => {
-  const { colors } = useThemeStore();
-  const navigation = useNavigation<any>();
-  const route = useRoute();
-  const { hadithId, chapterId } = route.params as {
-    hadithId: string;
-    chapterId: string;
-    chapterTitle?: string
-  };
+// Main SavedHadiths Component
+const SavedHadiths = () => {
+  const navigation = useNavigation();
+  const { getAllSavedHadiths } = useHadithStore();
   
-  // Use our custom hook for pagination
-  const {
-    data: chapters,
-    isLoading,
-    error,
-    loadMore,
-    hasMore,
-    refetch
-  } = useHadithChaptersWithPagination(hadithId, chapterId, 10);
-  
-  // Log API response for debugging
-  useEffect(() => {
-    if (chapters && chapters.length > 0) {
-      console.log('Hadith Chapters API Response:', chapters);
-    }
-    if (error) {
-      console.error('Hadith Chapters API Error:', error);
-    }
-  }, [chapters, error]);
-  
-  // Handle end reached for infinite scroll
-  const handleEndReached = () => {
-    if (hasMore && !isLoading) {
-      loadMore();
-    }
-  };
-  
-  // Show loading state
-  if (isLoading && chapters.length === 0) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-          </View>
-          <TouchableOpacity style={styles.headerButton}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
-          </TouchableOpacity>
-        </View>
-        <LoadingIndicator color={colors.primary.primary500} />
-      </SafeAreaView>
-    );
-  }
-  
-  // Show error state
-  if (error) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-          </View>
-          <TouchableOpacity style={styles.headerButton}>
-            <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
-          </TouchableOpacity>
-        </View>
-        <ErrorMessage 
-          message={error.toString() || 'Failed to load hadith chapters'} 
-          onRetry={refetch}
-        />
-      </SafeAreaView>
-    );
-  }
+  // Get all saved hadiths
+  const savedHadiths = getAllSavedHadiths();
   
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-        </View>
-        <TouchableOpacity style={styles.headerButton}>
-          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
-        </TouchableOpacity>
-      </View>
+      {/* Header */}
+       <View style={styles.headerContainer}>
+                <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+                  <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={24} height={24} />
+                </TouchableOpacity>
+                <View style={styles.headerCenter}>
+                  <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
+                </View>
+                <TouchableOpacity style={styles.headerButton}>
+                  <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={24} height={24} />
+                </TouchableOpacity>
+              </View>
       
-      {chapters && chapters.length > 0 ? (
+      {savedHadiths.length > 0 ? (
         <FlatList
-          data={chapters}
-          keyExtractor={item => item.hadithNumber}
+          data={savedHadiths}
+          keyExtractor={item => `${item.collection}_${item.hadithNumber}`}
           renderItem={({ item }) => <ChapterSection chapter={item} />}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={
-            <>
-              {isLoading && chapters.length > 0 && (
-                <View style={styles.loadingFooter}>
-                  <LoadingIndicator size="small" color={colors.primary.primary500} />
-                </View>
-              )}
-              <HadithImageFooter />
-            </>
-          }
         />
       ) : (
-        <View style={styles.noContentContainer}>
-          <Body1Title2Medium>No chapters found</Body1Title2Medium>
-          <HadithImageFooter />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No saved hadiths yet</Text>
+          <Text style={styles.emptySubtext}>Bookmark hadiths to see them here</Text>
         </View>
       )}
     </SafeAreaView>
@@ -275,43 +191,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  dot: {
-    width: 5,
-    height: 5,
-    backgroundColor: '#D4D4D4',
-    borderRadius: 5,
-  },
-  headerContainer: {
-    width: scale(375),
-    height: verticalScale(66),
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFDF6',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    flexDirection: 'row',
-  },
-  headerButton: {
-    width: scale(76.15),
-    height: scale(152.07),
-    justifyContent: 'center',
-    alignItems: 'center',
-    opacity: 0.2,
-  },
-  headerCenter: {
-    width: scale(200),
-    height: scale(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   container: {
     paddingBottom: verticalScale(32),
   },
-  noContentContainer: {
+  ayahContainer: {
+    width: scale(375),
+    height: verticalScale(121),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFDF7',
+  },
+  ayahImage: {
+    width: '100%',
+    height: '100%',
+  },
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: scale(20),
+    paddingHorizontal: 24,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   chapterSection: {
     width: scale(375),
@@ -383,10 +292,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingFooter: {
-    paddingVertical: verticalScale(16),
+  dot: {
+    width: 5,
+    height: 5,
+    backgroundColor: '#D4D4D4',
+    borderRadius: 5,
+  },
+  headerContainer: {
+    width: scale(375),
+    height: verticalScale(66),
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFDF6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    flexDirection: 'row',
+  },
+  headerButton: {
+    width: scale(76.15),
+    height: scale(40),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerCenter: {
+    width: scale(200),
+    height: scale(40),
+    justifyContent: 'center',
     alignItems: 'center',
   },
 });
 
-export default HadithChaptersScreen;
+export default SavedHadiths;
