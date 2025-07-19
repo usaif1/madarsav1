@@ -1,5 +1,20 @@
 import axios from 'axios';
+import Config from 'react-native-config';
 import { API_URLS } from '../config/apiConfig';
+
+// Debug: Log all available config keys to see what's loaded
+console.log('🔍 Available Config keys:', Object.keys(Config));
+console.log('🔍 Full Config object:', Config);
+console.log('🔍 SUNNAH_HADITH_KEY value:', Config.SUNNAH_HADITH_KEY);
+
+// Type assertion for TypeScript
+interface AppConfig {
+  SUNNAH_HADITH_KEY?: string;
+  GOOGLE_KEY?: string;
+  [key: string]: string | undefined;
+}
+
+const appConfig = Config as AppConfig;
 
 // Create a map of base URLs to Axios instances
 const apiClients = {
@@ -37,14 +52,53 @@ const apiClients = {
 };
 
 // Add request/response interceptors if needed
-// Add API key to all requests to Sunnah.com API
+// Add API key to all requests to Sunnah.com API from environment variable
 apiClients.SUNNAH.interceptors.request.use(
   (config) => {
-    // Replace with your actual API key from Sunnah.com
-    config.headers['X-API-Key'] = '9iHLJib7vC2bF6lbU8op97hJJfkOu4tz9lVlhUmw';
+    // Get API key from environment variables with multiple fallback attempts
+    const sunnahApiKey = 
+      appConfig.SUNNAH_HADITH_KEY || 
+      appConfig['SUNNAH_HADITH_KEY'] ||
+      process.env.SUNNAH_HADITH_KEY;
+
+    const googleKey = 
+      appConfig.GOOGLE_WEB_CLIENT_ID
+    
+    console.log('🔑 Attempting to use Sunnah API key:', sunnahApiKey ? `${sunnahApiKey} ✅ Found` : '❌ Not found');
+    console.log('🔑 Attempting to use Google API key:', googleKey ? `${googleKey} ✅ Found` : '❌ Not found');
+    
+    // Validate that the API key exists
+    if (!sunnahApiKey) {
+      console.error('❌ SUNNAH_HADITH_KEY is not configured in environment variables');
+      console.error('🔍 Available keys:', Object.keys(appConfig));
+      
+      // Temporary fallback for development (remove in production)
+      const fallbackKey = '9iHLJib7vC2bF6lbU8op97hJJfkOu4tz9lVlhUmw';
+      console.warn('⚠️ Using fallback API key for development');
+      config.headers['X-API-Key'] = fallbackKey;
+      return config;
+      
+      // Uncomment this to throw error instead of using fallback:
+      // throw new Error('Sunnah API key is not configured');
+    }
+    
+    config.headers['X-API-Key'] = sunnahApiKey;
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Optional: Add response interceptor for better error handling
+apiClients.SUNNAH.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Sunnah API: Unauthorized - Check your API key');
+    } else if (error.response?.status === 403) {
+      console.error('Sunnah API: Forbidden - API key may be invalid or expired');
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Named exports for specific clients

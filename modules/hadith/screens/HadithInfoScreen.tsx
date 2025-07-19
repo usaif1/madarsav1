@@ -1,10 +1,11 @@
 // modules/hadith/screens/HadithInfoScreen.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, useWindowDimensions } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Medium, Body2Medium } from '@/components/Typography/Typography';
+import RenderHtml from 'react-native-render-html';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SearchInput from '../components/SearchInput';
 import HadithInfoCard from '../components/HadithInfoCard';
@@ -14,7 +15,6 @@ import { getHadithBookImagePath, DUA_ASSETS } from '@/utils/cdnUtils';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
 import { CdnSvg } from '@/components/CdnSvg';
-import { useHadithStore } from '../store/hadithStore';
 
 // Fallback data in case API fails
 const fallbackHadithInfo = {
@@ -72,7 +72,7 @@ const HadithInfoScreen: React.FC = () => {
   const { id } = route.params as { id: string };
   const [search, setSearch] = useState('');
   const [allBooks, setAllBooks] = useState<Book[]>([]);
-  const { isCollectionBookmarked } = useHadithStore();
+  const { width } = useWindowDimensions();
 
   // Fetch collection details and books
   const {
@@ -234,10 +234,6 @@ const HadithInfoScreen: React.FC = () => {
     
     return `Contains ${collection.totalAvailableHadith} hadith`;
   };
-
-  // Get the hadith collection ID for saving
-  const collectionId = collection?.name || id;
-  const isBookmarked = isCollectionBookmarked(collectionId);
   
   const handleSavedPress = () => {
     // Navigate to saved hadiths screen
@@ -324,7 +320,18 @@ const HadithInfoScreen: React.FC = () => {
               <Text style={styles.chapterIndex}>{index + 1}</Text>
             </View>
             <View style={styles.chapterTitleContainer}>
-              <Body1Title2Medium style={styles.chapterTitle}>{item.title}</Body1Title2Medium>
+              <RenderHtml
+                contentWidth={width - scale(100)} // Adjust for padding and other elements
+                source={{ html: `<p>${item.title}</p>` }}
+                tagsStyles={{
+                  p: {
+                    fontSize: scale(14),
+                    color: '#171717',
+                    margin: 0,
+                    padding: 0,
+                  }
+                }}
+              />
             </View>
             <View style={styles.chapterRangeContainer}>
               <Body2Medium color="sub-heading" style={styles.chapterRange}>{item.range}</Body2Medium>
@@ -361,6 +368,8 @@ const HadithInfoScreen: React.FC = () => {
         />
         <Body1Title2Medium color="white" style={{marginLeft: 8}}>Saved</Body1Title2Medium>
       </TouchableOpacity>
+
+       <HadithImageFooter />
     </View>
   );
 };

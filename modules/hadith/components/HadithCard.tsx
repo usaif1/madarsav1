@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Bold, CaptionMedium, CaptionBold } from '@/components/Typography/Typography';
+import { Body1Title2Bold, CaptionBold } from '@/components/Typography/Typography';
+import RenderHtml from 'react-native-render-html';
 import { useThemeStore } from '@/globalStore';
 import { DUA_ASSETS, getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
 import FastImage from 'react-native-fast-image';
@@ -20,6 +21,7 @@ export interface HadithCardProps {
 const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
   const { colors } = useThemeStore();
   const styles = getStyles(colors);
+  const { width } = useWindowDimensions();
   
   /**
    * Get the dynamic image URL based on hadith title
@@ -66,14 +68,30 @@ const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
         </Body1Title2Bold>
         
         <View style={styles.authorPill}>
-          <CaptionBold color="yellow-700" style={[styles.authorText]}>
+          <CaptionBold
+            color="yellow-700"
+            style={[styles.authorText]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {hadith.author}
           </CaptionBold>
         </View>
         
-        <CaptionMedium style={styles.brief} color="sub-heading" numberOfLines={3}>
-          {hadith.brief}
-        </CaptionMedium>
+        <RenderHtml
+          contentWidth={width - scale(24)} // Adjust for padding
+          source={{ html: `<p>${hadith.brief}</p>` }}
+          tagsStyles={{
+            p: {
+              fontSize: scale(10),
+              lineHeight: scale(14),
+              color: '#6B7280', // sub-heading color
+              textAlign: 'center',
+              margin: 0,
+              padding: 0,
+            }
+          }}
+        />
       </View>
     </TouchableOpacity>
   );

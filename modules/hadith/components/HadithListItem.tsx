@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Body1Title2Bold, CaptionMedium, CaptionBold } from '@/components/Typography/Typography';
+import { Body1Title2Bold, CaptionBold } from '@/components/Typography/Typography';
+import RenderHtml from 'react-native-render-html';
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
 import { getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
@@ -20,6 +21,7 @@ export interface HadithListItemProps {
 const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
   const { colors } = useThemeStore();
   const styles = getStyles(colors);
+  const { width } = useWindowDimensions();
   
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
@@ -41,14 +43,39 @@ const HadithListItem: React.FC<HadithListItemProps> = ({ hadith, onPress }) => {
         </Body1Title2Bold>
         
         <View style={styles.authorPill}>
-          <CaptionBold color="yellow-700" style={styles.authorText}>
-            {hadith.author}
-          </CaptionBold>
+          <RenderHtml 
+          contentWidth={width - scale(16)} // Adjust for padding
+          source={{ html: `<p>${hadith.author}</p>` }}
+          tagsStyles={{
+            p: {
+              fontSize: scale(10),
+              textAlign: 'center',
+              lineHeight: scale(14),
+              color: '#9A7E2A', // sub-heading color
+              fontFamily: 'Geist',
+              fontWeight: '500',
+              margin: 0,
+              padding: 0,
+            }
+          }}
+          />
         </View>
         
-        <CaptionMedium style={styles.brief} color="sub-heading" numberOfLines={2}>
-          {hadith.brief}
-        </CaptionMedium>
+        <RenderHtml
+          contentWidth={width - scale(16)} // Adjust for padding
+          source={{ html: `<p>${hadith.brief}</p>` }}
+          tagsStyles={{
+            p: {
+              fontSize: scale(10),
+              lineHeight: scale(14),
+              color: '#525252', // sub-heading color
+              fontFamily: 'Geist',
+              fontWeight: '500',
+              margin: 0,
+              padding: 0,
+            }
+          }}
+        />
       </View>
     </TouchableOpacity>
   );

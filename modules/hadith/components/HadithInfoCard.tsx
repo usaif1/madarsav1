@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
-import { Title3Bold, Body1Title2Medium, Body2Medium, CaptionBold, Body1Title2Bold } from '@/components/Typography/Typography';
+import { CaptionBold, Body1Title2Bold } from '@/components/Typography/Typography';
 import FastImage from 'react-native-fast-image';
 import { useThemeStore } from '@/globalStore';
 import { DUA_ASSETS, getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
 import { CdnSvg } from '@/components/CdnSvg';
+import RenderHtml from 'react-native-render-html';
 
 interface HadithInfoCardProps {
   title: string;
@@ -24,6 +25,7 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
 }) => {
   const { colors } = useThemeStore();
   const styles = getStyles(colors);
+  const { width } = useWindowDimensions();
 
   return (
     <TouchableOpacity 
@@ -70,16 +72,46 @@ const HadithInfoCard: React.FC<HadithInfoCardProps> = ({
           {/* Author Pill */}
           <View style={styles.authorPillContainer}>
             <View style={styles.authorPill}>
-              <CaptionBold color="yellow-700" style={styles.authorText}>
-                {author}
-              </CaptionBold>
+              <View style={{
+  maxWidth: width - scale(140),
+  height: scale(14), // Fixed height to ensure single line
+  overflow: 'hidden',
+}}>
+  <RenderHtml 
+    contentWidth={width - scale(16)} // Adjust for padding
+    source={{ html: `<p>${author}</p>` }}
+    tagsStyles={{
+      p: {
+        fontSize: scale(10),
+        textAlign: 'center',
+        lineHeight: scale(14),
+        color: '#9A7E2A', // sub-heading color
+        fontFamily: 'Geist',
+        fontWeight: '500',
+        margin: 0,
+        padding: 0,
+        overflow: 'hidden',
+      }
+    }}
+  />
+</View>
             </View>
           </View>
 
           {/* Description */}
-          <Body2Medium color="sub-heading" style={styles.description} numberOfLines={2}>
-            {brief}
-          </Body2Medium>
+          <RenderHtml
+            contentWidth={width - scale(32)} // Adjust for padding
+            source={{ html: `<p>${brief}</p>` }}
+            tagsStyles={{
+              p: {
+                fontSize: scale(12),
+                lineHeight: scale(17),
+                color: '#6B7280',
+                height: verticalScale(51),
+                width: '100%',
+              }
+            }}
+          />
         </View>
       </View>
     </TouchableOpacity>
