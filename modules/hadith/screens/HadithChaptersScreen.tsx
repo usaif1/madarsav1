@@ -1,52 +1,47 @@
 // modules/hadith/screens/HadithChaptersScreen.tsx
 
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, useWindowDimensions } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { scale, verticalScale } from '@/theme/responsive';
-import { H5Bold, Body1Title2Medium, Body1Title2Bold, Body1Title2Regular, CaptionMedium } from '@/components/Typography/Typography';
+import { Body1Title2Medium, Body1Title2Regular } from '@/components/Typography/Typography';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 import HadithImageFooter from '../components/HadithImageFooter';
-import { useChapters, useHadiths } from '../hooks/useHadith';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
+import RenderHtml from 'react-native-render-html';
+import { useHadithChaptersWithPagination } from '../hooks/useHadithChaptersWithPagination';
+// Import only what we need from the service
 
-// Dummy data for demo
-const chaptersData = [
-  {
-    id: '1',
-    title: 'How the Divine Revelation started being revealed to Allah\'s Messenger',
-    arabic: 'باب (1) كَيْفَ كَانَ بَدْءُ الْوَحْىِ إِلَى رَسُولِ اللَّهِ صلى الله عليه وسلم',
-    hadiths: [
-      {
-        id: '1',
-        arabic: 'حَدَّثَنَا الْحُمَيْدِيُّ عَبْدُ اللَّهِ بْنُ الزُّبَيْرِ ، قَالَ : حَدَّثَنَا سُفْيَانُ ، قَالَ : حَدَّثَنَا يَحْيَى بْنُ سَعِيدٍ الْأَنْصَارِيُّ ، قَالَ : أَخْبَرَنِي مُحَمَّدُ بْنُ إِبْرَاهِيمَ التَّيْمِيُّ ، أَنَّهُ سَمِعَ عَلْقَمَةَ بْنَ وَقَّاصٍ اللَّيْثِيَّ ، يَقُولُ : سَمِعْتُ عُمَرَ بْنَ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ عَلَى الْمِنْبَرِ ، قَالَ : سَمِعْتُ رَسُولَ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ ، يَقُولُ : " إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى ، فَمَنْ كَانَتْ هِجْرَتُهُ إِلَى دُنْيَا يُصِيبُهَا أَوْ إِلَى امْرَأَةٍ يَنْكِحُهَا ، فَهِجْرَتُهُ إِلَى مَا هَاجَرَ إِلَيْهِ "',
-        translation: 'I heard Allah\'s Messenger (ﷺ) saying, "The reward of deeds depends upon the intentions and every person will get the reward according to what he has intended. So whoever emigrated for worldly benefits or for a woman to marry, his emigration was for what he emigrated for."',
-        narrator: 'Narrated \'Umar bin Al-Khattab:',
-        reference: 'Sahih al-Bukhari - 1:1',
-      },
-    ],
-  },
-  {
-    id: '2',
-    title: '',
-    arabic: 'باب (2)',
-    hadiths: [
-      {
-        id: '2',
-        arabic: 'حَدَّثَنَا عَبْدُ اللَّهِ بْنُ يُوسُفَ ، قَالَ : أَخْبَرَنَا مَالِكٌ ، عَنْ هِشَامِ بْنِ عُرْوَةَ ، عَنْ أَبِيهِ ، عَنْ عَائِشَةَ أُمِّ الْمُؤْمِنِينَ - رَضِيَ اللَّهُ عَنْهَا - : أَنَّ الْحَارِثَ بْنَ هِشَامٍ - رَضِيَ اللَّهُ عَنْهُ - سَأَلَ رَسُولَ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ فَقَالَ : يَا رَسُولَ اللَّهِ كَيْفَ يَأْتِيكَ الْوَحْيُ ؟ فَقَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ : " أَحْيَانًا يَأْتِينِي مِثْلَ صَلْصَلَةِ الْجَرَسِ ، وَهُوَ أَشَدُّهُ عَلَيَّ ، فَيُفْصَمُ عَنِّي وَقَدْ وَعَيْتُ عَنْهُ مَا قَالَ ، وَأَحْيَانًا يَتَمَثَّلُ لِي الْمَلَكُ رَجُلًا فَيُكَلِّمُنِي فَأَعِي مَا يَقُولُ " . قَالَتْ عَائِشَةُ رَضِيَ اللَّهُ عَنْهَا : وَلَقَدْ رَأَيْتُهُ يَنْزِلُ عَلَيْهِ الْوَحْيُ فِي الْيَوْمِ الشَّدِيدِ الْبَرْدِ فَيَفْصِمُ عَنْهُ وَإِنَّ جَبِينَهُ لَيَتَفَصَّدُ عَرَقًا',
-        translation: 'The mother of the faithful believers, \'Aisha narrated: Al-Harith bin Hisham asked the Messenger of Allah (ﷺ): "How does the divine inspiration come to you?" He replied, "In all these ways: The Angel sometimes comes to me with a voice which resembles the sound of a ringing bell, and when this state abandons me, I remember what the Angel has said, and this type of Divine Inspiration is the hardest on me; and sometimes the Angel comes to me in the shape of a man and talks to me, and I understand and remember what he says."',
-        narrator: 'Narrated \'Aisha:',
-        reference: 'Sahih al-Bukhari - 1:2',
-      },
-    ],
-  },
-];
+// Define interfaces for the new API response structure
+interface HadithContent {
+  lang: string;
+  chapterNumber: string;
+  chapterTitle: string;
+  urn: number;
+  body: string;
+  grades: {
+    graded_by: string | null;
+    grade: string;
+  }[];
+}
 
-const ChapterHeader = ({ chapter, index }: { chapter: any, index: number }) => {
+interface HadithChapter {
+  collection: string;
+  bookNumber: string;
+  chapterId: string;
+  hadithNumber: string;
+  hadith: HadithContent[];
+}
+
+const ChapterHeader = ({ chapter }: { chapter: HadithChapter }) => {
+  // Find English and Arabic content
+  const englishContent = chapter.hadith.find(h => h.lang === 'en');
+  const arabicContent = chapter.hadith.find(h => h.lang === 'ar');
+  
   return (
     <LinearGradient
       colors={['#FEFAEC', '#FCEFC7']}
@@ -54,29 +49,69 @@ const ChapterHeader = ({ chapter, index }: { chapter: any, index: number }) => {
       end={{ x: 0, y: 1 }}
       style={styles.chapterHeader}
     >
-      <Body1Title2Medium color="yellow-800" style={styles.chapterNumber}>({index + 1}) Chapter: {chapter.title}</Body1Title2Medium>
+      <Body1Title2Medium color="yellow-800" style={styles.chapterNumber}>
+        ({chapter.hadithNumber}) Chapter: {englishContent?.chapterTitle || ''}
+      </Body1Title2Medium>
       <View style={styles.dividerContainer}>
         <CdnSvg path={DUA_ASSETS.HADITH_DASHED_LINE} width={scale(300)} height={1} />
       </View>
-      <Body1Title2Medium color="accent-yellow-900" style={styles.chapterArabic}>{chapter.arabic}</Body1Title2Medium>
+      <View style={styles.chapterArabicContainer}><Body1Title2Medium color="yellow-800" style={styles.chapterArabic}>
+        {arabicContent?.chapterTitle || ''} 
+      </Body1Title2Medium><Body1Title2Medium color="yellow-800">({chapter?.hadithNumber})</Body1Title2Medium></View>
     </LinearGradient>
   );
 };
 
-const HadithItem = ({ hadith }: { hadith: any }) => {
+const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
+  const { width } = useWindowDimensions();
+  
+  // Find English and Arabic content
+  const englishContent = chapter.hadith.find(h => h.lang === 'en');
+  const arabicContent = chapter.hadith.find(h => h.lang === 'ar');
+  
   return (
     <View style={styles.hadithContainer}>
+      {/* Arabic Content */}
       <View style={styles.arabicContainer}>
-        <Text style={styles.arabicText}>{hadith.arabic}</Text>
+        {arabicContent?.body && (
+          <RenderHtml
+            contentWidth={width - scale(36)} // Adjust for padding
+            source={{ html: arabicContent.body }}
+            tagsStyles={{
+              p: {
+                fontSize: scale(18),
+                lineHeight: scale(28),
+                color: '#171717',
+                textAlign: 'right',
+                fontWeight: '500',
+              }
+            }}
+          />
+        )}
       </View>
       
+      {/* English Content */}
       <View style={styles.narratorContainer}>
-        <Body1Title2Medium style={styles.narratorText}>{hadith.narrator}</Body1Title2Medium>
-        <Body1Title2Regular style={styles.translationText}>{hadith.translation}</Body1Title2Regular>
+        {englishContent?.body && (
+          <RenderHtml
+            contentWidth={width - scale(40)} // Adjust for padding
+            source={{ html: englishContent.body }}
+            tagsStyles={{
+              p: {
+                fontSize: scale(14),
+                lineHeight: scale(20),
+                color: '#525252',
+              }
+            }}
+          />
+        )}
       </View>
       
+      {/* Footer with reference and actions */}
       <View style={styles.footerContainer}>
-        <Body1Title2Regular style={styles.referenceText}>{hadith.reference}</Body1Title2Regular>
+        <Body1Title2Regular style={styles.referenceText}>
+          {chapter.collection} . {chapter.bookNumber}:{chapter.hadithNumber}
+        </Body1Title2Regular>
         <View style={styles.actionsContainer}>
           <TouchableOpacity style={styles.actionButton}>
             <CdnSvg path={DUA_ASSETS.HADITH_BOOKMARK} width={24} height={24} />
@@ -90,153 +125,54 @@ const HadithItem = ({ hadith }: { hadith: any }) => {
   );
 };
 
-const ChapterSection = ({ chapter, index }: { chapter: any, index: number }) => {
+const ChapterSection = ({ chapter }: { chapter: HadithChapter }) => {
   return (
     <View style={styles.chapterSection}>
-      <ChapterHeader chapter={chapter} index={index} />
-      {chapter.hadiths.map((hadith: any) => (
-        <HadithItem key={hadith.id} hadith={hadith} />
-      ))}
+      <ChapterHeader chapter={chapter} />
+      <HadithItem chapter={chapter} />
     </View>
   );
 };
-
-// Import the Chapter type from the service
-import type { Chapter as ServiceChapter, Hadith as ServiceHadith } from '../services/hadithService';
-
-// Define our local Chapter interface
-interface Chapter {
-  id: string;
-  chapterId: string;
-  title: string;
-  arabic: string;
-  hadiths: Hadith[];
-  bookNumber?: string;
-  chapterNumber?: string;
-  chapterEnglish?: string;
-  chapterArabic?: string;
-  chapter?: Array<{
-    lang: string;
-    chapterNumber: string;
-    chapterTitle: string;
-    intro: string | null;
-    ending: string | null;
-  }>;
-  // Add index signature to allow dynamic properties
-  [key: string]: any;
-}
-
-interface Hadith {
-  id: string;
-  hadithNumber?: string;
-  arabic: string;
-  translation?: string;
-  narrator?: string;
-  reference?: string;
-  collection?: string;
-  bookNumber?: string;
-  chapterId?: string;
-  hadith?: Array<{
-    lang: string;
-    chapterNumber: string;
-    chapterTitle: string;
-    urn: number;
-    body: string;
-    grades?: Array<{
-      graded_by: string;
-      grade: string;
-    }>;
-  }>;
-}
-
-// Type guard to check if an object is a valid Chapter
-function isValidChapter(chapter: any): chapter is Chapter {
-  return (
-    chapter &&
-    typeof chapter === 'object' &&
-    'id' in chapter &&
-    'title' in chapter &&
-    'arabic' in chapter &&
-    'hadiths' in chapter
-  );
-}
 
 const HadithChaptersScreen: React.FC = () => {
   const { colors } = useThemeStore();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const { hadithId, chapterId, chapterTitle } = route.params as { hadithId: string; chapterId: string; chapterTitle: string };
-  const [visibleChapters, setVisibleChapters] = useState(1);
+  const { hadithId, chapterId } = route.params as {
+    hadithId: string;
+    chapterId: string;
+    chapterTitle?: string
+  };
   
-  // Fetch chapters and hadiths from API
-  const { 
-    data: chaptersData, 
-    isLoading: chaptersLoading, 
-    error: chaptersError 
-  } = useChapters(hadithId, chapterId);
+  // Use our custom hook for pagination
+  const {
+    data: chapters,
+    isLoading,
+    error,
+    loadMore,
+    hasMore,
+    refetch
+  } = useHadithChaptersWithPagination(hadithId, chapterId, 10);
   
-  const { 
-    data: hadithsData, 
-    isLoading: hadithsLoading, 
-    error: hadithsError 
-  } = useHadiths(hadithId, chapterId);
-
-  // Log API responses for debugging
+  // Log API response for debugging
   useEffect(() => {
-    if (chaptersData) {
-      console.log('Chapters API Response:', chaptersData);
+    if (chapters && chapters.length > 0) {
+      console.log('Hadith Chapters API Response:', chapters);
     }
-    if (chaptersError) {
-      console.error('Chapters API Error:', chaptersError);
+    if (error) {
+      console.error('Hadith Chapters API Error:', error);
     }
-    if (hadithsData) {
-      console.log('Hadiths API Response:', hadithsData);
-    }
-    if (hadithsError) {
-      console.error('Hadiths API Error:', hadithsError);
-    }
-  }, [chaptersData, chaptersError, hadithsData, hadithsError]);
-
-  // Process API data or use fallback
-  const processedChapters: Chapter[] = React.useMemo(() => {
-    if (!chaptersData?.data || !hadithsData?.data) {
-      return [];
-    }
-    
-    // Map API data to our UI format
-    const chapters = chaptersData.data.map((chapter: any) => {
-      const chapterHadiths = hadithsData.data.filter((hadith: any) => 
-        hadith.chapterNumber === chapter.chapterNumber
-      ).map((hadith: any) => ({
-        id: hadith.hadithNumber,
-        hadithNumber: hadith.hadithNumber,
-        arabic: hadith.hadithArabic || '',
-        translation: hadith.hadithEnglish || '',
-        narrator: hadith.narrator || 'Unknown Narrator',
-        reference: `${hadithId} - ${hadith.hadithNumber}`
-      }));
-      
-      return {
-        id: chapter.chapterNumber,
-        chapterId: chapter.chapterNumber,
-        title: chapter.chapterEnglish || '',
-        arabic: chapter.chapterArabic || `باب (${chapter.chapterNumber})`,
-        hadiths: chapterHadiths
-      };
-    });
-    
-    return chapters;
-  }, [chaptersData, hadithsData, hadithId]);
-
-  // Infinite scroll handler
+  }, [chapters, error]);
+  
+  // Handle end reached for infinite scroll
   const handleEndReached = () => {
-    if (visibleChapters < processedChapters.length) {
-      setVisibleChapters(prev => Math.min(prev + 2, processedChapters.length));
+    if (hasMore && !isLoading) {
+      loadMore();
     }
   };
-
+  
   // Show loading state
-  if (chaptersLoading || hadithsLoading) {
+  if (isLoading && chapters.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerContainer}>
@@ -254,9 +190,9 @@ const HadithChaptersScreen: React.FC = () => {
       </SafeAreaView>
     );
   }
-
+  
   // Show error state
-  if (chaptersError || hadithsError) {
+  if (error) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerContainer}>
@@ -271,74 +207,13 @@ const HadithChaptersScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         <ErrorMessage 
-          message={(chaptersError || hadithsError)?.toString() || 'Failed to load hadith chapters'} 
-          onRetry={() => navigation.replace('hadithChapters', { hadithId, chapterId, chapterTitle })}
+          message={error.toString() || 'Failed to load hadith chapters'} 
+          onRetry={refetch}
         />
       </SafeAreaView>
     );
   }
-
-  // Process and normalize chapters data
-  let displayChapters: Chapter[] = [];
   
-  try {
-    if (processedChapters.length > 0) {
-      // Use processed chapters if available
-      displayChapters = processedChapters;
-    } else if (chaptersData?.data) {
-      const data = chaptersData.data;
-      let chapters: any[] = [];
-      
-      // Normalize data to array
-      if (Array.isArray(data)) {
-        chapters = data;
-      } else if (data && typeof data === 'object') {
-        chapters = [data];
-      }
-      
-      // Map and validate chapters
-      displayChapters = chapters
-        .map(chapter => {
-          // Extract chapter info from the service format
-          const chapterInfo = Array.isArray(chapter.chapter) ? chapter.chapter[0] : null;
-          
-          // Create a normalized chapter object with type assertion
-          const normalizedChapter = {
-            id: chapter.id || chapter.chapterId || '',
-            chapterId: chapter.chapterId || chapter.id || '',
-            title: chapter.title || chapterInfo?.chapterTitle || '',
-            arabic: chapter.arabic || '',
-            bookNumber: chapter.bookNumber,
-            chapterNumber: chapterInfo?.chapterNumber,
-            chapterEnglish: chapterInfo?.chapterTitle,
-            chapterArabic: '', // Will be populated if available
-            chapter: chapter.chapter,
-            hadiths: Array.isArray(chapter.hadiths) 
-              ? chapter.hadiths.map((h: any) => ({
-                  ...h,
-                  id: h.id || '',
-                  arabic: h.hadith?.[0]?.body || '',
-                  translation: h.translation || '',
-                  narrator: h.narrator || '',
-                  reference: h.reference || `${chapterInfo?.chapterNumber || ''}`,
-                  collection: h.collection,
-                  bookNumber: h.bookNumber,
-                  chapterId: h.chapterId,
-                  hadithNumber: h.hadithNumber
-                }))
-              : []
-          } as Chapter;
-          
-          return normalizedChapter;
-        })
-        .filter(isValidChapter); // Filter out invalid chapters
-    }
-  } catch (error) {
-    console.error('Error processing chapters data:', error);
-    // Return empty array in case of error to prevent crashes
-    displayChapters = [];
-  }
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
@@ -353,16 +228,25 @@ const HadithChaptersScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
       
-      {displayChapters && displayChapters.length > 0 ? (
+      {chapters && chapters.length > 0 ? (
         <FlatList
-          data={displayChapters.slice(0, visibleChapters)}
-          keyExtractor={item => item.id}
-          renderItem={({ item, index }) => <ChapterSection chapter={item} index={index} />}
+          data={chapters}
+          keyExtractor={item => item.hadithNumber}
+          renderItem={({ item }) => <ChapterSection chapter={item} />}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={<HadithImageFooter />}
+          ListFooterComponent={
+            <>
+              {isLoading && chapters.length > 0 && (
+                <View style={styles.loadingFooter}>
+                  <LoadingIndicator size="small" color={colors.primary.primary500} />
+                </View>
+              )}
+              <HadithImageFooter />
+            </>
+          }
         />
       ) : (
         <View style={styles.noContentContainer}>
@@ -434,8 +318,10 @@ const styles = StyleSheet.create({
   chapterArabic: {
     fontSize: scale(16),
     fontWeight: 'bold',
-    color: '#171717',
     textAlign: 'center',
+  },
+  chapterArabicContainer: {
+    flexDirection: 'row',
   },
   dividerContainer: {
     alignItems: 'center',
@@ -451,27 +337,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(18),
     rowGap: scale(6),
   },
-  arabicText: {
-    fontSize: scale(18),
-    lineHeight: scale(28),
-    color: '#171717',
-    textAlign: 'right',
-    fontWeight: '500',
-  },
   narratorContainer: {
     width: scale(375),
     padding: scale(20),
     rowGap: scale(16),
-  },
-  narratorText: {
-    fontSize: scale(14),
-    fontWeight: 'bold',
-    color: '#171717',
-  },
-  translationText: {
-    fontSize: scale(14),
-    lineHeight: scale(20),
-    color: '#525252',
   },
   footerContainer: {
     width: scale(375),
@@ -496,8 +365,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  actionButtonText: {
-    fontSize: scale(16),
+  loadingFooter: {
+    paddingVertical: verticalScale(16),
+    alignItems: 'center',
   },
 });
 
