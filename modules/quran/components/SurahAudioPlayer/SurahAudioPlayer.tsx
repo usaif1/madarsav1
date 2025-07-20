@@ -1,15 +1,31 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ImageBackground, ActivityIndicator } from 'react-native';
 import { scale, verticalScale } from '@/theme/responsive';
 import { Body1Title2Medium, CaptionMedium } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS, getCdnUrl } from '@/utils/cdnUtils';
-import { useSurahAudio } from '../../hooks/useSurahAudio';
 
 interface SurahAudioPlayerProps {
   surahId: number;
   surahName: string;
   verses: any[];
+  audioHook: {
+    isPlaying: boolean;
+    isLoading: boolean;
+    error: string | null;
+    duration: number;
+    position: number;
+    currentVerseId: number | null;
+    totalVerses: number;
+    playAudio: (verseId: number) => Promise<void>;
+    pauseAudio: () => void;
+    resumeAudio: () => Promise<void>;
+    stopAudio: () => void;
+    seekTo: (position: number) => void;
+    playNext: () => Promise<void>;
+    playPrevious: () => Promise<void>;
+    cleanup: () => void;
+  };
   onClose?: () => void;
 }
 
@@ -17,9 +33,10 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
   surahId,
   surahName,
   verses,
+  audioHook,
   onClose,
 }) => {
-  // Get audio functionality from the useSurahAudio hook
+  // Destructure audio functionality from the passed audioHook
   const { 
     isPlaying, 
     isLoading, 
@@ -34,7 +51,15 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     playNext,
     playPrevious,
     seekTo
-  } = useSurahAudio(verses.length);
+  } = audioHook;
+  
+  // Auto-start first verse when player opens and nothing is playing
+  useEffect(() => {
+    if (!currentVerseId && verses.length > 0 && !isPlaying && !isLoading) {
+      console.log('🎵 Audio player opened - starting first verse');
+      playAudio(verses[0].id);
+    }
+  }, []); // Empty deps - only run once when component mounts
   
   // Format time helper function
   const formatTime = (seconds: number): string => {
@@ -48,15 +73,35 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     return duration > 0 ? position / duration : 0;
   }, [position, duration]);
 
+  // Get current verse info
+  const currentVerse = useMemo(() => {
+    if (currentVerseId) {
+      return verses.find(v => v.id === currentVerseId);
+    }
+    return verses[0] || null;
+  }, [currentVerseId, verses]);
+
+  // Get current verse index for navigation controls
+  const currentVerseIndex = useMemo(() => {
+    if (currentVerseId) {
+      return verses.findIndex(v => v.id === currentVerseId);
+    }
+    return 0;
+  }, [currentVerseId, verses]);
+
   const handlePlayPause = async () => {
     try {
       if (isPlaying) {
         pauseAudio();
       } else {
-        if (position > 0) {
+        if (currentVerseId && position > 0) {
           await resumeAudio();
         } else {
-          await playAudio(currentVerseId);
+          // If no verse is selected, start with first verse
+          const verseToPlay = currentVerseId || (verses[0]?.id);
+          if (verseToPlay) {
+            await playAudio(verseToPlay);
+          }
         }
       }
     } catch (error) {
@@ -67,7 +112,7 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
   // Handle seek functionality with proper position calculation
   const handleSeek = (event: any) => {
     const { locationX } = event.nativeEvent;
-    const progressBarWidth = scale(232); // Width of progress bar in middle section
+    const progressBarWidth = scale(180); // Width of progress bar in middle section
     const percentage = Math.max(0, Math.min(1, locationX / progressBarWidth));
     const newPosition = percentage * duration;
     
@@ -98,6 +143,10 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     }
   };
 
+  // Check if we can go to next/previous
+  const canGoNext = currentVerseIndex < verses.length - 1;
+  const canGoPrevious = currentVerseIndex > 0;
+
   return (
     <View style={styles.container}>
       {/* Track Image */}
@@ -121,7 +170,7 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
         {/* Track Name and Time */}
         <View style={styles.trackInfoRow}>
           <Body1Title2Medium color="white" style={styles.trackName}>
-            {surahName} - Verse {currentVerseId}
+            {surahName} - Verse {currentVerseId || 1}
           </Body1Title2Medium>
           <CaptionMedium style={styles.timeText}>
             {formatTime(position)} / {formatTime(duration)}
@@ -133,7 +182,9 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
           <TouchableOpacity 
             style={styles.progressBarTouchArea}
             onPress={handleSeek}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            disabled={duration === 0}
+          >
             <View style={styles.progressBarContainer}>
               <View style={styles.progressBarBackground} />
               <View style={[styles.progressBar, {width: `${Math.min(100, Math.max(0, progress * 100))}%`}]} />
@@ -146,15 +197,16 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
       <View style={styles.controlsContainer}>
         {/* Previous Button */}
         <TouchableOpacity 
-          style={styles.controlButton} 
+          style={[styles.controlButton, !canGoPrevious && styles.disabledButton]} 
           onPress={handlePrevious}
-          disabled={isLoading || currentVerseId <= 1}
+          disabled={isLoading || !canGoPrevious}
           activeOpacity={0.7}
         >
           <CdnSvg 
             path={DUA_ASSETS.QURAN_PLAY_PREVIOUS_ICON} 
             width={scale(12)} 
-            height={scale(12)} 
+            height={scale(12)}
+            style={!canGoPrevious && styles.disabledIcon}
           />
         </TouchableOpacity>
 
@@ -176,25 +228,35 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
 
         {/* Next Button */}
         <TouchableOpacity 
-          style={styles.controlButton} 
+          style={[styles.controlButton, !canGoNext && styles.disabledButton]} 
           onPress={handleNext}
-          disabled={isLoading || currentVerseId >= totalVerses}
+          disabled={isLoading || !canGoNext}
           activeOpacity={0.7}
         >
           <CdnSvg 
             path={DUA_ASSETS.QURAN_PLAY_NEXT_ICON} 
             width={scale(14)} 
-            height={scale(14)} 
+            height={scale(14)}
+            style={!canGoNext && styles.disabledIcon}
           />
         </TouchableOpacity>
       </View>
+
+      {/* Error Display */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <CaptionMedium style={styles.errorText}>
+            {error}
+          </CaptionMedium>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: scale(350), // Reduced width to fit screen better
+    width: scale(350),
     height: verticalScale(51),
     borderRadius: scale(45),
     paddingTop: verticalScale(6),
@@ -203,7 +265,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#16092A',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // Center content
+    justifyContent: 'center',
     gap: scale(8),
     shadowColor: '#000',
     shadowOffset: {
@@ -213,7 +275,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
-    alignSelf: 'center', // Center the entire container
+    alignSelf: 'center',
   },
   trackImageContainer: {
     width: scale(39),
@@ -238,7 +300,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   middleSection: {
-    width: scale(180), // Adjusted width for better balance
+    width: scale(180),
     height: verticalScale(30),
     gap: scale(6),
     justifyContent: 'center',
@@ -289,7 +351,7 @@ const styles = StyleSheet.create({
   controlsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(6), // Reduced gap for better fit
+    gap: scale(6),
   },
   controlButton: {
     width: scale(24),
@@ -299,6 +361,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  disabledIcon: {
+    opacity: 0.5,
+  },
   playPauseButton: {
     width: scale(30),
     height: scale(30),
@@ -307,6 +375,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  errorContainer: {
+    position: 'absolute',
+    bottom: scale(-20),
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: scale(8),
+  },
 });
 
-export default SurahAudioPlayer; 
+export default SurahAudioPlayer;

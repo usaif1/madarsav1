@@ -1,4 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { AudioPro, AudioProContentType } from 'react-native-audio-pro';
+import quranService from '../services/quranService';
+import { API_ENDPOINTS } from '@/api/config/apiConfig';
+
+interface VerseData {
+  id: number;
+  verseKey: string;
+  audioUrl?: string;
+}
 
 interface SurahAudioHook {
   isPlaying: boolean;
@@ -6,7 +15,7 @@ interface SurahAudioHook {
   error: string | null;
   duration: number;
   position: number;
-  currentVerseId: number;
+  currentVerseId: number | null;
   totalVerses: number;
   playAudio: (verseId: number) => Promise<void>;
   pauseAudio: () => void;
@@ -15,94 +24,190 @@ interface SurahAudioHook {
   seekTo: (position: number) => void;
   playNext: () => Promise<void>;
   playPrevious: () => Promise<void>;
-  playVerseFromUrl: (url: string, verseId: number) => Promise<void>;
+  cleanup: () => void;
 }
 
-export const useSurahAudio = (totalVerses: number = 5): SurahAudioHook => {
+export const useSurahAudio = (
+  verses: VerseData[] = [],
+  recitationId: number = 7
+): SurahAudioHook => {
+  // Simple local state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
-  const [currentVerseId, setCurrentVerseId] = useState(1);
+  const [currentVerseId, setCurrentVerseId] = useState<number | null>(null);
+  
+  // Stable refs
+  const eventListenerRef = useRef<any>(null);
+  const currentTrackRef = useRef<string | null>(null);
+  const versesRef = useRef(verses);
+  const isInitializedRef = useRef(false);
 
-  // Simulate audio progress
+  // Update verses ref when verses change
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setPosition(prev => {
-          if (prev >= duration && duration > 0) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+    versesRef.current = verses;
+  }, [verses]);
+
+  const totalVerses = verses.length;
+
+  // Initialize AudioPro once
+  useEffect(() => {
+    if (!isInitializedRef.current) {
+      console.log('🎵 [SurahAudio] Initializing...');
+      
+      AudioPro.configure({
+        contentType: AudioProContentType.SPEECH,
+        showNextPrevControls: false,
+      });
+
+      eventListenerRef.current = AudioPro.addEventListener((event) => {
+        console.log('🎵 [SurahAudio] Event:', event.type);
+        
+        switch (event.type) {
+          case 'STATE_CHANGED':
+            const state = event.payload?.state;
+            setIsPlaying(state === 'PLAYING');
+            setIsLoading(state === 'LOADING');
+            
+            // Handle auto-next on completion
+            if (state === 'STOPPED') {
+              console.log('🎵 [SurahAudio] Track stopped');
+              setPosition(0);
+              // Auto-next logic will be handled by the audio player component
+            }
+            break;
+            
+          case 'PROGRESS':
+            const pos = (event.payload?.position || 0) / 1000;
+            const dur = (event.payload?.duration || 0) / 1000;
+            setPosition(pos);
+            setDuration(dur);
+            break;
+            
+          case 'PLAYBACK_ERROR':
+            console.error('🎵 [SurahAudio] Error:', event.payload?.error);
+            setError('Audio playback failed');
+            setIsLoading(false);
+            break;
+        }
+      });
+
+      isInitializedRef.current = true;
     }
 
+    // Cleanup on unmount only
     return () => {
-      if (interval) clearInterval(interval);
+      if (eventListenerRef.current) {
+        eventListenerRef.current.remove();
+        eventListenerRef.current = null;
+      }
+      AudioPro.stop();
+      isInitializedRef.current = false;
     };
-  }, [isPlaying, duration]);
+  }, []); // Empty deps - run once
 
-  const playVerseFromUrl = useCallback(async (url: string, verseId: number): Promise<void> => {
+  // Fetch audio URL from API
+  const fetchAudioUrl = useCallback(async (verseKey: string): Promise<string> => {
+    const response = await quranService.getAyahRecitation(recitationId, verseKey);
+    
+    if (!response.audio_files || response.audio_files.length === 0) {
+      throw new Error('No audio files found');
+    }
+    
+    let audioUrl = response.audio_files[0].url;
+    if (!audioUrl.startsWith('http')) {
+      audioUrl = `${API_ENDPOINTS.QURAN_FOUNDATION.AUDIO_BASE_URL}${audioUrl}`;
+    }
+    
+    return audioUrl;
+  }, [recitationId]);
+
+  // Play audio function
+  const playAudio = useCallback(async (verseId: number): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // Simulate loading time
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const verse = versesRef.current.find(v => v.id === verseId);
+      if (!verse) {
+        throw new Error('Verse not found');
+      }
       
+      const audioUrl = await fetchAudioUrl(verse.verseKey);
+      const trackId = `verse-${verseId}-${Date.now()}`;
+      
+      const track = {
+        id: trackId,
+        url: audioUrl,
+        title: `Verse ${verseId}`,
+        artist: 'Quran',
+        artwork: '',
+      };
+      
+      currentTrackRef.current = trackId;
       setCurrentVerseId(verseId);
-      setDuration(180); // 3 minutes simulation
-      setPosition(0);
-      setIsPlaying(true);
-    } catch (e) {
-      console.error('Error playing verse:', e);
-      setError('Failed to play verse');
-    } finally {
+      
+      await AudioPro.play(track);
+      
+    } catch (err) {
+      console.error('🎵 [SurahAudio] Play error:', err);
+      setError('Failed to play audio');
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchAudioUrl]);
 
-  const playAudio = useCallback(async (verseId: number): Promise<void> => {
-    // This would typically fetch the audio URL for the verse
-    const audioUrl = `https://example.com/quran/verse-${verseId}.mp3`;
-    await playVerseFromUrl(audioUrl, verseId);
-  }, [playVerseFromUrl]);
-
+  // Simple control functions
   const pauseAudio = useCallback(() => {
-    setIsPlaying(false);
-  }, []);
+    if (isPlaying) {
+      AudioPro.pause();
+    }
+  }, [isPlaying]);
 
   const resumeAudio = useCallback(async (): Promise<void> => {
-    setIsPlaying(true);
-  }, []);
+    if (!isPlaying && currentTrackRef.current) {
+      await AudioPro.resume();
+    }
+  }, [isPlaying]);
 
   const stopAudio = useCallback(() => {
-    setIsPlaying(false);
+    AudioPro.stop();
+    currentTrackRef.current = null;
+    setCurrentVerseId(null);
     setPosition(0);
   }, []);
 
   const seekTo = useCallback((newPosition: number) => {
-    setPosition(Math.max(0, Math.min(newPosition, duration)));
+    if (duration > 0) {
+      AudioPro.seekTo(newPosition * 1000);
+      setPosition(newPosition);
+    }
   }, [duration]);
 
   const playNext = useCallback(async (): Promise<void> => {
-    if (currentVerseId < totalVerses) {
-      const nextVerseId = currentVerseId + 1;
-      await playAudio(nextVerseId);
-    }
-  }, [currentVerseId, totalVerses, playAudio]);
-
-  const playPrevious = useCallback(async (): Promise<void> => {
-    if (currentVerseId > 1) {
-      const previousVerseId = currentVerseId - 1;
-      await playAudio(previousVerseId);
+    if (currentVerseId !== null) {
+      const currentIndex = versesRef.current.findIndex(v => v.id === currentVerseId);
+      if (currentIndex >= 0 && currentIndex < versesRef.current.length - 1) {
+        const nextVerse = versesRef.current[currentIndex + 1];
+        await playAudio(nextVerse.id);
+      }
     }
   }, [currentVerseId, playAudio]);
+
+  const playPrevious = useCallback(async (): Promise<void> => {
+    if (currentVerseId !== null) {
+      const currentIndex = versesRef.current.findIndex(v => v.id === currentVerseId);
+      if (currentIndex > 0) {
+        const previousVerse = versesRef.current[currentIndex - 1];
+        await playAudio(previousVerse.id);
+      }
+    }
+  }, [currentVerseId, playAudio]);
+
+  const cleanup = useCallback(() => {
+    stopAudio();
+  }, [stopAudio]);
 
   return {
     isPlaying,
@@ -119,6 +224,6 @@ export const useSurahAudio = (totalVerses: number = 5): SurahAudioHook => {
     seekTo,
     playNext,
     playPrevious,
-    playVerseFromUrl,
+    cleanup,
   };
-}; 
+};
