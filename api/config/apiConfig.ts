@@ -1,3 +1,11 @@
+import Config from "react-native-config";
+
+// Get environment variables for Quran Foundation credentials
+const QURAN_PRE_PRODUCTION_CLIENT_ID = Config.QURAN_PRE_PRODUCTION_CLIENT_ID;
+const QURAN_PRE_PRODUCTION_CLIENT_SECRET = Config.QURAN_PRE_PRODUCTION_CLIENT_SECRET;
+const QURAN_PRODUCTION_CLIENT_ID = Config.QURAN_PRODUCTION_CLIENT_ID;
+const QURAN_PRODUCTION_CLIENT_SECRET = Config.QURAN_PRODUCTION_CLIENT_SECRET;
+
 export const API_URLS = {
   ISLAMIC_DEVELOPERS: 'https://api.islamicdevelopers.com',
   ALADHAN: 'https://api.aladhan.com',
@@ -76,31 +84,51 @@ export const API_ENDPOINTS = {
     TRANSLATION_BY_AYAH: (resourceId: number, ayahKey: string) => `/translations/${resourceId}/by_ayah/${ayahKey}`,
     // New endpoint for getting verse by key with complete data
     VERSE_BY_KEY: (verseKey: string) => `/verses/by_key/${verseKey}`,
+    // New endpoint for getting ayah recitations
+    AYAH_RECITATION: (recitationId: number, ayahKey: string) => `/recitations/${recitationId}/by_ayah/${ayahKey}`,
+    AUDIO_BASE_URL: 'https://verses.quran.foundation/'
   }
 };
 
-// Quran.Foundation API credentials
+// Quran.Foundation API credentials from environment variables
 export const QURAN_FOUNDATION_CREDENTIALS = {
   PRE_PRODUCTION: {
-    CLIENT_ID: 'b876018d-438d-4ba9-bff1-e832300622ad',
-    CLIENT_SECRET: 'eYgetdho~4m81bd2nu7vEBRJ9Y',
+    CLIENT_ID: QURAN_PRE_PRODUCTION_CLIENT_ID,
+    CLIENT_SECRET: QURAN_PRE_PRODUCTION_CLIENT_SECRET,
   },
   PRODUCTION: {
-    CLIENT_ID: 'e13619a8-9cf8-47f0-8ba1-3b68117e0fad',
-    CLIENT_SECRET: 'DqY.zCCq7kb~-XtjdjOO-ANZLE',
+    CLIENT_ID: QURAN_PRODUCTION_CLIENT_ID,
+    CLIENT_SECRET: QURAN_PRODUCTION_CLIENT_SECRET,
   }
 };
 
 // Get the appropriate credentials based on environment
 export const getQuranFoundationCredentials = () => {
-  return __DEV__
+  const credentials = __DEV__
     ? QURAN_FOUNDATION_CREDENTIALS.PRE_PRODUCTION
     : QURAN_FOUNDATION_CREDENTIALS.PRODUCTION;
+
+  // Validate that credentials are available
+  if (!credentials.CLIENT_ID || !credentials.CLIENT_SECRET) {
+    console.error('❌ Quran Foundation credentials not found in environment variables');
+    console.error('Required environment variables:');
+    if (__DEV__) {
+      console.error('- QURAN_PRE_PRODUCTION_CLIENT_ID');
+      console.error('- QURAN_PRE_PRODUCTION_CLIENT_SECRET');
+    } else {
+      console.error('- QURAN_PRODUCTION_CLIENT_ID');
+      console.error('- QURAN_PRODUCTION_CLIENT_SECRET');
+    }
+    throw new Error('Missing Quran Foundation API credentials in environment variables');
+  }
+
+  return credentials;
 };
 
 // Default IDs for translations and tafsirs
 export const DEFAULT_QURAN_SETTINGS = {
   TRANSLATION_ID: 131, // Dr. Mustafa Khattab, the Clear Quran
   TAFSIR_ID: 169, // Tafsir Ibn Kathir
+  RECITATION_ID: 7, // Mishary Rashid Alafasy (commonly used default)
   LANGUAGE: 'en',
 };

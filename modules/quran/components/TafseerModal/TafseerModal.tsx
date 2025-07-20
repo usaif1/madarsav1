@@ -71,6 +71,29 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
   const [chapters, setChapters] = useState<Array<{id: number, name: string, verses_count: number}>>([]);
   const [selectedChapterVerseCount, setSelectedChapterVerseCount] = useState(114); // Default fallback
 
+  // Fetch initial tafseer data when modal opens
+  useEffect(() => {
+    const fetchInitialTafseerData = async () => {
+      if (visible && !currentTafsir) {
+        setIsLoadingNewData(true);
+        try {
+          // Create verse key from surahId and ayahId
+          const verseKey = `${surahId}:${ayahId}`;
+          
+          // If we don't have tafsir, fetch it using the old API
+          const tafsirResponse = await quranService.getTafsirByAyah(169, verseKey);
+          setCurrentTafsir(tafsirResponse.tafsir?.text || '');
+          
+        } catch (error) {
+          console.error('Error fetching initial tafseer data:', error);
+        } finally {
+          setIsLoadingNewData(false);
+        }
+      }
+    };
+
+    fetchInitialTafseerData();
+  }, [visible, surahId, ayahId, currentTafsir]);
   // Fetch chapters list on component mount
   useEffect(() => {
     const fetchChapters = async () => {

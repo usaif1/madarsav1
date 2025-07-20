@@ -16,7 +16,22 @@ import {
   ChapterRecitersResponse
 } from '../types/quranFoundationTypes';
 
-// New types for verse by key response
+// New types for ayah recitation response
+export interface AyahRecitationResponse {
+  audio_files: Array<{
+    url: string;
+    duration: number;
+    format: string;
+    segments?: Array<Array<[number, number, number]>>;
+  }>;
+  pagination?: {
+    per_page: number;
+    current_page: number;
+    next_page?: number;
+    total_pages: number;
+    total_records: number;
+  };
+}
 export interface VerseByKeyResponse {
   verse: {
     id: number;
@@ -590,7 +605,34 @@ const quranService = {
       }
       throw error;
     }
+  },
+  // Get ayah recitation audio - NEW API
+getAyahRecitation: async (
+  recitationId: number = DEFAULT_QURAN_SETTINGS.RECITATION_ID,
+  ayahKey: string
+): Promise<AyahRecitationResponse> => {
+  console.log(`📘 Fetching recitation for ayah: ${ayahKey} with recitation ID: ${recitationId}`);
+  try {
+    const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.AYAH_RECITATION(recitationId, ayahKey);
+    console.log(`🔍 Request to: ${endpoint}`);
+    
+    const response = await quranFoundationClient.get<AyahRecitationResponse>(endpoint);
+    
+    console.log(`✅ Received recitation: ${response.data.audio_files?.length || 0} audio files`);
+    if (response.data.audio_files?.length > 0) {
+      console.log(`📊 Audio URL: ${response.data.audio_files[0].url}`);
+      console.log(`📊 Duration: ${response.data.audio_files[0].duration} seconds`);
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Error fetching recitation for ayah ${ayahKey}:`, error);
+    if (error instanceof Error) {
+      console.error(`❌ Error message: ${error.message}`);
+    }
+    throw error;
   }
+},
 };
 
 export default quranService;

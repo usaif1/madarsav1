@@ -340,11 +340,6 @@ const HadithInfoScreen: React.FC = () => {
         )}
         style={styles.chapterList}
         contentContainerStyle={styles.listContentContainer}
-        ListFooterComponent={
-          <>
-            <HadithImageFooter />
-          </>
-        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Body1Title2Medium>No chapters found</Body1Title2Medium>
