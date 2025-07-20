@@ -474,17 +474,17 @@ ${surahName}, Verse ${verse.id}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}`
 
   // Handle play
   const handlePlay = useCallback((_verse: DisplayVerse) => {
-    setShowAudioPlayer(true);
+    // setShowAudioPlayer(true);
   }, []);
 
   // Handle floating play button press
   const handleFloatingPlayPress = useCallback(() => {
-    setShowAudioPlayer(true);
+    // setShowAudioPlayer(true);
   }, []);
 
   // Handle audio player close
   const handleAudioPlayerClose = useCallback(() => {
-    setShowAudioPlayer(false);
+    // setShowAudioPlayer(false);
   }, []);
 
   // Render loading state
