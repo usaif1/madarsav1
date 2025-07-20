@@ -16,7 +16,53 @@ import {
   ChapterRecitersResponse
 } from '../types/quranFoundationTypes';
 
-// New types for tafsir and translation by ayah responses
+// New types for verse by key response
+export interface VerseByKeyResponse {
+  verse: {
+    id: number;
+    verse_number: number;
+    page_number: number;
+    verse_key: string;
+    juz_number: number;
+    hizb_number: number;
+    rub_el_hizb_number: number;
+    sajdah_type: string | null;
+    sajdah_number: number | null;
+    text_uthmani: string;
+    words?: Array<{
+      id: number;
+      position: number;
+      audio_url: string;
+      char_type_name: string;
+      line_number: number;
+      page_number: number;
+      code_v1: string;
+      text: string;
+      text_uthmani: string;
+      translation?: {
+        text: string;
+        language_name: string;
+      };
+      transliteration?: {
+        text: string;
+        language_name: string;
+      };
+    }>;
+    translations?: Array<{
+      resource_id: number;
+      text: string;
+      resource_name?: string;
+      language_name?: string;
+    }>;
+    tafsirs?: Array<{
+      id: number;
+      language_name: string;
+      name: string;
+      text: string;
+      resource_id?: number;
+    }>;
+  };
+}
 export interface TafsirByAyahResponse {
   tafsir: {
     verses: Record<string, { id: number }>;
@@ -465,7 +511,46 @@ const quranService = {
     }
   },
 
-  // Search the Quran
+  // Get verse by key with complete data - NEW API
+  getVerseByKey: async (
+    verseKey: string,
+    language: string = DEFAULT_QURAN_SETTINGS.LANGUAGE
+  ): Promise<VerseByKeyResponse> => {
+    console.log(`📘 Fetching verse by key: ${verseKey} with complete data`);
+    try {
+      const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.VERSE_BY_KEY(verseKey);
+      
+      // Complete parameters for maximum data
+      const params = {
+        language,
+        words: 'true',
+        translations: DEFAULT_QURAN_SETTINGS.TRANSLATION_ID.toString(),
+        tafsirs: DEFAULT_QURAN_SETTINGS.TAFSIR_ID.toString(),
+        word_fields: 'text_uthmani,transliteration,translation',
+        translation_fields: 'text,resource_name,language_name',
+        fields: 'text_uthmani,translations,words,tafsirs',
+        audio: 1 // Include audio for verse
+      };
+      
+      console.log(`🔍 Request to: ${endpoint} with params:`, params);
+      
+      const response = await quranFoundationClient.get<VerseByKeyResponse>(
+        endpoint,
+        { params }
+      );
+      
+      console.log(`✅ Received verse: ${response.data.verse.verse_key} with complete data`);
+      console.log(`📊 Verse data: translations=${response.data.verse.translations?.length || 0}, tafsirs=${response.data.verse.tafsirs?.length || 0}, words=${response.data.verse.words?.length || 0}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Error fetching verse by key ${verseKey}:`, error);
+      if (error instanceof Error) {
+        console.error(`❌ Error message: ${error.message}`);
+      }
+      throw error;
+    }
+  },
   searchQuran: async (
     query: string,
     page: number = 1,

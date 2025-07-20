@@ -74,6 +74,8 @@ export const API_ENDPOINTS = {
     // Updated endpoints for tafsir and translation by ayah
     TAFSIR_BY_AYAH: (resourceId: number, ayahKey: string) => `/tafsirs/${resourceId}/by_ayah/${ayahKey}`,
     TRANSLATION_BY_AYAH: (resourceId: number, ayahKey: string) => `/translations/${resourceId}/by_ayah/${ayahKey}`,
+    // New endpoint for getting verse by key with complete data
+    VERSE_BY_KEY: (verseKey: string) => `/verses/by_key/${verseKey}`,
   }
 };
 

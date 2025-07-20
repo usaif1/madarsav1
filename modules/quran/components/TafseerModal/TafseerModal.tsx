@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Dimensions, FlatList } from 'react-native';
 import Modal from 'react-native-modal';
+import RenderHtml from 'react-native-render-html';
 
 // Get screen dimensions for calculations
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
 import { Body2Medium, Body2Bold, Body1Title2Bold, Body1Title2Regular, H5Medium } from '@/components/Typography/Typography';
@@ -146,25 +147,33 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
       const selectedChapter = chapters.find(ch => ch.id === newSurahId);
       if (selectedChapter) {
         setSelectedChapterVerseCount(selectedChapter.verses_count);
+        setSelectedSurahName(selectedChapter.name);
       }
 
-      // Fetch new translation and tafsir for the new surah, verse 1
-      const ayahKey = `${newSurahId}:1`;
-      const [translationResponse, tafsirResponse] = await Promise.all([
-        quranService.getTranslationByAyah(131, ayahKey),
-        quranService.getTafsirByAyah(169, ayahKey)
+      // Fetch verse data using new API and translation/tafsir using old APIs
+      const verseKey = `${newSurahId}:1`;
+      const [verseResponse, translationResponse, tafsirResponse] = await Promise.all([
+        quranService.getVerseByKey(verseKey),
+        quranService.getTranslationByAyah(131, verseKey),
+        quranService.getTafsirByAyah(169, verseKey)
       ]);
+
+      const verseData = verseResponse.verse;
 
       // Update state with new data
       setSelectedSurahId(newSurahId);
-      setSelectedSurahName(newSurahName);
       setSelectedAyahId(1);
       setCurrentTranslation(translationResponse.translations[0]?.text || '');
       setCurrentTafsir(tafsirResponse.tafsir?.text || '');
+      setCurrentVerse(verseData.text_uthmani || '');
       
-      // Clear verse and words since we don't have full verse data for new surah
-      setCurrentVerse('');
-      setCurrentWords([]);
+      // Convert words to our format
+      const convertedWords = verseData.words?.map(word => ({
+        arabic: word.text_uthmani || word.text,
+        transliteration: word.transliteration?.text || '',
+        translation: word.translation?.text || '',
+      })) || [];
+      setCurrentWords(convertedWords);
       
     } catch (error) {
       console.error('Error fetching new surah data:', error);
@@ -198,20 +207,28 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
         }
       }
 
-      // Fetch new translation and tafsir for the selected verse
-      const ayahKey = verseData.verseKey;
-      const [translationResponse, tafsirResponse] = await Promise.all([
-        quranService.getTranslationByAyah(131, ayahKey),
-        quranService.getTafsirByAyah(169, ayahKey)
+      // Fetch verse data using new API and translation/tafsir using old APIs
+      const verseKey = verseData.verseKey;
+      const [verseResponse, translationResponse, tafsirResponse] = await Promise.all([
+        quranService.getVerseByKey(verseKey),
+        quranService.getTranslationByAyah(131, verseKey),
+        quranService.getTafsirByAyah(169, verseKey)
       ]);
+
+      const verse = verseResponse.verse;
 
       setSelectedAyahId(verseData.number);
       setCurrentTranslation(translationResponse.translations[0]?.text || '');
       setCurrentTafsir(tafsirResponse.tafsir?.text || '');
+      setCurrentVerse(verse.text_uthmani || '');
       
-      // For verses from different surahs, we don't have the Arabic text and words
-      setCurrentVerse('');
-      setCurrentWords([]);
+      // Convert words to our format
+      const convertedWords = verse.words?.map(word => ({
+        arabic: word.text_uthmani || word.text,
+        transliteration: word.transliteration?.text || '',
+        translation: word.translation?.text || '',
+      })) || [];
+      setCurrentWords(convertedWords);
       
     } catch (error) {
       console.error('Error fetching new verse data:', error);
@@ -286,6 +303,45 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
     return '';
   }, [currentTranslation, currentWords, generateTranslationFromWords]);
 
+  // HTML rendering styles for tafsir
+  const htmlStyles = {
+    body: {
+      color: '#404040',
+      fontSize: 12,
+      lineHeight: 12 * 1.4,
+      fontFamily: 'System',
+    },
+    h1: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#0A0A0A',
+      marginBottom: 8,
+    },
+    h2: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#0A0A0A',
+      marginBottom: 6,
+    },
+    h3: {
+      fontSize: 13,
+      fontWeight: 'bold',
+      color: '#0A0A0A',
+      marginBottom: 4,
+    },
+    p: {
+      marginBottom: 8,
+      fontSize: 12,
+      lineHeight: 12 * 1.4,
+    },
+    strong: {
+      fontWeight: 'bold',
+    },
+    em: {
+      fontStyle: 'italic',
+    },
+  };
+
   return (
     <Modal 
       isVisible={visible} 
@@ -315,7 +371,7 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
               />
             </TouchableOpacity>
 
-            {/* Verse Selection Button */}
+            {/* Verse Selection Button - Fixed to show number */}
             <TouchableOpacity 
               style={styles.verseButton}
               onPress={() => {
@@ -427,10 +483,18 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
                   </TouchableOpacity>
                 </View>
                 
-                {/* Tafseer Content */}
-                <Body2Medium style={styles.tafseerText}>
-                  {currentTafsir || "Tafseer content will be loaded based on the selected verse."}
-                </Body2Medium>
+                {/* Tafseer Content with HTML rendering */}
+                {currentTafsir ? (
+                  <RenderHtml
+                    contentWidth={screenWidth - scale(32)} // Account for modal padding
+                    source={{ html: currentTafsir }}
+                    tagsStyles={htmlStyles}
+                  />
+                ) : (
+                  <Body2Medium style={styles.tafseerText}>
+                    Tafseer content will be loaded based on the selected verse.
+                  </Body2Medium>
+                )}
               </View>
             </>
           )}
@@ -493,7 +557,7 @@ const styles = StyleSheet.create({
     color: ColorPrimary.primary500,
   },
   verseButton: {
-    width: 95,
+    minWidth: 95, // Changed from fixed width to minWidth
     height: 28,
     flexDirection: 'row',
     alignItems: 'center',
@@ -539,9 +603,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(16),
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-  },
-  selectedDropdownItem: {
-    backgroundColor: '#F0EAFB',
   },
   dropdownText: {
     color: '#404040',
