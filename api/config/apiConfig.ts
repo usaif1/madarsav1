@@ -46,25 +46,22 @@ export const API_ENDPOINTS = {
   PRAYER_METHODS: '/v1/methods',
   
   // AlAdhan Hijri Calendar API endpoints
-  GREGORIAN_TO_HIJRI: '/v1/gToH',              // Convert Gregorian date to Hijri
-  HIJRI_TO_GREGORIAN: '/v1/hToG',              // Convert Hijri date to Gregorian
-  HIJRI_CALENDAR: '/v1/gToHCalendar',          // Get Hijri calendar for a Gregorian month
-  GREGORIAN_CALENDAR: '/v1/hToGCalendar',      // Get Gregorian calendar for a Hijri month
-  NEXT_HIJRI_HOLIDAY: '/v1/nextHijriHoliday',  // Get next Hijri holiday
-  CURRENT_ISLAMIC_YEAR: '/v1/currentIslamicYear', // Get current Islamic year
-  CURRENT_ISLAMIC_MONTH: '/v1/currentIslamicMonth', // Get current Islamic month
-  ISLAMIC_YEAR_FROM_GREGORIAN: '/v1/islamicYearFromGregorianForRamadan', // Islamic year from Gregorian
-  HIJRI_HOLIDAYS: '/v1/hijriHolidays',         // Holiday for specific Hijri day
-  SPECIAL_DAYS: '/v1/specialDays',             // List of special days
-  ISLAMIC_MONTHS: '/v1/islamicMonths',         // Islamic months
-  HIJRI_HOLIDAYS_BY_YEAR: '/v1/islamicHolidaysByHijriYear', // Hijri holidays by year
-  RAMADAN_CALENDAR: '/v1/hijriCalendar/9', // Ramadan calendar (month 9)
-  
-  // Other endpoints will be added as needed
+  GREGORIAN_TO_HIJRI: '/v1/gToH',
+  HIJRI_TO_GREGORIAN: '/v1/hToG',
+  HIJRI_CALENDAR: '/v1/gToHCalendar',
+  GREGORIAN_CALENDAR: '/v1/hToGCalendar',
+  NEXT_HIJRI_HOLIDAY: '/v1/nextHijriHoliday',
+  CURRENT_ISLAMIC_YEAR: '/v1/currentIslamicYear',
+  CURRENT_ISLAMIC_MONTH: '/v1/currentIslamicMonth',
+  ISLAMIC_YEAR_FROM_GREGORIAN: '/v1/islamicYearFromGregorianForRamadan',
+  HIJRI_HOLIDAYS: '/v1/hijriHolidays',
+  SPECIAL_DAYS: '/v1/specialDays',
+  ISLAMIC_MONTHS: '/v1/islamicMonths',
+  HIJRI_HOLIDAYS_BY_YEAR: '/v1/islamicHolidaysByHijriYear',
+  RAMADAN_CALENDAR: '/v1/hijriCalendar/9',
   
   // Quran.Foundation API endpoints
   QURAN_FOUNDATION: {
-    // ... your existing endpoints
     CHAPTERS: '/chapters',
     CHAPTER: (id: number) => `/chapters/${id}`,
     VERSES_BY_CHAPTERS: (chapterId: number) => `/verses/by_chapter/${chapterId}`,
@@ -73,10 +70,10 @@ export const API_ENDPOINTS = {
     JUZS: '/juzs',
     JUZ: (id: number) => `/juzs/${id}`,
     TRANSLATIONS: '/resources/translations',
-    // Fix the reciters endpoint to use the correct path
-    CHAPTER_RECITERS: '/resources/chapter_reciters', // This is the correct endpoint
-    // Remove or rename the old RECITERS endpoint if it exists
-    // RECITERS: '/recitations', // Old incorrect endpoint
+    CHAPTER_RECITERS: '/resources/chapter_reciters',
+    // New endpoints for single translation and tafsir
+    SINGLE_TRANSLATION: (translationId: number) => `/quran/translations/${translationId}`,
+    SINGLE_TAFSIR: (tafsirId: number) => `/quran/tafsirs/${tafsirId}`,
   }
 };
 
@@ -97,4 +94,11 @@ export const getQuranFoundationCredentials = () => {
   return __DEV__
     ? QURAN_FOUNDATION_CREDENTIALS.PRE_PRODUCTION
     : QURAN_FOUNDATION_CREDENTIALS.PRODUCTION;
+};
+
+// Default IDs for translations and tafsirs
+export const DEFAULT_QURAN_SETTINGS = {
+  TRANSLATION_ID: 131, // Dr. Mustafa Khattab, the Clear Quran
+  TAFSIR_ID: 169, // Tafsir Ibn Kathir
+  LANGUAGE: 'en',
 };

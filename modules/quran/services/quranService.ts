@@ -1,5 +1,5 @@
 import quranFoundationClient from '@/api/clients/quranFoundationClient';
-import { API_ENDPOINTS } from '@/api/config/apiConfig';
+import { API_ENDPOINTS, DEFAULT_QURAN_SETTINGS } from '@/api/config/apiConfig';
 import { 
   Chapter, 
   Verse, 
@@ -13,8 +13,31 @@ import {
   JuzsResponse,
   JuzResponse,
   ChapterReciter,
-ChapterRecitersResponse
+  ChapterRecitersResponse
 } from '../types/quranFoundationTypes';
+
+// New types for single translation and tafsir responses
+export interface SingleTranslationResponse {
+  translations: Array<{
+    resource_id: number;
+    text: string;
+  }>;
+  meta: {
+    translation_name: string;
+    author_name: string;
+  };
+}
+
+export interface SingleTafsirResponse {
+  tafsirs: Array<{
+    resource_id: number;
+    text: string;
+  }>;
+  meta: {
+    tafsir_name: string;
+    author_name: string;
+  };
+}
 
 // Legacy types for backward compatibility
 export interface Surah {
@@ -156,36 +179,46 @@ const quranService = {
     }
   },
 
-  // Get verses for a specific chapter
+  // Get verses for a specific chapter with complete data
   getVersesForChapter: async (
     chapterId: number,
     page: number = 1,
     perPage: number = 10,
-    language: string = 'en'
+    language: string = DEFAULT_QURAN_SETTINGS.LANGUAGE
   ): Promise<Verse[]> => {
-    console.log(`📘 Fetching verses for chapter ID: ${chapterId}`);
+    console.log(`📘 Fetching verses for chapter ID: ${chapterId} with complete data`);
     console.log(`📊 Pagination: page ${page}, per_page ${perPage}, language: ${language}`);
     
     try {
       const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.VERSES_BY_CHAPTERS(chapterId);
-      console.log(`🔍 Request to: ${endpoint} with params:`, { page, per_page: perPage, language });
+      
+      // Complete parameters for maximum data
+      const params = {
+        page,
+        per_page: perPage,
+        language,
+        words: 'true',
+        translations: DEFAULT_QURAN_SETTINGS.TRANSLATION_ID.toString(),
+        tafsirs: DEFAULT_QURAN_SETTINGS.TAFSIR_ID.toString(),
+        word_fields: 'text_uthmani,transliteration,translation',
+        translation_fields: 'text,resource_name,language_name',
+        fields: 'text_uthmani,translations,words,tafsirs,audio_url',
+        audio: 1 // Include audio for verses
+      };
+      
+      console.log(`🔍 Request to: ${endpoint} with params:`, params);
       
       const response = await quranFoundationClient.get<VersesResponse>(
         endpoint,
-        {
-          params: {
-            page,
-            per_page: perPage,
-            language
-          }
-        }
+        { params }
       );
       
       const verses = response.data.verses;
-      console.log(`✅ Received ${verses.length} verses for chapter ${chapterId}`);
+      console.log(`✅ Received ${verses.length} verses for chapter ${chapterId} with complete data`);
       
       if (verses.length > 0) {
         console.log(`📊 First verse: ${verses[0].verse_number}, Last verse: ${verses[verses.length - 1].verse_number}`);
+        console.log(`📊 Sample verse data: translations=${verses[0].translations?.length || 0}, tafsirs=${verses[0].tafsirs?.length || 0}, words=${verses[0].words?.length || 0}`);
       }
       
       return verses;
@@ -237,8 +270,7 @@ const quranService = {
     }
   },
 
-  // Get available recitations
-  // Get available chapter reciters (fixed method)
+  // Get available chapter reciters
   getReciters: async (language: string = 'en'): Promise<ChapterReciter[]> => {
     console.log(`📘 Fetching available chapter reciters with language: ${language}`);
     try {
@@ -304,11 +336,7 @@ const quranService = {
   // Helper function to convert JuzFoundation to legacy Juz format
   juzFoundationToJuz: async (juzFoundation: JuzFoundation): Promise<Juz> => {
     try {
-      // We need to fetch all verses for this juz to convert to the legacy format
-      // This is a simplified implementation
       const ayahs: Ayah[] = [];
-      
-      // For now, return a basic structure
       return {
         number: juzFoundation.juz_number,
         ayahs: ayahs
@@ -319,68 +347,49 @@ const quranService = {
     }
   },
 
-  // Get tafseer for a specific ayah
-  getTafseerForAyah: async (surahId: number, ayahId: number): Promise<string> => {
-    try {
-      // This is a placeholder as we need to implement Tafseer fetching with the new API
-      // For now, we'll throw an error
-      throw new Error('Tafseer fetching not yet implemented with Quran.Foundation API');
-    } catch (error) {
-      console.error(`Error fetching tafseer for surah ${surahId}, ayah ${ayahId}:`, error);
-      throw error;
-    }
-  },
-
-  // Search the Quran
-  // Get verses for a specific juz with pagination
+  // Get verses for a specific juz with complete data and pagination
   getVersesByJuz: async (
     juzNumber: number,
     page: number = 1,
     perPage: number = 10,
-    language: string = 'en',
-    includeWords: boolean = true,
-    translationIds?: string,
-    audioId?: number,
-    tafsirIds?: string
+    language: string = DEFAULT_QURAN_SETTINGS.LANGUAGE
   ): Promise<{ verses: Verse[], pagination: { total_records: number, total_pages: number, current_page: number, next_page: number | null } }> => {
-    console.log(`📘 Fetching verses for juz number: ${juzNumber}`);
+    console.log(`📘 Fetching verses for juz number: ${juzNumber} with complete data`);
     console.log(`📊 Pagination: page ${page}, per_page ${perPage}, language: ${language}`);
     
     try {
       const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.VERSES_BY_JUZ(juzNumber);
-      console.log(`🔍 Request to: ${endpoint} with params:`, {
+      
+      // Complete parameters for maximum data
+      const params = {
         page,
         per_page: perPage,
         language,
-        words: includeWords ? 'true' : 'false',
-        translations: translationIds,
-        audio: audioId,
-        tafsirs: tafsirIds
-      });
+        words: 'true',
+        translations: DEFAULT_QURAN_SETTINGS.TRANSLATION_ID.toString(),
+        tafsirs: DEFAULT_QURAN_SETTINGS.TAFSIR_ID.toString(),
+        word_fields: 'text_uthmani,transliteration,translation',
+        translation_fields: 'text,resource_name,language_name',
+        fields: 'text_uthmani,translations,words,tafsirs,audio_url',
+        audio: 1 // Include audio for verses
+      };
+      
+      console.log(`🔍 Request to: ${endpoint} with params:`, params);
       
       const response = await quranFoundationClient.get(
         endpoint,
-        {
-          params: {
-            page,
-            per_page: perPage,
-            language,
-            words: includeWords ? 'true' : 'false',
-            translations: translationIds,
-            audio: audioId,
-            tafsirs: tafsirIds
-          }
-        }
+        { params }
       );
       
       const verses = response.data.verses;
       const pagination = response.data.pagination;
       
-      console.log(`✅ Received ${verses.length} verses for juz ${juzNumber}`);
+      console.log(`✅ Received ${verses.length} verses for juz ${juzNumber} with complete data`);
       console.log(`📊 Pagination info: page ${pagination.current_page} of ${pagination.total_pages}, total records: ${pagination.total_records}`);
       
       if (verses.length > 0) {
         console.log(`📊 First verse: ${verses[0].verse_key}, Last verse: ${verses[verses.length - 1].verse_key}`);
+        console.log(`📊 Sample verse data: translations=${verses[0].translations?.length || 0}, tafsirs=${verses[0].tafsirs?.length || 0}, words=${verses[0].words?.length || 0}`);
       }
       
       return {
@@ -395,7 +404,102 @@ const quranService = {
       throw error;
     }
   },
-  
+
+  // Get single translation for specific verse/surah
+  getSingleTranslation: async (
+    translationId: number = DEFAULT_QURAN_SETTINGS.TRANSLATION_ID,
+    options: {
+      chapterNumber?: number;
+      juzNumber?: number;
+      verseKey?: string;
+      pageNumber?: number;
+      hizbNumber?: number;
+      rubElHizbNumber?: number;
+    } = {}
+  ): Promise<SingleTranslationResponse> => {
+    console.log(`📘 Fetching single translation ID: ${translationId}`);
+    try {
+      const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.SINGLE_TRANSLATION(translationId);
+      
+      const params: Record<string, any> = {
+        fields: 'text,resource_name,language_name'
+      };
+      
+      // Add optional parameters
+      if (options.chapterNumber) params.chapter_number = options.chapterNumber;
+      if (options.juzNumber) params.juz_number = options.juzNumber;
+      if (options.verseKey) params.verse_key = options.verseKey;
+      if (options.pageNumber) params.page_number = options.pageNumber;
+      if (options.hizbNumber) params.hizb_number = options.hizbNumber;
+      if (options.rubElHizbNumber) params.rub_el_hizb_number = options.rubElHizbNumber;
+      
+      console.log(`🔍 Request to: ${endpoint} with params:`, params);
+      
+      const response = await quranFoundationClient.get<SingleTranslationResponse>(
+        endpoint,
+        { params }
+      );
+      
+      console.log(`✅ Received translation: ${response.data.meta.translation_name} by ${response.data.meta.author_name}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Error fetching translation ${translationId}:`, error);
+      if (error instanceof Error) {
+        console.error(`❌ Error message: ${error.message}`);
+      }
+      throw error;
+    }
+  },
+
+  // Get single tafsir for specific verse/surah
+  getSingleTafsir: async (
+    tafsirId: number = DEFAULT_QURAN_SETTINGS.TAFSIR_ID,
+    options: {
+      chapterNumber?: number;
+      juzNumber?: number;
+      verseKey?: string;
+      pageNumber?: number;
+      hizbNumber?: number;
+      rubElHizbNumber?: number;
+    } = {}
+  ): Promise<SingleTafsirResponse> => {
+    console.log(`📘 Fetching single tafsir ID: ${tafsirId}`);
+    try {
+      const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.SINGLE_TAFSIR(tafsirId);
+      
+      const params: Record<string, any> = {
+        fields: 'text,resource_name,language_name'
+      };
+      
+      // Add optional parameters
+      if (options.chapterNumber) params.chapter_number = options.chapterNumber;
+      if (options.juzNumber) params.juz_number = options.juzNumber;
+      if (options.verseKey) params.verse_key = options.verseKey;
+      if (options.pageNumber) params.page_number = options.pageNumber;
+      if (options.hizbNumber) params.hizb_number = options.hizbNumber;
+      if (options.rubElHizbNumber) params.rub_el_hizb_number = options.rubElHizbNumber;
+      
+      console.log(`🔍 Request to: ${endpoint} with params:`, params);
+      
+      const response = await quranFoundationClient.get<SingleTafsirResponse>(
+        endpoint,
+        { params }
+      );
+      
+      console.log(`✅ Received tafsir: ${response.data.meta.tafsir_name} by ${response.data.meta.author_name}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Error fetching tafsir ${tafsirId}:`, error);
+      if (error instanceof Error) {
+        console.error(`❌ Error message: ${error.message}`);
+      }
+      throw error;
+    }
+  },
+
+  // Search the Quran
   searchQuran: async (
     query: string,
     page: number = 1,

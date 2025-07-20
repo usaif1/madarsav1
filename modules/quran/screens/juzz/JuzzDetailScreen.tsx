@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable, ActivityIndicator, Share } from 'react-native';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { JuzzStackParamList } from '../../navigation/juzz.navigator';
@@ -17,6 +17,7 @@ import { useQuranStore } from '../../store/quranStore';
 import quranService from '../../services/quranService';
 import { Verse as ApiVerse } from '../../types/quranFoundationTypes';
 import FastImage from 'react-native-fast-image';
+import { BubbleIndex } from '../../components/BubbleIndex';
 
 // Define the type for a word
 type Word = {
@@ -35,89 +36,10 @@ type Verse = {
   translation: string;
   transliteration: string;
   words: Word[];
+  tafsir?: string;
+  audioUrl?: string;
+  verseKey: string;
 };
-
-// Dynamic bubble index component that adapts to number size
-const BubbleIndex = memo(({ number }: { number: number }) => {
-  const numberStr = number.toString();
-  const digitCount = numberStr.length;
-  
-  // Calculate bubble size based on digit count
-  const bubbleSize = Math.max(26, digitCount * 8 + 18); // Minimum 26, grows with digits
-  const fontSize = digitCount >= 3 ? 10 : digitCount >= 2 ? 11 : 12; // Smaller font for more digits
-  
-  return (
-    <View style={[styles.bubbleContainer, { width: scale(bubbleSize), height: scale(bubbleSize) }]}>
-      <CdnSvg 
-        path={DUA_ASSETS.BUBBLE}
-        width={scale(bubbleSize)}
-        height={scale(bubbleSize)}
-      />
-      <Body1Title2Bold style={[
-        styles.bubbleNumber, 
-        { 
-          fontSize: scale(fontSize),
-          // Dynamic positioning for perfect centering
-          left: '50%',
-          top: '50%',
-          transform: [
-            { translateX: -(digitCount * 3) }, // Adjust for text width
-            { translateY: -scale(fontSize / 2) } // Adjust for text height
-          ]
-        }
-      ]}>
-        {number}
-      </Body1Title2Bold>
-    </View>
-  );
-});
-
-// Sample data for verses with word breakdown
-const SAMPLE_VERSES: Verse[] = [
-  {
-    id: 1,
-    surahId: 1,
-    surahName: 'Al-Fatiha',
-    ayahNumber: 1,
-    arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-    translation: 'In the Name of Allah—the Most Compassionate, Most Merciful.',
-    transliteration: 'Bismillahir Rahmanir Raheem',
-    words: [
-      { arabic: 'بِسْمِ', transliteration: 'Bismi', translation: 'In the name' },
-      { arabic: 'اللَّهِ', transliteration: 'Allahi', translation: 'of Allah' },
-      { arabic: 'الرَّحْمَٰنِ', transliteration: 'Ar-Rahman', translation: 'the Most Gracious' },
-      { arabic: 'الرَّحِيمِ', transliteration: 'Ar-Raheem', translation: 'the Most Merciful' },
-    ],
-  },
-  {
-    id: 2,
-    surahId: 1,
-    surahName: 'Al-Fatiha',
-    ayahNumber: 2,
-    arabic: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
-    translation: 'All praise is for Allah—Lord of all worlds,',
-    transliteration: 'Alhamdu lillahi rabbil alamin',
-    words: [
-      { arabic: 'الْحَمْدُ', transliteration: 'Al-hamdu', translation: 'All praises and thanks' },
-      { arabic: 'لِلَّهِ', transliteration: 'lillahi', translation: 'to Allah (be)' },
-      { arabic: 'رَبِّ', transliteration: 'rabbi', translation: 'the Lord' },
-      { arabic: 'الْعَالَمِينَ', transliteration: 'L-alamina', translation: 'of the universe' },
-    ],
-  },
-  {
-    id: 3,
-    surahId: 1,
-    surahName: 'Al-Fatiha',
-    ayahNumber: 3,
-    arabic: 'الرَّحْمَٰنِ الرَّحِيمِ',
-    translation: 'the Most Compassionate, Most Merciful,',
-    transliteration: 'Ar-Rahman ar-Raheem',
-    words: [
-      { arabic: 'الرَّحْمَٰنِ', transliteration: 'Ar-Rahman', translation: 'the Most Compassionate' },
-      { arabic: 'الرَّحِيمِ', transliteration: 'Ar-Raheem', translation: 'Most Merciful' },
-    ],
-  },
-];
 
 type JuzzDetailScreenRouteProp = RouteProp<JuzzStackParamList, 'juzzDetail'>;
 type JuzzDetailScreenNavigationProp = NativeStackNavigationProp<JuzzStackParamList, 'juzzDetail'>;
@@ -129,6 +51,7 @@ const VerseItem = memo(({
   juzzId,
   juzzName,
   bookmarkedVerses,
+  showTransliteration,
   onTafseerPress,
   onToggleBookmark,
   onShare,
@@ -139,23 +62,31 @@ const VerseItem = memo(({
   juzzId: number;
   juzzName: string;
   bookmarkedVerses: Set<number>;
+  showTransliteration: boolean;
   onTafseerPress: (verse: Verse) => void;
   onToggleBookmark: (verse: Verse) => void;
   onShare: (verse: Verse) => void;
   onPlay: (verse: Verse) => void;
 }) => {
-  // Memoize word boxes to prevent re-renders
-  const wordBoxes = useMemo(() => (
-    <View style={styles.wordsContainer}>
-      {verse.words.map((word, wordIndex) => (
-        <View key={`${verse.id}-word-${wordIndex}`} style={styles.wordBox}>
-          <H5Medium style={styles.wordArabic}>{word.arabic}</H5Medium>
-          <Body2Medium style={styles.wordTransliteration}>{word.transliteration}</Body2Medium>
-          <Body2Bold style={styles.wordTranslation}>{word.translation}</Body2Bold>
-        </View>
-      ))}
-    </View>
-  ), [verse.words, verse.id]);
+  // Memoize word boxes with RTL ordering and transliteration toggle
+  const wordBoxes = useMemo(() => {
+    // Reverse the words array for RTL display (Arabic reads right to left)
+    const reversedWords = [...verse.words].reverse();
+    
+    return (
+      <View style={styles.wordsContainer}>
+        {reversedWords.map((word, wordIndex) => (
+          <View key={`${verse.id}-word-${wordIndex}`} style={styles.wordBox}>
+            <H5Medium style={styles.wordArabic}>{word.arabic}</H5Medium>
+            {showTransliteration && (
+              <Body2Medium style={styles.wordTransliteration}>{word.transliteration}</Body2Medium>
+            )}
+            <Body2Bold style={styles.wordTranslation}>{word.translation}</Body2Bold>
+          </View>
+        ))}
+      </View>
+    );
+  }, [verse.words, verse.id, showTransliteration]);
 
   // Memoize bookmark icon
   const bookmarkIcon = useMemo(() => {
@@ -191,10 +122,10 @@ const VerseItem = memo(({
       <View style={styles.verseContent}>
         {/* Top row with bubble index and word boxes */}
         <View style={styles.topRow}>
-          {/* Dynamic Bubble index */}
+          {/* Fixed size bubble index */}
           <BubbleIndex number={verse.ayahNumber} />
           
-          {/* Word-by-word boxes */}
+          {/* Word-by-word boxes (reversed for RTL) */}
           {wordBoxes}
         </View>
         
@@ -268,7 +199,7 @@ const JuzzDetailScreen: React.FC = () => {
   const [showChangeJuzzModal, setShowChangeJuzzModal] = useState(false);
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const { setTabsVisibility } = useQuranNavigation();
-  const { saveAyah, removeAyah, isAyahSaved } = useQuranStore();
+  const { saveAyah, removeAyah, isAyahSaved, settings } = useQuranStore();
   
   // State for API data
   const [verses, setVerses] = useState<Verse[]>([]);
@@ -290,14 +221,27 @@ const JuzzDetailScreen: React.FC = () => {
   // Memoize route params to prevent unnecessary re-renders
   const memoizedParams = useMemo(() => ({ juzzId, juzzName }), [juzzId, juzzName]);
 
-  // Convert API verse to our Verse format
+  // Get transliteration setting from store
+  const showTransliteration = settings.transliterationEnabled;
+
+  // Convert API verse to our Verse format with complete data
   const convertApiVerseToVerse = useCallback((apiVerse: ApiVerse): Verse => {
     // Extract surah ID and name from verse_key (format: "1:1" where 1 is surah ID and 1 is verse number)
     const [surahId, ayahNumber] = apiVerse.verse_key.split(':').map(Number);
     
+    // Get translation text
+    const translation = apiVerse.translations && apiVerse.translations.length > 0
+      ? apiVerse.translations[0].text
+      : '';
+    
+    // Get tafsir text
+    const tafsir = apiVerse.tafsirs && apiVerse.tafsirs.length > 0
+      ? apiVerse.tafsirs[0].text
+      : '';
+    
     // Create words array from API words if available
     const words: Word[] = apiVerse.words?.map(word => ({
-      arabic: word.text,
+      arabic: word.text_uthmani || word.text,
       transliteration: word.transliteration?.text || '',
       translation: word.translation?.text || ''
     })) || [];
@@ -308,13 +252,16 @@ const JuzzDetailScreen: React.FC = () => {
       surahName: `Surah ${surahId}`, // We could fetch the actual surah name if needed
       ayahNumber,
       arabic: apiVerse.text_uthmani,
-      translation: apiVerse.translations?.[0]?.text || '',
+      translation,
       transliteration: words.map(w => w.transliteration).join(' '),
-      words
+      words,
+      tafsir,
+      audioUrl: apiVerse.audio_url,
+      verseKey: apiVerse.verse_key || `${surahId}:${ayahNumber}`,
     };
   }, []);
   
-  // Fetch verses for the juz
+  // Fetch verses for the juz with complete data
   const fetchVerses = useCallback(async (page: number = 1) => {
     try {
       if (page === 1) {
@@ -329,11 +276,7 @@ const JuzzDetailScreen: React.FC = () => {
         juzzId,
         page,
         10, // perPage
-        'ar', // language
-        true, // includeWords
-        '131', // translationIds (English)
-        undefined, // audioId
-        undefined // tafsirIds
+        'en' // language
       );
       
       const convertedVerses = response.verses.map(convertApiVerseToVerse);
@@ -437,10 +380,27 @@ const JuzzDetailScreen: React.FC = () => {
     }
   }, [juzzId, juzzName, isAyahSaved, removeAyah, saveAyah]);
 
-  // Handle share
-  const handleShare = useCallback((verse: Verse) => {
-    // Implement share functionality
-    console.log('Share verse:', verse.id);
+  // Handle share with complete verse information
+  const handleShare = useCallback(async (verse: Verse) => {
+    try {
+      const shareContent = `${verse.arabic}
+
+Translation: ${verse.translation}
+
+Transliteration: ${verse.transliteration}
+
+Word by word:
+${verse.words.map(word => `${word.arabic} - ${word.transliteration} - ${word.translation}`).join('\n')}
+
+${verse.surahName}, Verse ${verse.ayahNumber}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}` : ''}`;
+
+      await Share.share({
+        message: shareContent,
+        title: `${verse.surahName} - Verse ${verse.ayahNumber}`,
+      });
+    } catch (error) {
+      console.error('Error sharing verse:', error);
+    }
   }, []);
 
   // Handle play
@@ -514,6 +474,7 @@ const JuzzDetailScreen: React.FC = () => {
                 juzzId={juzzId}
                 juzzName={juzzName}
                 bookmarkedVerses={bookmarkedVerses}
+                showTransliteration={showTransliteration}
                 onTafseerPress={handleTafseerPress}
                 onToggleBookmark={toggleBookmark}
                 onShare={handleShare}
@@ -552,7 +513,7 @@ const JuzzDetailScreen: React.FC = () => {
             <SurahAudioPlayer
               surahId={juzzId}
               surahName={juzzName}
-              verses={verses.length > 0 ? verses : SAMPLE_VERSES}
+              verses={verses}
               onClose={handleAudioPlayerClose}
             />
           </View>
@@ -567,7 +528,7 @@ const JuzzDetailScreen: React.FC = () => {
         onJuzzChange={handleJuzzChange}
       />
        
-      {/* Tafseer Modal */}
+      {/* Tafseer Modal with verse data */}
       {showTafseerModal && selectedVerse && (
         <TafseerModal
           visible={showTafseerModal}
@@ -578,6 +539,9 @@ const JuzzDetailScreen: React.FC = () => {
           verse={selectedVerse.arabic}
           words={selectedVerse.words}
           translation={selectedVerse.translation}
+          tafsir={selectedVerse.tafsir}
+          allVerses={verses} // Pass all verses for dropdown
+          currentVerseIndex={verses.findIndex(v => v.id === selectedVerse.id)}
         />
       )}
     </View>
@@ -663,18 +627,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
     gap: scale(6),
-  },
-  bubbleContainer: {
-    position: 'relative',
-    marginTop: scale(8),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bubbleNumber: {
-    position: 'absolute',
-    color: ColorPrimary.primary600,
-    fontWeight: '700',
-    textAlign: 'center',
   },
   wordsContainer: {
     flex: 1,
@@ -788,13 +740,6 @@ const styles = StyleSheet.create({
   audioPlayerWrapper: {
     paddingHorizontal: scale(16),
     paddingBottom: scale(34),
-  },
-  audioPlayerContainer: {
-    position: 'absolute',
-    bottom: scale(40),
-    left: '50%',
-    transform: [{ translateX: -scale(180) }],
-    alignItems: 'center',
   },
 });
 

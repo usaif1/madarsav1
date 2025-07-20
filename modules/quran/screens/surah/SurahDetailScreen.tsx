@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable, ActivityIndicator, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable, ActivityIndicator, Text, Share } from 'react-native';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SurahStackParamList } from '../../navigation/surah.navigator';
@@ -18,6 +18,7 @@ import FastImage from 'react-native-fast-image';
 import quranService from '../../services/quranService';
 import { Verse, Word } from '../../types/quranFoundationTypes';
 import useQuranAuth from '../../hooks/useQuranAuth';
+import { BubbleIndex } from '../../components/BubbleIndex';
 
 // Helper type for UI display
 type DisplayVerse = {
@@ -26,6 +27,9 @@ type DisplayVerse = {
   translation: string;
   transliteration: string;
   words: DisplayWord[];
+  tafsir?: string;
+  audioUrl?: string;
+  verseKey: string;
 };
 
 // Helper type for UI display
@@ -35,7 +39,7 @@ type DisplayWord = {
   translation: string;
 };
 
-// Helper function to convert API Word to DisplayWord (memoized)
+// Helper function to convert API Word to DisplayWord
 const convertToDisplayWord = (word: Word): DisplayWord => {
   return {
     arabic: word.text_uthmani || word.text,
@@ -44,10 +48,14 @@ const convertToDisplayWord = (word: Word): DisplayWord => {
   };
 };
 
-// Helper function to convert API Verse to DisplayVerse (memoized)
+// Helper function to convert API Verse to DisplayVerse
 const convertToDisplayVerse = (verse: Verse): DisplayVerse => {
   const translation = verse.translations && verse.translations.length > 0
     ? verse.translations[0].text
+    : '';
+  
+  const tafsir = verse.tafsirs && verse.tafsirs.length > 0
+    ? verse.tafsirs[0].text
     : '';
   
   const words = verse.words
@@ -60,6 +68,9 @@ const convertToDisplayVerse = (verse: Verse): DisplayVerse => {
     translation,
     transliteration: words.map(w => w.transliteration).join(' '),
     words,
+    tafsir,
+    audioUrl: verse.audio_url,
+    verseKey: verse.verse_key || `${verse.chapter_id}:${verse.verse_number}`,
   };
 };
 
@@ -70,41 +81,6 @@ type SavedSurahRouteProp = RouteProp<SavedStackParamList, 'savedSurahDetail'>;
 // Define navigation types for both stacks
 type SurahNavigationProp = NativeStackNavigationProp<SurahStackParamList, 'surahDetail'>;
 
-// Dynamic bubble index component that adapts to number size
-const BubbleIndex = memo(({ number }: { number: number }) => {
-  const numberStr = number.toString();
-  const digitCount = numberStr.length;
-  
-  // Calculate bubble size based on digit count
-  const bubbleSize = Math.max(26, digitCount * 8 + 18); // Minimum 26, grows with digits
-  const fontSize = digitCount >= 3 ? 10 : digitCount >= 2 ? 11 : 12; // Smaller font for more digits
-  
-  return (
-    <View style={[styles.bubbleContainer, { width: scale(bubbleSize), height: scale(bubbleSize) }]}>
-      <CdnSvg 
-        path={DUA_ASSETS.BUBBLE}
-        width={scale(bubbleSize)}
-        height={scale(bubbleSize)}
-      />
-      <Body1Title2Bold style={[
-        styles.bubbleNumber, 
-        { 
-          fontSize: scale(fontSize),
-          // Dynamic positioning for perfect centering
-          left: '50%',
-          top: '50%',
-          transform: [
-            { translateX: -(digitCount * 3) }, // Adjust for text width
-            { translateY: -scale(fontSize / 2) } // Adjust for text height
-          ]
-        }
-      ]}>
-        {number}
-      </Body1Title2Bold>
-    </View>
-  );
-});
-
 // Memoize the verse item component to prevent unnecessary rerenders
 const VerseItem = memo(({
   verse,
@@ -112,6 +88,7 @@ const VerseItem = memo(({
   surahName,
   surahId,
   bookmarkedVerses,
+  showTransliteration,
   onTafseerPress,
   onToggleBookmark,
   onShare,
@@ -122,23 +99,31 @@ const VerseItem = memo(({
   surahName: string;
   surahId: number;
   bookmarkedVerses: Set<number>;
+  showTransliteration: boolean;
   onTafseerPress: (verse: DisplayVerse) => void;
   onToggleBookmark: (verse: DisplayVerse) => void;
   onShare: (verse: DisplayVerse) => void;
   onPlay: (verse: DisplayVerse) => void;
 }) => {
-  // Memoize word boxes to prevent re-renders
-  const wordBoxes = useMemo(() => (
-    <View style={styles.wordsContainer}>
-      {verse.words.map((word, wordIndex) => (
-        <View key={`${verse.id}-word-${wordIndex}`} style={styles.wordBox}>
-          <H5Medium style={styles.wordArabic}>{word.arabic}</H5Medium>
-          <Body2Medium style={styles.wordTransliteration}>{word.transliteration}</Body2Medium>
-          <Body2Bold style={styles.wordTranslation}>{word.translation}</Body2Bold>
-        </View>
-      ))}
-    </View>
-  ), [verse.words, verse.id]);
+  // Memoize word boxes with RTL ordering and transliteration toggle
+  const wordBoxes = useMemo(() => {
+    // Reverse the words array for RTL display (Arabic reads right to left)
+    const reversedWords = [...verse.words].reverse();
+    
+    return (
+      <View style={styles.wordsContainer}>
+        {reversedWords.map((word, wordIndex) => (
+          <View key={`${verse.id}-word-${wordIndex}`} style={styles.wordBox}>
+            <H5Medium style={styles.wordArabic}>{word.arabic}</H5Medium>
+            {showTransliteration && (
+              <Body2Medium style={styles.wordTransliteration}>{word.transliteration}</Body2Medium>
+            )}
+            <Body2Bold style={styles.wordTranslation}>{word.translation}</Body2Bold>
+          </View>
+        ))}
+      </View>
+    );
+  }, [verse.words, verse.id, showTransliteration]);
 
   // Memoize bookmark icon
   const bookmarkIcon = useMemo(() => {
@@ -174,10 +159,10 @@ const VerseItem = memo(({
       <View style={styles.verseContent}>
         {/* Top row with bubble index and word boxes */}
         <View style={styles.topRow}>
-          {/* Dynamic Bubble index */}
+          {/* Fixed size bubble index */}
           <BubbleIndex number={verse.id} />
           
-          {/* Word-by-word boxes */}
+          {/* Word-by-word boxes (reversed for RTL) */}
           {wordBoxes}
         </View>
         
@@ -250,7 +235,7 @@ const SurahDetailScreen: React.FC = () => {
   const [showTafseerModal, setShowTafseerModal] = useState(false);
   const [selectedVerse, setSelectedVerse] = useState<DisplayVerse | null>(null);
   const { setTabsVisibility } = useQuranNavigation();
-  const { saveAyah, removeAyah, isAyahSaved } = useQuranStore();
+  const { saveAyah, removeAyah, isAyahSaved, settings } = useQuranStore();
   const { isAuthenticated, isInitialized } = useQuranAuth();
   
   // State for verses data
@@ -268,7 +253,10 @@ const SurahDetailScreen: React.FC = () => {
   // Memoize route params to prevent unnecessary re-renders
   const memoizedParams = useMemo(() => ({ surahId, surahName }), [surahId, surahName]);
 
-  // Fetch chapter info - FIXED: Remove bookmarkedVerses dependency
+  // Get transliteration setting from store
+  const showTransliteration = settings.transliterationEnabled;
+
+  // Fetch chapter info
   const fetchChapterInfo = useCallback(async () => {
     console.log(`🔄 Fetching chapter info for surah ${surahId}`);
     try {
@@ -279,9 +267,9 @@ const SurahDetailScreen: React.FC = () => {
     } catch (err) {
       console.error('❌ Error fetching chapter info:', err);
     }
-  }, [surahId]); // FIXED: Removed bookmarkedVerses dependency
+  }, [surahId]);
 
-  // Fetch verses from API with pagination - FIXED: Remove bookmarkedVerses dependency
+  // Fetch verses from API with pagination and complete data
   const fetchVerses = useCallback(async (page: number = 1, append: boolean = false) => {
     console.log(`🔄 Starting to fetch verses for surah ${surahId}, page ${page}`);
     if (page === 1) {
@@ -292,15 +280,15 @@ const SurahDetailScreen: React.FC = () => {
     setError(null);
     
     try {
-      console.log('📡 Calling quranService.getVersesForChapter()');
+      console.log('📡 Calling quranService.getVersesForChapter() with complete data');
       const startTime = Date.now();
       
-      // Fetch verses for the current page
+      // Fetch verses with complete data including translations, tafsirs, and audio
       const versesData = await quranService.getVersesForChapter(
         surahId,
         page,
         PAGE_SIZE,
-        'en',
+        'en'
       );
       
       const endTime = Date.now();
@@ -334,9 +322,9 @@ const SurahDetailScreen: React.FC = () => {
       setIsLoadingMore(false);
       console.log('🏁 Verse fetching process completed');
     }
-  }, [surahId, PAGE_SIZE]); // FIXED: Removed bookmarkedVerses and isAyahSaved dependencies
+  }, [surahId, PAGE_SIZE]);
 
-  // Load saved verses separately - FIXED: Separate effect for bookmarks
+  // Load saved verses separately
   useEffect(() => {
     if (verses.length > 0) {
       const savedVerses = new Set<number>();
@@ -379,7 +367,7 @@ const SurahDetailScreen: React.FC = () => {
     }
   }, [hasMorePages, isLoading, isLoadingMore, loadMoreVerses]);
 
-  // FIXED: Fetch verses when component mounts or auth state changes - simplified dependencies
+  // Fetch verses when component mounts or auth state changes
   useEffect(() => {
     console.log(`🔐 Auth state changed - initialized: ${isInitialized}, authenticated: ${isAuthenticated}`);
     
@@ -394,7 +382,7 @@ const SurahDetailScreen: React.FC = () => {
     } else {
       console.log('⏳ Waiting for authentication to initialize');
     }
-  }, [isInitialized, isAuthenticated, memoizedParams.surahId]); // FIXED: Use memoized params
+  }, [isInitialized, isAuthenticated, memoizedParams.surahId]);
 
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
@@ -430,7 +418,7 @@ const SurahDetailScreen: React.FC = () => {
     setShowTafseerModal(true);
   }, []);
 
-  // Toggle bookmark - FIXED: Memoize with proper dependencies
+  // Toggle bookmark
   const toggleBookmark = useCallback((verse: DisplayVerse) => {
     const ayahId = `${surahId}-${verse.id}`;
     if (isAyahSaved(ayahId)) {
@@ -458,10 +446,28 @@ const SurahDetailScreen: React.FC = () => {
     }
   }, [surahId, surahName, isAyahSaved, removeAyah, saveAyah]);
 
-  // Handle share
-  const handleShare = useCallback((verse: DisplayVerse) => {
-    console.log('Share verse:', verse.id);
-  }, []);
+  // Handle share with complete verse information
+  const handleShare = useCallback(async (verse: DisplayVerse) => {
+    try {
+      const shareContent = `${verse.arabic}
+
+Translation: ${verse.translation}
+
+Transliteration: ${verse.transliteration}
+
+Word by word:
+${verse.words.map(word => `${word.arabic} - ${word.transliteration} - ${word.translation}`).join('\n')}
+
+${surahName}, Verse ${verse.id}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}` : ''}`;
+
+      await Share.share({
+        message: shareContent,
+        title: `${surahName} - Verse ${verse.id}`,
+      });
+    } catch (error) {
+      console.error('Error sharing verse:', error);
+    }
+  }, [surahName]);
 
   // Handle play
   const handlePlay = useCallback((_verse: DisplayVerse) => {
@@ -557,6 +563,7 @@ const SurahDetailScreen: React.FC = () => {
                   surahName={surahName}
                   surahId={surahId}
                   bookmarkedVerses={bookmarkedVerses}
+                  showTransliteration={showTransliteration}
                   onTafseerPress={handleTafseerPress}
                   onToggleBookmark={toggleBookmark}
                   onShare={handleShare}
@@ -596,7 +603,7 @@ const SurahDetailScreen: React.FC = () => {
             </View>
           )}
           
-          {/* Tafseer Modal */}
+          {/* Tafseer Modal with verse data */}
           {showTafseerModal && selectedVerse && (
             <TafseerModal
               visible={showTafseerModal}
@@ -607,6 +614,9 @@ const SurahDetailScreen: React.FC = () => {
               verse={selectedVerse.arabic}
               words={selectedVerse.words}
               translation={selectedVerse.translation}
+              tafsir={selectedVerse.tafsir}
+              allVerses={verses} // Pass all verses for dropdown
+              currentVerseIndex={verses.findIndex(v => v.id === selectedVerse.id)}
             />
           )}
         </View>
@@ -681,18 +691,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: scale(6),
-  },
-  bubbleContainer: {
-    position: 'relative',
-    marginTop: scale(8),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bubbleNumber: {
-    position: 'absolute',
-    color: ColorPrimary.primary600,
-    fontWeight: '700',
-    textAlign: 'center',
   },
   wordsContainer: {
     flex: 1,
