@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator, FlatList } from 'react-native';
 import Modal from 'react-native-modal';
 import { scale, verticalScale } from '@/theme/responsive';
 import { ColorPrimary } from '@/theme/lightColors';
-import { Body2Medium,Body1Title2Medium, Body2Bold, Title3Bold, Body1Title2Bold } from '@/components/Typography/Typography';
+import { Body2Medium, Body1Title2Medium, Body2Bold, Title3Bold, Body1Title2Bold } from '@/components/Typography/Typography';
 import { CdnSvg } from '@/components/CdnSvg';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
+import quranService from '../../services/quranService';
+import { ChapterReciter } from '../../types/quranFoundationTypes'; // Updated import
+import { useQuranStore } from '../../store/quranStore';
 
 // Get screen dimensions for calculations
 const { height: screenHeight } = Dimensions.get('window');
@@ -32,9 +35,38 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
   onApply,
   onClose,
 }) => {
-  const [selectedFont, setSelectedFont] = useState(1);
-  const [selectedQari, setSelectedQari] = useState(1);
-  const [transliterationEnabled, setTransliterationEnabled] = useState(true);
+  // Get settings from store
+  const { settings, updateSettings } = useQuranStore();
+  
+  // Initialize state with values from store
+  const [selectedFont, setSelectedFont] = useState(settings.selectedFont);
+  const [selectedQari, setSelectedQari] = useState(settings.selectedReciterId);
+  const [transliterationEnabled, setTransliterationEnabled] = useState(settings.transliterationEnabled);
+  const [reciters, setReciters] = useState<ChapterReciter[]>([]); // Updated type
+  const [isLoadingReciters, setIsLoadingReciters] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch reciters on component mount
+  useEffect(() => {
+    const fetchReciters = async () => {
+      setIsLoadingReciters(true);
+      setError(null);
+      try {
+        const recitationsData = await quranService.getReciters(); // This now returns ChapterReciter[]
+        console.log('📊 Fetched reciters:', recitationsData);
+        setReciters(recitationsData);
+      } catch (error) {
+        console.error('Failed to fetch reciters:', error);
+        setError('Failed to load reciters. Please try again.');
+      } finally {
+        setIsLoadingReciters(false);
+      }
+    };
+
+    if (visible) { // Only fetch when modal is visible
+      fetchReciters();
+    }
+  }, [visible]);
 
   // Handle font selection
   const handleFontSelect = (fontId: number) => {
@@ -53,12 +85,29 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
 
   // Handle apply settings
   const handleApplySettings = () => {
-    const settings = {
+    // Find the selected reciter to get its name
+    const selectedReciter = reciters.find(r => r.id === selectedQari);
+    
+    // Create new settings object
+    const newSettings = {
+      selectedFont,
+      selectedReciterId: selectedQari,
+      reciterName: selectedReciter ? selectedReciter.name : '', // Updated property name
+      transliterationEnabled,
+    };
+    
+    // Update the store
+    updateSettings(newSettings);
+    
+    // Call the onApply callback with the new settings
+    onApply({
       selectedFont,
       selectedQari,
       transliterationEnabled,
-    };
-    onApply(settings);
+    });
+    
+    // Close the modal
+    onClose();
   };
 
   // Get button style based on selection
@@ -132,24 +181,47 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
           {/* Reciter selection */}
           <View style={styles.settingSection}>
             <Body2Bold style={styles.settingTitle}>Reciter</Body2Bold>
-            <View style={styles.optionsRow}>
-              <TouchableOpacity 
-                style={getButtonStyle(selectedQari === 1)}
-                onPress={() => handleQariSelect(1)}
-              >
-                <Body2Medium style={getButtonTextStyle(selectedQari === 1)}>
-                  Qari name 1
-                </Body2Medium>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={getButtonStyle(selectedQari === 2)}
-                onPress={() => handleQariSelect(2)}
-              >
-                <Body1Title2Medium style={getButtonTextStyle(selectedQari === 2)}>
-                  Qari name 2
-                </Body1Title2Medium>
-              </TouchableOpacity>
-            </View>
+            
+            {isLoadingReciters ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={ColorPrimary.primary500} />
+                <Body2Medium style={styles.loadingText}>Loading reciters...</Body2Medium>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Body2Medium style={styles.errorText}>{error}</Body2Medium>
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={() => {
+                    setError(null);
+                    // Trigger re-fetch by toggling visibility state or calling fetch directly
+                  }}
+                >
+                  <Body2Medium style={styles.retryText}>Retry</Body2Medium>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <FlatList
+                data={reciters}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.recitersList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={getButtonStyle(selectedQari === item.id)}
+                    onPress={() => handleQariSelect(item.id)}
+                  >
+                    <Body2Medium style={getButtonTextStyle(selectedQari === item.id)}>
+                      {item.name} {/* Updated property name */}
+                    </Body2Medium>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <Body2Medium style={styles.emptyText}>No reciters available</Body2Medium>
+                }
+              />
+            )}
           </View>
           
           {/* Transliteration selection */}
@@ -192,6 +264,43 @@ const QuranSettingsModal: React.FC<QuranSettingsModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: scale(16),
+  },
+  loadingText: {
+    marginLeft: scale(8),
+    color: '#525252',
+  },
+  errorContainer: {
+    padding: scale(16),
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    textAlign: 'center',
+    marginBottom: scale(8),
+  },
+  retryButton: {
+    paddingVertical: scale(8),
+    paddingHorizontal: scale(16),
+    backgroundColor: '#F0F0F0',
+    borderRadius: scale(4),
+  },
+  retryText: {
+    color: '#525252',
+  },
+  recitersList: {
+    paddingVertical: scale(8),
+    gap: scale(8),
+  },
+  emptyText: {
+    padding: scale(16),
+    color: '#737373',
+    textAlign: 'center',
+  },
   modal: {
     margin: 0,
     justifyContent: 'flex-end',
@@ -298,4 +407,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default QuranSettingsModal; 
+export default QuranSettingsModal;

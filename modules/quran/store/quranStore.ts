@@ -8,7 +8,7 @@ export interface SavedSurah {
   name: string;
   arabicName: string;
   translation: string;
-  type: 'makkah' | 'madinah';
+  type: 'meccan' | 'medinan';
   ayahCount: number;
   progress?: number;
   savedAt: string;
@@ -34,11 +34,22 @@ export interface SavedAyah {
   savedAt: string;
 }
 
+// Settings type
+export interface QuranSettings {
+  selectedFont: number;
+  selectedReciterId: number;
+  reciterName: string;
+  transliterationEnabled: boolean;
+}
+
 interface QuranStore {
   // Saved items
   savedSurahs: SavedSurah[];
   savedJuzz: SavedJuzz[];
   savedAyahs: SavedAyah[];
+  
+  // Settings
+  settings: QuranSettings;
   
   // Actions for Surahs
   saveSurah: (surah: Omit<SavedSurah, 'savedAt'>) => void;
@@ -55,6 +66,10 @@ interface QuranStore {
   removeAyah: (ayahId: string) => void;
   isAyahSaved: (ayahId: string) => boolean;
   
+  // Settings actions
+  updateSettings: (settings: Partial<QuranSettings>) => void;
+  getSettings: () => QuranSettings;
+  
   // Getters
   getSavedSurahsCount: () => number;
   getSavedJuzzCount: () => number;
@@ -63,6 +78,14 @@ interface QuranStore {
   // Clear all
   clearAllSaved: () => void;
 }
+
+// Default settings
+const defaultSettings: QuranSettings = {
+  selectedFont: 1,
+  selectedReciterId: 1,
+  reciterName: '',
+  transliterationEnabled: true,
+};
 
 export const useQuranStore = create<QuranStore>()(
   persist(
@@ -112,6 +135,9 @@ export const useQuranStore = create<QuranStore>()(
           savedAt: new Date().toISOString(),
         },
       ],
+      
+      // Initial settings
+      settings: defaultSettings,
       
       // Surah actions
       saveSurah: (surah) => {
@@ -189,6 +215,18 @@ export const useQuranStore = create<QuranStore>()(
           savedAyahs: [],
         });
       },
+      
+      // Settings actions
+      updateSettings: (newSettings) => {
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            ...newSettings,
+          },
+        }));
+      },
+      
+      getSettings: () => get().settings,
     }),
     {
       name: 'quran-storage',

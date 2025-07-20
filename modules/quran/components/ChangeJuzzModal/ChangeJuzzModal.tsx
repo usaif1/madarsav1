@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList, Dimensions, ActivityIndicator } from 'react-native';
 import Modal from 'react-native-modal';
+import quranService from '../../services/quranService';
+import { Juz } from '../../types/quranFoundationTypes';
 
 // Get screen dimensions for calculations
 const { height: screenHeight } = Dimensions.get('window');
@@ -17,39 +19,6 @@ interface ChangeJuzzModalProps {
   onJuzzChange: (juzzId: number, juzzName: string) => void;
 }
 
-// Sample data for Juzz with proper names and ayah counts
-const JUZZ_LIST = [
-  { id: 1, name: 'Juzz 1', ayahCount: 148 },
-  { id: 2, name: 'Juzz 2', ayahCount: 111 },
-  { id: 3, name: 'Juzz 3', ayahCount: 126 },
-  { id: 4, name: 'Juzz 4', ayahCount: 132 },
-  { id: 5, name: 'Juzz 5', ayahCount: 124 },
-  { id: 6, name: 'Juzz 6', ayahCount: 110 },
-  { id: 7, name: 'Juzz 7', ayahCount: 149 },
-  { id: 8, name: 'Juzz 8', ayahCount: 142 },
-  { id: 9, name: 'Juzz 9', ayahCount: 159 },
-  { id: 10, name: 'Juzz 10', ayahCount: 129 },
-  { id: 11, name: 'Juzz 11', ayahCount: 123 },
-  { id: 12, name: 'Juzz 12', ayahCount: 111 },
-  { id: 13, name: 'Juzz 13', ayahCount: 108 },
-  { id: 14, name: 'Juzz 14', ayahCount: 107 },
-  { id: 15, name: 'Juzz 15', ayahCount: 128 },
-  { id: 16, name: 'Juzz 16', ayahCount: 118 },
-  { id: 17, name: 'Juzz 17', ayahCount: 117 },
-  { id: 18, name: 'Juzz 18', ayahCount: 101 },
-  { id: 19, name: 'Juzz 19', ayahCount: 113 },
-  { id: 20, name: 'Juzz 20', ayahCount: 114 },
-  { id: 21, name: 'Juzz 21', ayahCount: 112 },
-  { id: 22, name: 'Juzz 22', ayahCount: 118 },
-  { id: 23, name: 'Juzz 23', ayahCount: 134 },
-  { id: 24, name: 'Juzz 24', ayahCount: 137 },
-  { id: 25, name: 'Juzz 25', ayahCount: 99 },
-  { id: 26, name: 'Juzz 26', ayahCount: 159 },
-  { id: 27, name: 'Juzz 27', ayahCount: 170 },
-  { id: 28, name: 'Juzz 28', ayahCount: 137 },
-  { id: 29, name: 'Juzz 29', ayahCount: 180 },
-  { id: 30, name: 'Juzz 30', ayahCount: 564 },
-];
 
 const ITEM_HEIGHT = 40;
 
@@ -60,15 +29,38 @@ const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
   onJuzzChange,
 }) => {
   const [selectedJuzzId, setSelectedJuzzId] = useState(currentJuzzId);
+  const [juzList, setJuzList] = useState<Juz[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const juzzScrollRef = useRef<FlatList>(null);
 
+  // Fetch juz data
   useEffect(() => {
-    if (visible) {
+    const fetchJuzs = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const juzsData = await quranService.getAllJuzs();
+        setJuzList(juzsData);
+      } catch (error) {
+        console.error('Failed to fetch juzs:', error);
+        setError('Failed to load juzs. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJuzs();
+  }, []);
+
+  // Handle modal visibility and scroll to current juz
+  useEffect(() => {
+    if (visible && juzList.length > 0) {
       setSelectedJuzzId(currentJuzzId);
       
       // Scroll to current juzz position after a short delay
       setTimeout(() => {
-        const initialJuzzIndex = JUZZ_LIST.findIndex(j => j.id === currentJuzzId);
+        const initialJuzzIndex = juzList.findIndex(j => j.juz_number === currentJuzzId);
         if (initialJuzzIndex >= 0) {
           juzzScrollRef.current?.scrollToIndex({
             index: initialJuzzIndex,
@@ -78,46 +70,46 @@ const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
         }
       }, 100);
     }
-  }, [visible, currentJuzzId]);
+  }, [visible, currentJuzzId, juzList]);
 
   const handleJuzzSelect = (juzzId: number) => {
     setSelectedJuzzId(juzzId);
   };
 
   const handleConfirm = () => {
-    const selectedJuzz = JUZZ_LIST.find(j => j.id === selectedJuzzId);
-    if (selectedJuzz) {
-      onJuzzChange(selectedJuzzId, selectedJuzz.name);
+    const selectedJuz = juzList.find(j => j.juz_number === selectedJuzzId);
+    if (selectedJuz) {
+      onJuzzChange(selectedJuzzId, `Juz ${selectedJuz.juz_number}`);
     }
     onClose();
   };
 
-  const renderJuzzItem = ({ item }: { item: typeof JUZZ_LIST[0] }) => {
-    const isSelected = item.id === selectedJuzzId;
+  const renderJuzzItem = ({ item }: { item: Juz }) => {
+    const isSelected = item.juz_number === selectedJuzzId;
     return (
       <TouchableOpacity
         style={[styles.juzzItem, isSelected && styles.selectedJuzzItem]}
-        onPress={() => handleJuzzSelect(item.id)}
+        onPress={() => handleJuzzSelect(item.juz_number)}
         activeOpacity={0.7}
       >
         <View style={styles.juzzItemContent}>
           {isSelected ? (
             <Body1Title2Bold style={styles.selectedJuzzName}>
-              {item.name}
+              Juz {item.juz_number}
             </Body1Title2Bold>
           ) : (
             <Body1Title2Medium style={styles.juzzName}>
-              {item.name}
+              Juz {item.juz_number}
             </Body1Title2Medium>
           )}
           
           {isSelected ? (
             <Body1Title2Bold style={styles.selectedAyahCount}>
-              {item.ayahCount} Ayahs
+              {item.verses_count} Ayahs
             </Body1Title2Bold>
           ) : (
             <Body1Title2Medium style={styles.ayahCount}>
-              {item.ayahCount} Ayahs
+              {item.verses_count} Ayahs
             </Body1Title2Medium>
           )}
         </View>
@@ -151,28 +143,38 @@ const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
         
         {/* Juzz list */}
         <View style={styles.listContainer}>
-          <FlatList
-            ref={juzzScrollRef}
-            data={JUZZ_LIST}
-            renderItem={renderJuzzItem}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContent}
-            getItemLayout={(_, index) => ({
-              length: ITEM_HEIGHT,
-              offset: ITEM_HEIGHT * index,
-              index,
-            })}
-            onScrollToIndexFailed={(info) => {
-              setTimeout(() => {
-                juzzScrollRef.current?.scrollToIndex({
-                  index: info.index,
-                  animated: true,
-                  viewPosition: 0.5,
-                });
-              }, 100);
-            }}
-          />
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={ColorPrimary.primary500} />
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Body1Title2Medium style={styles.errorText}>{error}</Body1Title2Medium>
+            </View>
+          ) : (
+            <FlatList
+              ref={juzzScrollRef}
+              data={juzList}
+              renderItem={renderJuzzItem}
+              keyExtractor={(item) => item.juz_number.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listContent}
+              getItemLayout={(_, index) => ({
+                length: ITEM_HEIGHT,
+                offset: ITEM_HEIGHT * index,
+                index,
+              })}
+              onScrollToIndexFailed={(info) => {
+                setTimeout(() => {
+                  juzzScrollRef.current?.scrollToIndex({
+                    index: info.index,
+                    animated: true,
+                    viewPosition: 0.5,
+                  });
+                }, 100);
+              }}
+            />
+          )}
         </View>
         
         {/* Confirm button */}
@@ -191,6 +193,21 @@ const ChangeJuzzModal: React.FC<ChangeJuzzModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(16),
+  },
+  errorText: {
+    color: '#FF6B6B',
+    textAlign: 'center',
+  },
   modal: {
     margin: 0,
     justifyContent: 'flex-end',

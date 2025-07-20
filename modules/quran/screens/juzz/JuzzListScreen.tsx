@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { JuzzStackParamList } from '../../navigation/juzz.navigator';
@@ -13,6 +13,9 @@ import QuranSettingsModal from '../../components/QuranSettingsModal/QuranSetting
 import { useQuranNavigation } from '../../context/QuranNavigationContext';
 import HadithImageFooter from '@/modules/hadith/components/HadithImageFooter';
 import { useQuranStore } from '../../store/quranStore';
+import useQuranAuth from '../../hooks/useQuranAuth';
+import quranService from '../../services/quranService';
+import { Juz as JuzFoundation } from '../../types/quranFoundationTypes';
 
 // Define the type for a Juzz item
 type JuzzItem = {
@@ -25,40 +28,100 @@ type JuzzItem = {
   totalJuzz?: number; // Total number of juzz (30)
 };
 
-// Sample data for Juzz
-const JUZZ_LIST: JuzzItem[] = [
-  { id: 1, name: 'Juzz 1', surahRange: 'Al-Fatihah - Al-Baqarah', ayahCount: 141, progress: 75, bookmarked: true, totalJuzz: 30 },
-  { id: 2, name: 'Juzz 2', surahRange: 'Al-Baqarah', ayahCount: 111, progress: 50, bookmarked: false, totalJuzz: 30 },
-  { id: 3, name: 'Juzz 3', surahRange: 'Al-Baqarah - Al-Imran', ayahCount: 127, progress: 25, bookmarked: false, totalJuzz: 30 },
-  { id: 4, name: 'Juzz 4', surahRange: 'Al-Imran - An-Nisa', ayahCount: 137, progress: 10, bookmarked: true, totalJuzz: 30 },
-  { id: 5, name: 'Juzz 5', surahRange: 'An-Nisa', ayahCount: 124, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 6, name: 'Juzz 6', surahRange: 'An-Nisa - Al-Ma\'idah', ayahCount: 111, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 7, name: 'Juzz 7', surahRange: 'Al-Ma\'idah - Al-An\'am', ayahCount: 121, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 8, name: 'Juzz 8', surahRange: 'Al-An\'am - Al-A\'raf', ayahCount: 111, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 9, name: 'Juzz 9', surahRange: 'Al-A\'raf - Al-Anfal', ayahCount: 127, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 10, name: 'Juzz 10', surahRange: 'Al-Anfal - At-Tawbah', ayahCount: 109, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 11, name: 'Juzz 11', surahRange: 'At-Tawbah - Hud', ayahCount: 123, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 12, name: 'Juzz 12', surahRange: 'Hud - Yusuf', ayahCount: 111, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 13, name: 'Juzz 13', surahRange: 'Yusuf - Ibrahim', ayahCount: 115, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 14, name: 'Juzz 14', surahRange: 'Ibrahim - Al-Hijr', ayahCount: 107, progress: 0, bookmarked: false, totalJuzz: 30 },
-  { id: 15, name: 'Juzz 15', surahRange: 'Al-Hijr - An-Nahl', ayahCount: 128, progress: 0, bookmarked: false, totalJuzz: 30 },
-];
+// Helper function to convert JuzFoundation to JuzzItem
+const juzFoundationToJuzzItem = (juz: JuzFoundation): JuzzItem => {
+  // Extract chapter numbers from verse_mapping
+  const chapterNumbers = Object.keys(juz.verse_mapping);
+  
+  // Create surah range string
+  let surahRange = '';
+  if (chapterNumbers.length === 1) {
+    surahRange = `Surah ${chapterNumbers[0]}`;
+  } else if (chapterNumbers.length > 1) {
+    surahRange = `Surah ${chapterNumbers[0]} - Surah ${chapterNumbers[chapterNumbers.length - 1]}`;
+  }
+  
+  return {
+    id: juz.juz_number,
+    name: `Juz ${juz.juz_number}`,
+    surahRange: surahRange,
+    ayahCount: juz.verses_count,
+    progress: 0, // Default progress
+    totalJuzz: 30 // Total number of juzs in Quran
+  };
+};
 
 type JuzzListScreenNavigationProp = NativeStackNavigationProp<JuzzStackParamList, 'juzzList'>;
 
 const JuzzListScreen: React.FC = () => {
   const navigation = useNavigation<JuzzListScreenNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredJuzz, setFilteredJuzz] = useState(JUZZ_LIST);
+  const [juzs, setJuzs] = useState<JuzzItem[]>([]);
+  const [filteredJuzz, setFilteredJuzz] = useState<JuzzItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const { setTabsVisibility } = useQuranNavigation();
   const { saveJuzz, removeJuzz, isJuzzSaved } = useQuranStore();
+  const { isAuthenticated, isInitialized } = useQuranAuth();
+
+  // Fetch juzs when component mounts or auth state changes
+  useEffect(() => {
+    console.log(`🔐 Auth state changed - initialized: ${isInitialized}, authenticated: ${isAuthenticated}`);
+    
+    if (isInitialized && isAuthenticated) {
+      console.log('✅ Authentication ready, fetching juzs');
+      fetchJuzs();
+    } else if (isInitialized && !isAuthenticated) {
+      console.log('⚠️ Authentication initialized but not authenticated');
+      setError('Authentication failed. Please try again.');
+      setIsLoading(false);
+    } else {
+      console.log('⏳ Waiting for authentication to initialize');
+    }
+  }, [isInitialized, isAuthenticated]);
+
+  // Fetch juzs from API
+  const fetchJuzs = async () => {
+    console.log('🔄 Starting to fetch juzs from API');
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log('📡 Calling quranService.getAllJuzs()');
+      const startTime = Date.now();
+      const juzsData = await quranService.getAllJuzs();
+      const endTime = Date.now();
+      
+      console.log(`✅ Received ${juzsData.length} juzs in ${endTime - startTime}ms`);
+      
+      // Convert juzs to JuzzItem format
+      console.log('🔄 Converting juzs to JuzzItem format');
+      const juzzItems = juzsData.map(juzFoundationToJuzzItem);
+      setJuzs(juzzItems);
+      setFilteredJuzz(juzzItems);
+      
+      console.log('✅ Juz data processed and ready for display');
+    } catch (err) {
+      console.error('❌ Error fetching juzs:', err);
+      if (err instanceof Error) {
+        console.error(`❌ Error message: ${err.message}`);
+        console.error(`❌ Error stack: ${err.stack}`);
+      }
+      setError('Failed to load juzs. Please try again.');
+    } finally {
+      setIsLoading(false);
+      console.log('🏁 Juz fetching process completed');
+    }
+  };
 
   // Show both top and bottom tabs when this screen is focused
   useFocusEffect(
     React.useCallback(() => {
+      console.log('📱 JuzzListScreen focused - showing navigation tabs');
       setTabsVisibility(true, true); // Show both top and bottom tabs
       return () => {
+        console.log('📱 JuzzListScreen unfocused');
         // Keep tabs shown when leaving unless going to detail screen
       };
     }, [setTabsVisibility])
@@ -66,15 +129,20 @@ const JuzzListScreen: React.FC = () => {
 
   // Handle search input change
   const handleSearch = (text: string) => {
+    console.log(`🔍 Search query changed: "${text}"`);
     setSearchQuery(text);
+    
     if (text.trim() === '') {
-      setFilteredJuzz(JUZZ_LIST);
+      console.log('🔍 Empty search query, showing all juzs');
+      setFilteredJuzz(juzs);
     } else {
-      const filtered = JUZZ_LIST.filter(
-        juzz => 
+      console.log(`🔍 Filtering juzs by: "${text}"`);
+      const filtered = juzs.filter(
+        (juzz: JuzzItem) =>
           juzz.name.toLowerCase().includes(text.toLowerCase()) ||
           juzz.surahRange.toLowerCase().includes(text.toLowerCase())
       );
+      console.log(`🔍 Found ${filtered.length} matching juzs`);
       setFilteredJuzz(filtered);
     }
   };
@@ -173,6 +241,27 @@ const JuzzListScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  // Render loading state
+  const renderLoading = () => (
+    <View style={styles.centerContainer}>
+      <ActivityIndicator size="large" color={ColorPrimary.primary500} />
+      <Body2Medium style={{marginTop: scale(10)}}>Loading juzs...</Body2Medium>
+    </View>
+  );
+
+  // Render error state
+  const renderError = () => (
+    <View style={styles.centerContainer}>
+      <Text style={styles.errorText}>{error}</Text>
+      <TouchableOpacity
+        style={styles.retryButton}
+        onPress={fetchJuzs}
+      >
+        <Body2Bold style={styles.retryButtonText}>Retry</Body2Bold>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       {/* Search input */}
@@ -184,15 +273,22 @@ const JuzzListScreen: React.FC = () => {
         />
       </View>
       
-      {/* Juzz list */}
-      <FlatList
-        data={filteredJuzz}
-        renderItem={renderJuzzItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={()=><HadithImageFooter />}
-      />
+      {/* Content based on state */}
+      {isLoading ? (
+        renderLoading()
+      ) : error ? (
+        renderError()
+      ) : (
+        /* Juzz list */
+        <FlatList
+          data={filteredJuzz}
+          renderItem={renderJuzzItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={()=><HadithImageFooter />}
+        />
+      )}
 
       {/* Floating Settings Button */}
       <TouchableOpacity 
@@ -216,6 +312,27 @@ const JuzzListScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(20),
+  },
+  errorText: {
+    fontSize: scale(16),
+    color: '#FF6B6B',
+    textAlign: 'center',
+    marginBottom: scale(16),
+  },
+  retryButton: {
+    backgroundColor: ColorPrimary.primary500,
+    paddingHorizontal: scale(20),
+    paddingVertical: scale(10),
+    borderRadius: scale(8),
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',

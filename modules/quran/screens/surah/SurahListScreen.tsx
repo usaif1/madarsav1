@@ -23,7 +23,7 @@ type SurahItem = {
   name: string;
   arabicName: string;
   translation: string;
-  type: 'makkah' | 'madinah';
+  type: 'meccan' | 'medinan';
   ayahCount: number;
 };
 

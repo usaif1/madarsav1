@@ -1,7 +1,7 @@
 // Chapter (Surah) type
 export interface Chapter {
   id: number;
-  revelation_place: 'makka' | 'madinah';
+  revelation_place: 'makkah' | 'madinah';
   revelation_order: number;
   bismillah_pre: boolean;
   name_simple: string;
@@ -15,33 +15,71 @@ export interface Chapter {
   };
 }
 
+// Word type
+export interface Word {
+  id: number;
+  position: number;
+  verse_id: number;
+  verse_key: string;
+  chapter_id: number;
+  page_number: number;
+  line_number: number;
+  text: string;
+  text_uthmani: string;
+  text_indopak: string;
+  code_v1?: string;
+  code_v2?: string;
+  char_type_name: string;
+  audio_url?: string;
+  location?: string;
+  translation?: {
+    text: string;
+    language_name: string;
+  };
+  transliteration?: {
+    text: string;
+    language_name: string;
+  };
+}
+
 // Verse (Ayah) type
 export interface Verse {
   id: number;
   verse_number: number;
+  verse_key: string;
   chapter_id: number;
   text_uthmani: string;
   text_indopak: string;
   juz_number: number;
   hizb_number: number;
-  rub_number: number;
+  rub_el_hizb_number: number;
   sajdah_type: string | null;
   sajdah_number: number | null;
   page_number: number;
+  words?: Word[];
   translations?: VerseTranslation[];
   audio?: {
     url: string;
     segments: number[][];
   };
+  tafsirs?: VerseTafsir[];
 }
 
 // Verse Translation type
 export interface VerseTranslation {
+  id?: number;
+  language_name?: string;
+  text: string;
+  resource_name?: string;
+  resource_id: number;
+}
+
+// Verse Tafsir type
+export interface VerseTafsir {
   id: number;
   language_name: string;
+  name: string;
   text: string;
-  resource_name: string;
-  resource_id: number;
 }
 
 // Recitation type
@@ -128,4 +166,39 @@ export interface SearchResponse {
   verses: Verse[];
   meta: PaginationMeta;
   total: number;
+}
+
+// Juz type
+export interface Juz {
+  id: number;
+  juz_number: number;
+  verse_mapping: Record<string, string>;
+  first_verse_id: number;
+  last_verse_id: number;
+  verses_count: number;
+}
+
+// Juzs response
+export interface JuzsResponse {
+  juzs: Juz[];
+  meta?: PaginationMeta;
+}
+
+// Juz response
+export interface JuzResponse {
+  juz: Juz;
+}
+
+// Add this to your types file:
+export interface ChapterReciter {
+  id: number;
+  name: string;
+  arabic_name: string;
+  relative_path: string;
+  format: string;
+  files_size: number;
+}
+
+export interface ChapterRecitersResponse {
+  reciters: ChapterReciter[];
 }

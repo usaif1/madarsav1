@@ -64,12 +64,19 @@ export const API_ENDPOINTS = {
   
   // Quran.Foundation API endpoints
   QURAN_FOUNDATION: {
+    // ... your existing endpoints
     CHAPTERS: '/chapters',
     CHAPTER: (id: number) => `/chapters/${id}`,
-    VERSES: (chapterId: number) => `/chapters/${chapterId}/verses`,
+    VERSES_BY_CHAPTERS: (chapterId: number) => `/verses/by_chapter/${chapterId}`,
     VERSE: (chapterId: number, verseId: number) => `/chapters/${chapterId}/verses/${verseId}`,
-    RECITATIONS: '/recitations',
-    TRANSLATIONS: '/translations',
+    VERSES_BY_JUZ: (juzNumber: number) => `/verses/by_juz/${juzNumber}`,
+    JUZS: '/juzs',
+    JUZ: (id: number) => `/juzs/${id}`,
+    TRANSLATIONS: '/resources/translations',
+    // Fix the reciters endpoint to use the correct path
+    CHAPTER_RECITERS: '/resources/chapter_reciters', // This is the correct endpoint
+    // Remove or rename the old RECITERS endpoint if it exists
+    // RECITERS: '/recitations', // Old incorrect endpoint
   }
 };
 
