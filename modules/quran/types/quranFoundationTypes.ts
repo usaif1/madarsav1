@@ -202,3 +202,10 @@ export interface ChapterReciter {
 export interface ChapterRecitersResponse {
   reciters: ChapterReciter[];
 }
+
+export const generateTranslationFromWords = (words: Array<{translation: string}>): string => {
+  return words
+    .map(word => word.translation)
+    .filter(translation => translation && translation.trim())
+    .join(' ');
+};

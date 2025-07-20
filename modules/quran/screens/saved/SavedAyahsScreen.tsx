@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SavedStackParamList } from '../../navigation/saved.navigator';
@@ -12,6 +12,7 @@ import CustomHeader from '@/components/Header/Header';
 import { DUA_ASSETS } from '@/utils/cdnUtils';
 import { useQuranNavigation } from '../../context/QuranNavigationContext';
 import { useQuranStore, SavedAyah } from '../../store/quranStore';
+import { BubbleIndex } from '../../components/BubbleIndex';
 
 type SavedAyahsScreenNavigationProp = NativeStackNavigationProp<SavedStackParamList, 'savedAyahs'>;
 
@@ -40,47 +41,70 @@ const SavedAyahsScreen: React.FC = () => {
     removeAyah(ayahId);
   };
 
-  // Handle share
-  const handleShare = (ayah: SavedAyah) => {
-    // Implement share functionality
-    console.log('Share ayah:', ayah.id);
+  // Handle share with proper formatting (no word by word)
+  const handleShare = async (ayah: SavedAyah) => {
+    try {
+      const shareContent = `${ayah.arabic}
+
+Translation: ${ayah.translation}
+
+Transliteration: ${ayah.transliteration}
+
+${ayah.surahName}, Verse ${ayah.ayahNumber}`;
+
+      await Share.share({
+        message: shareContent,
+        title: `${ayah.surahName} - Verse ${ayah.ayahNumber}`,
+      });
+    } catch (error) {
+      console.error('Error sharing ayah:', error);
+    }
   };
 
-  // Handle play
-  const handlePlay = (ayah: SavedAyah) => {
-    // Implement play functionality
-    console.log('Play ayah:', ayah.id);
+  // Render word boxes from transliteration (simplified version for saved ayahs)
+  const renderSimplifiedWordBoxes = (transliteration: string, translation: string) => {
+    // Split transliteration and translation into words for display
+    const transliterationWords = transliteration.split(' ').filter(word => word.trim());
+    const translationWords = translation.split(' ').filter(word => word.trim());
+    
+    // Create simplified word pairs (reversed for RTL)
+    const wordPairs = transliterationWords.map((translit, index) => ({
+      transliteration: translit,
+      translation: translationWords[index] || '',
+    })).reverse(); // Reverse for RTL display
+
+    if (wordPairs.length === 0) return null;
+
+    return (
+      <View style={styles.wordsContainer}>
+        {wordPairs.slice(0, 8).map((wordPair, index) => ( // Limit to 8 words for space
+          <View key={index} style={styles.wordBox}>
+            <Body2Medium style={styles.wordTransliteration}>{wordPair.transliteration}</Body2Medium>
+            <Body2Bold style={styles.wordTranslation}>{wordPair.translation}</Body2Bold>
+          </View>
+        ))}
+        {wordPairs.length > 8 && (
+          <View style={styles.moreWordsIndicator}>
+            <Body2Medium style={styles.moreWordsText}>...</Body2Medium>
+          </View>
+        )}
+      </View>
+    );
   };
 
-  // Render word boxes from Arabic text (simplified version)
-  const renderSimplifiedArabic = (arabicText: string, ayahNumber: number) => (
-    <View style={styles.topRow}>
-      {/* Bubble index */}
-      <View style={styles.bubbleContainer}>
-        <CdnSvg 
-          path={DUA_ASSETS.BUBBLE}
-          width={scale(26)}
-          height={scale(26)}
-        />
-        <Body1Title2Bold style={styles.bubbleNumber}>
-          {ayahNumber}
-        </Body1Title2Bold>
-      </View>
-      
-      {/* Arabic text in a simplified layout */}
-      <View style={styles.arabicTextContainer}>
-        <H5Medium style={styles.arabicText}>{arabicText}</H5Medium>
-      </View>
-    </View>
-  );
-
-  // Render a saved ayah item with consistent UI
+  // Render a saved ayah item with consistent UI matching detail screens
   const renderSavedAyahItem = ({ item }: { item: SavedAyah }) => (
     <View style={styles.verseCard}>
       {/* Verse content */}
       <View style={styles.verseContent}>
-        {/* Top row with bubble index and Arabic text */}
-        {renderSimplifiedArabic(item.arabic, item.ayahNumber)}
+        {/* Top row with bubble index and word boxes */}
+        <View style={styles.topRow}>
+          {/* Fixed size bubble index */}
+          <BubbleIndex number={item.ayahNumber} />
+          
+          {/* Word-by-word boxes (simplified from transliteration) */}
+          {renderSimplifiedWordBoxes(item.transliteration, item.translation)}
+        </View>
         
         {/* Translation section */}
         <View style={styles.translationSection}>
@@ -97,7 +121,7 @@ const SavedAyahsScreen: React.FC = () => {
             <Body1Title2Regular style={styles.referenceText}>{item.ayahNumber}</Body1Title2Regular>
           </View>
           
-          {/* Right: Action icons */}
+          {/* Right: Action icons (bookmark and share only) */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity 
               style={styles.actionButton}
@@ -105,8 +129,8 @@ const SavedAyahsScreen: React.FC = () => {
             >
               <CdnSvg 
                 path={DUA_ASSETS.BOOKMARK_PRIMARY}
-                width={scale(16)}
-                height={scale(16)}
+                width={scale(20)}
+                height={scale(20)}
               />
             </TouchableOpacity>
             <TouchableOpacity 
@@ -119,24 +143,7 @@ const SavedAyahsScreen: React.FC = () => {
                 height={scale(16)}
               />
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => handlePlay(item)}
-            >
-              <CdnSvg 
-                path={DUA_ASSETS.SURAH_PLAY_ICON}
-                width={scale(16)}
-                height={scale(16)}
-              />
-            </TouchableOpacity>
           </View>
-        </View>
-        
-        {/* Date saved info */}
-        <View style={styles.dateSavedContainer}>
-          <Body2Medium style={styles.dateSavedText}>
-            Saved on {new Date(item.savedAt).toLocaleDateString()}
-          </Body2Medium>
         </View>
       </View>
     </View>
@@ -188,7 +195,7 @@ const styles = StyleSheet.create({
   },
   verseCard: {
     backgroundColor: '#FFFFFF',
-    marginVertical: scale(8),
+    marginVertical: scale(4),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -205,30 +212,47 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: scale(6),
   },
-  bubbleContainer: {
-    position: 'relative',
-    width: scale(26),
-    height: scale(26),
-    marginTop: scale(8),
-  },
-  bubbleNumber: {
-    position: 'absolute',
-    top: '50%',
-    left: '55%',
-    transform: [{ translateX: -3 }, { translateY: -8 }],
-    color: ColorPrimary.primary600,
-    fontSize: 12,
-  },
-  arabicTextContainer: {
+  wordsContainer: {
     flex: 1,
-    alignItems: 'flex-end',
-    paddingTop: scale(8),
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scale(10),
   },
-  arabicText: {
-    fontSize: 20,
-    lineHeight: 20 * 1.4,
-    textAlign: 'right',
-    color: '#171717',
+  wordBox: {
+    width: 72,
+    height: 60, // Smaller height since no Arabic text
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: scale(2),
+    padding: scale(6),
+    paddingVertical: scale(8),
+  },
+  wordTransliteration: {
+    fontSize: 9,
+    lineHeight: 9 * 1.2,
+    textAlign: 'center',
+    color: '#525252',
+    fontWeight: '400',
+    marginBottom: scale(1),
+  },
+  wordTranslation: {
+    fontSize: 9,
+    lineHeight: 9 * 1.2,
+    textAlign: 'center',
+    color: '#525252',
+    fontWeight: '600',
+    paddingHorizontal: scale(2),
+  },
+  moreWordsIndicator: {
+    width: 30,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moreWordsText: {
+    fontSize: 16,
+    color: '#A3A3A3',
+    fontWeight: 'bold',
   },
   translationSection: {
     gap: scale(4),
@@ -272,15 +296,6 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 8,
-  },
-  dateSavedContainer: {
-    alignItems: 'flex-end',
-    marginTop: scale(-8),
-  },
-  dateSavedText: {
-    fontSize: 12,
-    color: '#737373',
-    fontStyle: 'italic',
   },
   emptyContainer: {
     flex: 1,

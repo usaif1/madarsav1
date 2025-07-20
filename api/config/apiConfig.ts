@@ -71,9 +71,9 @@ export const API_ENDPOINTS = {
     JUZ: (id: number) => `/juzs/${id}`,
     TRANSLATIONS: '/resources/translations',
     CHAPTER_RECITERS: '/resources/chapter_reciters',
-    // New endpoints for single translation and tafsir
-    SINGLE_TRANSLATION: (translationId: number) => `/quran/translations/${translationId}`,
-    SINGLE_TAFSIR: (tafsirId: number) => `/quran/tafsirs/${tafsirId}`,
+    // Updated endpoints for tafsir and translation by ayah
+    TAFSIR_BY_AYAH: (resourceId: number, ayahKey: string) => `/tafsirs/${resourceId}/by_ayah/${ayahKey}`,
+    TRANSLATION_BY_AYAH: (resourceId: number, ayahKey: string) => `/translations/${resourceId}/by_ayah/${ayahKey}`,
   }
 };
 

@@ -18,7 +18,7 @@ import FastImage from 'react-native-fast-image';
 import quranService from '../../services/quranService';
 import { Verse, Word } from '../../types/quranFoundationTypes';
 import useQuranAuth from '../../hooks/useQuranAuth';
-import { BubbleIndex } from '../../components/BubbleIndex';
+import { BubbleIndex } from '../../components/BubbleIndex'; // Import the new component
 
 // Helper type for UI display
 type DisplayVerse = {
@@ -50,9 +50,11 @@ const convertToDisplayWord = (word: Word): DisplayWord => {
 
 // Helper function to convert API Verse to DisplayVerse
 const convertToDisplayVerse = (verse: Verse): DisplayVerse => {
-  const translation = verse.translations && verse.translations.length > 0
-    ? verse.translations[0].text
-    : '';
+  const wordTranslation = verse.words?.map(word => word.translation?.text || '').filter(t => t.trim()).join(' ');
+      const finalTranslation = verse.translation || wordTranslation;
+    const translation = verse.translations && verse.translations.length > 0
+      ? verse.translations[0].text
+      : finalTranslation;
   
   const tafsir = verse.tafsirs && verse.tafsirs.length > 0
     ? verse.tafsirs[0].text
@@ -446,17 +448,18 @@ const SurahDetailScreen: React.FC = () => {
     }
   }, [surahId, surahName, isAyahSaved, removeAyah, saveAyah]);
 
-  // Handle share with complete verse information
+  // Handle share with improved formatting (no word by word)
   const handleShare = useCallback(async (verse: DisplayVerse) => {
     try {
+      // Create translation from individual words if not available (left to right for English)
+      const wordTranslation = verse.words.map(word => word.translation).filter(t => t.trim()).join(' ');
+      const finalTranslation = verse.translation || wordTranslation;
+      
       const shareContent = `${verse.arabic}
 
-Translation: ${verse.translation}
+Translation: ${finalTranslation}
 
 Transliteration: ${verse.transliteration}
-
-Word by word:
-${verse.words.map(word => `${word.arabic} - ${word.transliteration} - ${word.translation}`).join('\n')}
 
 ${surahName}, Verse ${verse.id}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}` : ''}`;
 
@@ -700,32 +703,35 @@ const styles = StyleSheet.create({
   },
   wordBox: {
     width: 72,
-    height: 70,
+    height: 80, // Increased height for better spacing
     alignItems: 'center',
     justifyContent: 'center',
     gap: scale(2),
-    padding: scale(4),
+    padding: scale(6), // Increased padding
+    paddingVertical: scale(8), // Extra vertical padding
   },
   wordArabic: {
-    fontSize: 20,
-    lineHeight: 20 * 1.4,
-    textAlign: 'right',
+    fontSize: 18, // Slightly smaller to fit better
+    lineHeight: 18 * 1.2, // Tighter line height
+    textAlign: 'center',
     color: '#171717',
+    marginBottom: scale(2), // Small margin to separate from transliteration
   },
   wordTransliteration: {
-    fontSize: 10,
-    lineHeight: 10 * 1.4,
+    fontSize: 9, // Slightly smaller
+    lineHeight: 9 * 1.2, // Tighter line height
     textAlign: 'center',
     color: '#525252',
     fontWeight: '400',
+    marginBottom: scale(1), // Small margin to separate from translation
   },
   wordTranslation: {
-    fontSize: 10,
-    lineHeight: 10 * 1.4,
+    fontSize: 9, // Slightly smaller
+    lineHeight: 9 * 1.2, // Tighter line height
     textAlign: 'center',
     color: '#525252',
     fontWeight: '600',
-    marginTop: scale(8),
+    paddingHorizontal: scale(2), // Side padding to prevent overflow
   },
   translationSection: {
     gap: scale(4),

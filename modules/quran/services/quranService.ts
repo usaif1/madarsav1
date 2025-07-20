@@ -16,27 +16,39 @@ import {
   ChapterRecitersResponse
 } from '../types/quranFoundationTypes';
 
-// New types for single translation and tafsir responses
-export interface SingleTranslationResponse {
-  translations: Array<{
+// New types for tafsir and translation by ayah responses
+export interface TafsirByAyahResponse {
+  tafsir: {
+    verses: Record<string, { id: number }>;
     resource_id: number;
+    resource_name: string;
+    language_id: number;
+    slug: string;
+    translated_name: {
+      name: string;
+      language_name: string;
+    };
     text: string;
-  }>;
-  meta: {
-    translation_name: string;
-    author_name: string;
   };
 }
 
-export interface SingleTafsirResponse {
-  tafsirs: Array<{
+export interface TranslationByAyahResponse {
+  translations: Array<{
     resource_id: number;
+    resource_name: string;
+    id: number;
     text: string;
+    verse_id: number;
+    language_id: number;
+    language_name: string;
+    verse_key: string;
+    chapter_id: number;
+    verse_number: number;
+    juz_number: number;
+    hizb_number: number;
+    rub_number: number;
+    page_number: number;
   }>;
-  meta: {
-    tafsir_name: string;
-    author_name: string;
-  };
 }
 
 // Legacy types for backward compatibility
@@ -405,46 +417,23 @@ const quranService = {
     }
   },
 
-  // Get single translation for specific verse/surah
-  getSingleTranslation: async (
-    translationId: number = DEFAULT_QURAN_SETTINGS.TRANSLATION_ID,
-    options: {
-      chapterNumber?: number;
-      juzNumber?: number;
-      verseKey?: string;
-      pageNumber?: number;
-      hizbNumber?: number;
-      rubElHizbNumber?: number;
-    } = {}
-  ): Promise<SingleTranslationResponse> => {
-    console.log(`📘 Fetching single translation ID: ${translationId}`);
+  // Get tafsir for specific ayah - NEW API
+  getTafsirByAyah: async (
+    resourceId: number = DEFAULT_QURAN_SETTINGS.TAFSIR_ID,
+    ayahKey: string
+  ): Promise<TafsirByAyahResponse> => {
+    console.log(`📘 Fetching tafsir for ayah: ${ayahKey} with resource ID: ${resourceId}`);
     try {
-      const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.SINGLE_TRANSLATION(translationId);
+      const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.TAFSIR_BY_AYAH(resourceId, ayahKey);
+      console.log(`🔍 Request to: ${endpoint}`);
       
-      const params: Record<string, any> = {
-        fields: 'text,resource_name,language_name'
-      };
+      const response = await quranFoundationClient.get<TafsirByAyahResponse>(endpoint);
       
-      // Add optional parameters
-      if (options.chapterNumber) params.chapter_number = options.chapterNumber;
-      if (options.juzNumber) params.juz_number = options.juzNumber;
-      if (options.verseKey) params.verse_key = options.verseKey;
-      if (options.pageNumber) params.page_number = options.pageNumber;
-      if (options.hizbNumber) params.hizb_number = options.hizbNumber;
-      if (options.rubElHizbNumber) params.rub_el_hizb_number = options.rubElHizbNumber;
-      
-      console.log(`🔍 Request to: ${endpoint} with params:`, params);
-      
-      const response = await quranFoundationClient.get<SingleTranslationResponse>(
-        endpoint,
-        { params }
-      );
-      
-      console.log(`✅ Received translation: ${response.data.meta.translation_name} by ${response.data.meta.author_name}`);
+      console.log(`✅ Received tafsir: ${response.data.tafsir.resource_name}`);
       
       return response.data;
     } catch (error) {
-      console.error(`❌ Error fetching translation ${translationId}:`, error);
+      console.error(`❌ Error fetching tafsir for ayah ${ayahKey}:`, error);
       if (error instanceof Error) {
         console.error(`❌ Error message: ${error.message}`);
       }
@@ -452,46 +441,23 @@ const quranService = {
     }
   },
 
-  // Get single tafsir for specific verse/surah
-  getSingleTafsir: async (
-    tafsirId: number = DEFAULT_QURAN_SETTINGS.TAFSIR_ID,
-    options: {
-      chapterNumber?: number;
-      juzNumber?: number;
-      verseKey?: string;
-      pageNumber?: number;
-      hizbNumber?: number;
-      rubElHizbNumber?: number;
-    } = {}
-  ): Promise<SingleTafsirResponse> => {
-    console.log(`📘 Fetching single tafsir ID: ${tafsirId}`);
+  // Get translation for specific ayah - NEW API
+  getTranslationByAyah: async (
+    resourceId: number = DEFAULT_QURAN_SETTINGS.TRANSLATION_ID,
+    ayahKey: string
+  ): Promise<TranslationByAyahResponse> => {
+    console.log(`📘 Fetching translation for ayah: ${ayahKey} with resource ID: ${resourceId}`);
     try {
-      const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.SINGLE_TAFSIR(tafsirId);
+      const endpoint = API_ENDPOINTS.QURAN_FOUNDATION.TRANSLATION_BY_AYAH(resourceId, ayahKey);
+      console.log(`🔍 Request to: ${endpoint}`);
       
-      const params: Record<string, any> = {
-        fields: 'text,resource_name,language_name'
-      };
+      const response = await quranFoundationClient.get<TranslationByAyahResponse>(endpoint);
       
-      // Add optional parameters
-      if (options.chapterNumber) params.chapter_number = options.chapterNumber;
-      if (options.juzNumber) params.juz_number = options.juzNumber;
-      if (options.verseKey) params.verse_key = options.verseKey;
-      if (options.pageNumber) params.page_number = options.pageNumber;
-      if (options.hizbNumber) params.hizb_number = options.hizbNumber;
-      if (options.rubElHizbNumber) params.rub_el_hizb_number = options.rubElHizbNumber;
-      
-      console.log(`🔍 Request to: ${endpoint} with params:`, params);
-      
-      const response = await quranFoundationClient.get<SingleTafsirResponse>(
-        endpoint,
-        { params }
-      );
-      
-      console.log(`✅ Received tafsir: ${response.data.meta.tafsir_name} by ${response.data.meta.author_name}`);
+      console.log(`✅ Received translation: ${response.data.translations[0]?.resource_name || 'N/A'}`);
       
       return response.data;
     } catch (error) {
-      console.error(`❌ Error fetching tafsir ${tafsirId}:`, error);
+      console.error(`❌ Error fetching translation for ayah ${ayahKey}:`, error);
       if (error instanceof Error) {
         console.error(`❌ Error message: ${error.message}`);
       }

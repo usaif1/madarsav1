@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Dimensions, FlatList } from 'react-native';
 import Modal from 'react-native-modal';
 
@@ -67,29 +67,71 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
   const [currentWords, setCurrentWords] = useState(words);
   const [currentVerse, setCurrentVerse] = useState(verse);
   const [isLoadingNewData, setIsLoadingNewData] = useState(false);
+  const [chapters, setChapters] = useState<Array<{id: number, name: string, verses_count: number}>>([]);
+  const [selectedChapterVerseCount, setSelectedChapterVerseCount] = useState(114); // Default fallback
 
-  // Generate surah list (1-114)
-  const surahList = useMemo(() => {
-    const surahs = [];
-    for (let i = 1; i <= 114; i++) {
-      surahs.push({
-        id: i,
-        name: `Surah ${i}`,
-        isCurrentSurah: i === selectedSurahId
-      });
+  // Fetch chapters list on component mount
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const chaptersData = await quranService.getAllChapters();
+        const formattedChapters = chaptersData.map(chapter => ({
+          id: chapter.id,
+          name: chapter.name_simple,
+          verses_count: chapter.verses_count
+        }));
+        setChapters(formattedChapters);
+        
+        // Set current chapter verse count
+        const currentChapter = formattedChapters.find(ch => ch.id === selectedSurahId);
+        if (currentChapter) {
+          setSelectedChapterVerseCount(currentChapter.verses_count);
+        }
+      } catch (error) {
+        console.error('Error fetching chapters:', error);
+      }
+    };
+
+    if (visible) {
+      fetchChapters();
     }
-    return surahs;
-  }, [selectedSurahId]);
+  }, [visible, selectedSurahId]);
 
-  // Generate verse list from current verses data
+  // Generate surah list from fetched chapters
+  const surahList = useMemo(() => {
+    return chapters.map(chapter => ({
+      id: chapter.id,
+      name: chapter.name,
+      versesCount: chapter.verses_count,
+      isCurrentSurah: chapter.id === selectedSurahId
+    }));
+  }, [chapters, selectedSurahId]);
+
+  // Generate verse list based on selected chapter or current verses
   const verseList = useMemo(() => {
+    // If we're looking at a different surah, generate verse numbers based on verse count
+    if (selectedSurahId !== surahId) {
+      const verseCount = selectedChapterVerseCount;
+      const verses = [];
+      for (let i = 1; i <= verseCount; i++) {
+        verses.push({
+          id: i,
+          number: i,
+          verseKey: `${selectedSurahId}:${i}`,
+          isCurrentVerse: i === selectedAyahId
+        });
+      }
+      return verses;
+    }
+    
+    // For current surah, use loaded verses
     return allVerses.map((verse, index) => ({
       id: verse.id,
       number: verse.ayahNumber || verse.id,
       verseKey: verse.verseKey,
       isCurrentVerse: verse.id === selectedAyahId
     }));
-  }, [allVerses, selectedAyahId]);
+  }, [allVerses, selectedAyahId, selectedSurahId, surahId, selectedChapterVerseCount]);
 
   // Handle surah selection
   const handleSurahSelect = useCallback(async (newSurahId: number, newSurahName: string) => {
@@ -100,10 +142,17 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
 
     setIsLoadingNewData(true);
     try {
+      // Update selected chapter verse count
+      const selectedChapter = chapters.find(ch => ch.id === newSurahId);
+      if (selectedChapter) {
+        setSelectedChapterVerseCount(selectedChapter.verses_count);
+      }
+
       // Fetch new translation and tafsir for the new surah, verse 1
+      const ayahKey = `${newSurahId}:1`;
       const [translationResponse, tafsirResponse] = await Promise.all([
-        quranService.getSingleTranslation(131, { chapterNumber: newSurahId, verseKey: `${newSurahId}:1` }),
-        quranService.getSingleTafsir(169, { chapterNumber: newSurahId, verseKey: `${newSurahId}:1` })
+        quranService.getTranslationByAyah(131, ayahKey),
+        quranService.getTafsirByAyah(169, ayahKey)
       ]);
 
       // Update state with new data
@@ -111,10 +160,10 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
       setSelectedSurahName(newSurahName);
       setSelectedAyahId(1);
       setCurrentTranslation(translationResponse.translations[0]?.text || '');
-      setCurrentTafsir(tafsirResponse.tafsirs[0]?.text || '');
+      setCurrentTafsir(tafsirResponse.tafsir?.text || '');
       
-      // Note: We don't have the full verse data for the new surah, so we'll show minimal info
-      setCurrentVerse(''); // Will need to fetch this
+      // Clear verse and words since we don't have full verse data for new surah
+      setCurrentVerse('');
       setCurrentWords([]);
       
     } catch (error) {
@@ -123,44 +172,62 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
       setIsLoadingNewData(false);
       setShowSurahDropdown(false);
     }
-  }, [selectedSurahId]);
+  }, [selectedSurahId, chapters]);
 
-  // Handle verse selection from current loaded verses
-  const handleVerseSelect = useCallback(async (verseData: VerseData) => {
-    if (verseData.id === selectedAyahId) {
+  // Handle verse selection
+  const handleVerseSelect = useCallback(async (verseData: any) => {
+    if (verseData.number === selectedAyahId) {
       setShowVerseDropdown(false);
       return;
     }
 
     setIsLoadingNewData(true);
     try {
-      // Use the verse data if available, otherwise fetch new data
-      if (verseData.translation && verseData.tafsir) {
-        setSelectedAyahId(verseData.id);
-        setCurrentTranslation(verseData.translation);
-        setCurrentTafsir(verseData.tafsir);
-        setCurrentVerse(verseData.arabic);
-        setCurrentWords(verseData.words);
-      } else {
-        // Fetch new translation and tafsir for the selected verse
-        const [translationResponse, tafsirResponse] = await Promise.all([
-          quranService.getSingleTranslation(131, { verseKey: verseData.verseKey }),
-          quranService.getSingleTafsir(169, { verseKey: verseData.verseKey })
-        ]);
-
-        setSelectedAyahId(verseData.id);
-        setCurrentTranslation(translationResponse.translations[0]?.text || '');
-        setCurrentTafsir(tafsirResponse.tafsirs[0]?.text || '');
-        setCurrentVerse(verseData.arabic);
-        setCurrentWords(verseData.words);
+      // Check if we have the verse data locally (same surah)
+      if (selectedSurahId === surahId) {
+        const localVerse = allVerses.find(v => v.id === verseData.id);
+        if (localVerse && localVerse.translation && localVerse.tafsir) {
+          setSelectedAyahId(localVerse.id);
+          setCurrentTranslation(localVerse.translation);
+          setCurrentTafsir(localVerse.tafsir);
+          setCurrentVerse(localVerse.arabic);
+          setCurrentWords(localVerse.words);
+          setIsLoadingNewData(false);
+          setShowVerseDropdown(false);
+          return;
+        }
       }
+
+      // Fetch new translation and tafsir for the selected verse
+      const ayahKey = verseData.verseKey;
+      const [translationResponse, tafsirResponse] = await Promise.all([
+        quranService.getTranslationByAyah(131, ayahKey),
+        quranService.getTafsirByAyah(169, ayahKey)
+      ]);
+
+      setSelectedAyahId(verseData.number);
+      setCurrentTranslation(translationResponse.translations[0]?.text || '');
+      setCurrentTafsir(tafsirResponse.tafsir?.text || '');
+      
+      // For verses from different surahs, we don't have the Arabic text and words
+      setCurrentVerse('');
+      setCurrentWords([]);
+      
     } catch (error) {
       console.error('Error fetching new verse data:', error);
     } finally {
       setIsLoadingNewData(false);
       setShowVerseDropdown(false);
     }
-  }, [selectedAyahId]);
+  }, [selectedAyahId, selectedSurahId, surahId, allVerses]);
+
+  // Generate translation from words if not available
+  const generateTranslationFromWords = useCallback((wordsArray: Word[]) => {
+    return wordsArray
+      .map(word => word.translation)
+      .filter(translation => translation && translation.trim())
+      .join(' ');
+  }, []);
 
   // Render word boxes with RTL ordering
   const renderWordBoxes = (wordsArray: Word[]) => {
@@ -211,6 +278,13 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
       />
     </View>
   );
+
+  // Get display translation (from words if original not available)
+  const displayTranslation = useMemo(() => {
+    if (currentTranslation) return currentTranslation;
+    if (currentWords.length > 0) return generateTranslationFromWords(currentWords);
+    return '';
+  }, [currentTranslation, currentWords, generateTranslationFromWords]);
 
   return (
     <Modal 
@@ -281,10 +355,7 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
 
         {showVerseDropdown && renderDropdown(
           verseList,
-          (item) => {
-            const verseData = allVerses.find(v => v.id === item.id);
-            if (verseData) handleVerseSelect(verseData);
-          },
+          (item) => handleVerseSelect(item),
           (item) => item.id.toString(),
           (item) => (
             <Body2Medium style={[
@@ -320,10 +391,10 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
                 </View>
                 
                 {/* Translation section */}
-                {currentTranslation ? (
+                {displayTranslation ? (
                   <View style={styles.translationSection}>
                     <Body1Title2Bold style={styles.translationTitle}>Translation</Body1Title2Bold>
-                    <Body2Medium style={styles.translationText}>{currentTranslation}</Body2Medium>
+                    <Body2Medium style={styles.translationText}>{displayTranslation}</Body2Medium>
                   </View>
                 ) : null}
               </View>
@@ -335,26 +406,26 @@ const TafseerModal: React.FC<TafseerModalProps> = ({
               <View style={styles.tafseerSection}>
                 <Body1Title2Bold style={styles.tafseerTitle}>Tafseer</Body1Title2Bold>
 
-                 {/* Tafseer Language Buttons */}
-            <View style={styles.tafseerButtonsContainer}>
-              <TouchableOpacity style={styles.tafseerButton}>
-                <Body2Medium style={styles.tafseerButtonText}>English</Body2Medium>
-                <CdnSvg 
-                  path={DUA_ASSETS.SURAH_DOWN_ARROW} 
-                  width={scale(10)} 
-                  height={scale(10)} 
-                />
-              </TouchableOpacity>
+                {/* Tafseer Language Buttons */}
+                <View style={styles.tafseerButtonsContainer}>
+                  <TouchableOpacity style={styles.tafseerButton}>
+                    <Body2Medium style={styles.tafseerButtonText}>English</Body2Medium>
+                    <CdnSvg 
+                      path={DUA_ASSETS.SURAH_DOWN_ARROW} 
+                      width={scale(10)} 
+                      height={scale(10)} 
+                    />
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={styles.tafseerButton}>
-                <Body2Medium style={styles.tafseerButtonText}>Author name</Body2Medium>
-                <CdnSvg 
-                  path={DUA_ASSETS.SURAH_DOWN_ARROW} 
-                  width={scale(10)} 
-                  height={scale(10)} 
-                />
-              </TouchableOpacity>
-            </View>
+                  <TouchableOpacity style={styles.tafseerButton}>
+                    <Body2Medium style={styles.tafseerButtonText}>Author name</Body2Medium>
+                    <CdnSvg 
+                      path={DUA_ASSETS.SURAH_DOWN_ARROW} 
+                      width={scale(10)} 
+                      height={scale(10)} 
+                    />
+                  </TouchableOpacity>
+                </View>
                 
                 {/* Tafseer Content */}
                 <Body2Medium style={styles.tafseerText}>
@@ -405,7 +476,7 @@ const styles = StyleSheet.create({
     gap: scale(12),
   },
   surahButton: {
-    width: 111,
+    minWidth: 111,
     height: 28,
     flexDirection: 'row',
     alignItems: 'center',
@@ -509,31 +580,35 @@ const styles = StyleSheet.create({
   },
   wordBox: {
     width: 72,
-    height: 70,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
     gap: scale(2),
-    padding: scale(4),
+    padding: scale(6),
+    paddingVertical: scale(8),
   },
   wordArabic: {
-    fontSize: 20,
-    lineHeight: 20 * 1.4,
-    textAlign: 'right',
+    fontSize: 18,
+    lineHeight: 18 * 1.2,
+    textAlign: 'center',
     color: '#171717',
+    marginBottom: scale(2),
   },
   wordTransliteration: {
-    fontSize: 10,
-    lineHeight: 10 * 1.4,
+    fontSize: 9,
+    lineHeight: 9 * 1.2,
     textAlign: 'center',
     color: '#525252',
     fontWeight: '400',
+    marginBottom: scale(1),
   },
   wordTranslation: {
-    fontSize: 10,
-    lineHeight: 10 * 1.4,
+    fontSize: 9,
+    lineHeight: 9 * 1.2,
     textAlign: 'center',
     color: '#525252',
     fontWeight: '600',
+    paddingHorizontal: scale(2),
   },
   translationSection: {
     gap: scale(4),
@@ -559,7 +634,7 @@ const styles = StyleSheet.create({
   tafseerSection: {
     gap: scale(16),
   },
-   tafseerButtonsContainer: {
+  tafseerButtonsContainer: {
     flexDirection: 'row',
     gap: scale(12),
   },
@@ -591,10 +666,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 12 * 1.4,
     color: '#404040',
-  },
-  arrowText: {
-    color: '#A3A3A3',
-    fontSize: 12,
   },
 });
 
