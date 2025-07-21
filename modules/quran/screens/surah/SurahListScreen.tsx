@@ -289,6 +289,7 @@ const SurahListScreen: React.FC = () => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          ListFooterComponent={()=><HadithImageFooter />}
         />
       )}
 
@@ -308,9 +309,6 @@ const SurahListScreen: React.FC = () => {
         onApply={handleSettingsApply}
         onClose={handleSettingsClose}
       />
-
-         <HadithImageFooter />
-      
     </View>
   );
 };

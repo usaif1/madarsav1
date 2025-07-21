@@ -286,6 +286,7 @@ const JuzzListScreen: React.FC = () => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          ListFooterComponent={()=><HadithImageFooter />}
         />
       )}
 
@@ -305,7 +306,6 @@ const JuzzListScreen: React.FC = () => {
         onApply={handleSettingsApply}
         onClose={handleSettingsClose}
       />
-         <HadithImageFooter />
     </View>
   );
 };

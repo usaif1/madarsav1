@@ -34,12 +34,23 @@ export interface SavedAyah {
   savedAt: string;
 }
 
+// Reciter information
+export interface Reciter {
+  id: number;
+  name: string;
+  arabicName: string;
+  style: string;
+}
+
 // Settings type
 export interface QuranSettings {
   selectedFont: number;
   selectedReciterId: number;
   reciterName: string;
+  reciterArabicName: string;
   transliterationEnabled: boolean;
+  autoPlayNext: boolean;
+  audioQuality: 'high' | 'medium' | 'low';
 }
 
 interface QuranStore {
@@ -47,6 +58,9 @@ interface QuranStore {
   savedSurahs: SavedSurah[];
   savedJuzz: SavedJuzz[];
   savedAyahs: SavedAyah[];
+  
+  // Available reciters
+  availableReciters: Reciter[];
   
   // Settings
   settings: QuranSettings;
@@ -66,6 +80,11 @@ interface QuranStore {
   removeAyah: (ayahId: string) => void;
   isAyahSaved: (ayahId: string) => boolean;
   
+  // Reciter actions
+  setAvailableReciters: (reciters: Reciter[]) => void;
+  setSelectedReciter: (reciterId: number) => void;
+  getCurrentReciter: () => Reciter | null;
+  
   // Settings actions
   updateSettings: (settings: Partial<QuranSettings>) => void;
   getSettings: () => QuranSettings;
@@ -79,12 +98,49 @@ interface QuranStore {
   clearAllSaved: () => void;
 }
 
+// Default reciters list (can be updated from API)
+const defaultReciters: Reciter[] = [
+  {
+    id: 7,
+    name: 'Mishari Rashid al-`Afasy',
+    arabicName: 'مشاري بن راشد العفاسي',
+    style: 'Warsh'
+  },
+  {
+    id: 1,
+    name: 'Abdul Rahman Al-Sudais',
+    arabicName: 'عبد الرحمن السديس',
+    style: 'Hafs'
+  },
+  {
+    id: 2,
+    name: 'Saad Al-Ghamidi',
+    arabicName: 'سعد الغامدي',
+    style: 'Hafs'
+  },
+  {
+    id: 3,
+    name: 'Abu Bakr al-Shatri',
+    arabicName: 'أبو بكر الشاطري',
+    style: 'Hafs'
+  },
+  {
+    id: 4,
+    name: 'Hani ar-Rifai',
+    arabicName: 'هاني الرفاعي',
+    style: 'Hafs'
+  }
+];
+
 // Default settings
 const defaultSettings: QuranSettings = {
   selectedFont: 1,
-  selectedReciterId: 1,
-  reciterName: '',
+  selectedReciterId: 7, // Default to Mishari Rashid al-`Afasy
+  reciterName: 'Mishari Rashid al-`Afasy',
+  reciterArabicName: 'مشاري بن راشد العفاسي',
   transliterationEnabled: true,
+  autoPlayNext: true,
+  audioQuality: 'high',
 };
 
 export const useQuranStore = create<QuranStore>()(
@@ -135,6 +191,9 @@ export const useQuranStore = create<QuranStore>()(
           savedAt: new Date().toISOString(),
         },
       ],
+      
+      // Initial reciters
+      availableReciters: defaultReciters,
       
       // Initial settings
       settings: defaultSettings,
@@ -202,6 +261,30 @@ export const useQuranStore = create<QuranStore>()(
         return get().savedAyahs.some(a => a.id === ayahId);
       },
       
+      // Reciter actions
+      setAvailableReciters: (reciters) => {
+        set({ availableReciters: reciters });
+      },
+      
+      setSelectedReciter: (reciterId) => {
+        const reciter = get().availableReciters.find(r => r.id === reciterId);
+        if (reciter) {
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              selectedReciterId: reciterId,
+              reciterName: reciter.name,
+              reciterArabicName: reciter.arabicName,
+            },
+          }));
+        }
+      },
+      
+      getCurrentReciter: () => {
+        const { settings, availableReciters } = get();
+        return availableReciters.find(r => r.id === settings.selectedReciterId) || null;
+      },
+      
       // Getters
       getSavedSurahsCount: () => get().savedSurahs.length,
       getSavedJuzzCount: () => get().savedJuzz.length,
@@ -233,4 +316,4 @@ export const useQuranStore = create<QuranStore>()(
       storage: createJSONStorage(() => mmkvStorage),
     }
   )
-); 
+);

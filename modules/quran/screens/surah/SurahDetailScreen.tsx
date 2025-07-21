@@ -18,7 +18,8 @@ import FastImage from 'react-native-fast-image';
 import quranService from '../../services/quranService';
 import { Verse, Word } from '../../types/quranFoundationTypes';
 import useQuranAuth from '../../hooks/useQuranAuth';
-import { BubbleIndex } from '../../components/BubbleIndex'; // Import the new component
+import { BubbleIndex } from '../../components/BubbleIndex';
+import { useSurahAudio } from '../../hooks/useSurahAudio';
 
 // Helper type for UI display
 type DisplayVerse = {
@@ -51,10 +52,10 @@ const convertToDisplayWord = (word: Word): DisplayWord => {
 // Helper function to convert API Verse to DisplayVerse
 const convertToDisplayVerse = (verse: Verse): DisplayVerse => {
   const wordTranslation = verse.words?.map(word => word.translation?.text || '').filter(t => t.trim()).join(' ');
-      const finalTranslation = verse.translation || wordTranslation;
-    const translation = verse.translations && verse.translations.length > 0
-      ? verse.translations[0].text
-      : finalTranslation;
+  const finalTranslation = verse.translation || wordTranslation;
+  const translation = verse.translations && verse.translations.length > 0
+    ? verse.translations[0].text
+    : finalTranslation;
   
   const tafsir = verse.tafsirs && verse.tafsirs.length > 0
     ? verse.tafsirs[0].text
@@ -94,7 +95,9 @@ const VerseItem = memo(({
   onTafseerPress,
   onToggleBookmark,
   onShare,
-  onPlay
+  onPlay,
+  isCurrentlyPlaying,
+  isLoading: verseIsLoading
 }: {
   verse: DisplayVerse;
   index: number;
@@ -106,6 +109,8 @@ const VerseItem = memo(({
   onToggleBookmark: (verse: DisplayVerse) => void;
   onShare: (verse: DisplayVerse) => void;
   onPlay: (verse: DisplayVerse) => void;
+  isCurrentlyPlaying: boolean;
+  isLoading: boolean;
 }) => {
   // Memoize word boxes with RTL ordering and transliteration toggle
   const wordBoxes = useMemo(() => {
@@ -144,8 +149,32 @@ const VerseItem = memo(({
     );
   }, [bookmarkedVerses, verse.id]);
 
+  // Memoize play icon based on current state
+  const playIcon = useMemo(() => {
+    if (verseIsLoading) {
+      return <ActivityIndicator size="small" color={ColorPrimary.primary500} />;
+    }
+    
+    return isCurrentlyPlaying ? (
+      <CdnSvg
+        path={DUA_ASSETS.NAMES_PAUSE}
+        width={scale(16)}
+        height={scale(16)}
+      />
+    ) : (
+      <CdnSvg
+        path={DUA_ASSETS.SURAH_PLAY_ICON}
+        width={scale(16)}
+        height={scale(16)}
+      />
+    );
+  }, [isCurrentlyPlaying, verseIsLoading]);
+
   return (
-    <View style={styles.verseCard}>
+    <View style={[
+      styles.verseCard,
+      isCurrentlyPlaying && styles.currentlyPlayingCard
+    ]}>
       {/* Top graphic for first verse */}
       {index === 0 && (
         <View style={styles.graphicContainer}>
@@ -162,7 +191,10 @@ const VerseItem = memo(({
         {/* Top row with bubble index and word boxes */}
         <View style={styles.topRow}>
           {/* Fixed size bubble index */}
-          <BubbleIndex number={verse.id} />
+          <BubbleIndex 
+            number={verse.id} 
+            isHighlighted={isCurrentlyPlaying}
+          />
           
           {/* Word-by-word boxes (reversed for RTL) */}
           {wordBoxes}
@@ -212,14 +244,14 @@ const VerseItem = memo(({
               />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[
+                styles.actionButton,
+                isCurrentlyPlaying && styles.playingActionButton
+              ]}
               onPress={() => onPlay(verse)}
+              disabled={verseIsLoading}
             >
-              <CdnSvg
-                path={DUA_ASSETS.SURAH_PLAY_ICON}
-                width={scale(16)}
-                height={scale(16)}
-              />
+              {playIcon}
             </TouchableOpacity>
           </View>
         </View>
@@ -251,6 +283,9 @@ const SurahDetailScreen: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMorePages, setHasMorePages] = useState(true);
   const PAGE_SIZE = 10;
+
+  // Initialize audio hook for the screen
+  const audioHook = useSurahAudio(verses, settings.selectedReciterId);
 
   // Memoize route params to prevent unnecessary re-renders
   const memoizedParams = useMemo(() => ({ surahId, surahName }), [surahId, surahName]);
@@ -386,6 +421,13 @@ const SurahDetailScreen: React.FC = () => {
     }
   }, [isInitialized, isAuthenticated, memoizedParams.surahId]);
 
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      audioHook.cleanup();
+    };
+  }, [audioHook.cleanup]);
+
   // Determine which stack we're in
   const isSavedStack = route.name === 'savedSurahDetail';
 
@@ -402,12 +444,15 @@ const SurahDetailScreen: React.FC = () => {
   // Handle surah change from header
   const handleSurahChange = useCallback((newSurahId: number, newSurahName: string) => {
     if (!isSavedStack) {
+      // Cleanup current audio before navigation
+      audioHook.cleanup();
+      
       (navigation as unknown as SurahNavigationProp).navigate('surahDetail', {
         surahId: newSurahId,
         surahName: newSurahName
       });
     }
-  }, [isSavedStack, navigation]);
+  }, [isSavedStack, navigation, audioHook.cleanup]);
 
   // Handle settings change from header
   const handleSettingsChange = useCallback((settings: any) => {
@@ -472,19 +517,38 @@ ${surahName}, Verse ${verse.id}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}`
     }
   }, [surahName]);
 
-  // Handle play
-  const handlePlay = useCallback((_verse: DisplayVerse) => {
-    // setShowAudioPlayer(true);
-  }, []);
+  // Handle play verse audio
+  const handlePlay = useCallback(async (verse: DisplayVerse) => {
+    try {
+      if (audioHook.currentVerseId === verse.id) {
+        // If same verse is selected, toggle play/pause
+        if (audioHook.isPlaying) {
+          audioHook.pauseAudio();
+        } else {
+          await audioHook.resumeAudio();
+        }
+      } else {
+        // Play new verse
+        await audioHook.playAudio(verse.id);
+        // Show audio player when playing
+        if (!showAudioPlayer) {
+          setShowAudioPlayer(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error playing verse audio:', error);
+    }
+  }, [audioHook, showAudioPlayer]);
 
   // Handle floating play button press
   const handleFloatingPlayPress = useCallback(() => {
-    // setShowAudioPlayer(true);
+    setShowAudioPlayer(true);
   }, []);
 
   // Handle audio player close
   const handleAudioPlayerClose = useCallback(() => {
-    // setShowAudioPlayer(false);
+    setShowAudioPlayer(false);
+    // Don't stop audio, just hide the player
   }, []);
 
   // Render loading state
@@ -521,108 +585,116 @@ ${surahName}, Verse ${verse.id}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}`
   );
 
   return (
-        <View style={styles.container}>
-          {/* Header */}
-          <SurahHeader
-            onBack={() => navigation.goBack()}
-            surahName={surahName}
-            surahInfo={surahInfo}
-            currentSurahId={surahId}
-            onSurahChange={handleSurahChange}
-            onSettingsChange={handleSettingsChange}
+    <View style={styles.container}>
+      {/* Header */}
+      <SurahHeader
+        onBack={() => navigation.goBack()}
+        surahName={surahName}
+        surahInfo={surahInfo}
+        currentSurahId={surahId}
+        onSurahChange={handleSurahChange}
+        onSettingsChange={handleSettingsChange}
+      />
+      
+      {/* Content based on state */}
+      {isLoading ? (
+        renderLoading()
+      ) : error ? (
+        renderError()
+      ) : (
+        /* Verses */
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: showAudioPlayer ? scale(120) : scale(80) }
+          ]}
+          showsVerticalScrollIndicator={false}
+          onScroll={({ nativeEvent }) => {
+            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+            const paddingToBottom = 20;
+            const isCloseToBottom = layoutMeasurement.height + contentOffset.y >=
+              contentSize.height - paddingToBottom;
+            
+            if (isCloseToBottom) {
+              handleEndReached();
+            }
+          }}
+          scrollEventThrottle={400}
+        >
+          {verses.map((verse, index) => (
+            <VerseItem
+              key={verse.id}
+              verse={verse}
+              index={index}
+              surahName={surahName}
+              surahId={surahId}
+              bookmarkedVerses={bookmarkedVerses}
+              showTransliteration={showTransliteration}
+              onTafseerPress={handleTafseerPress}
+              onToggleBookmark={toggleBookmark}
+              onShare={handleShare}
+              onPlay={handlePlay}
+              isCurrentlyPlaying={audioHook.currentVerseId === verse.id && audioHook.isPlaying}
+              isLoading={audioHook.currentVerseId === verse.id && audioHook.isLoading}
+            />
+          ))}
+          {renderLoadingMore()}
+        </ScrollView>
+      )}
+      
+      {/* Floating play button - only show when audio is playing but player is hidden */}
+      {!showAudioPlayer && (audioHook.isPlaying || audioHook.currentVerseId) && (
+        <TouchableOpacity 
+          style={styles.floatingButton}
+          onPress={handleFloatingPlayPress}
+          activeOpacity={0.8}
+        >
+          <CdnSvg 
+            style={{marginLeft: scale(2)}} 
+            path={audioHook.isPlaying ? DUA_ASSETS.NAMES_PAUSE_WHITE : DUA_ASSETS.QURAN_PLAY_WHITE_ICON} 
+            width={scale(14)} 
+            height={scale(16)} 
+            fill="#FFFFFF" 
           />
-          
-          {/* Content based on state */}
-          {isLoading ? (
-            renderLoading()
-          ) : error ? (
-            renderError()
-          ) : (
-            /* Verses */
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={[
-                styles.scrollContent,
-                { paddingBottom: showAudioPlayer ? scale(120) : scale(80) }
-              ]}
-              showsVerticalScrollIndicator={false}
-              onScroll={({ nativeEvent }) => {
-                const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-                const paddingToBottom = 20;
-                const isCloseToBottom = layoutMeasurement.height + contentOffset.y >=
-                  contentSize.height - paddingToBottom;
-                
-                if (isCloseToBottom) {
-                  handleEndReached();
-                }
-              }}
-              scrollEventThrottle={400}
-            >
-              {verses.map((verse, index) => (
-                <VerseItem
-                  key={verse.id}
-                  verse={verse}
-                  index={index}
-                  surahName={surahName}
-                  surahId={surahId}
-                  bookmarkedVerses={bookmarkedVerses}
-                  showTransliteration={showTransliteration}
-                  onTafseerPress={handleTafseerPress}
-                  onToggleBookmark={toggleBookmark}
-                  onShare={handleShare}
-                  onPlay={handlePlay}
-                />
-              ))}
-              {renderLoadingMore()}
-            </ScrollView>
-          )}
-          
-          {/* Floating play button - only show when audio player is not visible */}
-          {!showAudioPlayer && (
-            <TouchableOpacity 
-              style={styles.floatingButton}
-              onPress={handleFloatingPlayPress}
-              activeOpacity={0.8}
-            >
-              <CdnSvg style={{marginLeft:scale(2)}} path={DUA_ASSETS.QURAN_PLAY_WHITE_ICON} width={scale(14)} height={scale(16)} fill="#FFFFFF" />
-            </TouchableOpacity>
-          )}
-          
-          {/* Surah Audio Player */}
-          {showAudioPlayer && (
-            <View style={styles.audioPlayerOverlay}>
-              <Pressable 
-                style={styles.audioPlayerBackdrop}
-                onPress={handleAudioPlayerClose}
-              />
-              <View style={styles.audioPlayerWrapper}>
-                <SurahAudioPlayer
-                  surahId={surahId}
-                  surahName={surahName}
-                  verses={verses}
-                  onClose={handleAudioPlayerClose}
-                />
-              </View>
-            </View>
-          )}
-          
-          {/* Tafseer Modal with verse data */}
-          {showTafseerModal && selectedVerse && (
-            <TafseerModal
-              visible={showTafseerModal}
-              onClose={() => setShowTafseerModal(false)}
+        </TouchableOpacity>
+      )}
+      
+      {/* Surah Audio Player */}
+      {showAudioPlayer && (audioHook.isPlaying || audioHook.currentVerseId) && (
+        <View style={styles.audioPlayerOverlay}>
+          <Pressable 
+            style={styles.audioPlayerBackdrop}
+            onPress={handleAudioPlayerClose}
+          />
+          <View style={styles.audioPlayerWrapper}>
+            <SurahAudioPlayer
               surahId={surahId}
               surahName={surahName}
-              ayahId={selectedVerse.id}
-              verse={selectedVerse.arabic}
-              words={selectedVerse.words}
-              translation={selectedVerse.translation}
-              tafsir={selectedVerse.tafsir}
-              allVerses={verses} // Pass all verses for dropdown
-              currentVerseIndex={verses.findIndex(v => v.id === selectedVerse.id)}
+              verses={verses}
+              onClose={handleAudioPlayerClose}
             />
-          )}
+          </View>
         </View>
+      )}
+      
+      {/* Tafseer Modal with verse data */}
+      {showTafseerModal && selectedVerse && (
+        <TafseerModal
+          visible={showTafseerModal}
+          onClose={() => setShowTafseerModal(false)}
+          surahId={surahId}
+          surahName={surahName}
+          ayahId={selectedVerse.id}
+          verse={selectedVerse.arabic}
+          words={selectedVerse.words}
+          translation={selectedVerse.translation}
+          tafsir={selectedVerse.tafsir}
+          allVerses={verses} // Pass all verses for dropdown
+          currentVerseIndex={verses.findIndex(v => v.id === selectedVerse.id)}
+        />
+      )}
+    </View>
   );
 };
 
@@ -685,6 +757,11 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  currentlyPlayingCard: {
+    backgroundColor: '#F9F6FF',
+    borderLeftWidth: 4,
+    borderLeftColor: ColorPrimary.primary500,
+  },
   verseContent: {
     padding: scale(16),
     paddingHorizontal: scale(24),
@@ -703,35 +780,35 @@ const styles = StyleSheet.create({
   },
   wordBox: {
     width: 72,
-    height: 80, // Increased height for better spacing
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
     gap: scale(2),
-    padding: scale(6), // Increased padding
-    paddingVertical: scale(8), // Extra vertical padding
+    padding: scale(6),
+    paddingVertical: scale(8),
   },
   wordArabic: {
-    fontSize: 18, // Slightly smaller to fit better
-    lineHeight: 18 * 1.2, // Tighter line height
+    fontSize: 18,
+    lineHeight: 18 * 1.2,
     textAlign: 'center',
     color: '#171717',
-    marginBottom: scale(2), // Small margin to separate from transliteration
+    marginBottom: scale(2),
   },
   wordTransliteration: {
-    fontSize: 9, // Slightly smaller
-    lineHeight: 9 * 1.2, // Tighter line height
+    fontSize: 9,
+    lineHeight: 9 * 1.2,
     textAlign: 'center',
     color: '#525252',
     fontWeight: '400',
-    marginBottom: scale(1), // Small margin to separate from translation
+    marginBottom: scale(1),
   },
   wordTranslation: {
-    fontSize: 9, // Slightly smaller
-    lineHeight: 9 * 1.2, // Tighter line height
+    fontSize: 9,
+    lineHeight: 9 * 1.2,
     textAlign: 'center',
     color: '#525252',
     fontWeight: '600',
-    paddingHorizontal: scale(2), // Side padding to prevent overflow
+    paddingHorizontal: scale(2),
   },
   translationSection: {
     gap: scale(4),
@@ -775,6 +852,10 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 8,
+  },
+  playingActionButton: {
+    backgroundColor: ColorPrimary.primary100,
+    borderRadius: scale(20),
   },
   floatingButton: {
     position: 'absolute',
