@@ -205,7 +205,7 @@ export const useSurahAudio = (
         url: audioUrl,
         title: `Verse ${verseId}`,
         artist: 'Quran Recitation',
-        artwork: '',
+        artwork: 'https://cdn.quran.foundation/default-artwork.png', // Provide a default artwork URL
       };
       
       // Store current track info
