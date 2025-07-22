@@ -66,6 +66,7 @@
     "react-native-sensors": "^7.3.6",
     "react-native-share": "^12.1.0",
     "react-native-snap-carousel": "^3.9.1",
+    "react-native-sound": "^0.11.2",
     "react-native-svg": "^15.11.2",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^10.2.0",

@@ -157,7 +157,7 @@ const VerseItem = memo(({
     
     return isCurrentlyPlaying ? (
       <CdnSvg
-        path={DUA_ASSETS.NAMES_PAUSE}
+        path={DUA_ASSETS.NAMES_PAUSE_WHITE}
         width={scale(16)}
         height={scale(16)}
       />
@@ -672,6 +672,7 @@ ${surahName}, Verse ${verse.id}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}`
               surahId={surahId}
               surahName={surahName}
               verses={verses}
+              audioHook={audioHook}
               onClose={handleAudioPlayerClose}
             />
           </View>
