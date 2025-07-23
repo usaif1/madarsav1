@@ -157,10 +157,10 @@ const VerseItem = memo(({
     
     return isCurrentlyPlaying ? (
       <CdnSvg
-        path={DUA_ASSETS.NAMES_PAUSE_WHITE}
-        width={scale(16)}
-        height={scale(16)}
-      />
+              path={DUA_ASSETS.NAMES_PAUSE}
+              width={scale(14)}
+              height={scale(14)}
+            />
     ) : (
       <CdnSvg
         path={DUA_ASSETS.SURAH_PLAY_ICON}
