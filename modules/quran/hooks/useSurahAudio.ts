@@ -51,6 +51,7 @@ export const useSurahAudio = (
   const positionInterval = useRef<NodeJS.Timeout | null>(null);
   const currentUrl = useRef<string | null>(null);
   const isLoadedRef = useRef(false);
+  const isPlayingRef = useRef(false); // Track playing state in ref for interval
   
   // Event subscription refs for proper cleanup
   const finishedPlayingSubscription = useRef<any>(null);
@@ -59,6 +60,11 @@ export const useSurahAudio = (
   /* ---- keep refs fresh ---- */
   useEffect(() => { versesRef.current = verses; }, [verses]);
   useEffect(() => { recitationIdRef.current = recitationId; }, [recitationId]);
+  
+  // Keep playing state in sync with ref for interval access
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   /* ---- helpers ---- */
   const totalVerses = verses.length;
@@ -67,32 +73,51 @@ export const useSurahAudio = (
     : -1;
   const progress = duration > 0 ? position / duration : 0;
 
-  /* ---- position polling ---- */
+  /* ---- position polling with better error handling ---- */
   const startPolling = useCallback(() => {
+    console.log('🔄 Starting position polling');
+    
     if (positionInterval.current) {
       clearInterval(positionInterval.current);
     }
     
     positionInterval.current = setInterval(async () => {
       try {
-        if (!isLoadedRef.current || !isPlaying) return;
+        // Check if we should continue polling
+        if (!isLoadedRef.current || !isPlayingRef.current) {
+          console.log('⏸️ Stopping polling - not loaded or not playing');
+          return;
+        }
         
         const info = await SoundPlayer.getInfo();
+        console.log(`📍 Position update: ${info.currentTime.toFixed(1)}s / ${info.duration.toFixed(1)}s`);
+        
+        // Update position state
         setPosition(info.currentTime);
         
-        // Auto-detect completion (fallback if event doesn't fire)
-        if (info.currentTime >= info.duration - 0.1 && info.duration > 0) {
-          console.log('Audio completed via polling detection');
+        // Update duration if it changed (sometimes duration isn't available immediately)
+        if (info.duration > 0 && Math.abs(info.duration - duration) > 0.1) {
+          console.log(`⏱️ Duration updated: ${info.duration}s`);
+          setDuration(info.duration);
+        }
+        
+        // Auto-detect completion with more precise threshold
+        const isNearEnd = info.duration > 0 && info.currentTime >= (info.duration - 0.5);
+        if (isNearEnd) {
+          console.log('🏁 Audio completion detected via polling');
           handleAudioCompletion();
         }
       } catch (err) {
-        // Ignore polling errors - audio might not be loaded
-        console.warn('Position polling error (expected if no audio loaded):', err);
+        // Only log errors if we expect audio to be loaded
+        if (isLoadedRef.current && isPlayingRef.current) {
+          console.warn('⚠️ Position polling error:', err);
+        }
       }
-    }, 500);
-  }, [isPlaying]);
+    }, 250); // Reduced interval for smoother updates
+  }, [duration, handleAudioCompletion]);
 
   const stopPolling = useCallback(() => {
+    console.log('⏹️ Stopping position polling');
     if (positionInterval.current) {
       clearInterval(positionInterval.current);
       positionInterval.current = null;
@@ -101,7 +126,7 @@ export const useSurahAudio = (
 
   /* ---- handle audio completion ---- */
   const handleAudioCompletion = useCallback(() => {
-    console.log('Handling audio completion');
+    console.log('🎵 Handling audio completion');
     setIsPlaying(false);
     stopPolling();
     
@@ -109,20 +134,21 @@ export const useSurahAudio = (
     const currentIdx = versesRef.current.findIndex(v => v.id === currentVerseId);
     if (currentIdx >= 0 && currentIdx < versesRef.current.length - 1) {
       const nextVerse = versesRef.current[currentIdx + 1];
-      console.log('Auto-playing next verse:', nextVerse.verseKey);
+      console.log(`⏭️ Auto-playing next verse: ${nextVerse.verseKey}`);
       setTimeout(() => {
         playAudio(nextVerse.id);
       }, 500);
     } else {
-      console.log('Reached end of playlist');
+      console.log('📝 Reached end of playlist');
       setCurrentVerseId(null);
+      setPosition(0);
       isLoadedRef.current = false;
     }
-  }, [currentVerseId, stopPolling]);
+  }, [currentVerseId, stopPolling, playAudio]);
 
   /* ---- setup event listeners ---- */
   useEffect(() => {
-    console.log('Setting up SoundPlayer event listeners');
+    console.log('🎧 Setting up SoundPlayer event listeners');
     
     // Cleanup existing subscriptions
     if (finishedPlayingSubscription.current) {
@@ -134,10 +160,10 @@ export const useSurahAudio = (
 
     // Subscribe to FinishedPlaying event
     finishedPlayingSubscription.current = SoundPlayer.addEventListener('FinishedPlaying', ({ success }) => {
-      console.log('FinishedPlaying event:', success);
+      console.log('🎵 FinishedPlaying event:', success);
       
       if (!success) {
-        console.error('Playback failed');
+        console.error('❌ Playback failed');
         setError('Audio playback failed');
         setIsPlaying(false);
         stopPolling();
@@ -149,28 +175,30 @@ export const useSurahAudio = (
 
     // Subscribe to FinishedLoadingURL event
     finishedLoadingURLSubscription.current = SoundPlayer.addEventListener('FinishedLoadingURL', ({ success, url }) => {
-      console.log('FinishedLoadingURL event:', success, url);
+      console.log('📥 FinishedLoadingURL event:', success, url);
       
       if (!success) {
-        console.error('Failed to load URL:', url);
+        console.error('❌ Failed to load URL:', url);
         setError('Failed to load audio from URL');
         setIsLoading(false);
         isLoadedRef.current = false;
         return;
       }
       
-      console.log('URL loaded successfully, getting audio info...');
+      console.log('✅ URL loaded successfully, getting audio info...');
       isLoadedRef.current = true;
       
       // Get duration after successful load
       SoundPlayer.getInfo()
         .then(info => {
-          console.log('Audio info after load:', info);
+          console.log('📊 Audio info after load:', info);
           setDuration(info.duration);
           setPosition(0);
+          // Start playback immediately after load
+          startPlayback();
         })
         .catch(err => {
-          console.error('Error getting audio info after load:', err);
+          console.error('❌ Error getting audio info after load:', err);
           setError('Failed to get audio information');
           setIsLoading(false);
         });
@@ -178,7 +206,7 @@ export const useSurahAudio = (
 
     // Cleanup function
     return () => {
-      console.log('Cleaning up event listeners');
+      console.log('🧹 Cleaning up event listeners');
       if (finishedPlayingSubscription.current) {
         finishedPlayingSubscription.current.remove();
         finishedPlayingSubscription.current = null;
@@ -190,42 +218,71 @@ export const useSurahAudio = (
     };
   }, [handleAudioCompletion, stopPolling]);
 
-  /* ---- audio url fetch ---- */
+  /* ---- improved URL construction ---- */
+  const constructAudioUrl = useCallback((rawUrl: string): string => {
+    console.log("🔗 Raw URL:", rawUrl);
+    
+    // Check if URL is already complete (has protocol and domain)
+    const isCompleteUrl = /^https?:\/\//i.test(rawUrl) || /^\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i.test(rawUrl);
+    
+    if (isCompleteUrl) {
+      // If URL starts with //, add https:
+      if (rawUrl.startsWith('//')) {
+        const completeUrl = `https:${rawUrl}`;
+        console.log("🔗 Complete URL (added https):", completeUrl);
+        return completeUrl;
+      }
+      // If URL already has protocol, use as is
+      console.log("🔗 Complete URL (as is):", rawUrl);
+      return rawUrl;
+    } else {
+      // Construct full URL with base URL
+      const baseUrl = API_ENDPOINTS.QURAN_FOUNDATION.AUDIO_BASE_URL;
+      // Ensure proper URL joining (avoid double slashes)
+      const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      const cleanRawUrl = rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
+      const fullUrl = `${cleanBaseUrl}${cleanRawUrl}`;
+      console.log("🔗 Constructed URL:", fullUrl);
+      return fullUrl;
+    }
+  }, []);
+
+  /* ---- audio url fetch with improved URL handling ---- */
   const fetchAudioUrl = useCallback(async (verseKey: string): Promise<string> => {
     try {
       const res = await quranService.getAyahRecitation(recitationIdRef.current || 7, verseKey);
-      console.log("API Response:", res);
+      console.log("📡 API Response:", res);
       
       if (!res?.audio_files?.[0]?.url) {
         throw new Error('No audio URL in response');
       }
       
-      let url = res.audio_files[0].url;
-      console.log("Raw URL:", url);
+      const rawUrl = res.audio_files[0].url;
+      const finalUrl = constructAudioUrl(rawUrl);
       
-      // Construct full URL
-      url = `${API_ENDPOINTS.QURAN_FOUNDATION.AUDIO_BASE_URL}${url}`;
-      console.log("Full URL:", url);
-      
-      // Validate URL format
-      new URL(url);
-      
-      return url;
+      // Validate final URL
+      try {
+        new URL(finalUrl);
+        console.log("✅ Valid URL constructed:", finalUrl);
+        return finalUrl;
+      } catch (urlError) {
+        throw new Error(`Invalid URL constructed: ${finalUrl}`);
+      }
     } catch (err) {
-      console.error('Error fetching audio URL:', err);
+      console.error('❌ Error fetching audio URL:', err);
       throw new Error(`Failed to fetch audio URL: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  }, []);
+  }, [constructAudioUrl]);
 
   /* ---- play audio ---- */
   const playAudio = useCallback(async (verseId: number): Promise<void> => {
     // Prevent multiple simultaneous requests
     if (isLoading) {
-      console.log('Already loading, ignoring play request');
+      console.log('⏳ Already loading, ignoring play request');
       return;
     }
     
-    console.log('Starting playAudio for verseId:', verseId);
+    console.log('▶️ Starting playAudio for verseId:', verseId);
     setIsLoading(true);
     setError(null);
     stopPolling();
@@ -237,14 +294,14 @@ export const useSurahAudio = (
         throw new Error(`Verse with ID ${verseId} not found`);
       }
 
-      console.log('Playing verse:', verse.verseKey);
+      console.log('🎵 Playing verse:', verse.verseKey);
       
       // Stop any currently playing audio
       try {
         SoundPlayer.stop();
-        console.log('Stopped previous audio');
+        console.log('⏹️ Stopped previous audio');
       } catch (stopErr) {
-        console.warn('No audio to stop:', stopErr);
+        console.warn('⚠️ No audio to stop:', stopErr);
       }
 
       // Reset state
@@ -257,7 +314,7 @@ export const useSurahAudio = (
       const url = await fetchAudioUrl(verse.verseKey);
       currentUrl.current = url;
 
-      console.log('Loading audio from URL:', url);
+      console.log('📥 Loading audio from URL:', url);
       
       // Load URL (this will trigger FinishedLoadingURL event)
       SoundPlayer.loadUrl(url);
@@ -265,11 +322,8 @@ export const useSurahAudio = (
       // Set current verse immediately since we're starting to load
       setCurrentVerseId(verseId);
       
-      // Wait for the loading to complete via event listener
-      // The actual play will happen after FinishedLoadingURL event
-      
     } catch (error) {
-      console.error('Error in playAudio:', error);
+      console.error('❌ Error in playAudio:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown playback error';
       setError(errorMessage);
       setIsLoading(false);
@@ -282,37 +336,29 @@ export const useSurahAudio = (
   /* ---- play after load completes ---- */
   const startPlayback = useCallback(async () => {
     try {
-      console.log('Starting playback after successful load');
+      console.log('▶️ Starting playback after successful load');
       SoundPlayer.play();
       setIsPlaying(true);
       setIsLoading(false);
-      startPolling();
-      console.log('Playback started successfully');
+      startPolling(); // Start polling when playback begins
+      console.log('✅ Playback started successfully');
     } catch (err) {
-      console.error('Error starting playback:', err);
+      console.error('❌ Error starting playback:', err);
       setError('Failed to start playback');
       setIsLoading(false);
       setIsPlaying(false);
     }
   }, [startPolling]);
 
-  /* ---- trigger playback when audio is loaded ---- */
-  useEffect(() => {
-    if (isLoadedRef.current && isLoading && currentVerseId && !isPlaying) {
-      console.log('Audio loaded, starting playback...');
-      startPlayback();
-    }
-  }, [isLoadedRef.current, isLoading, currentVerseId, isPlaying, startPlayback]);
-
   /* ---- control functions ---- */
   const pauseAudio = useCallback(() => {
     try {
-      console.log('Pausing audio');
+      console.log('⏸️ Pausing audio');
       SoundPlayer.pause();
       setIsPlaying(false);
       stopPolling();
     } catch (err) {
-      console.error('Error pausing audio:', err);
+      console.error('❌ Error pausing audio:', err);
       setError('Failed to pause audio');
     }
   }, [stopPolling]);
@@ -320,22 +366,22 @@ export const useSurahAudio = (
   const resumeAudio = useCallback(() => {
     try {
       if (!isLoadedRef.current) {
-        console.warn('No audio loaded to resume');
+        console.warn('⚠️ No audio loaded to resume');
         return;
       }
-      console.log('Resuming audio');
+      console.log('▶️ Resuming audio');
       SoundPlayer.resume();
       setIsPlaying(true);
-      startPolling();
+      startPolling(); // Restart polling when resuming
     } catch (err) {
-      console.error('Error resuming audio:', err);
+      console.error('❌ Error resuming audio:', err);
       setError('Failed to resume audio');
     }
   }, [startPolling]);
 
   const stopAudio = useCallback(() => {
     try {
-      console.log('Stopping audio');
+      console.log('⏹️ Stopping audio');
       SoundPlayer.stop();
       setIsPlaying(false);
       setPosition(0);
@@ -343,28 +389,33 @@ export const useSurahAudio = (
       isLoadedRef.current = false;
       stopPolling();
     } catch (err) {
-      console.error('Error stopping audio:', err);
+      console.error('❌ Error stopping audio:', err);
     }
   }, [stopPolling]);
 
   const seekTo = useCallback((seconds: number) => {
     try {
       if (!isLoadedRef.current) {
-        console.warn('No audio loaded to seek');
+        console.warn('⚠️ No audio loaded to seek');
         return;
       }
       if (seconds < 0 || seconds > duration) {
-        console.warn('Invalid seek position:', seconds);
+        console.warn('⚠️ Invalid seek position:', seconds);
         return;
       }
-      console.log('Seeking to:', seconds);
+      console.log('⏩ Seeking to:', seconds);
       SoundPlayer.seek(seconds);
       setPosition(seconds);
+      
+      // If audio was playing, restart polling after seek
+      if (isPlayingRef.current) {
+        startPolling();
+      }
     } catch (err) {
-      console.error('Error seeking:', err);
+      console.error('❌ Error seeking:', err);
       setError('Failed to seek');
     }
-  }, [duration]);
+  }, [duration, startPolling]);
 
   const playNext = useCallback(async () => {
     const currentIdx = versesRef.current.findIndex(v => v.id === currentVerseId);
@@ -372,7 +423,7 @@ export const useSurahAudio = (
       const nextVerse = versesRef.current[currentIdx + 1];
       await playAudio(nextVerse.id);
     } else {
-      console.log('No next verse available');
+      console.log('⚠️ No next verse available');
     }
   }, [currentVerseId, playAudio]);
 
@@ -382,7 +433,7 @@ export const useSurahAudio = (
       const prevVerse = versesRef.current[currentIdx - 1];
       await playAudio(prevVerse.id);
     } else {
-      console.log('No previous verse available');
+      console.log('⚠️ No previous verse available');
     }
   }, [currentVerseId, playAudio]);
 
@@ -390,9 +441,9 @@ export const useSurahAudio = (
     try {
       const clampedVolume = Math.max(0, Math.min(1, volume));
       SoundPlayer.setVolume(clampedVolume);
-      console.log('Volume set to:', clampedVolume);
+      console.log('🔊 Volume set to:', clampedVolume);
     } catch (err) {
-      console.error('Error setting volume:', err);
+      console.error('❌ Error setting volume:', err);
     }
   }, []);
 
@@ -402,7 +453,7 @@ export const useSurahAudio = (
 
   const cleanup = useCallback(() => {
     try {
-      console.log('Cleaning up audio hook');
+      console.log('🧹 Cleaning up audio hook');
       stopPolling();
       SoundPlayer.stop();
       
@@ -424,9 +475,9 @@ export const useSurahAudio = (
       setError(null);
       isLoadedRef.current = false;
       
-      console.log('Audio hook cleanup completed');
+      console.log('✅ Audio hook cleanup completed');
     } catch (err) {
-      console.error('Error during cleanup:', err);
+      console.error('❌ Error during cleanup:', err);
     }
   }, [stopPolling]);
 
