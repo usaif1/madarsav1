@@ -548,8 +548,9 @@ ${surahName}, Verse ${verse.id}${verse.audioUrl ? `\n\nAudio: ${verse.audioUrl}`
   // Handle audio player close
   const handleAudioPlayerClose = useCallback(() => {
     setShowAudioPlayer(false);
+    audioHook.stopAudio();
     // Don't stop audio, just hide the player
-  }, []);
+  }, [audioHook]);
 
   // Render loading state
   const renderLoading = () => (
@@ -855,7 +856,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   playingActionButton: {
-    backgroundColor: ColorPrimary.primary100,
     borderRadius: scale(20),
   },
   floatingButton: {

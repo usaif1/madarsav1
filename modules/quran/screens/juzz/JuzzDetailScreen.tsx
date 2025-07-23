@@ -482,8 +482,9 @@ ${verse.surahName}, Verse ${verse.ayahNumber}${verse.audioUrl ? `\n\nAudio: ${ve
   // Handle audio player close
   const handleAudioPlayerClose = useCallback(() => {
     setShowAudioPlayer(false);
+    audioHook.stopAudio();
     // Don't stop audio, just hide the player
-  }, []);
+  }, [audioHook]);
 
   return (
     <View style={styles.container}>
