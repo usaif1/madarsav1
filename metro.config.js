@@ -16,6 +16,9 @@ const config = {
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
+     alias: {
+      'react-native-sound': require.resolve('react-native-sound'),
+    },
   },
   resetCache: true,
 };

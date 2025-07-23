@@ -17,7 +17,7 @@ interface SurahAudioPlayerProps {
   surahName: string;
   verses: VerseData[];
   onClose?: () => void;
-  // Accept the audio hook directly to prevent re-initialization
+  // Accept the audio hook directly - completely isolated from shared audio
   audioHook: {
     isPlaying: boolean;
     isLoading: boolean;
@@ -30,7 +30,7 @@ interface SurahAudioPlayerProps {
     progress: number;
     playAudio: (verseId: number) => Promise<void>;
     pauseAudio: () => void;
-    resumeAudio: () => Promise<void>;
+    resumeAudio: () => void;
     stopAudio: () => void;
     seekTo: (position: number) => void;
     playNext: () => Promise<void>;
@@ -67,7 +67,7 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     clearError,
   } = audioHook;
   
-  // Show error alerts - use useEffect with dependency to prevent multiple alerts
+  // Show error alerts - isolated error handling
   useEffect(() => {
     if (error) {
       Alert.alert(
@@ -78,8 +78,10 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     }
   }, [error, clearError]);
   
-  // Memoize format time to prevent recreation
+  // Memoize format time function
   const formatTime = useCallback((seconds: number): string => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -104,14 +106,14 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     return formatTime(rounded);
   }, [formatTime, Math.floor(duration)]);
 
-  // Handle play/pause with useCallback to prevent recreation
+  // Handle play/pause with isolated state
   const handlePlayPause = useCallback(async () => {
     try {
       if (isPlaying) {
         pauseAudio();
       } else {
         if (currentVerseId && position > 0) {
-          await resumeAudio();
+          resumeAudio();
         } else {
           // If no verse is selected, start with first verse
           const verseToPlay = currentVerseId || (verses[0]?.id);
@@ -125,7 +127,7 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     }
   }, [isPlaying, currentVerseId, position, pauseAudio, resumeAudio, playAudio, verses]);
 
-  // Handle seek functionality with useCallback
+  // Handle seek functionality
   const handleSeek = useCallback((event: any) => {
     const { locationX } = event.nativeEvent;
     const progressBarWidth = scale(180);
@@ -137,14 +139,14 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     }
   }, [duration, seekTo]);
 
-  // Handle close with useCallback
+  // Handle close with cleanup
   const handleClose = useCallback(() => {
     if (onClose) {
       onClose();
     }
   }, [onClose]);
 
-  // Handle next verse with useCallback
+  // Handle next verse
   const handleNext = useCallback(async () => {
     try {
       await playNext();
@@ -153,7 +155,7 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     }
   }, [playNext]);
 
-  // Handle previous verse with useCallback
+  // Handle previous verse
   const handlePrevious = useCallback(async () => {
     try {
       await playPrevious();
@@ -180,6 +182,15 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
     return Math.min(100, Math.max(0, percentage));
   }, [position, duration]);
 
+  // Memoize current verse display
+  const currentVerseDisplay = useMemo(() => {
+    if (currentVerseId) {
+      const verse = verses.find(v => v.id === currentVerseId);
+      return verse ? verse.id : 1;
+    }
+    return 1;
+  }, [currentVerseId, verses]);
+
   return (
     <View style={styles.container}>
       {/* Track Image */}
@@ -204,7 +215,7 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
         {/* Track Name and Time */}
         <View style={styles.trackInfoRow}>
           <Body1Title2Medium color="white" style={styles.trackName} numberOfLines={1}>
-            {surahName} - Verse {currentVerseId || 1}
+            {surahName} - Verse {currentVerseDisplay}
           </Body1Title2Medium>
           <CaptionMedium style={styles.timeText}>
             {formattedPosition} / {formattedDuration}
@@ -258,11 +269,11 @@ const SurahAudioPlayer: React.FC<SurahAudioPlayerProps> = ({
           {isLoading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : isPlaying ? (
-            <View style={styles.iconContainer}>
+            <View style={styles.buttonIconContainer}>
               <CdnSvg path={DUA_ASSETS.NAMES_PAUSE_WHITE} width={12} height={12} />
             </View>
           ) : (
-            <View style={styles.iconContainer}>
+            <View style={styles.buttonIconContainer}>
               <CdnSvg path={DUA_ASSETS.NAMES_RIGHT_TRIANGLE} width={12} height={12} />
             </View>
           )}
@@ -402,6 +413,10 @@ const styles = StyleSheet.create({
     height: scale(30),
     borderRadius: scale(21),
     backgroundColor: '#8A57DC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonIconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
