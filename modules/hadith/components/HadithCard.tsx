@@ -29,7 +29,15 @@ const HadithCard: React.FC<HadithCardProps> = ({ hadith, onPress }) => {
    */
   const getHadithImageUrl = (): string => {
     // Generate dynamic path based on hadith title
-    const dynamicImagePath = getHadithBookImagePath(hadith.title);
+    // Normalize the collection name:
+  // 1. Convert to lowercase
+  // 2. Remove special characters (hyphens, apostrophes, backticks, spaces, etc.)
+  // 3. Keep only alphanumeric characters
+  const normalizedName = hadith.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric characters
+    .trim();
+    const dynamicImagePath = getHadithBookImagePath(normalizedName);
     return getCdnUrl(dynamicImagePath);
   };
 

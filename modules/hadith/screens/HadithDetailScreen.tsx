@@ -11,51 +11,96 @@ import LinearGradient from 'react-native-linear-gradient';
 import { DUA_ASSETS, getCdnUrl, getHadithBookImagePath } from '@/utils/cdnUtils';
 import { CdnSvg } from '@/components/CdnSvg';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import LoadingIndicator from '@/components/LoadingIndicator';
+import ErrorMessage from '@/components/ErrorMessage';
 
-// Fallback data in case API fails
-const fallbackHadithDetail = {
-  id: 'bukhari',
-  title: 'Sahih al-Bukhari',
-  author: 'Abu Abdullah Muhammad Ibn Isma\'il al-Bukhari(rahimahullah)',
-  years: '202-275 AH',
-  translator: 'Dr. M. Muhsin Khan',
-  image: DUA_ASSETS.HADITH_BOOK_IMAGE,
-  highlight: 'Contains roughly 7500 Hadith (with repetitions) in 57 books',
-  brief: `Ṣaḥīḥ al-Bukhārī is a collection of hadīth compiled by Abu Abdullāh Muhammad Ibn Ismā\`īl al-Bukhārī(rahimahullāh). His collection is recognised by the overwhelming majority of the Muslim world to be one of the most authentic collections of the Sunnah of the Prophet (ﷺ). It contains roughly 7563 hadīth (with repetitions) in 98 books. The translation provided here is by Dr. M. Muhsin Khan.`,
-  authorBio: `Imām al-Bukhārī (rahimahullāh) is known as the Amīr al-Mu'minīn in hadīth. His genealogy is as follows: Abu Abdullāh Muhammad Ibn Ismā\`īl Ibn Ibrāhīm Ibn al-Mughīrah Ibn Bardizbah al-Bukhārī. His father Ismā\`īl was a well-known and famous muhaddith in his time and had been blessed with the chance of being in the company of Imām Mālik, Hammād Ibn Zaid and also Abdullāh Ibn Mubārak (rahimahullahum).`,
-};
+/**
+ * Interface for hadith detail data structure
+ */
+interface HadithDetail {
+  id: string;
+  title: string;
+  author: string;
+  years: string;
+  translator: string;
+  image: string;
+  highlight: string;
+  brief: string;
+  authorBio: string;
+}
+
+/**
+ * Route parameters interface
+ */
+interface RouteParams {
+  id: string;
+  hadithTitle: string;
+  hadithDetail?: HadithDetail;
+}
 
 const HadithDetailScreen: React.FC = () => {
   const { colors } = useThemeStore();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const { id, hadithTitle, hadithDetail: passedHadithDetail } = route.params as {
-    id: string;
-    hadithTitle: string;
-    hadithDetail: any;
-  };
+  const { id, hadithTitle, hadithDetail } = route.params as RouteParams;
 
-  // Use passed data or fallback to dummy data
-  const hadithDetail = passedHadithDetail || fallbackHadithDetail;
-
+  /**
+   * Handle start learning button press
+   * Navigates to hadith chapters screen
+   */
   const handleStartLearning = () => {
-    navigation.navigate('hadithChapters', { hadithId: id, chapterId: '1', chapterTitle: hadithTitle });
+    navigation.navigate('hadithChapters', { 
+      hadithId: id, 
+      chapterId: '1', 
+      chapterTitle: hadithTitle 
+    });
   };
+
+  /**
+   * Handle share button press
+   * TODO: Implement sharing functionality
+   */
+  const handleSharePress = () => {
+    // Implement share functionality
+    console.log('Share pressed for hadith:', hadithDetail?.title);
+  };
+
+  // Show error if no hadith detail data is provided
+  if (!hadithDetail) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ErrorMessage 
+          message="Hadith details not available. Please try again."
+          onRetry={() => navigation.goBack()}
+        />
+      </View>
+    );
+  }
+
+  // Show loading if essential data is missing
+  if (!hadithDetail.title || !hadithDetail.author) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <LoadingIndicator color={colors.primary.primary500} />
+        <Text style={styles.loadingText}>Loading hadith details...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Top Section */}
       <View style={styles.topSection}>
-        
-      <View style={styles.topIllustrationContainer}>
-            <CdnSvg 
-              path={DUA_ASSETS.HADITH_TOP_ILLUSTRATION}
-              width={scale(155)}
-              height={verticalScale(100)}
-            />
-          </View>
+        {/* Top Illustration */}
+        <View style={styles.topIllustrationContainer}>
+          <CdnSvg 
+            path={DUA_ASSETS.HADITH_TOP_ILLUSTRATION}
+            width={scale(155)}
+            height={verticalScale(100)}
+          />
+        </View>
+
         <View style={styles.innerTopSection}>
-          
           {/* Book Card */}
           <View style={styles.bookCard}>
             {/* Book Image */}
@@ -63,6 +108,7 @@ const HadithDetailScreen: React.FC = () => {
               source={{ uri: getCdnUrl(getHadithBookImagePath(hadithDetail.title)) }}
               style={styles.bookImage}
               resizeMode={FastImage.resizeMode.contain}
+              defaultSource={{ uri: getCdnUrl(DUA_ASSETS.HADITH_BOOK_IMAGE) }}
             />
             
             {/* Book Info */}
@@ -74,15 +120,19 @@ const HadithDetailScreen: React.FC = () => {
                 <CaptionMedium style={styles.authorName}>{hadithDetail.author}</CaptionMedium>
               </View>
               
-              <View style={styles.infoSection}>
-                <CaptionMedium color="sub-heading" style={styles.infoLabel}>Narrated in</CaptionMedium>
-                <Body2Medium style={styles.infoValue}>{hadithDetail.years}</Body2Medium>
-              </View>
+              {hadithDetail.years && (
+                <View style={styles.infoSection}>
+                  <CaptionMedium color="sub-heading" style={styles.infoLabel}>Narrated in</CaptionMedium>
+                  <Body2Medium style={styles.infoValue}>{hadithDetail.years}</Body2Medium>
+                </View>
+              )}
               
-              <View style={styles.infoSection}>
-                <CaptionMedium color="sub-heading" style={styles.infoLabel}>Translation by</CaptionMedium>
-                <Body2Medium style={styles.infoValue}>{hadithDetail.translator}</Body2Medium>
-              </View>
+              {hadithDetail.translator && (
+                <View style={styles.infoSection}>
+                  <CaptionMedium color="sub-heading" style={styles.infoLabel}>Translation by</CaptionMedium>
+                  <Body2Medium style={styles.infoValue}>{hadithDetail.translator}</Body2Medium>
+                </View>
+              )}
             </View>
           </View>
 
@@ -91,6 +141,9 @@ const HadithDetailScreen: React.FC = () => {
             <TouchableOpacity 
               style={[styles.actionBtn, styles.startBtn]}
               onPress={handleStartLearning}
+              activeOpacity={0.8}
+              accessibilityLabel="Start learning hadith"
+              accessibilityRole="button"
             >
               <CdnSvg 
                 path={DUA_ASSETS.HADITH_PLAY}
@@ -99,7 +152,14 @@ const HadithDetailScreen: React.FC = () => {
               />
               <Body1Title2Bold style={styles.startBtnText}>Start learning</Body1Title2Bold>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.shareBtn]}>
+            
+            <TouchableOpacity 
+              style={[styles.actionBtn, styles.shareBtn]}
+              onPress={handleSharePress}
+              activeOpacity={0.8}
+              accessibilityLabel="Share hadith"
+              accessibilityRole="button"
+            >
               <CdnSvg 
                 path={DUA_ASSETS.QURAN_SHARE_ICON}
                 width={20}
@@ -110,30 +170,42 @@ const HadithDetailScreen: React.FC = () => {
           </View>
         </View>
 
-      {/* Highlight Bar */}
-      <LinearGradient 
-        colors={['#FEFAEC', '#FCEFC7']} 
-        start={{x: 0, y: 0}} 
-        end={{x: 1, y: 0}} 
-        style={styles.highlightBar}
-      >
-        <CaptionBold color="accent-yellow-900" style={styles.highlightText}>{hadithDetail.highlight}</CaptionBold>
-      </LinearGradient>
+        {/* Highlight Bar */}
+        {hadithDetail.highlight && (
+          <LinearGradient 
+            colors={['#FEFAEC', '#FCEFC7']} 
+            start={{x: 0, y: 0}} 
+            end={{x: 1, y: 0}} 
+            style={styles.highlightBar}
+          >
+            <CaptionBold color="accent-yellow-900" style={styles.highlightText}>
+              {hadithDetail.highlight}
+            </CaptionBold>
+          </LinearGradient>
+        )}
       </View>
 
       {/* Content Section */}
       <View style={styles.contentSection}>
         {/* Hadith Brief */}
-        <View style={styles.briefSection}>
-          <H5Bold style={styles.sectionTitle}>Hadith brief</H5Bold>
-          <Body1Title2Regular style={styles.briefText}>{hadithDetail.brief}</Body1Title2Regular>
-        </View>
+        {hadithDetail.brief && (
+          <View style={styles.briefSection}>
+            <H5Bold style={styles.sectionTitle}>Hadith brief</H5Bold>
+            <Body1Title2Regular style={styles.briefText}>
+              {hadithDetail.brief}
+            </Body1Title2Regular>
+          </View>
+        )}
 
         {/* Author Bio */}
-        <View style={styles.bioSection}>
-          <Body1Title2Regular style={styles.bioText}>Author bio</Body1Title2Regular>
-          <Body1Title2Regular style={styles.bioText}>{hadithDetail.authorBio}</Body1Title2Regular>
-        </View>
+        {hadithDetail.authorBio && (
+          <View style={styles.bioSection}>
+            <H5Bold style={styles.sectionTitle}>Author bio</H5Bold>
+            <Body1Title2Regular style={styles.bioText}>
+              {hadithDetail.authorBio}
+            </Body1Title2Regular>
+          </View>
+        )}
       </View>
 
       {/* Footer */}
@@ -147,16 +219,27 @@ const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: 'white',
   },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: verticalScale(16),
+    fontSize: scale(16),
+    color: '#8A57DC',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   topSection: {
     width: scale(375),
-    height: verticalScale(322.7),
+    minHeight: verticalScale(322.7),
     paddingTop: scale(32),
     gap: scale(16),
     backgroundColor: '#FFFDF6',
   },
   innerTopSection: {
     width: scale(375),
-    height: verticalScale(244.7),
+    minHeight: verticalScale(244.7),
     rowGap: scale(16),
     paddingHorizontal: scale(20),
     position: 'relative',
@@ -169,7 +252,7 @@ const styles = StyleSheet.create({
   },
   bookCard: {
     width: scale(335),
-    height: verticalScale(188.7),
+    minHeight: verticalScale(188.7),
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
@@ -184,18 +267,19 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: scale(1.65),
   },
   bookInfo: {
-    width: scale(186.91),
-    height: verticalScale(188.7),
+    flex: 1,
+    minHeight: verticalScale(188.7),
     paddingVertical: scale(10),
     justifyContent: 'flex-start',
   },
   infoSection: {
-    width: scale(186.91),
+    width: '100%',
     marginBottom: scale(16),
   },
   bookTitle: {
     fontSize: scale(20),
     marginBottom: scale(16),
+    flexWrap: 'wrap',
   },
   infoLabel: {
     fontSize: scale(10),
@@ -205,10 +289,12 @@ const styles = StyleSheet.create({
   authorName: {
     fontSize: scale(12),
     color: '#171717',
+    flexWrap: 'wrap',
   },
   infoValue: {
     fontSize: scale(12),
     color: '#171717',
+    flexWrap: 'wrap',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -216,7 +302,8 @@ const styles = StyleSheet.create({
     gap: scale(7),
   },
   actionBtn: {
-    width: scale(164),
+    flex: 1,
+    maxWidth: scale(164),
     height: verticalScale(40),
     borderRadius: scale(60),
     paddingVertical: scale(10),
@@ -241,12 +328,15 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
   },
   highlightBar: {
-    height: verticalScale(30),
+    minHeight: verticalScale(30),
+    paddingVertical: scale(8),
+    paddingHorizontal: scale(16),
     justifyContent: 'center',
     alignItems: 'center',
   },
   highlightText: {
     fontSize: scale(10),
+    textAlign: 'center',
   },
   contentSection: {
     width: scale(375),

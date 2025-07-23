@@ -168,29 +168,35 @@ const mapCollectionToHadith = (collection: Collection): Hadith => {
     }
   }
   
-  // Extract brief from shortIntro
+  // Extract brief from shortIntro - fallback to totalAvailableHadith if no shortIntro
   let brief = `Contains ${collection.totalAvailableHadith} hadith${collection.hasBooks ? ' in multiple books' : ''}.`;
   
-  // Try to extract brief using various patterns but ensure it starts with "Contains"
-  const briefPatterns = [
-    /\d+ hadith[^.]+\./i,         // "X hadith..."
-    /roughly \d+[^.]+\./i,        // "roughly X..."
-    /over \d+[^.]+\./i            // "over X..."
-  ];
+  // Only try to extract from shortIntro if it exists and has content
+  if (shortIntro && shortIntro.trim()) {
+    // Updated patterns to handle commas in numbers (e.g., 6,000)
+    const briefPatterns = [
+      /\d{1,3}(?:,\d{3})*\s+hadith[^.]+\./i,     // "6,000 hadith..." or "7500 hadith..."
+      /roughly\s+\d{1,3}(?:,\d{3})*[^.]+\./i,   // "roughly 6,000..." or "roughly 7500..."
+      /over\s+\d{1,3}(?:,\d{3})*[^.]+\./i,      // "over 30,000..." or "over 5000..."
+      /approximately\s+\d{1,3}(?:,\d{3})*[^.]+\./i, // "approximately 3,500..."
+      /about\s+\d{1,3}(?:,\d{3})*[^.]+\./i,     // "about 1,720..."
+      /contains\s+\d{1,3}(?:,\d{3})*[^.]+\./i   // "contains 4,341..."
+    ];
 
-  // Try each pattern in order
-  for (const pattern of briefPatterns) {
-    const match = shortIntro.match(pattern);
-    if (match) {
-      // Get the matched text
-      let matchText = match[0];
-      
-      // Remove any phrases like "it contains" or "contains" if they exist
-      matchText = matchText.replace(/^(it\s+contains|contains)\s+/i, '');
-      
-      // Ensure brief starts with "Contains" (capital C)
-      brief = `Contains ${matchText}`;
-      break;  // Stop after first match
+    // Try each pattern in order
+    for (const pattern of briefPatterns) {
+      const match = shortIntro.match(pattern);
+      if (match) {
+        // Get the matched text
+        let matchText = match[0];
+        
+        // Remove any leading phrases like "it contains" or "contains" if they exist
+        matchText = matchText.replace(/^(it\s+contains|contains)\s+/i, '');
+        
+        // Ensure brief starts with "Contains" (capital C)
+        brief = `Contains ${matchText}`;
+        break;  // Stop after first match
+      }
     }
   }
   
@@ -200,14 +206,32 @@ const mapCollectionToHadith = (collection: Collection): Hadith => {
     title: collectionData.title || collection.name,
     author: author,
     // Use a mapping for known collection images or generate a placeholder
-    image: getHadithImage(collection.name),
+    image: getHadithImage(collectionData.title),
     brief: brief
   };
 };
 
-// Helper function to get appropriate image for each collection
+/**
+ * Helper function to get appropriate image for each collection
+ * Normalizes collection name by converting to lowercase and removing special characters
+ * @param collectionName - The title of the hadith collection
+ * @returns CDN URL for the collection image
+ */
 const getHadithImage = (collectionName: string): string => {
-  return getCdnUrl(getHadithBookImagePath(collectionName));
+  console.log(`📘 Fetching image for collection: ${collectionName}`);
+  
+  // Normalize the collection name:
+  // 1. Convert to lowercase
+  // 2. Remove special characters (hyphens, apostrophes, backticks, spaces, etc.)
+  // 3. Keep only alphanumeric characters
+  const normalizedName = collectionName
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric characters
+    .trim();
+  
+  console.log(`📘 Normalized collection name: ${normalizedName}`);
+  
+  return getCdnUrl(getHadithBookImagePath(normalizedName));
 };
 
 const HadithsListScreen: React.FC = () => {

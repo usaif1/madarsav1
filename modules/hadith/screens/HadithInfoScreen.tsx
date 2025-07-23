@@ -16,31 +16,9 @@ import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
 import { CdnSvg } from '@/components/CdnSvg';
 
-// Fallback data in case API fails
-const fallbackHadithInfo = {
-  id: 'bukhari',
-  title: 'Sahih al-Bukhari',
-  author: 'Imam Bukhari',
-  brief: 'Sahih al-Bukhari is a collection of hadith compiled by Abu Abdullah Muhammad Ibn Isma\'il al-Bukhari...',
-  chapters: [
-    { id: '1', title: 'Revelation', range: '1-7' },
-    { id: '2', title: 'Belief', range: '8-58' },
-    { id: '3', title: 'Knowledge', range: '59-134' },
-    { id: '4', title: 'Ablutions (Wudu\')', range: '135-248' },
-    { id: '5', title: 'Bathing (Ghusl)', range: '249-293' },
-    { id: '6', title: 'Menstrual Periods', range: '294-330' },
-    { id: '7', title: 'Rubbing hands and feet with dust (Tayammum)', range: '331-348' },
-    { id: '8', title: 'Prayer (Salat)', range: '349-512' },
-    { id: '9', title: 'Times of the Prayers', range: '513-590' },
-    { id: '10', title: 'Call to Prayers (Adhaan)', range: '591-856' },
-    { id: '11', title: 'Friday Prayer', range: '857-941' },
-    { id: '12', title: 'Fear Prayer', range: '942-957' },
-    { id: '14', title: 'The Two Festivals (Eids)', range: '958-964' },
-    // Add more chapters as needed
-  ],
-};
-
-// Define interfaces for API data - match the actual API response structure
+/**
+ * Interface for API book data structure
+ */
 interface Book {
   bookNumber: string;
   book: {
@@ -52,6 +30,9 @@ interface Book {
   numberOfHadith: number;
 }
 
+/**
+ * Interface for API collection data structure
+ */
 interface CollectionInfo {
   name: string;
   hasBooks: boolean;
@@ -65,16 +46,32 @@ interface CollectionInfo {
   totalAvailableHadith: number;
 }
 
+/**
+ * Interface for UI chapter display
+ */
+interface Chapter {
+  id: string;
+  title: string;
+  range: string;
+}
+
+/**
+ * Route parameters interface
+ */
+interface RouteParams {
+  id: string;
+}
+
 const HadithInfoScreen: React.FC = () => {
   const { colors } = useThemeStore();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const { id } = route.params as { id: string };
+  const { id } = route.params as RouteParams;
   const [search, setSearch] = useState('');
   const [allBooks, setAllBooks] = useState<Book[]>([]);
   const { width } = useWindowDimensions();
 
-  // Fetch collection details and books
+  // Fetch collection details and books from API
   const {
     data: collectionData,
     isLoading: collectionLoading,
@@ -110,55 +107,21 @@ const HadithInfoScreen: React.FC = () => {
     }
   }, [booksData]);
 
-  // Prepare data for UI
-  const collection: CollectionInfo = collectionData || {
-    name: fallbackHadithInfo.id,
-    hasBooks: true,
-    hasChapters: true,
-    collection: [{
-      title: fallbackHadithInfo.title,
-      shortIntro: fallbackHadithInfo.brief,
-      lang: 'en'
-    }],
-    totalHadith: 0,
-    totalAvailableHadith: 0
-  };
-  
-  // Map books to chapters format for UI
-  const chapters = allBooks.map(book => {
-    // Get the book name from the first non-empty name in the book array
-    const bookName = book.book.find(b => b.name && b.name.trim() !== '')?.name || `Book ${book.bookNumber}`;
+  /**
+   * Extract author from shortIntro using various patterns
+   * @param shortIntro - The short introduction text
+   * @returns Extracted author name or 'Unknown Author'
+   */
+  const extractAuthor = (shortIntro: string): string => {
+    if (!shortIntro) return 'Unknown Author';
     
-    // Use hadithStartNumber and hadithEndNumber for the range
-    return {
-      id: book.bookNumber,
-      title: bookName,
-      range: `${book.hadithStartNumber}-${book.hadithEndNumber}`
-    };
-  });
-
-  // Filter chapters by search
-  const filteredChapters = chapters.filter(ch =>
-    ch.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Get collection title and author
-  const collectionTitle = collection.collection.find(c => c.lang === 'en')?.title || collection.name;
-  const collectionIntro = collection.collection.find(c => c.lang === 'en')?.shortIntro || '';
-  
-  // Extract first sentence for brief
-  const firstSentence = collectionIntro.split('.')[0] + (collectionIntro.includes('.') ? '.' : '');
-  
-  // Extract author using logic from HadithsListScreen
-  let author = 'Unknown Author';
-  const shortIntro = collectionIntro || '';
-  
-  // Try to extract author using "compiled by" pattern
-  const compiledByMatch = shortIntro.match(/compiled by ([^(]+)/i);
-  if (compiledByMatch && compiledByMatch[1]) {
-    author = compiledByMatch[1].trim();
-  } else {
-    // Fallback: Try to get first sentence
+    // Try to extract author using "compiled by" pattern
+    const compiledByMatch = shortIntro.match(/compiled by ([^(]+)/i);
+    if (compiledByMatch && compiledByMatch[1]) {
+      return compiledByMatch[1].trim();
+    }
+    
+    // Fallback: Try to get first sentence words
     const firstSentenceMatch = shortIntro.split('.')[0] || '';
     const words = firstSentenceMatch.split(/\s+/).filter(word => word.length > 0);
     
@@ -168,18 +131,24 @@ const HadithInfoScreen: React.FC = () => {
       
       if (bracketIndex > 0) {
         // Use the first word and the word before the bracket
-        author = `${words[0]} ${words[bracketIndex - 1]}`;
+        return `${words[0]} ${words[bracketIndex - 1]}`;
       } else if (words.length > 1 && words[0] === 'Imam') {
         // If first word is just "Imam", include the second word too
-        author = `${words[0]} ${words[1]}`;
+        return `${words[0]} ${words[1]}`;
       } else if (words.length > 0) {
         // Just use the first word if no bracket found
-        author = words[0];
+        return words[0];
       }
     }
-  }
+    
+    return 'Unknown Author';
+  };
 
-  // Helper functions to extract information from shortIntro
+  /**
+   * Extract translator from text using various patterns
+   * @param text - The text to search in
+   * @returns Extracted translator name or 'Unknown Translator'
+   */
   const extractTranslator = (text: string): string => {
     if (!text) return 'Unknown Translator';
     
@@ -208,6 +177,11 @@ const HadithInfoScreen: React.FC = () => {
     return 'Unknown Translator';
   };
 
+  /**
+   * Extract years from text using pattern matching
+   * @param text - The text to search in
+   * @returns Extracted years or empty string
+   */
   const extractYears = (text: string): string => {
     if (!text) return '';
     
@@ -220,40 +194,98 @@ const HadithInfoScreen: React.FC = () => {
     return '';
   };
 
-  const extractHighlight = (text: string): string => {
-    if (!text) return '';
+  /**
+   * Extract highlight text from shortIntro
+   * @param text - The text to search in
+   * @param totalAvailableHadith - Fallback number for highlight
+   * @returns Extracted highlight text
+   */
+  const extractHighlight = (text: string, totalAvailableHadith: number): string => {
+    if (!text) {
+      return totalAvailableHadith > 0 ? `Contains ${totalAvailableHadith} hadith` : '';
+    }
     
     // Look for patterns like "contains roughly 7500 hadith" or similar
-    const highlightMatch = text.match(/contains roughly \d+[^.]+\./i) ||
-                           text.match(/contains \d+[^.]+\./i) ||
-                           text.match(/\d+ hadith[^.]+\./i);
+    const highlightMatch = text.match(/contains roughly \d{1,3}(?:,\d{3})*[^.]+\./i) ||
+                           text.match(/contains \d{1,3}(?:,\d{3})*[^.]+\./i) ||
+                           text.match(/\d{1,3}(?:,\d{3})*\s+hadith[^.]+\./i);
     
     if (highlightMatch && highlightMatch[0]) {
       return highlightMatch[0];
     }
     
-    return `Contains ${collection.totalAvailableHadith} hadith`;
+    return totalAvailableHadith > 0 ? `Contains ${totalAvailableHadith} hadith` : '';
   };
-  
+
+  /**
+   * Handle saved button press
+   */
   const handleSavedPress = () => {
-    // Navigate to saved hadiths screen
     navigation.navigate('savedHadiths');
   };
 
   // Show loading state
   if (collectionLoading || booksLoading) {
-    return <LoadingIndicator color={colors.primary.primary500} />;
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <LoadingIndicator color={colors.primary.primary500} />
+        <Text style={styles.loadingText}>Loading hadith information...</Text>
+      </View>
+    );
   }
 
   // Show error state
   if (collectionError || booksError) {
     return (
-      <ErrorMessage 
-        message={(collectionError || booksError)?.toString() || 'Failed to load hadith information'} 
-        onRetry={() => navigation.replace('hadithInfo', { id })}
-      />
+      <View style={[styles.container, styles.centerContent]}>
+        <ErrorMessage 
+          message={(collectionError || booksError)?.toString() || 'Failed to load hadith information'} 
+          onRetry={() => navigation.replace('hadithInfo', { id })}
+        />
+      </View>
     );
   }
+
+  // Show error if no collection data is available
+  if (!collectionData) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ErrorMessage 
+          message="Hadith collection not found. Please try again."
+          onRetry={() => navigation.replace('hadithInfo', { id })}
+        />
+      </View>
+    );
+  }
+
+  const collection: CollectionInfo = collectionData;
+  
+  // Map books to chapters format for UI
+  const chapters: Chapter[] = allBooks.map(book => {
+    // Get the book name from the first non-empty name in the book array
+    const bookName = book.book.find(b => b.name && b.name.trim() !== '')?.name || `Book ${book.bookNumber}`;
+    
+    // Use hadithStartNumber and hadithEndNumber for the range
+    return {
+      id: book.bookNumber,
+      title: bookName,
+      range: `${book.hadithStartNumber}-${book.hadithEndNumber}`
+    };
+  });
+
+  // Filter chapters by search
+  const filteredChapters = chapters.filter(ch =>
+    ch.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Get collection title and intro
+  const englishCollection = collection.collection.find(c => c.lang === 'en');
+  const collectionTitle = englishCollection?.title || collection.name;
+  const collectionIntro = englishCollection?.shortIntro || '';
+  
+  // Extract information from shortIntro
+  const author = extractAuthor(collectionIntro);
+  const firstSentence = collectionIntro.split('.')[0] + (collectionIntro.includes('.') ? '.' : '');
 
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}>
@@ -270,23 +302,18 @@ const HadithInfoScreen: React.FC = () => {
       <HadithInfoCard
         title={collectionTitle}
         author={author}
-        brief={firstSentence || fallbackHadithInfo.brief}
+        brief={firstSentence || ''}
         onPress={() => {
-          // Create a hadith detail object with real data
+          // Create a hadith detail object with real API data
           const hadithDetail = {
             id: collection.name,
             title: collectionTitle,
             author: author,
-            brief: collectionIntro || fallbackHadithInfo.brief,
-            // Extract translator from the last sentence if it contains "translation provided here by"
+            brief: collectionIntro || '',
             translator: extractTranslator(collectionIntro),
-            // Use shortIntro as authorBio
             authorBio: collectionIntro || '',
-            // Extract years if available
             years: extractYears(collectionIntro),
-            // Extract highlight if available (contains roughly X hadith)
-            highlight: extractHighlight(collectionIntro),
-            // Use the new utility function to get the image path
+            highlight: extractHighlight(collectionIntro, collection.totalAvailableHadith),
             image: getHadithBookImagePath(collectionTitle),
           };
           
@@ -315,6 +342,9 @@ const HadithInfoScreen: React.FC = () => {
                 chapterTitle: item.title
               });
             }}
+            activeOpacity={0.7}
+            accessibilityLabel={`Chapter ${index + 1}: ${item.title}`}
+            accessibilityRole="button"
           >
             <View style={styles.indexContainer}>
               <Text style={styles.chapterIndex}>{index + 1}</Text>
@@ -334,7 +364,9 @@ const HadithInfoScreen: React.FC = () => {
               />
             </View>
             <View style={styles.chapterRangeContainer}>
-              <Body2Medium color="sub-heading" style={styles.chapterRange}>{item.range}</Body2Medium>
+              <Body2Medium color="sub-heading" style={styles.chapterRange}>
+                {item.range}
+              </Body2Medium>
             </View>
           </TouchableOpacity>
         )}
@@ -342,7 +374,14 @@ const HadithInfoScreen: React.FC = () => {
         contentContainerStyle={styles.listContentContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Body1Title2Medium>No chapters found</Body1Title2Medium>
+            <Body1Title2Medium>
+              {search ? 'No chapters found for your search' : 'No chapters available'}
+            </Body1Title2Medium>
+            {search && (
+              <Text style={styles.emptySubtext}>
+                Try adjusting your search terms
+              </Text>
+            )}
           </View>
         }
         showsVerticalScrollIndicator={false}
@@ -361,10 +400,12 @@ const HadithInfoScreen: React.FC = () => {
           width={scale(16)}
           height={scale(16)}
         />
-        <Body1Title2Medium color="white" style={{marginLeft: 8}}>Saved</Body1Title2Medium>
+        <Body1Title2Medium color="white" style={styles.savedButtonText}>
+          Saved
+        </Body1Title2Medium>
       </TouchableOpacity>
 
-       <HadithImageFooter />
+      <HadithImageFooter />
     </View>
   );
 };
@@ -372,6 +413,17 @@ const HadithInfoScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: verticalScale(16),
+    fontSize: scale(16),
+    color: '#8A57DC',
+    fontWeight: '500',
+    textAlign: 'center',
   },
   searchBarContainer: { 
     marginVertical: verticalScale(10),
@@ -412,10 +464,6 @@ const styles = StyleSheet.create({
   chapterTitleContainer: {
     flex: 1,
   },
-  chapterTitle: {
-    fontSize: scale(14),
-    color: '#171717',
-  },
   chapterRangeContainer: {
     marginLeft: scale(8),
   },
@@ -423,14 +471,16 @@ const styles = StyleSheet.create({
     fontSize: scale(12),
     textAlign: 'right',
   },
-  loadingFooter: {
-    paddingVertical: verticalScale(16),
-    alignItems: 'center',
-  },
   emptyContainer: {
     padding: scale(20),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  emptySubtext: {
+    marginTop: scale(8),
+    fontSize: scale(14),
+    color: '#737373',
+    textAlign: 'center',
   },
   savedButton: {
     position: 'absolute',
@@ -450,6 +500,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
+  },
+  savedButtonText: {
+    marginLeft: scale(8),
   },
 });
 
