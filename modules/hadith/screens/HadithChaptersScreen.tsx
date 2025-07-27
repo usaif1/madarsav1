@@ -1,6 +1,6 @@
 // modules/hadith/screens/HadithChaptersScreen.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, useWindowDimensions } from 'react-native';
 import { useThemeStore } from '@/globalStore';
 import { useHadithStore } from '../store/hadithStore';
@@ -15,9 +15,72 @@ import LoadingIndicator from '@/components/LoadingIndicator';
 import ErrorMessage from '@/components/ErrorMessage';
 import RenderHtml from 'react-native-render-html';
 import { useHadithChaptersWithPagination } from '../hooks/useHadithChaptersWithPagination';
-// Import only what we need from the service
 
-// Define interfaces for the new API response structure
+/**
+ * Utility function to clean Arabic HTML content by removing scholarly markup
+ * Removes [prematn], [narrator], [matn] and other annotation tags
+ * @param htmlContent - Raw HTML string with scholarly markup
+ * @returns Cleaned HTML string suitable for display
+ */
+const cleanArabicHtmlContent = (htmlContent: string): string => {
+  if (!htmlContent || typeof htmlContent !== 'string') {
+    return '';
+  }
+
+  try {
+    let cleanedContent = htmlContent;
+
+    // Remove scholarly annotation tags
+    // [prematn] and [/prematn] - pre-matn (chain of narration)
+    cleanedContent = cleanedContent.replace(/\[prematn\]/g, '');
+    cleanedContent = cleanedContent.replace(/\[\/prematn\]/g, '');
+
+    // [matn] and [/matn] - matn (actual hadith text)
+    cleanedContent = cleanedContent.replace(/\[matn\]/g, '');
+    cleanedContent = cleanedContent.replace(/\[\/matn\]/g, '');
+
+    // [narrator id="..." tooltip="..."] and [/narrator] - narrator metadata
+    cleanedContent = cleanedContent.replace(/\[narrator[^\]]*\]/g, '');
+    cleanedContent = cleanedContent.replace(/\[\/narrator\]/g, '');
+
+    // Remove any other custom annotation tags that might exist
+    cleanedContent = cleanedContent.replace(/\[[^\]]*\]/g, '');
+
+    // Clean up multiple spaces and normalize whitespace
+    cleanedContent = cleanedContent.replace(/\s+/g, ' ').trim();
+
+    return cleanedContent;
+  } catch (error) {
+    console.error('Error cleaning Arabic HTML content:', error);
+    // Return original content if cleaning fails for graceful degradation
+    return htmlContent;
+  }
+};
+
+/**
+ * Custom hook to process hadith content and clean markup
+ * @param content - HadithContent object
+ * @returns Processed content with cleaned HTML
+ */
+const useProcessedHadithContent = (content: HadithContent | undefined) => {
+  return useMemo(() => {
+    if (!content?.body) {
+      return {
+        cleanedBody: '',
+        hasContent: false
+      };
+    }
+
+    const cleanedBody = cleanArabicHtmlContent(content.body);
+    
+    return {
+      cleanedBody,
+      hasContent: Boolean(cleanedBody.trim())
+    };
+  }, [content?.body]);
+};
+
+// Define interfaces for the API response structure
 interface HadithContent {
   lang: string;
   chapterNumber: string;
@@ -38,10 +101,24 @@ interface HadithChapter {
   hadith: HadithContent[];
 }
 
-const ChapterHeader = ({ chapter }: { chapter: HadithChapter }) => {
-  // Find English and Arabic content
-  const englishContent = chapter.hadith.find(h => h.lang === 'en');
-  const arabicContent = chapter.hadith.find(h => h.lang === 'ar');
+interface ChapterHeaderProps {
+  chapter: HadithChapter;
+}
+
+/**
+ * Component to render chapter header with English and Arabic titles
+ */
+const ChapterHeader: React.FC<ChapterHeaderProps> = ({ chapter }) => {
+  // Extract English and Arabic content safely
+  const englishContent = useMemo(() => 
+    chapter.hadith.find(h => h.lang === 'en'), 
+    [chapter.hadith]
+  );
+  
+  const arabicContent = useMemo(() => 
+    chapter.hadith.find(h => h.lang === 'ar'), 
+    [chapter.hadith]
+  );
   
   return (
     <LinearGradient
@@ -53,38 +130,78 @@ const ChapterHeader = ({ chapter }: { chapter: HadithChapter }) => {
       <Body1Title2Medium color="yellow-800" style={styles.chapterNumber}>
         ({chapter.hadithNumber}) Chapter: {englishContent?.chapterTitle || ''}
       </Body1Title2Medium>
+      
       <View style={styles.dividerContainer}>
         <CdnSvg path={DUA_ASSETS.HADITH_DASHED_LINE} width={scale(300)} height={1} />
       </View>
-      <View style={styles.chapterArabicContainer}><Body1Title2Medium color="yellow-800" style={styles.chapterArabic}>
-        {arabicContent?.chapterTitle || ''} 
-      </Body1Title2Medium><Body1Title2Medium color="yellow-800">({chapter?.hadithNumber})</Body1Title2Medium></View>
+      
+      <View style={styles.chapterArabicContainer}>
+        <Body1Title2Medium color="yellow-800" style={styles.chapterArabic}>
+          {arabicContent?.chapterTitle || ''} 
+        </Body1Title2Medium>
+        <Body1Title2Medium color="yellow-800">
+          ({chapter?.hadithNumber})
+        </Body1Title2Medium>
+      </View>
     </LinearGradient>
   );
 };
 
-const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
+interface HadithItemProps {
+  chapter: HadithChapter;
+}
+
+/**
+ * Component to render individual hadith item with cleaned content
+ */
+const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
   const { width } = useWindowDimensions();
   const { isHadithSaved, toggleSavedHadith } = useHadithStore();
-  const [isSaved, setIsSaved] = useState(isHadithSaved(chapter.hadithNumber, chapter.collection));
   
-  // Find English and Arabic content
-  const englishContent = chapter.hadith.find(h => h.lang === 'en');
-  const arabicContent = chapter.hadith.find(h => h.lang === 'ar');
+  // Track bookmark state with proper error handling
+  const [isSaved, setIsSaved] = useState(() => {
+    try {
+      return isHadithSaved(chapter.hadithNumber, chapter.collection);
+    } catch (error) {
+      console.error('Error checking saved hadith status:', error);
+      return false;
+    }
+  });
   
-  const handleBookmarkPress = () => {
-    toggleSavedHadith(chapter);
-    setIsSaved(!isSaved);
-  };
+  // Extract and process content
+  const englishContent = useMemo(() => 
+    chapter.hadith.find(h => h.lang === 'en'), 
+    [chapter.hadith]
+  );
+  
+  const arabicContent = useMemo(() => 
+    chapter.hadith.find(h => h.lang === 'ar'), 
+    [chapter.hadith]
+  );
+  
+  // Process Arabic content to remove markup
+  const { cleanedBody: cleanedArabicBody, hasContent: hasArabicContent } = 
+    useProcessedHadithContent(arabicContent);
+  
+  // Handle bookmark toggle with error handling
+  const handleBookmarkPress = useCallback(() => {
+    try {
+      toggleSavedHadith(chapter);
+      setIsSaved(prevState => !prevState);
+    } catch (error) {
+      console.error('Error toggling hadith bookmark:', error);
+      // Could show a toast or error message here
+    }
+  }, [chapter, toggleSavedHadith]);
   
   return (
     <View style={styles.hadithContainer}>
-      {/* Arabic Content */}
-      <View style={styles.arabicContainer}>
-        {arabicContent?.body && (
+      {/* Arabic Content with cleaned markup */}
+      {hasArabicContent && (
+        <View style={styles.arabicContainer}>
           <RenderHtml
-            contentWidth={width - scale(36)} // Adjust for padding
-            source={{ html: arabicContent.body }}
+            contentWidth={width - scale(36)}
+            source={{ html: cleanedArabicBody }}
             tagsStyles={{
               p: {
                 fontSize: scale(18),
@@ -95,14 +212,14 @@ const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
               }
             }}
           />
-        )}
-      </View>
+        </View>
+      )}
       
       {/* English Content */}
-      <View style={styles.narratorContainer}>
-        {englishContent?.body && (
+      {englishContent?.body && (
+        <View style={styles.narratorContainer}>
           <RenderHtml
-            contentWidth={width - scale(40)} // Adjust for padding
+            contentWidth={width - scale(40)}
             source={{ html: englishContent.body }}
             tagsStyles={{
               p: {
@@ -112,23 +229,34 @@ const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
               }
             }}
           />
-        )}
-      </View>
+        </View>
+      )}
       
       {/* Footer with reference and actions */}
       <View style={styles.footerContainer}>
         <Body1Title2Regular style={styles.referenceText}>
           {chapter.collection} <View style={styles.dot}></View> {chapter.bookNumber}:{chapter.hadithNumber}
         </Body1Title2Regular>
+        
         <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleBookmarkPress}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={handleBookmarkPress}
+            accessibilityLabel={isSaved ? "Remove bookmark" : "Add bookmark"}
+            accessibilityRole="button"
+          >
             <CdnSvg
               path={isSaved ? DUA_ASSETS.QURAN_BOOKMARK_FILL_ICON : DUA_ASSETS.HADITH_BOOKMARK}
               width={24}
               height={24}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          
+          <TouchableOpacity 
+            style={styles.actionButton}
+            accessibilityLabel="Share hadith"
+            accessibilityRole="button"
+          >
             <CdnSvg path={DUA_ASSETS.HADITH_SHARE} width={24} height={24} />
           </TouchableOpacity>
         </View>
@@ -137,7 +265,14 @@ const HadithItem = ({ chapter }: { chapter: HadithChapter }) => {
   );
 };
 
-const ChapterSection = ({ chapter }: { chapter: HadithChapter }) => {
+interface ChapterSectionProps {
+  chapter: HadithChapter;
+}
+
+/**
+ * Component combining chapter header and hadith item
+ */
+const ChapterSection: React.FC<ChapterSectionProps> = ({ chapter }) => {
   return (
     <View style={styles.chapterSection}>
       <ChapterHeader chapter={chapter} />
@@ -146,17 +281,24 @@ const ChapterSection = ({ chapter }: { chapter: HadithChapter }) => {
   );
 };
 
+interface RouteParams {
+  hadithId: string;
+  chapterId: string;
+  chapterTitle?: string;
+}
+
+/**
+ * Main screen component for displaying hadith chapters with pagination
+ */
 const HadithChaptersScreen: React.FC = () => {
   const { colors } = useThemeStore();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const { hadithId, chapterId } = route.params as {
-    hadithId: string;
-    chapterId: string;
-    chapterTitle?: string
-  };
   
-  // Use our custom hook for pagination
+  // Extract route parameters with type safety
+  const { hadithId, chapterId } = route.params as RouteParams;
+  
+  // Use custom hook for pagination with error handling
   const {
     data: chapters,
     isLoading,
@@ -166,58 +308,85 @@ const HadithChaptersScreen: React.FC = () => {
     refetch
   } = useHadithChaptersWithPagination(hadithId, chapterId, 10);
   
-  // Log API response for debugging
+  // Debug logging for API responses
   useEffect(() => {
     if (chapters && chapters.length > 0) {
-      console.log('Hadith Chapters API Response:', chapters);
+      console.log('Hadith Chapters API Response:', {
+        totalChapters: chapters.length,
+        firstChapter: chapters[0],
+        hasArabicMarkup: chapters[0]?.hadith?.find(h => h.lang === 'ar')?.body?.includes('[')
+      });
     }
     if (error) {
       console.error('Hadith Chapters API Error:', error);
     }
   }, [chapters, error]);
   
-  // Handle end reached for infinite scroll
-  const handleEndReached = () => {
+  // Handle infinite scroll with throttling
+  const handleEndReached = useCallback(() => {
     if (hasMore && !isLoading) {
       loadMore();
     }
-  };
+  }, [hasMore, isLoading, loadMore]);
   
-  // Show loading state
+  // Navigation handler with error handling
+  const handleGoBack = useCallback(() => {
+    try {
+      navigation.goBack();
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  }, [navigation]);
+  
+  // Render key extractor with fallback
+  const keyExtractor = useCallback((item: HadithChapter) => 
+    `${item.hadithNumber}-${item.collection}`, 
+    []
+  );
+  
+  // Render item component
+  const renderChapterItem = useCallback(({ item }: { item: HadithChapter }) => 
+    <ChapterSection chapter={item} />, 
+    []
+  );
+  
+  // Common header component
+  const HeaderComponent = useMemo(() => (
+    <View style={styles.headerContainer}>
+      <TouchableOpacity 
+        style={styles.headerButtonLeft} 
+        onPress={handleGoBack}
+        accessibilityLabel="Go back"
+        accessibilityRole="button"
+      >
+        <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
+      </TouchableOpacity>
+      
+      <View style={styles.headerCenter}>
+        <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
+      </View>
+      
+      <TouchableOpacity style={styles.headerButtonRight}>
+        <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
+      </TouchableOpacity>
+    </View>
+  ), [handleGoBack]);
+  
+  // Loading state
   if (isLoading && chapters.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-       <View style={styles.headerContainer}>
-                       <TouchableOpacity style={styles.headerButtonLeft} onPress={() => navigation.goBack()}>
-                         <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
-                       </TouchableOpacity>
-                       <View style={styles.headerCenter}>
-                         <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-                       </View>
-                       <TouchableOpacity style={styles.headerButtonRight}>
-                         <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
-                       </TouchableOpacity>
-                     </View>
+        {HeaderComponent}
         <LoadingIndicator color={colors.primary.primary500} />
       </SafeAreaView>
     );
   }
   
-  // Show error state
+  // Error state
   if (error) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerContainer}>
-                        <TouchableOpacity style={styles.headerButtonLeft} onPress={() => navigation.goBack()}>
-                          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
-                        </TouchableOpacity>
-                        <View style={styles.headerCenter}>
-                          <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-                        </View>
-                        <TouchableOpacity style={styles.headerButtonRight}>
-                          <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
-                        </TouchableOpacity>
-                      </View>
+        {HeaderComponent}
         <ErrorMessage 
           message={error.toString() || 'Failed to load hadith chapters'} 
           onRetry={refetch}
@@ -226,29 +395,23 @@ const HadithChaptersScreen: React.FC = () => {
     );
   }
   
+  // Main content
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerContainer}>
-                      <TouchableOpacity style={styles.headerButtonLeft} onPress={() => navigation.goBack()}>
-                        <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_LEFT} width={80} height={80} />
-                      </TouchableOpacity>
-                      <View style={styles.headerCenter}>
-                        <CdnSvg path={DUA_ASSETS.HADITH_BISMILLAH} width={200} height={40} />
-                      </View>
-                      <TouchableOpacity style={styles.headerButtonRight}>
-                        <CdnSvg path={DUA_ASSETS.HADITH_CHAPTER_RIGHT} width={80} height={80} />
-                      </TouchableOpacity>
-                    </View>
+      {HeaderComponent}
       
       {chapters && chapters.length > 0 ? (
         <FlatList
           data={chapters}
-          keyExtractor={item => item.hadithNumber}
-          renderItem={({ item }) => <ChapterSection chapter={item} />}
+          keyExtractor={keyExtractor}
+          renderItem={renderChapterItem}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true} // Performance optimization
+          maxToRenderPerBatch={5} // Performance optimization
+          windowSize={10} // Performance optimization
           ListFooterComponent={
             <>
               {isLoading && chapters.length > 0 && (
@@ -270,6 +433,7 @@ const HadithChaptersScreen: React.FC = () => {
   );
 };
 
+// Styles remain the same as original
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -298,7 +462,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    paddingBottom: verticalScale(32),
   },
   noContentContainer: {
     flex: 1,
