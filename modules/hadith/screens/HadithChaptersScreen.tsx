@@ -16,9 +16,60 @@ import ErrorMessage from '@/components/ErrorMessage';
 import RenderHtml from 'react-native-render-html';
 import { useHadithChaptersWithPagination } from '../hooks/useHadithChaptersWithPagination';
 
+// ==================== INTERFACES ====================
+
+/**
+ * Interface for hadith content structure from API response
+ */
+interface HadithContent {
+  lang: string;
+  chapterNumber: string;
+  chapterTitle: string;
+  urn: number;
+  body: string;
+  grades: {
+    graded_by: string | null;
+    grade: string;
+  }[];
+}
+
+/**
+ * Interface for hadith chapter structure from API response
+ */
+interface HadithChapter {
+  collection: string;
+  bookNumber: string;
+  chapterId: string;
+  hadithNumber: string;
+  hadith: HadithContent[];
+}
+
+/**
+ * Interface for navigation route parameters
+ */
+interface RouteParams {
+  hadithId: string;
+  chapterId: string;
+  chapterTitle?: string;
+}
+
+/**
+ * Interface for component props
+ */
+interface ChapterHeaderProps {
+  chapter: HadithChapter;
+}
+
+interface HadithItemProps {
+  chapter: HadithChapter;
+}
+
+// ==================== UTILITY FUNCTIONS ====================
+
 /**
  * Utility function to clean Arabic HTML content by removing scholarly markup
  * Removes [prematn], [narrator], [matn] and other annotation tags
+ * Preserves ALL Arabic text content while removing only English markup
  * @param htmlContent - Raw HTML string with scholarly markup
  * @returns Cleaned HTML string suitable for display
  */
@@ -30,7 +81,7 @@ const cleanArabicHtmlContent = (htmlContent: string): string => {
   try {
     let cleanedContent = htmlContent;
 
-    // Remove scholarly annotation tags
+    // Remove scholarly annotation tags (English markup only)
     // [prematn] and [/prematn] - pre-matn (chain of narration)
     cleanedContent = cleanedContent.replace(/\[prematn\]/g, '');
     cleanedContent = cleanedContent.replace(/\[\/prematn\]/g, '');
@@ -40,6 +91,7 @@ const cleanArabicHtmlContent = (htmlContent: string): string => {
     cleanedContent = cleanedContent.replace(/\[\/matn\]/g, '');
 
     // [narrator id="..." tooltip="..."] and [/narrator] - narrator metadata
+    // This removes the English attributes but keeps the Arabic narrator names
     cleanedContent = cleanedContent.replace(/\[narrator[^\]]*\]/g, '');
     cleanedContent = cleanedContent.replace(/\[\/narrator\]/g, '');
 
@@ -80,36 +132,16 @@ const useProcessedHadithContent = (content: HadithContent | undefined) => {
   }, [content?.body]);
 };
 
-// Define interfaces for the API response structure
-interface HadithContent {
-  lang: string;
-  chapterNumber: string;
-  chapterTitle: string;
-  urn: number;
-  body: string;
-  grades: {
-    graded_by: string | null;
-    grade: string;
-  }[];
-}
-
-interface HadithChapter {
-  collection: string;
-  bookNumber: string;
-  chapterId: string;
-  hadithNumber: string;
-  hadith: HadithContent[];
-}
-
-interface ChapterHeaderProps {
-  chapter: HadithChapter;
-}
+// ==================== COMPONENTS ====================
 
 /**
  * Component to render chapter header with English and Arabic titles
+ * Uses RenderHtml for Arabic content to handle HTML markup properly
  */
 const ChapterHeader: React.FC<ChapterHeaderProps> = ({ chapter }) => {
-  // Extract English and Arabic content safely
+  const { width } = useWindowDimensions();
+  
+  // Extract English and Arabic content safely with memoization
   const englishContent = useMemo(() => 
     chapter.hadith.find(h => h.lang === 'en'), 
     [chapter.hadith]
@@ -119,6 +151,10 @@ const ChapterHeader: React.FC<ChapterHeaderProps> = ({ chapter }) => {
     chapter.hadith.find(h => h.lang === 'ar'), 
     [chapter.hadith]
   );
+
+  // Process Arabic chapter title to remove markup if present
+  const { cleanedBody: cleanedArabicTitle, hasContent: hasArabicTitle } = 
+    useProcessedHadithContent({ ...arabicContent, body: arabicContent?.chapterTitle || '' } as HadithContent);
   
   return (
     <LinearGradient
@@ -127,18 +163,38 @@ const ChapterHeader: React.FC<ChapterHeaderProps> = ({ chapter }) => {
       end={{ x: 0, y: 1 }}
       style={styles.chapterHeader}
     >
+      {/* English Chapter Title */}
       <Body1Title2Medium color="yellow-800" style={styles.chapterNumber}>
         ({chapter.hadithNumber}) Chapter: {englishContent?.chapterTitle || ''}
       </Body1Title2Medium>
       
+      {/* Decorative Divider */}
       <View style={styles.dividerContainer}>
         <CdnSvg path={DUA_ASSETS.HADITH_DASHED_LINE} width={scale(300)} height={1} />
       </View>
       
+      {/* Arabic Chapter Title using RenderHtml */}
       <View style={styles.chapterArabicContainer}>
-        <Body1Title2Medium color="yellow-800" style={styles.chapterArabic}>
-          {arabicContent?.chapterTitle || ''} 
-        </Body1Title2Medium>
+        {hasArabicTitle ? (
+          <RenderHtml
+            contentWidth={width - scale(80)}
+            source={{ html: `<p>${cleanedArabicTitle}</p>` }}
+            tagsStyles={{
+              p: {
+                fontSize: scale(16),
+                fontWeight: 'bold',
+                textAlign: 'center',
+                color: '#6D591D', // yellow-800 equivalent
+                margin: 0,
+              }
+            }}
+          />
+        ) : (
+          <Body1Title2Medium color="yellow-800" style={styles.chapterArabic}>
+            {arabicContent?.chapterTitle || ''} 
+          </Body1Title2Medium>
+        )}
+        
         <Body1Title2Medium color="yellow-800">
           ({chapter?.hadithNumber})
         </Body1Title2Medium>
@@ -147,12 +203,9 @@ const ChapterHeader: React.FC<ChapterHeaderProps> = ({ chapter }) => {
   );
 };
 
-interface HadithItemProps {
-  chapter: HadithChapter;
-}
-
 /**
  * Component to render individual hadith item with cleaned content
+ * Simple implementation without fancy features - just cleans markup and displays text
  */
 const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
   const { width } = useWindowDimensions();
@@ -168,7 +221,7 @@ const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
     }
   });
   
-  // Extract and process content
+  // Extract and process content with memoization
   const englishContent = useMemo(() => 
     chapter.hadith.find(h => h.lang === 'en'), 
     [chapter.hadith]
@@ -179,7 +232,7 @@ const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
     [chapter.hadith]
   );
   
-  // Process Arabic content to remove markup
+  // Process Arabic content to remove markup - keeps ALL Arabic text
   const { cleanedBody: cleanedArabicBody, hasContent: hasArabicContent } = 
     useProcessedHadithContent(arabicContent);
   
@@ -190,13 +243,13 @@ const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
       setIsSaved(prevState => !prevState);
     } catch (error) {
       console.error('Error toggling hadith bookmark:', error);
-      // Could show a toast or error message here
+      // Could show a toast or error message here if needed
     }
   }, [chapter, toggleSavedHadith]);
   
   return (
     <View style={styles.hadithContainer}>
-      {/* Arabic Content with cleaned markup */}
+      {/* Arabic Content with cleaned markup - preserves all Arabic text */}
       {hasArabicContent && (
         <View style={styles.arabicContainer}>
           <RenderHtml
@@ -239,6 +292,7 @@ const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
         </Body1Title2Regular>
         
         <View style={styles.actionsContainer}>
+          {/* Bookmark Button */}
           <TouchableOpacity 
             style={styles.actionButton} 
             onPress={handleBookmarkPress}
@@ -252,6 +306,7 @@ const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
             />
           </TouchableOpacity>
           
+          {/* Share Button */}
           <TouchableOpacity 
             style={styles.actionButton}
             accessibilityLabel="Share hadith"
@@ -265,14 +320,10 @@ const HadithItem: React.FC<HadithItemProps> = ({ chapter }) => {
   );
 };
 
-interface ChapterSectionProps {
-  chapter: HadithChapter;
-}
-
 /**
  * Component combining chapter header and hadith item
  */
-const ChapterSection: React.FC<ChapterSectionProps> = ({ chapter }) => {
+const ChapterSection: React.FC<{ chapter: HadithChapter }> = ({ chapter }) => {
   return (
     <View style={styles.chapterSection}>
       <ChapterHeader chapter={chapter} />
@@ -281,14 +332,11 @@ const ChapterSection: React.FC<ChapterSectionProps> = ({ chapter }) => {
   );
 };
 
-interface RouteParams {
-  hadithId: string;
-  chapterId: string;
-  chapterTitle?: string;
-}
+// ==================== MAIN COMPONENT ====================
 
 /**
  * Main screen component for displaying hadith chapters with pagination
+ * Simple, clean implementation without fancy features
  */
 const HadithChaptersScreen: React.FC = () => {
   const { colors } = useThemeStore();
@@ -311,12 +359,20 @@ const HadithChaptersScreen: React.FC = () => {
   // Debug logging for API responses
   useEffect(() => {
     if (chapters && chapters.length > 0) {
-      console.log('Hadith Chapters API Response:', {
+      const firstChapter = chapters[0];
+      const arabicContent = firstChapter?.hadith?.find(h => h.lang === 'ar');
+      
+      console.log('Hadith Chapters Debug Info:', {
         totalChapters: chapters.length,
-        firstChapter: chapters[0],
-        hasArabicMarkup: chapters[0]?.hadith?.find(h => h.lang === 'ar')?.body?.includes('[')
+        firstChapterId: firstChapter?.hadithNumber,
+        hasArabicContent: Boolean(arabicContent?.body),
+        hasScholarlyMarkup: arabicContent?.body?.includes('[') || false,
+        // Log a sample of what gets cleaned
+        originalSample: arabicContent?.body?.substring(0, 100) || '',
+        cleanedSample: cleanArabicHtmlContent(arabicContent?.body || '').substring(0, 100)
       });
     }
+    
     if (error) {
       console.error('Hadith Chapters API Error:', error);
     }
@@ -371,6 +427,8 @@ const HadithChaptersScreen: React.FC = () => {
       </TouchableOpacity>
     </View>
   ), [handleGoBack]);
+  
+  // ==================== RENDER STATES ====================
   
   // Loading state
   if (isLoading && chapters.length === 0) {
@@ -433,7 +491,8 @@ const HadithChaptersScreen: React.FC = () => {
   );
 };
 
-// Styles remain the same as original
+// ==================== STYLES ====================
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
