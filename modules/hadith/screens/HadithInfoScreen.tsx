@@ -384,6 +384,9 @@ const HadithInfoScreen: React.FC = () => {
             )}
           </View>
         }
+        ListFooterComponent={
+          <HadithImageFooter />
+        }
         showsVerticalScrollIndicator={false}
       />
       
@@ -404,8 +407,6 @@ const HadithInfoScreen: React.FC = () => {
           Saved
         </Body1Title2Medium>
       </TouchableOpacity>
-
-      <HadithImageFooter />
     </View>
   );
 };
